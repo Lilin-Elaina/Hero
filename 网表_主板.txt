@@ -1,0 +1,282 @@
+=== 元件清单 (主板 PCB3) ===
+AOALT                 
+C1      10uF          
+C2      10uF          
+C3      22uF          
+C4      22uF          
+C5      10uF          
+C6      22uF          CGA0603X7R104K500JT
+C7      10uF          CGA0603X7R104K500JT
+C8      22uF          
+C9      22uF          
+C10     4.7uF         
+C11     100nF         
+C12     100nF         
+C15     4.7nF         
+C16     4.7nF         
+CN1     XH2.54-2P-BatteryHX-XH2.54-2PZZ
+D1      SMAJ12CA      SMAJ12CA
+D2      SMAJ6.0CA     SMAJ6.0CA
+D3      SMAJ12CA      SMAJ12CA
+DOALT                 
+H1      254卧排针SWD     PZ254R-11-04P
+H2      HX PZ2.54-1x3P WTHX PZ2.54-1x3P WT
+L1      1uH           DH0630H-R82M
+LED1                  
+LED5                  
+Q1      AO3400        AO3400
+Q2      AO3400        AO3400
+R1      2R            
+R2      10K           
+R3      5.1K          
+R4      5.1K          
+R5      0R5           
+R6      10K           
+R7      1K            
+R8      10K           
+R9      100K          
+R10     30R           
+R11     10K           
+R12     30R           
+R13     10K           
+R14     1K            
+R15     1K            
+R16     47K           
+R17     47K           
+R18     2R            
+R19     1K            
+R20     120R          
+R21     1K            
+R27     100K          
+R28     1K            
+R29     1K            
+R30     100K          
+SCREW1                
+SCREW2                
+SCREW3                
+SCREW4                
+SW1     6*3           YTS1C0161BBJ00
+SW2     TS-1088-AR02016TS-1088-AR02016
+U1      IP5306        IP5306
+U2      AMS1117-3.3   AMS1117-3.3
+U3      GH1.25-4P     WAFER-GH1.25-4PWB
+U4      STM32G030F6P6TRSTM32G030F6P6TR
+U5      GH1.25-4P     WAFER-GH1.25-4PWB
+U6      SP3485EN-L/TR SP3485EN-L/TR
+U7      MC-306LS-H735 MC-306LS-H735
+U9      GH1.25-4P     WAFER-GH1.25-4PWB
+X1      GH125-S03DCA-00GH125-S03DCA-00
+X2      GH125-S03DCA-00GH125-S03DCA-00
+
+=== 网表 (主板 PCB3) ===
+【$1N103】
+    C15.2  [4.7nF]
+    R27.2  [100K]
+    R28.2  [1K]
+    U4.11 (PA4)  [STM32G030F6P6TR]
+【$1N110】
+    AOALT.1
+    R30.2  [100K]
+    U4.13 (PA6)  [STM32G030F6P6TR]
+【$1N112】
+    DOALT.1
+    U4.17 (PA12[PA10])  [STM32G030F6P6TR]
+【$1N114】
+    C16.2  [4.7nF]
+    R29.2  [1K]
+    U4.12 (PA5)  [STM32G030F6P6TR]
+【$1N17】
+    H2.3  [HX PZ2.54-1x3P WT]
+    R20.2  [120R]
+【$1N19】
+    R18.1  [2R]
+    U6.8 (VCC)  [SP3485EN-L/TR]
+【$1N24】
+    R19.1  [1K]
+    U6.2 (RE#)  [SP3485EN-L/TR]
+    U6.3 (DE)  [SP3485EN-L/TR]
+【$1N29】
+    Q2.1 (G)  [AO3400]
+    R13.2  [10K]
+    R15.1  [1K]
+【$1N30】
+    Q2.3 (D)  [AO3400]
+    R12.1  [30R]
+【$1N34】
+    Q1.1 (G)  [AO3400]
+    R11.2  [10K]
+    R14.1  [1K]
+【$1N35】
+    Q1.3 (D)  [AO3400]
+    R10.1  [30R]
+【$1N51】
+    LED5.2 (A)
+    R7.2  [1K]
+【$1N59】
+    R6.1  [10K]
+    SW1.1  [6*3]
+【$1N77】
+    C2.2  [10uF]
+    R1.1  [2R]
+【$1N78】
+    R3.2  [5.1K]
+    U7.B5 (CC2)  [MC-306LS-H735]
+【$1N80】
+    R4.2  [5.1K]
+    U7.A5 (CC1)  [MC-306LS-H735]
+【$1N92】
+    L1.1  [1uH]
+    U1.7 (SW)  [IP5306]
+【$1N93】
+    C8.2  [22uF]
+    R5.1  [0R5]
+    U1.6 (BAT)  [IP5306]
+【$1N94】
+    R6.2  [10K]
+    U1.5 (KEY)  [IP5306]
+【$1N95】
+    R21.2  [1K]
+    U1.3 (LED2)  [IP5306]
+    U1.4 (LED3)  [IP5306]
+【$1N96】
+    LED1.2 (A)
+    U1.2 (LED1)  [IP5306]
+【$1N97】
+    C1.2  [10uF]
+    R1.2  [2R]
+    U1.1 (VIN)  [IP5306]
+    U7.B9 (VBUS)  [MC-306LS-H735]
+    U7.A9 (VBUS)  [MC-306LS-H735]
+【+3.3V】
+    C6.1  [22uF]
+    C10.1  [4.7uF]
+    C11.1  [100nF]
+    H1.1  [254卧排针SWD]
+    R2.2  [10K]
+    R8.2  [10K]
+    R17.2  [47K]
+    R18.2  [2R]
+    U2.2 (VOUT(TAB))  [AMS1117-3.3]
+    U2.4 (TAB)  [AMS1117-3.3]
+    U4.4 (VDDA/DDA)  [STM32G030F6P6TR]
+    U9.2  [GH1.25-4P]
+【+5V】
+    C3.1  [22uF]
+    C4.1  [22uF]
+    C7.2  [10uF]
+    R7.1  [1K]
+    U1.8 (VOUT)  [IP5306]
+    U2.3 (VIN)  [AMS1117-3.3]
+    U3.4  [GH1.25-4P]
+    U3.3  [GH1.25-4P]
+    U5.4  [GH1.25-4P]
+    U5.3  [GH1.25-4P]
+【120R+】
+    D2.1 (K)  [SMAJ6.0CA]
+    D3.2  [SMAJ12CA]
+    H2.2  [HX PZ2.54-1x3P WT]
+    R17.1  [47K]
+    U6.6 (A)  [SP3485EN-L/TR]
+    X1.2  [GH125-S03DCA-00]
+    X2.2  [GH125-S03DCA-00]
+【120R-】
+    D1.1  [SMAJ12CA]
+    D2.2 (A)  [SMAJ6.0CA]
+    R16.1  [47K]
+    R20.1  [120R]
+    U6.7 (B)  [SP3485EN-L/TR]
+    X1.1  [GH125-S03DCA-00]
+    X2.1  [GH125-S03DCA-00]
+【AO】
+    R28.1  [1K]
+    U9.3  [GH1.25-4P]
+【BLUE】
+    R12.2  [30R]
+    U3.2  [GH1.25-4P]
+    U5.2  [GH1.25-4P]
+【BOOT0/CLK】
+    H1.3  [254卧排针SWD]
+    R9.2  [100K]
+    U4.19 (PA15/PA14-BOOT0)  [STM32G030F6P6TR]
+【DO】
+    R29.1  [1K]
+    U9.4  [GH1.25-4P]
+【GND】
+    C1.1  [10uF]
+    C2.1  [10uF]
+    C3.2  [22uF]
+    C4.2  [22uF]
+    C5.2  [10uF]
+    C6.2  [22uF]
+    C7.1  [10uF]
+    C8.1  [22uF]
+    C9.1  [22uF]
+    C10.2  [4.7uF]
+    C11.2  [100nF]
+    C12.1  [100nF]
+    C15.1  [4.7nF]
+    C16.1  [4.7nF]
+    CN1.2  [XH2.54-2P-Battery]
+    D1.2  [SMAJ12CA]
+    D3.1  [SMAJ12CA]
+    H1.4  [254卧排针SWD]
+    LED1.1 (C)
+    LED5.1 (C)
+    Q1.2 (S)  [AO3400]
+    Q2.2 (S)  [AO3400]
+    R3.1  [5.1K]
+    R4.1  [5.1K]
+    R9.1  [100K]
+    R11.1  [10K]
+    R13.1  [10K]
+    R16.2  [47K]
+    R27.1  [100K]
+    R30.1  [100K]
+    SW1.2  [6*3]
+    SW2.2  [TS-1088-AR02016]
+    U1.9 (EP)  [IP5306]
+    U2.1 (ADJ(GND))  [AMS1117-3.3]
+    U4.5 (VSSA/SSA)  [STM32G030F6P6TR]
+    U6.5 (GND)  [SP3485EN-L/TR]
+    U7.B12 (GND)  [MC-306LS-H735]
+    U7.A12 (GND)  [MC-306LS-H735]
+    U9.1  [GH1.25-4P]
+    X1.3  [GH125-S03DCA-00]
+    X2.3  [GH125-S03DCA-00]
+【KEY】
+    C5.1  [10uF]
+    R2.1  [10K]
+    SW2.1  [TS-1088-AR02016]
+    U4.7 (PA0)  [STM32G030F6P6TR]
+【NRST】
+    C12.2  [100nF]
+    R8.1  [10K]
+    U4.6 (NRST)  [STM32G030F6P6TR]
+【RED】
+    R10.2  [30R]
+    U3.1  [GH1.25-4P]
+    U5.1  [GH1.25-4P]
+【RX】
+    U4.1 (PB7/PB8)  [STM32G030F6P6TR]
+    U6.1 (RO)  [SP3485EN-L/TR]
+【SET】
+    R19.2  [1K]
+    U4.8 (PA1)  [STM32G030F6P6TR]
+【SIGNAL-B】
+    R15.2  [1K]
+    U4.16 (PA11[PA9])  [STM32G030F6P6TR]
+【SIGNAL-R】
+    R14.2  [1K]
+    U4.15 (PB0/PB1/PB2/PA8)  [STM32G030F6P6TR]
+【SWDIO】
+    H1.2  [254卧排针SWD]
+    U4.18 (PA13)  [STM32G030F6P6TR]
+【TX】
+    U4.20 (PB3/PB4/PB5/PB6)  [STM32G030F6P6TR]
+    U6.4 (DI)  [SP3485EN-L/TR]
+【VBAT】
+    C9.2  [22uF]
+    CN1.1  [XH2.54-2P-Battery]
+    L1.2  [1uH]
+    R5.2  [0R5]
+    R21.1  [1K]

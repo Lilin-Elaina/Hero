@@ -1,0 +1,3386 @@
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"rc_dbus.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "remote/rc_dbus.c"
+  19              		.section	.text.RC_StartReceive,"ax",%progbits
+  20              		.align	1
+  21              		.global	RC_StartReceive
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	RC_StartReceive:
+  27              	.LFB146:
+   1:remote/rc_dbus.c **** /**
+   2:remote/rc_dbus.c ****  * @file    rc_dbus.c
+   3:remote/rc_dbus.c ****  * @brief   DT7 + DR16 遥控器 DBUS 接收与解析
+   4:remote/rc_dbus.c ****  * @note    硬件：达妙 DM-MC-Board02 SBUS 口（官方例程走 UART5 / RX=PD2 AF8）
+   5:remote/rc_dbus.c ****  *          协议：100000bps, 8数据位+偶校验, 2停止位, 每帧18字节
+   6:remote/rc_dbus.c ****  */
+   7:remote/rc_dbus.c **** #include "rc_dbus.h"
+   8:remote/rc_dbus.c **** #include "usart.h"
+   9:remote/rc_dbus.c **** #include "DJ_Motor.h"
+  10:remote/rc_dbus.c **** #include "mecanum.h"
+  11:remote/rc_dbus.c **** #include <string.h>
+  12:remote/rc_dbus.c **** 
+  13:remote/rc_dbus.c **** RC_TypeDef RC_Data = {0};
+  14:remote/rc_dbus.c **** 
+  15:remote/rc_dbus.c **** /* 最近一次 RC_Control_Task 算出的各轮归一化目标（调试用，可在调试器里看�
+  16:remote/rc_dbus.c **** float RC_WheelOut[MECANUM_WHEEL_NUM] = {0};
+  17:remote/rc_dbus.c **** 
+  18:remote/rc_dbus.c **** /* 使能条件持续的起始时刻：用于“拨杆刚到位也要等 100ms 才给电流”的�
+  19:remote/rc_dbus.c **** static uint32_t rc_enable_since = 0;
+  20:remote/rc_dbus.c **** 
+  21:remote/rc_dbus.c **** /* DMA 接收缓冲：2 帧容量
+  22:remote/rc_dbus.c ****  *
+  23:remote/rc_dbus.c ****  * ★ 必须放在 DMA 可访问的内存里：STM32H7 的 DTCM(0x20000000) 只有 Cortex-M7
+  24:remote/rc_dbus.c ****  *   的 D-bus 能访问，DMA1/DMA2 往 DTCM 写会在第一个字节就报传输错误。
+  25:remote/rc_dbus.c ****  *   本工程 .data/.bss 都在 DTCMRAM，所以这里显式指定 .dma_buffer 段，
+  26:remote/rc_dbus.c ****  *   该段在 STM32H723xG_flash.ld 里被链接到 RAM_D1(0x24000000)。
+  27:remote/rc_dbus.c ****  *   32 字节对齐是为了将来若打开 D-Cache 仍能安全做 cache 维护。 */
+  28:remote/rc_dbus.c **** #if defined(__GNUC__)
+  29:remote/rc_dbus.c **** static uint8_t dbus_buf[DBUS_FRAME_LEN * 2]
+  30:remote/rc_dbus.c ****     __attribute__((section(".dma_buffer"), aligned(32)));
+  31:remote/rc_dbus.c **** #else
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 2
+
+
+  32:remote/rc_dbus.c **** static uint8_t dbus_buf[DBUS_FRAME_LEN * 2];
+  33:remote/rc_dbus.c **** #endif
+  34:remote/rc_dbus.c **** 
+  35:remote/rc_dbus.c **** void RC_StartReceive(void)
+  36:remote/rc_dbus.c **** {
+  28              		.loc 1 36 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  37:remote/rc_dbus.c ****     /* 上一帧若因溢出/噪声卡在 ORE，不清掉就再也收不到新数据 */
+  38:remote/rc_dbus.c ****     __HAL_UART_CLEAR_OREFLAG(&huart5);
+  37              		.loc 1 38 5 view .LVU1
+  38 0002 2A48     		ldr	r0, .L8
+  39 0004 0368     		ldr	r3, [r0]
+  40 0006 0822     		movs	r2, #8
+  41 0008 1A62     		str	r2, [r3, #32]
+  39:remote/rc_dbus.c **** 
+  40:remote/rc_dbus.c ****     /* DMA 普通模式，靠串口总线空闲（IDLE）判定一帧结束 */
+  41:remote/rc_dbus.c ****     if (HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf)) != HAL_OK)
+  42              		.loc 1 41 5 view .LVU2
+  43              		.loc 1 41 9 is_stmt 0 view .LVU3
+  44 000a 2422     		movs	r2, #36
+  45 000c 2849     		ldr	r1, .L8+4
+  46 000e FFF7FEFF 		bl	HAL_UARTEx_ReceiveToIdle_DMA
+  47              	.LVL0:
+  48              		.loc 1 41 8 discriminator 1 view .LVU4
+  49 0012 0028     		cmp	r0, #0
+  50 0014 3BD1     		bne	.L7
+  51              	.L2:
+  42:remote/rc_dbus.c ****     {
+  43:remote/rc_dbus.c ****         /* 启动失败（上一次接收还没拆干净）：强制中止后重试一次，
+  44:remote/rc_dbus.c ****          * 否则接收链会永久静默，表现为“遥控器完全没反应” */
+  45:remote/rc_dbus.c ****         HAL_UART_AbortReceive(&huart5);
+  46:remote/rc_dbus.c ****         (void)HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf));
+  47:remote/rc_dbus.c ****     }
+  48:remote/rc_dbus.c **** 
+  49:remote/rc_dbus.c ****     /* 关掉半传输中断，避免回调被提前触发一次 */
+  50:remote/rc_dbus.c ****     if (huart5.hdmarx != NULL)
+  52              		.loc 1 50 5 is_stmt 1 view .LVU5
+  53              		.loc 1 50 15 is_stmt 0 view .LVU6
+  54 0016 254B     		ldr	r3, .L8
+  55 0018 D3F88030 		ldr	r3, [r3, #128]
+  56              		.loc 1 50 8 view .LVU7
+  57 001c 002B     		cmp	r3, #0
+  58 001e 44D0     		beq	.L1
+  51:remote/rc_dbus.c ****     {
+  52:remote/rc_dbus.c ****         __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
+  59              		.loc 1 52 9 is_stmt 1 view .LVU8
+  60 0020 1B68     		ldr	r3, [r3]
+  61 0022 2449     		ldr	r1, .L8+8
+  62 0024 244A     		ldr	r2, .L8+12
+  63 0026 9342     		cmp	r3, r2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 3
+
+
+  64 0028 18BF     		it	ne
+  65 002a 8B42     		cmpne	r3, r1
+  66 002c 39D0     		beq	.L4
+  67              		.loc 1 52 9 is_stmt 0 discriminator 2 view .LVU9
+  68 002e 1832     		adds	r2, r2, #24
+  69 0030 9342     		cmp	r3, r2
+  70 0032 36D0     		beq	.L4
+  71              		.loc 1 52 9 discriminator 4 view .LVU10
+  72 0034 1832     		adds	r2, r2, #24
+  73 0036 9342     		cmp	r3, r2
+  74 0038 33D0     		beq	.L4
+  75              		.loc 1 52 9 discriminator 6 view .LVU11
+  76 003a 1832     		adds	r2, r2, #24
+  77 003c 9342     		cmp	r3, r2
+  78 003e 30D0     		beq	.L4
+  79              		.loc 1 52 9 discriminator 8 view .LVU12
+  80 0040 1832     		adds	r2, r2, #24
+  81 0042 9342     		cmp	r3, r2
+  82 0044 2DD0     		beq	.L4
+  83              		.loc 1 52 9 discriminator 10 view .LVU13
+  84 0046 1832     		adds	r2, r2, #24
+  85 0048 9342     		cmp	r3, r2
+  86 004a 2AD0     		beq	.L4
+  87              		.loc 1 52 9 discriminator 12 view .LVU14
+  88 004c 1832     		adds	r2, r2, #24
+  89 004e 9342     		cmp	r3, r2
+  90 0050 27D0     		beq	.L4
+  91              		.loc 1 52 9 discriminator 14 view .LVU15
+  92 0052 02F55672 		add	r2, r2, #856
+  93 0056 9342     		cmp	r3, r2
+  94 0058 23D0     		beq	.L4
+  95              		.loc 1 52 9 discriminator 16 view .LVU16
+  96 005a 1832     		adds	r2, r2, #24
+  97 005c 9342     		cmp	r3, r2
+  98 005e 20D0     		beq	.L4
+  99              		.loc 1 52 9 discriminator 18 view .LVU17
+ 100 0060 1832     		adds	r2, r2, #24
+ 101 0062 9342     		cmp	r3, r2
+ 102 0064 1DD0     		beq	.L4
+ 103              		.loc 1 52 9 discriminator 20 view .LVU18
+ 104 0066 1832     		adds	r2, r2, #24
+ 105 0068 9342     		cmp	r3, r2
+ 106 006a 1AD0     		beq	.L4
+ 107              		.loc 1 52 9 discriminator 22 view .LVU19
+ 108 006c 1832     		adds	r2, r2, #24
+ 109 006e 9342     		cmp	r3, r2
+ 110 0070 17D0     		beq	.L4
+ 111              		.loc 1 52 9 discriminator 24 view .LVU20
+ 112 0072 1832     		adds	r2, r2, #24
+ 113 0074 9342     		cmp	r3, r2
+ 114 0076 14D0     		beq	.L4
+ 115              		.loc 1 52 9 discriminator 26 view .LVU21
+ 116 0078 1832     		adds	r2, r2, #24
+ 117 007a 9342     		cmp	r3, r2
+ 118 007c 11D0     		beq	.L4
+ 119              		.loc 1 52 9 discriminator 28 view .LVU22
+ 120 007e 1832     		adds	r2, r2, #24
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 4
+
+
+ 121 0080 9342     		cmp	r3, r2
+ 122 0082 0ED0     		beq	.L4
+ 123              		.loc 1 52 9 discriminator 30 view .LVU23
+ 124 0084 1A68     		ldr	r2, [r3]
+ 125 0086 22F00402 		bic	r2, r2, #4
+ 126 008a 1A60     		str	r2, [r3]
+  53:remote/rc_dbus.c ****     }
+  54:remote/rc_dbus.c **** }
+ 127              		.loc 1 54 1 view .LVU24
+ 128 008c 0DE0     		b	.L1
+ 129              	.L7:
+  45:remote/rc_dbus.c ****         (void)HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf));
+ 130              		.loc 1 45 9 is_stmt 1 view .LVU25
+ 131 008e 074C     		ldr	r4, .L8
+ 132 0090 2046     		mov	r0, r4
+ 133 0092 FFF7FEFF 		bl	HAL_UART_AbortReceive
+ 134              	.LVL1:
+  46:remote/rc_dbus.c ****     }
+ 135              		.loc 1 46 9 view .LVU26
+  46:remote/rc_dbus.c ****     }
+ 136              		.loc 1 46 15 is_stmt 0 view .LVU27
+ 137 0096 2422     		movs	r2, #36
+ 138 0098 0549     		ldr	r1, .L8+4
+ 139 009a 2046     		mov	r0, r4
+ 140 009c FFF7FEFF 		bl	HAL_UARTEx_ReceiveToIdle_DMA
+ 141              	.LVL2:
+ 142 00a0 B9E7     		b	.L2
+ 143              	.L4:
+  52:remote/rc_dbus.c ****     }
+ 144              		.loc 1 52 9 discriminator 29 view .LVU28
+ 145 00a2 1A68     		ldr	r2, [r3]
+ 146 00a4 22F00802 		bic	r2, r2, #8
+ 147 00a8 1A60     		str	r2, [r3]
+ 148              	.L1:
+ 149              		.loc 1 54 1 view .LVU29
+ 150 00aa 10BD     		pop	{r4, pc}
+ 151              	.L9:
+ 152              		.align	2
+ 153              	.L8:
+ 154 00ac 00000000 		.word	huart5
+ 155 00b0 00000000 		.word	dbus_buf
+ 156 00b4 10000240 		.word	1073872912
+ 157 00b8 28000240 		.word	1073872936
+ 158              		.cfi_endproc
+ 159              	.LFE146:
+ 161              		.section	.text.RC_Init,"ax",%progbits
+ 162              		.align	1
+ 163              		.global	RC_Init
+ 164              		.syntax unified
+ 165              		.thumb
+ 166              		.thumb_func
+ 168              	RC_Init:
+ 169              	.LFB147:
+  55:remote/rc_dbus.c **** 
+  56:remote/rc_dbus.c **** void RC_Init(void)
+  57:remote/rc_dbus.c **** {
+ 170              		.loc 1 57 1 is_stmt 1 view -0
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 5
+
+
+ 171              		.cfi_startproc
+ 172              		@ args = 0, pretend = 0, frame = 0
+ 173              		@ frame_needed = 0, uses_anonymous_args = 0
+ 174 0000 10B5     		push	{r4, lr}
+ 175              	.LCFI1:
+ 176              		.cfi_def_cfa_offset 8
+ 177              		.cfi_offset 4, -8
+ 178              		.cfi_offset 14, -4
+  58:remote/rc_dbus.c ****     memset(&RC_Data, 0, sizeof(RC_Data));
+ 179              		.loc 1 58 5 view .LVU31
+ 180 0002 054C     		ldr	r4, .L12
+ 181 0004 3022     		movs	r2, #48
+ 182 0006 0021     		movs	r1, #0
+ 183 0008 2046     		mov	r0, r4
+ 184 000a FFF7FEFF 		bl	memset
+ 185              	.LVL3:
+  59:remote/rc_dbus.c ****     RC_Data.online = 0;
+ 186              		.loc 1 59 5 view .LVU32
+  60:remote/rc_dbus.c ****     RC_Data.sw_swap = 1u;
+ 187              		.loc 1 60 5 view .LVU33
+ 188              		.loc 1 60 21 is_stmt 0 view .LVU34
+ 189 000e 0123     		movs	r3, #1
+ 190 0010 2373     		strb	r3, [r4, #12]
+  61:remote/rc_dbus.c ****     RC_StartReceive();
+ 191              		.loc 1 61 5 is_stmt 1 view .LVU35
+ 192 0012 FFF7FEFF 		bl	RC_StartReceive
+ 193              	.LVL4:
+  62:remote/rc_dbus.c **** }
+ 194              		.loc 1 62 1 is_stmt 0 view .LVU36
+ 195 0016 10BD     		pop	{r4, pc}
+ 196              	.L13:
+ 197              		.align	2
+ 198              	.L12:
+ 199 0018 00000000 		.word	RC_Data
+ 200              		.cfi_endproc
+ 201              	.LFE147:
+ 203              		.section	.text.RC_SwitchAutoName,"ax",%progbits
+ 204              		.align	1
+ 205              		.global	RC_SwitchAutoName
+ 206              		.syntax unified
+ 207              		.thumb
+ 208              		.thumb_func
+ 210              	RC_SwitchAutoName:
+ 211              	.LFB148:
+  63:remote/rc_dbus.c **** 
+  64:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+  65:remote/rc_dbus.c **** /* 18 字节帧完整解析（与大疆官方 sbus_to_rc() 逐位一致）                */
+  66:remote/rc_dbus.c **** /*   byte0~5  : 4 路摇杆×11bit + 2 路拨杆×2bit                         */
+  67:remote/rc_dbus.c **** /*   byte6~13 : 鼠标 x/y/z + 左右键                                    */
+  68:remote/rc_dbus.c **** /*   byte14~15: 键盘按键位图                                           */
+  69:remote/rc_dbus.c **** /*   byte16~17: 左拨轮(11bit)                                          */
+  70:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+  71:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+  72:remote/rc_dbus.c **** /* 拨杆位域自动判定（确定性，不需人工判读）                              */
+  73:remote/rc_dbus.c **** /*   实测法：把 DT7 左拨杆停在非中位、右拨杆保持中位，持续 1 秒。        
+  74:remote/rc_dbus.c **** /*   这一秒内“稳定处于非中位”的那个位域 = 物理左拨杆 → 自动置 sw_swap
+  75:remote/rc_dbus.c **** /*   只在 sw_auto_window_ms 内开放，判定成功即永久锁定。                 */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 6
+
+
+  76:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+  77:remote/rc_dbus.c **** #define RC_SW_AUTO_HOLD_MS      1000    /* 条件需连续保持多少毫秒 */
+  78:remote/rc_dbus.c **** #define RC_SW_AUTO_WINDOW_MS    3000    /* 上电后多久内允许自动判定 */
+  79:remote/rc_dbus.c **** 
+  80:remote/rc_dbus.c **** #define RC_OBS_NONE      0              /* 两个位域都在中位 */
+  81:remote/rc_dbus.c **** #define RC_OBS_LO_MOVED  1              /* 只有 bit4~5 离开中位 */
+  82:remote/rc_dbus.c **** #define RC_OBS_HI_MOVED  2              /* 只有 bit6~7 离开中位 */
+  83:remote/rc_dbus.c **** #define RC_OBS_INVALID   3              /* 两个都离开中位 → 本段不计 */
+  84:remote/rc_dbus.c **** 
+  85:remote/rc_dbus.c **** void RC_SwitchAutoName(void)
+  86:remote/rc_dbus.c **** {
+ 212              		.loc 1 86 1 is_stmt 1 view -0
+ 213              		.cfi_startproc
+ 214              		@ args = 0, pretend = 0, frame = 0
+ 215              		@ frame_needed = 0, uses_anonymous_args = 0
+ 216 0000 10B5     		push	{r4, lr}
+ 217              	.LCFI2:
+ 218              		.cfi_def_cfa_offset 8
+ 219              		.cfi_offset 4, -8
+ 220              		.cfi_offset 14, -4
+  87:remote/rc_dbus.c ****     uint32_t now = HAL_GetTick();
+ 221              		.loc 1 87 5 view .LVU38
+ 222              		.loc 1 87 20 is_stmt 0 view .LVU39
+ 223 0002 FFF7FEFF 		bl	HAL_GetTick
+ 224              	.LVL5:
+  88:remote/rc_dbus.c **** 
+  89:remote/rc_dbus.c ****     if (RC_Data.sw_auto_done)
+ 225              		.loc 1 89 5 is_stmt 1 view .LVU40
+ 226              		.loc 1 89 16 is_stmt 0 view .LVU41
+ 227 0006 374B     		ldr	r3, .L38
+ 228 0008 9A7E     		ldrb	r2, [r3, #26]	@ zero_extendqisi2
+ 229              		.loc 1 89 8 view .LVU42
+ 230 000a 002A     		cmp	r2, #0
+ 231 000c 67D1     		bne	.L14
+  90:remote/rc_dbus.c ****     {
+  91:remote/rc_dbus.c ****         return;                                     /* 已锁定，永不改写 */
+  92:remote/rc_dbus.c ****     }
+  93:remote/rc_dbus.c **** 
+  94:remote/rc_dbus.c ****     /* 第一帧到达时开判定窗口（此前的上电时间不计入窗口） */
+  95:remote/rc_dbus.c ****     if (RC_Data.sw_first_frame_ms == 0)
+ 232              		.loc 1 95 5 is_stmt 1 view .LVU43
+ 233              		.loc 1 95 16 is_stmt 0 view .LVU44
+ 234 000e 5B6A     		ldr	r3, [r3, #36]
+ 235              		.loc 1 95 8 view .LVU45
+ 236 0010 3BB9     		cbnz	r3, .L16
+  96:remote/rc_dbus.c ****     {
+  97:remote/rc_dbus.c ****         RC_Data.sw_first_frame_ms = now ? now : 1u;
+ 237              		.loc 1 97 9 is_stmt 1 view .LVU46
+ 238              		.loc 1 97 47 is_stmt 0 view .LVU47
+ 239 0012 70B3     		cbz	r0, .L27
+ 240              		.loc 1 97 47 discriminator 1 view .LVU48
+ 241 0014 0146     		mov	r1, r0
+ 242              	.L17:
+ 243              		.loc 1 97 35 discriminator 4 view .LVU49
+ 244 0016 334B     		ldr	r3, .L38
+ 245 0018 5962     		str	r1, [r3, #36]
+  98:remote/rc_dbus.c ****         RC_Data.sw_obs_start_ms   = 0;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 7
+
+
+ 246              		.loc 1 98 9 is_stmt 1 view .LVU50
+ 247              		.loc 1 98 35 is_stmt 0 view .LVU51
+ 248 001a 0021     		movs	r1, #0
+ 249 001c 1962     		str	r1, [r3, #32]
+  99:remote/rc_dbus.c ****         RC_Data.sw_obs_last       = RC_OBS_NONE;
+ 250              		.loc 1 99 9 is_stmt 1 view .LVU52
+ 251              		.loc 1 99 35 is_stmt 0 view .LVU53
+ 252 001e 1977     		strb	r1, [r3, #28]
+ 100:remote/rc_dbus.c ****         RC_Data.sw_obs_hold       = 0;
+ 253              		.loc 1 100 9 is_stmt 1 view .LVU54
+ 254              		.loc 1 100 35 is_stmt 0 view .LVU55
+ 255 0020 5977     		strb	r1, [r3, #29]
+ 256              	.L16:
+ 101:remote/rc_dbus.c ****     }
+ 102:remote/rc_dbus.c **** 
+ 103:remote/rc_dbus.c ****     if ((now - RC_Data.sw_first_frame_ms) > RC_SW_AUTO_WINDOW_MS)
+ 257              		.loc 1 103 5 is_stmt 1 view .LVU56
+ 258              		.loc 1 103 23 is_stmt 0 view .LVU57
+ 259 0022 304B     		ldr	r3, .L38
+ 260 0024 5B6A     		ldr	r3, [r3, #36]
+ 261              		.loc 1 103 14 view .LVU58
+ 262 0026 C31A     		subs	r3, r0, r3
+ 263              		.loc 1 103 8 view .LVU59
+ 264 0028 40F6B831 		movw	r1, #3000
+ 265 002c 8B42     		cmp	r3, r1
+ 266 002e 56D8     		bhi	.L14
+ 104:remote/rc_dbus.c ****     {
+ 105:remote/rc_dbus.c ****         return;                                     /* 窗口已过 → 保持默认，永久放弃
+ 106:remote/rc_dbus.c ****     }
+ 107:remote/rc_dbus.c **** 
+ 108:remote/rc_dbus.c ****     /* 本帧观测：必须“恰好一个位域非中位”才有信息量 */
+ 109:remote/rc_dbus.c ****     uint8_t lo_mid = (RC_Data.sw_lo2 == RC_SW_MID) ? 1u : 0u;
+ 267              		.loc 1 109 5 is_stmt 1 view .LVU60
+ 268              		.loc 1 109 30 is_stmt 0 view .LVU61
+ 269 0030 2C4B     		ldr	r3, .L38
+ 270 0032 DB7A     		ldrb	r3, [r3, #11]	@ zero_extendqisi2
+ 271              		.loc 1 109 13 view .LVU62
+ 272 0034 032B     		cmp	r3, #3
+ 273 0036 1ED0     		beq	.L35
+ 274              		.loc 1 109 13 discriminator 2 view .LVU63
+ 275 0038 1346     		mov	r3, r2
+ 276              	.L18:
+ 277              	.LVL6:
+ 110:remote/rc_dbus.c ****     uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
+ 278              		.loc 1 110 5 is_stmt 1 view .LVU64
+ 279              		.loc 1 110 30 is_stmt 0 view .LVU65
+ 280 003a 2A49     		ldr	r1, .L38
+ 281 003c 897A     		ldrb	r1, [r1, #10]	@ zero_extendqisi2
+ 282              		.loc 1 110 13 view .LVU66
+ 283 003e 0329     		cmp	r1, #3
+ 284 0040 1BD0     		beq	.L36
+ 285              		.loc 1 110 13 discriminator 2 view .LVU67
+ 286 0042 1146     		mov	r1, r2
+ 287              	.L19:
+ 288              	.LVL7:
+ 111:remote/rc_dbus.c ****     uint8_t obs;
+ 289              		.loc 1 111 5 is_stmt 1 view .LVU68
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 8
+
+
+ 112:remote/rc_dbus.c **** 
+ 113:remote/rc_dbus.c ****     if (lo_mid && hi_mid)        obs = RC_OBS_NONE;
+ 290              		.loc 1 113 5 view .LVU69
+ 291              		.loc 1 113 9 is_stmt 0 view .LVU70
+ 292 0044 03F0010E 		and	lr, r3, #1
+ 293              		.loc 1 113 16 view .LVU71
+ 294 0048 01F0010C 		and	ip, r1, #1
+ 295              		.loc 1 113 8 view .LVU72
+ 296 004c 13EA0C0F 		tst	r3, ip
+ 297 0050 15D1     		bne	.L30
+ 114:remote/rc_dbus.c ****     else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
+ 298              		.loc 1 114 10 is_stmt 1 view .LVU73
+ 299              		.loc 1 114 14 is_stmt 0 view .LVU74
+ 300 0052 C3F30003 		ubfx	r3, r3, #0, #1
+ 301              	.LVL8:
+ 302              		.loc 1 114 14 view .LVU75
+ 303 0056 83F00103 		eor	r3, r3, #1
+ 304              		.loc 1 114 13 view .LVU76
+ 305 005a 13EA0C0F 		tst	r3, ip
+ 306 005e 2FD1     		bne	.L31
+ 115:remote/rc_dbus.c ****     else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
+ 307              		.loc 1 115 10 is_stmt 1 view .LVU77
+ 308              		.loc 1 115 24 is_stmt 0 view .LVU78
+ 309 0060 C1F30001 		ubfx	r1, r1, #0, #1
+ 310              	.LVL9:
+ 311              		.loc 1 115 24 view .LVU79
+ 312 0064 81F00101 		eor	r1, r1, #1
+ 313              		.loc 1 115 13 view .LVU80
+ 314 0068 11EA0E0F 		tst	r1, lr
+ 315 006c 2AD0     		beq	.L32
+ 316              		.loc 1 115 38 discriminator 1 view .LVU81
+ 317 006e 0223     		movs	r3, #2
+ 318 0070 06E0     		b	.L20
+ 319              	.LVL10:
+ 320              	.L27:
+  97:remote/rc_dbus.c ****         RC_Data.sw_obs_start_ms   = 0;
+ 321              		.loc 1 97 47 discriminator 2 view .LVU82
+ 322 0072 0121     		movs	r1, #1
+ 323 0074 CFE7     		b	.L17
+ 324              	.L35:
+ 109:remote/rc_dbus.c ****     uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
+ 325              		.loc 1 109 13 discriminator 1 view .LVU83
+ 326 0076 0123     		movs	r3, #1
+ 327 0078 DFE7     		b	.L18
+ 328              	.LVL11:
+ 329              	.L36:
+ 110:remote/rc_dbus.c ****     uint8_t obs;
+ 330              		.loc 1 110 13 discriminator 1 view .LVU84
+ 331 007a 0121     		movs	r1, #1
+ 332 007c E2E7     		b	.L19
+ 333              	.LVL12:
+ 334              	.L30:
+ 113:remote/rc_dbus.c ****     else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
+ 335              		.loc 1 113 38 discriminator 1 view .LVU85
+ 336 007e 1346     		mov	r3, r2
+ 337              	.LVL13:
+ 338              	.L20:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 9
+
+
+ 116:remote/rc_dbus.c ****     else                         obs = RC_OBS_INVALID;
+ 117:remote/rc_dbus.c **** 
+ 118:remote/rc_dbus.c ****     if ((obs != RC_Data.sw_obs_last) || (obs == RC_OBS_NONE) || (obs == RC_OBS_INVALID))
+ 339              		.loc 1 118 5 is_stmt 1 view .LVU86
+ 340              		.loc 1 118 24 is_stmt 0 view .LVU87
+ 341 0080 1849     		ldr	r1, .L38
+ 342 0082 097F     		ldrb	r1, [r1, #28]	@ zero_extendqisi2
+ 343              		.loc 1 118 8 view .LVU88
+ 344 0084 9942     		cmp	r1, r3
+ 345 0086 1FD1     		bne	.L21
+ 346              		.loc 1 118 70 discriminator 1 view .LVU89
+ 347 0088 032B     		cmp	r3, #3
+ 348 008a 14BF     		ite	ne
+ 349 008c 0021     		movne	r1, #0
+ 350 008e 0121     		moveq	r1, #1
+ 351              		.loc 1 118 62 discriminator 1 view .LVU90
+ 352 0090 D3B1     		cbz	r3, .L21
+ 353 0092 C9B9     		cbnz	r1, .L21
+ 119:remote/rc_dbus.c ****     {
+ 120:remote/rc_dbus.c ****         /* 观测状态变了（或本段无信息量）→ 重新开始计时 */
+ 121:remote/rc_dbus.c ****         RC_Data.sw_obs_last     = obs;
+ 122:remote/rc_dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ 123:remote/rc_dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 124:remote/rc_dbus.c ****         return;
+ 125:remote/rc_dbus.c ****     }
+ 126:remote/rc_dbus.c **** 
+ 127:remote/rc_dbus.c ****     if (RC_Data.sw_obs_hold < 250u)
+ 354              		.loc 1 127 5 is_stmt 1 view .LVU91
+ 355              		.loc 1 127 16 is_stmt 0 view .LVU92
+ 356 0094 1349     		ldr	r1, .L38
+ 357 0096 497F     		ldrb	r1, [r1, #29]	@ zero_extendqisi2
+ 358              		.loc 1 127 8 view .LVU93
+ 359 0098 F929     		cmp	r1, #249
+ 360 009a 02D8     		bhi	.L25
+ 128:remote/rc_dbus.c ****     {
+ 129:remote/rc_dbus.c ****         RC_Data.sw_obs_hold++;
+ 361              		.loc 1 129 9 is_stmt 1 view .LVU94
+ 362              		.loc 1 129 28 is_stmt 0 view .LVU95
+ 363 009c 0131     		adds	r1, r1, #1
+ 364 009e 114C     		ldr	r4, .L38
+ 365 00a0 6177     		strb	r1, [r4, #29]
+ 366              	.L25:
+ 130:remote/rc_dbus.c ****     }
+ 131:remote/rc_dbus.c **** 
+ 132:remote/rc_dbus.c ****     if (((RC_Data.sw_obs_start_ms != 0u) ? (now - RC_Data.sw_obs_start_ms)
+ 367              		.loc 1 132 5 is_stmt 1 view .LVU96
+ 368              		.loc 1 132 18 is_stmt 0 view .LVU97
+ 369 00a2 1049     		ldr	r1, .L38
+ 370 00a4 096A     		ldr	r1, [r1, #32]
+ 371              		.loc 1 132 8 view .LVU98
+ 372 00a6 D1B1     		cbz	r1, .L14
+ 373              		.loc 1 132 49 discriminator 1 view .LVU99
+ 374 00a8 401A     		subs	r0, r0, r1
+ 375              	.LVL14:
+ 133:remote/rc_dbus.c ****                                         : 0u) >= RC_SW_AUTO_HOLD_MS)
+ 376              		.loc 1 133 47 view .LVU100
+ 377 00aa B0F57A7F 		cmp	r0, #1000
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 10
+
+
+ 378 00ae 16D3     		bcc	.L14
+ 134:remote/rc_dbus.c ****     {
+ 135:remote/rc_dbus.c ****         /* 连续 1 秒只有一方离开中位 → 判定完成并永久锁定 */
+ 136:remote/rc_dbus.c ****         RC_Data.sw_auto_result = (obs == RC_OBS_HI_MOVED) ? 1u : 0u;
+ 379              		.loc 1 136 9 is_stmt 1 view .LVU101
+ 380              		.loc 1 136 32 is_stmt 0 view .LVU102
+ 381 00b0 022B     		cmp	r3, #2
+ 382 00b2 15D0     		beq	.L37
+ 383              	.L26:
+ 384              		.loc 1 136 32 discriminator 4 view .LVU103
+ 385 00b4 0B4B     		ldr	r3, .L38
+ 386              	.LVL15:
+ 387              		.loc 1 136 32 discriminator 4 view .LVU104
+ 388 00b6 DA76     		strb	r2, [r3, #27]
+ 137:remote/rc_dbus.c ****         RC_Data.sw_swap        = RC_Data.sw_auto_result;
+ 389              		.loc 1 137 9 is_stmt 1 view .LVU105
+ 390              		.loc 1 137 32 is_stmt 0 view .LVU106
+ 391 00b8 1A73     		strb	r2, [r3, #12]
+ 138:remote/rc_dbus.c ****         RC_Data.sw_auto_done   = 1u;
+ 392              		.loc 1 138 9 is_stmt 1 view .LVU107
+ 393              		.loc 1 138 32 is_stmt 0 view .LVU108
+ 394 00ba 0122     		movs	r2, #1
+ 395 00bc 9A76     		strb	r2, [r3, #26]
+ 396 00be 0EE0     		b	.L14
+ 397              	.LVL16:
+ 398              	.L31:
+ 114:remote/rc_dbus.c ****     else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
+ 399              		.loc 1 114 38 discriminator 1 view .LVU109
+ 400 00c0 0123     		movs	r3, #1
+ 401 00c2 DDE7     		b	.L20
+ 402              	.LVL17:
+ 403              	.L32:
+ 116:remote/rc_dbus.c **** 
+ 404              		.loc 1 116 38 view .LVU110
+ 405 00c4 0323     		movs	r3, #3
+ 406 00c6 DBE7     		b	.L20
+ 407              	.LVL18:
+ 408              	.L21:
+ 121:remote/rc_dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ 409              		.loc 1 121 9 is_stmt 1 view .LVU111
+ 121:remote/rc_dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ 410              		.loc 1 121 33 is_stmt 0 view .LVU112
+ 411 00c8 064A     		ldr	r2, .L38
+ 412 00ca 1377     		strb	r3, [r2, #28]
+ 122:remote/rc_dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 413              		.loc 1 122 9 is_stmt 1 view .LVU113
+ 122:remote/rc_dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 414              		.loc 1 122 33 is_stmt 0 view .LVU114
+ 415 00cc 0021     		movs	r1, #0
+ 416 00ce 5177     		strb	r1, [r2, #29]
+ 123:remote/rc_dbus.c ****         return;
+ 417              		.loc 1 123 9 is_stmt 1 view .LVU115
+ 123:remote/rc_dbus.c ****         return;
+ 418              		.loc 1 123 59 is_stmt 0 view .LVU116
+ 419 00d0 013B     		subs	r3, r3, #1
+ 420              	.LVL19:
+ 123:remote/rc_dbus.c ****         return;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 11
+
+
+ 421              		.loc 1 123 59 view .LVU117
+ 422 00d2 DBB2     		uxtb	r3, r3
+ 123:remote/rc_dbus.c ****         return;
+ 423              		.loc 1 123 92 view .LVU118
+ 424 00d4 012B     		cmp	r3, #1
+ 425 00d6 00D9     		bls	.L24
+ 123:remote/rc_dbus.c ****         return;
+ 426              		.loc 1 123 92 discriminator 2 view .LVU119
+ 427 00d8 0846     		mov	r0, r1
+ 428              	.LVL20:
+ 429              	.L24:
+ 123:remote/rc_dbus.c ****         return;
+ 430              		.loc 1 123 33 discriminator 4 view .LVU120
+ 431 00da 024B     		ldr	r3, .L38
+ 432 00dc 1862     		str	r0, [r3, #32]
+ 124:remote/rc_dbus.c ****     }
+ 433              		.loc 1 124 9 is_stmt 1 view .LVU121
+ 434              	.LVL21:
+ 435              	.L14:
+ 139:remote/rc_dbus.c ****     }
+ 140:remote/rc_dbus.c **** }
+ 436              		.loc 1 140 1 is_stmt 0 view .LVU122
+ 437 00de 10BD     		pop	{r4, pc}
+ 438              	.LVL22:
+ 439              	.L37:
+ 136:remote/rc_dbus.c ****         RC_Data.sw_swap        = RC_Data.sw_auto_result;
+ 440              		.loc 1 136 32 discriminator 1 view .LVU123
+ 441 00e0 0122     		movs	r2, #1
+ 442 00e2 E7E7     		b	.L26
+ 443              	.L39:
+ 444              		.align	2
+ 445              	.L38:
+ 446 00e4 00000000 		.word	RC_Data
+ 447              		.cfi_endproc
+ 448              	.LFE148:
+ 450              		.section	.text.RC_Decode,"ax",%progbits
+ 451              		.align	1
+ 452              		.global	RC_Decode
+ 453              		.syntax unified
+ 454              		.thumb
+ 455              		.thumb_func
+ 457              	RC_Decode:
+ 458              	.LVL23:
+ 459              	.LFB149:
+ 141:remote/rc_dbus.c **** 
+ 142:remote/rc_dbus.c **** void RC_Decode(uint8_t *b)
+ 143:remote/rc_dbus.c **** {
+ 460              		.loc 1 143 1 is_stmt 1 view -0
+ 461              		.cfi_startproc
+ 462              		@ args = 0, pretend = 0, frame = 0
+ 463              		@ frame_needed = 0, uses_anonymous_args = 0
+ 464              		.loc 1 143 1 is_stmt 0 view .LVU125
+ 465 0000 38B5     		push	{r3, r4, r5, lr}
+ 466              	.LCFI3:
+ 467              		.cfi_def_cfa_offset 16
+ 468              		.cfi_offset 3, -16
+ 469              		.cfi_offset 4, -12
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 12
+
+
+ 470              		.cfi_offset 5, -8
+ 471              		.cfi_offset 14, -4
+ 472 0002 0446     		mov	r4, r0
+ 144:remote/rc_dbus.c ****     /* ---- 4 路摇杆 × 11bit，LSB 先 / 小端顺序打包 ---- */
+ 145:remote/rc_dbus.c ****     RC_Data.ch[0] = (uint16_t)(b[0]            | ((uint16_t)b[1] << 8))                 & 0x07FF;
+ 473              		.loc 1 145 5 is_stmt 1 view .LVU126
+ 474              		.loc 1 145 33 is_stmt 0 view .LVU127
+ 475 0004 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 476              		.loc 1 145 62 view .LVU128
+ 477 0006 4278     		ldrb	r2, [r0, #1]	@ zero_extendqisi2
+ 478              		.loc 1 145 48 view .LVU129
+ 479 0008 43EA0223 		orr	r3, r3, r2, lsl #8
+ 480              		.loc 1 145 89 view .LVU130
+ 481 000c C3F30A03 		ubfx	r3, r3, #0, #11
+ 482              		.loc 1 145 19 view .LVU131
+ 483 0010 2D4D     		ldr	r5, .L44
+ 484 0012 2B80     		strh	r3, [r5]	@ movhi
+ 146:remote/rc_dbus.c ****     RC_Data.ch[1] = (uint16_t)((b[1] >> 3)     | ((uint16_t)b[2] << 5))                 & 0x07FF;
+ 485              		.loc 1 146 5 is_stmt 1 view .LVU132
+ 486              		.loc 1 146 34 is_stmt 0 view .LVU133
+ 487 0014 4278     		ldrb	r2, [r0, #1]	@ zero_extendqisi2
+ 488              		.loc 1 146 62 view .LVU134
+ 489 0016 8378     		ldrb	r3, [r0, #2]	@ zero_extendqisi2
+ 490              		.loc 1 146 48 view .LVU135
+ 491 0018 5B01     		lsls	r3, r3, #5
+ 492 001a 43EAD203 		orr	r3, r3, r2, lsr #3
+ 493              		.loc 1 146 89 view .LVU136
+ 494 001e C3F30A03 		ubfx	r3, r3, #0, #11
+ 495              		.loc 1 146 19 view .LVU137
+ 496 0022 6B80     		strh	r3, [r5, #2]	@ movhi
+ 147:remote/rc_dbus.c ****     RC_Data.ch[2] = (uint16_t)((b[2] >> 6)     | ((uint16_t)b[3] << 2) | ((uint16_t)b[4] << 10)) & 
+ 497              		.loc 1 147 5 is_stmt 1 view .LVU138
+ 498              		.loc 1 147 34 is_stmt 0 view .LVU139
+ 499 0024 8278     		ldrb	r2, [r0, #2]	@ zero_extendqisi2
+ 500              		.loc 1 147 62 view .LVU140
+ 501 0026 C378     		ldrb	r3, [r0, #3]	@ zero_extendqisi2
+ 502              		.loc 1 147 48 view .LVU141
+ 503 0028 9B00     		lsls	r3, r3, #2
+ 504 002a 43EA9213 		orr	r3, r3, r2, lsr #6
+ 505              		.loc 1 147 86 view .LVU142
+ 506 002e 0279     		ldrb	r2, [r0, #4]	@ zero_extendqisi2
+ 507              		.loc 1 147 72 view .LVU143
+ 508 0030 43EA8223 		orr	r3, r3, r2, lsl #10
+ 509              		.loc 1 147 98 view .LVU144
+ 510 0034 C3F30A03 		ubfx	r3, r3, #0, #11
+ 511              		.loc 1 147 19 view .LVU145
+ 512 0038 AB80     		strh	r3, [r5, #4]	@ movhi
+ 148:remote/rc_dbus.c ****     RC_Data.ch[3] = (uint16_t)((b[4] >> 1)     | ((uint16_t)b[5] << 7))                 & 0x07FF;
+ 513              		.loc 1 148 5 is_stmt 1 view .LVU146
+ 514              		.loc 1 148 34 is_stmt 0 view .LVU147
+ 515 003a 0279     		ldrb	r2, [r0, #4]	@ zero_extendqisi2
+ 516              		.loc 1 148 62 view .LVU148
+ 517 003c 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
+ 518              		.loc 1 148 48 view .LVU149
+ 519 003e DB01     		lsls	r3, r3, #7
+ 520 0040 43EA5203 		orr	r3, r3, r2, lsr #1
+ 521              		.loc 1 148 89 view .LVU150
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 13
+
+
+ 522 0044 C3F30A03 		ubfx	r3, r3, #0, #11
+ 523              		.loc 1 148 19 view .LVU151
+ 524 0048 EB80     		strh	r3, [r5, #6]	@ movhi
+ 149:remote/rc_dbus.c **** 
+ 150:remote/rc_dbus.c ****     /* ---- 2 路拨杆，各 2bit，放在 b[5] 的高 4 位 ----
+ 151:remote/rc_dbus.c ****      * 与官方 RC_ctrl_t.s[] 的对应关系（位运算不动，命名靠 sw_swap 调）：
+ 152:remote/rc_dbus.c ****      *   sw_lo2 = (b[5]>>4)&0x03       = 官方 s[0]（bit4~5）
+ 153:remote/rc_dbus.c ****      *   sw_hi2 = ((b[5]>>4)&0x0C)>>2  = 官方 s[1]（bit6~7）
+ 154:remote/rc_dbus.c ****      * 官方 s[0]/s[1] 哪个是物理左拨杆有版本分歧，用 sw_swap 一次性量准
+ 155:remote/rc_dbus.c ****      * （见 rc_dbus.h 的 ★验证法，位运算本身不用动）*/
+ 156:remote/rc_dbus.c ****     RC_Data.sw_lo2 = RC_SW_BITS_LO(b[5]);
+ 525              		.loc 1 156 5 is_stmt 1 view .LVU152
+ 526              		.loc 1 156 22 is_stmt 0 view .LVU153
+ 527 004a 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
+ 528 004c C3F30113 		ubfx	r3, r3, #4, #2
+ 529              		.loc 1 156 20 view .LVU154
+ 530 0050 EB72     		strb	r3, [r5, #11]
+ 157:remote/rc_dbus.c ****     RC_Data.sw_hi2 = RC_SW_BITS_HI(b[5]);
+ 531              		.loc 1 157 5 is_stmt 1 view .LVU155
+ 532              		.loc 1 157 22 is_stmt 0 view .LVU156
+ 533 0052 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
+ 534 0054 9B09     		lsrs	r3, r3, #6
+ 535              		.loc 1 157 20 view .LVU157
+ 536 0056 AB72     		strb	r3, [r5, #10]
+ 158:remote/rc_dbus.c **** 
+ 159:remote/rc_dbus.c ****     /* ---- 拨杆位域自动判定：必须在下面的命名映射之前调用，判定结果当
+ 160:remote/rc_dbus.c ****      * 实测法（上电后 3 秒内做一次即可）：把左拨杆停在“上”或“下”�
+ 161:remote/rc_dbus.c ****      * 保持右拨杆在中位不动，持续约 1 秒 → sw_auto_done 变 1、sw_swap 自动定�
+ 162:remote/rc_dbus.c ****     RC_SwitchAutoName();
+ 537              		.loc 1 162 5 is_stmt 1 view .LVU158
+ 538 0058 FFF7FEFF 		bl	RC_SwitchAutoName
+ 539              	.LVL24:
+ 163:remote/rc_dbus.c **** 
+ 164:remote/rc_dbus.c ****     if (RC_Data.sw_swap)
+ 540              		.loc 1 164 5 view .LVU159
+ 541              		.loc 1 164 16 is_stmt 0 view .LVU160
+ 542 005c 2B7B     		ldrb	r3, [r5, #12]	@ zero_extendqisi2
+ 543              		.loc 1 164 8 view .LVU161
+ 544 005e 002B     		cmp	r3, #0
+ 545 0060 2CD0     		beq	.L41
+ 165:remote/rc_dbus.c ****     {
+ 166:remote/rc_dbus.c ****         RC_Data.s_left  = RC_Data.sw_hi2;
+ 546              		.loc 1 166 9 is_stmt 1 view .LVU162
+ 547              		.loc 1 166 34 is_stmt 0 view .LVU163
+ 548 0062 AA7A     		ldrb	r2, [r5, #10]	@ zero_extendqisi2
+ 549              		.loc 1 166 25 view .LVU164
+ 550 0064 2A72     		strb	r2, [r5, #8]
+ 167:remote/rc_dbus.c ****         RC_Data.s_right = RC_Data.sw_lo2;
+ 551              		.loc 1 167 9 is_stmt 1 view .LVU165
+ 552              		.loc 1 167 34 is_stmt 0 view .LVU166
+ 553 0066 EA7A     		ldrb	r2, [r5, #11]	@ zero_extendqisi2
+ 554              		.loc 1 167 25 view .LVU167
+ 555 0068 6A72     		strb	r2, [r5, #9]
+ 556              	.L42:
+ 168:remote/rc_dbus.c ****     }
+ 169:remote/rc_dbus.c ****     else
+ 170:remote/rc_dbus.c ****     {
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 14
+
+
+ 171:remote/rc_dbus.c ****         RC_Data.s_left  = RC_Data.sw_lo2;
+ 172:remote/rc_dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 173:remote/rc_dbus.c ****     }
+ 174:remote/rc_dbus.c **** 
+ 175:remote/rc_dbus.c ****     /* ---- 鼠标 + 键盘（完整解出，保证整帧 18 字节全覆盖）----
+ 176:remote/rc_dbus.c ****      * 控制层暂不使用，但解出后可在调试器里核验通信正确性 */
+ 177:remote/rc_dbus.c ****     RC_Data.mouse.x        = (int16_t)(b[6]  | ((uint16_t)b[7]  << 8));
+ 557              		.loc 1 177 5 is_stmt 1 view .LVU168
+ 558              		.loc 1 177 41 is_stmt 0 view .LVU169
+ 559 006a A379     		ldrb	r3, [r4, #6]	@ zero_extendqisi2
+ 560              		.loc 1 177 60 view .LVU170
+ 561 006c E279     		ldrb	r2, [r4, #7]	@ zero_extendqisi2
+ 562              		.loc 1 177 30 view .LVU171
+ 563 006e 43EA0223 		orr	r3, r3, r2, lsl #8
+ 564              		.loc 1 177 28 view .LVU172
+ 565 0072 154D     		ldr	r5, .L44
+ 566 0074 2B82     		strh	r3, [r5, #16]	@ movhi
+ 178:remote/rc_dbus.c ****     RC_Data.mouse.y        = (int16_t)(b[8]  | ((uint16_t)b[9]  << 8));
+ 567              		.loc 1 178 5 is_stmt 1 view .LVU173
+ 568              		.loc 1 178 41 is_stmt 0 view .LVU174
+ 569 0076 237A     		ldrb	r3, [r4, #8]	@ zero_extendqisi2
+ 570              		.loc 1 178 60 view .LVU175
+ 571 0078 627A     		ldrb	r2, [r4, #9]	@ zero_extendqisi2
+ 572              		.loc 1 178 30 view .LVU176
+ 573 007a 43EA0223 		orr	r3, r3, r2, lsl #8
+ 574              		.loc 1 178 28 view .LVU177
+ 575 007e 6B82     		strh	r3, [r5, #18]	@ movhi
+ 179:remote/rc_dbus.c ****     RC_Data.mouse.z        = (int16_t)((b[10] | ((uint16_t)b[11] << 8)) & 0x07FF); /* 官方未掩�
+ 576              		.loc 1 179 5 is_stmt 1 view .LVU178
+ 577              		.loc 1 179 42 is_stmt 0 view .LVU179
+ 578 0080 A37A     		ldrb	r3, [r4, #10]	@ zero_extendqisi2
+ 579              		.loc 1 179 61 view .LVU180
+ 580 0082 E27A     		ldrb	r2, [r4, #11]	@ zero_extendqisi2
+ 581              		.loc 1 179 30 view .LVU181
+ 582 0084 1202     		lsls	r2, r2, #8
+ 583 0086 12B2     		sxth	r2, r2
+ 584              		.loc 1 179 47 view .LVU182
+ 585 0088 1343     		orrs	r3, r3, r2
+ 586              		.loc 1 179 30 view .LVU183
+ 587 008a C3F30A03 		ubfx	r3, r3, #0, #11
+ 588              		.loc 1 179 28 view .LVU184
+ 589 008e AB82     		strh	r3, [r5, #20]	@ movhi
+ 180:remote/rc_dbus.c ****     RC_Data.mouse.press_l  = b[12];
+ 590              		.loc 1 180 5 is_stmt 1 view .LVU185
+ 591              		.loc 1 180 28 is_stmt 0 view .LVU186
+ 592 0090 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 593 0092 AB75     		strb	r3, [r5, #22]
+ 181:remote/rc_dbus.c ****     RC_Data.mouse.press_r  = b[13];
+ 594              		.loc 1 181 5 is_stmt 1 view .LVU187
+ 595              		.loc 1 181 28 is_stmt 0 view .LVU188
+ 596 0094 637B     		ldrb	r3, [r4, #13]	@ zero_extendqisi2
+ 597 0096 EB75     		strb	r3, [r5, #23]
+ 182:remote/rc_dbus.c ****     RC_Data.key_v          = b[14];
+ 598              		.loc 1 182 5 is_stmt 1 view .LVU189
+ 599              		.loc 1 182 28 is_stmt 0 view .LVU190
+ 600 0098 A37B     		ldrb	r3, [r4, #14]	@ zero_extendqisi2
+ 601 009a 2B76     		strb	r3, [r5, #24]
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 15
+
+
+ 183:remote/rc_dbus.c ****     RC_Data.key_h          = b[15];
+ 602              		.loc 1 183 5 is_stmt 1 view .LVU191
+ 603              		.loc 1 183 28 is_stmt 0 view .LVU192
+ 604 009c E37B     		ldrb	r3, [r4, #15]	@ zero_extendqisi2
+ 605 009e 6B76     		strb	r3, [r5, #25]
+ 184:remote/rc_dbus.c **** 
+ 185:remote/rc_dbus.c ****     /* ---- 左拨轮：11bit。官方 sbus_to_rc 未对 wheel 掩码；
+ 186:remote/rc_dbus.c ****      * 此处 &0x07FF 为防御性加固——切掉 b[17] 高 5 位未定义脏位，
+ 187:remote/rc_dbus.c ****      * 合法帧恒等、异常帧不会把脏位当有效值 ---- */
+ 188:remote/rc_dbus.c ****     RC_Data.wheel = (uint16_t)((b[16] | ((uint16_t)b[17] << 8)) & 0x07FF);
+ 606              		.loc 1 188 5 is_stmt 1 view .LVU193
+ 607              		.loc 1 188 34 is_stmt 0 view .LVU194
+ 608 00a0 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+ 609              		.loc 1 188 53 view .LVU195
+ 610 00a2 627C     		ldrb	r2, [r4, #17]	@ zero_extendqisi2
+ 611              		.loc 1 188 39 view .LVU196
+ 612 00a4 43EA0223 		orr	r3, r3, r2, lsl #8
+ 613              		.loc 1 188 21 view .LVU197
+ 614 00a8 C3F30A03 		ubfx	r3, r3, #0, #11
+ 615              		.loc 1 188 19 view .LVU198
+ 616 00ac EB81     		strh	r3, [r5, #14]	@ movhi
+ 189:remote/rc_dbus.c **** 
+ 190:remote/rc_dbus.c ****     RC_Data.last_tick = HAL_GetTick();
+ 617              		.loc 1 190 5 is_stmt 1 view .LVU199
+ 618              		.loc 1 190 25 is_stmt 0 view .LVU200
+ 619 00ae FFF7FEFF 		bl	HAL_GetTick
+ 620              	.LVL25:
+ 621              		.loc 1 190 23 discriminator 1 view .LVU201
+ 622 00b2 A862     		str	r0, [r5, #40]
+ 191:remote/rc_dbus.c ****     RC_Data.online = 1;
+ 623              		.loc 1 191 5 is_stmt 1 view .LVU202
+ 624              		.loc 1 191 20 is_stmt 0 view .LVU203
+ 625 00b4 0123     		movs	r3, #1
+ 626 00b6 85F82C30 		strb	r3, [r5, #44]
+ 192:remote/rc_dbus.c **** }
+ 627              		.loc 1 192 1 view .LVU204
+ 628 00ba 38BD     		pop	{r3, r4, r5, pc}
+ 629              	.LVL26:
+ 630              	.L41:
+ 171:remote/rc_dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 631              		.loc 1 171 9 is_stmt 1 view .LVU205
+ 171:remote/rc_dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 632              		.loc 1 171 34 is_stmt 0 view .LVU206
+ 633 00bc 024B     		ldr	r3, .L44
+ 634 00be DA7A     		ldrb	r2, [r3, #11]	@ zero_extendqisi2
+ 171:remote/rc_dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 635              		.loc 1 171 25 view .LVU207
+ 636 00c0 1A72     		strb	r2, [r3, #8]
+ 172:remote/rc_dbus.c ****     }
+ 637              		.loc 1 172 9 is_stmt 1 view .LVU208
+ 172:remote/rc_dbus.c ****     }
+ 638              		.loc 1 172 34 is_stmt 0 view .LVU209
+ 639 00c2 9A7A     		ldrb	r2, [r3, #10]	@ zero_extendqisi2
+ 172:remote/rc_dbus.c ****     }
+ 640              		.loc 1 172 25 view .LVU210
+ 641 00c4 5A72     		strb	r2, [r3, #9]
+ 642 00c6 D0E7     		b	.L42
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 16
+
+
+ 643              	.L45:
+ 644              		.align	2
+ 645              	.L44:
+ 646 00c8 00000000 		.word	RC_Data
+ 647              		.cfi_endproc
+ 648              	.LFE149:
+ 650              		.section	.text.RC_IsOnline,"ax",%progbits
+ 651              		.align	1
+ 652              		.global	RC_IsOnline
+ 653              		.syntax unified
+ 654              		.thumb
+ 655              		.thumb_func
+ 657              	RC_IsOnline:
+ 658              	.LVL27:
+ 659              	.LFB150:
+ 193:remote/rc_dbus.c **** 
+ 194:remote/rc_dbus.c **** uint8_t RC_IsOnline(uint32_t now_ms)
+ 195:remote/rc_dbus.c **** {
+ 660              		.loc 1 195 1 is_stmt 1 view -0
+ 661              		.cfi_startproc
+ 662              		@ args = 0, pretend = 0, frame = 0
+ 663              		@ frame_needed = 0, uses_anonymous_args = 0
+ 664              		@ link register save eliminated.
+ 196:remote/rc_dbus.c ****     if ((now_ms - RC_Data.last_tick) > RC_OFFLINE_MS)
+ 665              		.loc 1 196 5 view .LVU212
+ 666              		.loc 1 196 26 is_stmt 0 view .LVU213
+ 667 0000 064B     		ldr	r3, .L48
+ 668 0002 9B6A     		ldr	r3, [r3, #40]
+ 669              		.loc 1 196 17 view .LVU214
+ 670 0004 C01A     		subs	r0, r0, r3
+ 671              	.LVL28:
+ 672              		.loc 1 196 8 view .LVU215
+ 673 0006 6428     		cmp	r0, #100
+ 674 0008 03D9     		bls	.L47
+ 197:remote/rc_dbus.c ****         RC_Data.online = 0;
+ 675              		.loc 1 197 9 is_stmt 1 view .LVU216
+ 676              		.loc 1 197 24 is_stmt 0 view .LVU217
+ 677 000a 044B     		ldr	r3, .L48
+ 678 000c 0022     		movs	r2, #0
+ 679 000e 83F82C20 		strb	r2, [r3, #44]
+ 680              	.L47:
+ 198:remote/rc_dbus.c ****     return RC_Data.online;
+ 681              		.loc 1 198 5 is_stmt 1 view .LVU218
+ 199:remote/rc_dbus.c **** }
+ 682              		.loc 1 199 1 is_stmt 0 view .LVU219
+ 683 0012 024B     		ldr	r3, .L48
+ 684 0014 93F82C00 		ldrb	r0, [r3, #44]	@ zero_extendqisi2
+ 685 0018 7047     		bx	lr
+ 686              	.L49:
+ 687 001a 00BF     		.align	2
+ 688              	.L48:
+ 689 001c 00000000 		.word	RC_Data
+ 690              		.cfi_endproc
+ 691              	.LFE150:
+ 693              		.section	.text.RC_Norm,"ax",%progbits
+ 694              		.align	1
+ 695              		.global	RC_Norm
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 17
+
+
+ 696              		.syntax unified
+ 697              		.thumb
+ 698              		.thumb_func
+ 700              	RC_Norm:
+ 701              	.LVL29:
+ 702              	.LFB151:
+ 200:remote/rc_dbus.c **** 
+ 201:remote/rc_dbus.c **** /* 摇杆原始值 → -1.0 ~ +1.0（带死区） */
+ 202:remote/rc_dbus.c **** float RC_Norm(uint16_t ch)
+ 203:remote/rc_dbus.c **** {
+ 703              		.loc 1 203 1 is_stmt 1 view -0
+ 704              		.cfi_startproc
+ 705              		@ args = 0, pretend = 0, frame = 0
+ 706              		@ frame_needed = 0, uses_anonymous_args = 0
+ 707              		@ link register save eliminated.
+ 204:remote/rc_dbus.c ****     int32_t v = (int32_t)ch - RC_CH_MID;
+ 708              		.loc 1 204 5 view .LVU221
+ 709              		.loc 1 204 13 is_stmt 0 view .LVU222
+ 710 0000 A0F58062 		sub	r2, r0, #1024
+ 711              	.LVL30:
+ 205:remote/rc_dbus.c **** 
+ 206:remote/rc_dbus.c ****     if ((v > -RC_DEADBAND) && (v < RC_DEADBAND))
+ 712              		.loc 1 206 5 is_stmt 1 view .LVU223
+ 713              		.loc 1 206 28 is_stmt 0 view .LVU224
+ 714 0004 A0F2ED33 		subw	r3, r0, #1005
+ 715              		.loc 1 206 8 view .LVU225
+ 716 0008 262B     		cmp	r3, #38
+ 717 000a 22D9     		bls	.L54
+ 207:remote/rc_dbus.c ****         return 0.0f;
+ 208:remote/rc_dbus.c **** 
+ 209:remote/rc_dbus.c ****     v = (v > 0) ? (v - RC_DEADBAND) : (v + RC_DEADBAND);
+ 718              		.loc 1 209 5 is_stmt 1 view .LVU226
+ 719              		.loc 1 209 37 is_stmt 0 view .LVU227
+ 720 000c 002A     		cmp	r2, #0
+ 721 000e 13DD     		ble	.L52
+ 722              		.loc 1 209 37 discriminator 1 view .LVU228
+ 723 0010 A0F21443 		subw	r3, r0, #1044
+ 724 0014 07EE903A 		vmov	s15, r3	@ int
+ 725              	.L53:
+ 726              	.LVL31:
+ 210:remote/rc_dbus.c **** 
+ 211:remote/rc_dbus.c ****     float n = (float)v / (float)(RC_CH_MAX - RC_CH_MID);
+ 727              		.loc 1 211 5 is_stmt 1 view .LVU229
+ 728              		.loc 1 211 15 is_stmt 0 view .LVU230
+ 729 0018 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 730              	.LVL32:
+ 731              		.loc 1 211 11 view .LVU231
+ 732 001c 9FED107A 		vldr.32	s14, .L59
+ 733 0020 87EE870A 		vdiv.f32	s0, s15, s14
+ 734              	.LVL33:
+ 212:remote/rc_dbus.c **** 
+ 213:remote/rc_dbus.c ****     if (n >  1.0f) n =  1.0f;
+ 735              		.loc 1 213 5 is_stmt 1 view .LVU232
+ 736              		.loc 1 213 8 is_stmt 0 view .LVU233
+ 737 0024 F7EE007A 		vmov.f32	s15, #1.0e+0
+ 738 0028 B4EEE70A 		vcmpe.f32	s0, s15
+ 739 002c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 18
+
+
+ 740 0030 07DD     		ble	.L57
+ 741              		.loc 1 213 22 discriminator 1 view .LVU234
+ 742 0032 B7EE000A 		vmov.f32	s0, #1.0e+0
+ 743              	.LVL34:
+ 744              		.loc 1 213 22 discriminator 1 view .LVU235
+ 745 0036 7047     		bx	lr
+ 746              	.LVL35:
+ 747              	.L52:
+ 209:remote/rc_dbus.c **** 
+ 748              		.loc 1 209 37 discriminator 2 view .LVU236
+ 749 0038 A0F57B73 		sub	r3, r0, #1004
+ 750 003c 07EE903A 		vmov	s15, r3	@ int
+ 751 0040 EAE7     		b	.L53
+ 752              	.LVL36:
+ 753              	.L57:
+ 214:remote/rc_dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 754              		.loc 1 214 5 is_stmt 1 view .LVU237
+ 755              		.loc 1 214 8 is_stmt 0 view .LVU238
+ 756 0042 FFEE007A 		vmov.f32	s15, #-1.0e+0
+ 757 0046 B4EEE70A 		vcmpe.f32	s0, s15
+ 758 004a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 759 004e 03D4     		bmi	.L58
+ 760              	.LVL37:
+ 761              	.L50:
+ 215:remote/rc_dbus.c ****     return n;
+ 216:remote/rc_dbus.c **** }
+ 762              		.loc 1 216 1 view .LVU239
+ 763 0050 7047     		bx	lr
+ 764              	.LVL38:
+ 765              	.L54:
+ 207:remote/rc_dbus.c **** 
+ 766              		.loc 1 207 16 view .LVU240
+ 767 0052 9FED040A 		vldr.32	s0, .L59+4
+ 768 0056 7047     		bx	lr
+ 769              	.LVL39:
+ 770              	.L58:
+ 214:remote/rc_dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 771              		.loc 1 214 22 discriminator 1 view .LVU241
+ 772 0058 BFEE000A 		vmov.f32	s0, #-1.0e+0
+ 773              	.LVL40:
+ 214:remote/rc_dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 774              		.loc 1 214 22 discriminator 1 view .LVU242
+ 775 005c F8E7     		b	.L50
+ 776              	.L60:
+ 777 005e 00BF     		.align	2
+ 778              	.L59:
+ 779 0060 00002544 		.word	1143275520
+ 780 0064 00000000 		.word	0
+ 781              		.cfi_endproc
+ 782              	.LFE151:
+ 784              		.section	.text.RC_Control_Task,"ax",%progbits
+ 785              		.align	1
+ 786              		.global	RC_Control_Task
+ 787              		.syntax unified
+ 788              		.thumb
+ 789              		.thumb_func
+ 791              	RC_Control_Task:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 19
+
+
+ 792              	.LFB152:
+ 217:remote/rc_dbus.c **** 
+ 218:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+ 219:remote/rc_dbus.c **** /* 控制任务：1kHz 调用一次                                              */
+ 220:remote/rc_dbus.c **** /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              
+ 221:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+ 222:remote/rc_dbus.c **** void RC_Control_Task(void)
+ 223:remote/rc_dbus.c **** {
+ 793              		.loc 1 223 1 is_stmt 1 view -0
+ 794              		.cfi_startproc
+ 795              		@ args = 0, pretend = 0, frame = 8
+ 796              		@ frame_needed = 0, uses_anonymous_args = 0
+ 797 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 798              	.LCFI4:
+ 799              		.cfi_def_cfa_offset 20
+ 800              		.cfi_offset 4, -20
+ 801              		.cfi_offset 5, -16
+ 802              		.cfi_offset 6, -12
+ 803              		.cfi_offset 7, -8
+ 804              		.cfi_offset 14, -4
+ 805 0002 2DED048B 		vpush.64	{d8, d9}
+ 806              	.LCFI5:
+ 807              		.cfi_def_cfa_offset 36
+ 808              		.cfi_offset 80, -36
+ 809              		.cfi_offset 81, -32
+ 810              		.cfi_offset 82, -28
+ 811              		.cfi_offset 83, -24
+ 812 0006 83B0     		sub	sp, sp, #12
+ 813              	.LCFI6:
+ 814              		.cfi_def_cfa_offset 48
+ 224:remote/rc_dbus.c ****     uint32_t now = HAL_GetTick();
+ 815              		.loc 1 224 5 view .LVU244
+ 816              		.loc 1 224 20 is_stmt 0 view .LVU245
+ 817 0008 FFF7FEFF 		bl	HAL_GetTick
+ 818              	.LVL41:
+ 819 000c 0746     		mov	r7, r0
+ 820              	.LVL42:
+ 225:remote/rc_dbus.c **** 
+ 226:remote/rc_dbus.c ****     /* 1) 通信在线判断：>100ms 没收到新帧 = 遥控器/接收机失联 */
+ 227:remote/rc_dbus.c ****     uint8_t online = RC_IsOnline(now);
+ 821              		.loc 1 227 5 is_stmt 1 view .LVU246
+ 822              		.loc 1 227 22 is_stmt 0 view .LVU247
+ 823 000e FFF7FEFF 		bl	RC_IsOnline
+ 824              	.LVL43:
+ 825              		.loc 1 227 22 view .LVU248
+ 826 0012 0446     		mov	r4, r0
+ 827              	.LVL44:
+ 228:remote/rc_dbus.c **** 
+ 229:remote/rc_dbus.c **** #if (RC_ENABLE_SW_POS != 0)
+ 230:remote/rc_dbus.c ****   #if (RC_ENABLE_USE_LEFT)
+ 231:remote/rc_dbus.c ****     uint8_t armed = (RC_Data.s_left  == RC_ENABLE_SW_POS);
+ 232:remote/rc_dbus.c ****   #else
+ 233:remote/rc_dbus.c ****     uint8_t armed = (RC_Data.s_right == RC_ENABLE_SW_POS);
+ 828              		.loc 1 233 5 is_stmt 1 view .LVU249
+ 829              		.loc 1 233 29 is_stmt 0 view .LVU250
+ 830 0014 AF4B     		ldr	r3, .L134
+ 831 0016 5B7A     		ldrb	r3, [r3, #9]	@ zero_extendqisi2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 20
+
+
+ 832              	.LVL45:
+ 234:remote/rc_dbus.c ****   #endif
+ 235:remote/rc_dbus.c **** #else
+ 236:remote/rc_dbus.c ****     uint8_t armed = 1;
+ 237:remote/rc_dbus.c **** #endif
+ 238:remote/rc_dbus.c **** 
+ 239:remote/rc_dbus.c ****     uint8_t enabled = (online && armed);
+ 833              		.loc 1 239 5 is_stmt 1 view .LVU251
+ 834              		.loc 1 239 24 is_stmt 0 view .LVU252
+ 835 0018 051E     		subs	r5, r0, #0
+ 836 001a 18BF     		it	ne
+ 837 001c 0125     		movne	r5, #1
+ 838              		.loc 1 239 31 view .LVU253
+ 839 001e 032B     		cmp	r3, #3
+ 840 0020 14BF     		ite	ne
+ 841 0022 0026     		movne	r6, #0
+ 842 0024 05F00106 		andeq	r6, r5, #1
+ 843              	.LVL46:
+ 240:remote/rc_dbus.c **** 
+ 241:remote/rc_dbus.c ****     /* 使能条件必须“连续保持”才放行：失联恢复或拨杆刚到位时不立刻�
+ 242:remote/rc_dbus.c ****      * 避免遥控信号抖动导致电机抽搐（软启动门） */
+ 243:remote/rc_dbus.c ****     if (enabled)
+ 844              		.loc 1 243 5 is_stmt 1 view .LVU254
+ 845              		.loc 1 243 8 is_stmt 0 view .LVU255
+ 846 0028 56B1     		cbz	r6, .L62
+ 244:remote/rc_dbus.c ****     {
+ 245:remote/rc_dbus.c ****         if (rc_enable_since == 0)
+ 847              		.loc 1 245 9 is_stmt 1 view .LVU256
+ 848              		.loc 1 245 29 is_stmt 0 view .LVU257
+ 849 002a AB4B     		ldr	r3, .L134+4
+ 850 002c 1B68     		ldr	r3, [r3]
+ 851              		.loc 1 245 12 view .LVU258
+ 852 002e 13B9     		cbnz	r3, .L63
+ 246:remote/rc_dbus.c ****         {
+ 247:remote/rc_dbus.c ****             rc_enable_since = now;
+ 853              		.loc 1 247 13 is_stmt 1 view .LVU259
+ 854              		.loc 1 247 29 is_stmt 0 view .LVU260
+ 855 0030 A94B     		ldr	r3, .L134+4
+ 856 0032 1F60     		str	r7, [r3]
+ 857 0034 07E0     		b	.L64
+ 858              	.L63:
+ 248:remote/rc_dbus.c ****         }
+ 249:remote/rc_dbus.c ****         else if ((now - rc_enable_since) < RC_ENABLE_DELAY_MS)
+ 859              		.loc 1 249 14 is_stmt 1 view .LVU261
+ 860              		.loc 1 249 23 is_stmt 0 view .LVU262
+ 861 0036 FB1A     		subs	r3, r7, r3
+ 862              		.loc 1 249 17 view .LVU263
+ 863 0038 632B     		cmp	r3, #99
+ 864 003a 04D8     		bhi	.L64
+ 250:remote/rc_dbus.c ****         {
+ 251:remote/rc_dbus.c ****             enabled = 0;                /* 门时间内先不给力，但斜坡已开始回零 */
+ 865              		.loc 1 251 21 view .LVU264
+ 866 003c 0026     		movs	r6, #0
+ 867              	.LVL47:
+ 868              		.loc 1 251 21 view .LVU265
+ 869 003e 02E0     		b	.L64
+ 870              	.LVL48:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 21
+
+
+ 871              	.L62:
+ 252:remote/rc_dbus.c ****         }
+ 253:remote/rc_dbus.c ****     }
+ 254:remote/rc_dbus.c ****     else
+ 255:remote/rc_dbus.c ****     {
+ 256:remote/rc_dbus.c ****         rc_enable_since = 0;
+ 872              		.loc 1 256 9 is_stmt 1 view .LVU266
+ 873              		.loc 1 256 25 is_stmt 0 view .LVU267
+ 874 0040 A54B     		ldr	r3, .L134+4
+ 875 0042 0022     		movs	r2, #0
+ 876 0044 1A60     		str	r2, [r3]
+ 877              	.LVL49:
+ 878              	.L64:
+ 257:remote/rc_dbus.c ****     }
+ 258:remote/rc_dbus.c **** 
+ 259:remote/rc_dbus.c ****     /* 2) 摇杆归一化：死区内为 0，范围 -1.0 ~ +1.0 */
+ 260:remote/rc_dbus.c ****     float fwd  = online ?  RC_Norm(RC_CH_FWD)  : 0.0f;
+ 879              		.loc 1 260 5 is_stmt 1 view .LVU268
+ 880              		.loc 1 260 48 is_stmt 0 view .LVU269
+ 881 0046 6CB1     		cbz	r4, .L100
+ 882              		.loc 1 260 28 discriminator 1 view .LVU270
+ 883 0048 A24B     		ldr	r3, .L134
+ 884 004a 9888     		ldrh	r0, [r3, #4]
+ 885              	.LVL50:
+ 886              		.loc 1 260 28 discriminator 1 view .LVU271
+ 887 004c FFF7FEFF 		bl	RC_Norm
+ 888              	.LVL51:
+ 889              		.loc 1 260 28 discriminator 1 view .LVU272
+ 890 0050 B0EE408A 		vmov.f32	s16, s0
+ 891              	.LVL52:
+ 261:remote/rc_dbus.c ****     float spin = online ? RC_Norm(RC_CH_TURN) : 0.0f;
+ 892              		.loc 1 261 5 is_stmt 1 view .LVU273
+ 893              		.loc 1 261 47 is_stmt 0 view .LVU274
+ 894 0054 14B3     		cbz	r4, .L101
+ 895              		.loc 1 261 27 discriminator 1 view .LVU275
+ 896 0056 9F4B     		ldr	r3, .L134
+ 897 0058 D888     		ldrh	r0, [r3, #6]
+ 898 005a FFF7FEFF 		bl	RC_Norm
+ 899              	.LVL53:
+ 900              		.loc 1 261 27 discriminator 1 view .LVU276
+ 901 005e F0EE408A 		vmov.f32	s17, s0
+ 902 0062 03E0     		b	.L65
+ 903              	.LVL54:
+ 904              	.L100:
+ 260:remote/rc_dbus.c ****     float spin = online ? RC_Norm(RC_CH_TURN) : 0.0f;
+ 905              		.loc 1 260 48 discriminator 2 view .LVU277
+ 906 0064 9FEDA78A 		vldr.32	s16, .L134+48
+ 907              		.loc 1 261 47 discriminator 2 view .LVU278
+ 908 0068 F0EE488A 		vmov.f32	s17, s16
+ 909              	.LVL55:
+ 910              	.L65:
+ 262:remote/rc_dbus.c **** 
+ 263:remote/rc_dbus.c **** #if (MECANUM_WHEEL_NUM == 4)
+ 264:remote/rc_dbus.c ****     /* 4 轮补齐后：右摇杆左右 = 横移（平移不转向），自转另给通道再用 sp
+ 265:remote/rc_dbus.c ****     float strafe = online ? RC_Norm(RC_CH_STRAFE) : 0.0f;
+ 911              		.loc 1 265 5 is_stmt 1 view .LVU279
+ 912              		.loc 1 265 51 is_stmt 0 view .LVU280
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 22
+
+
+ 913 006c DCB1     		cbz	r4, .L102
+ 914              		.loc 1 265 29 discriminator 1 view .LVU281
+ 915 006e 994B     		ldr	r3, .L134
+ 916 0070 1888     		ldrh	r0, [r3]
+ 917 0072 FFF7FEFF 		bl	RC_Norm
+ 918              	.LVL56:
+ 919 0076 F0EE400A 		vmov.f32	s1, s0
+ 920              	.LVL57:
+ 921              	.L66:
+ 266:remote/rc_dbus.c **** #else
+ 267:remote/rc_dbus.c ****     float strafe = 0.0f;      /* 只有 2 个轮子时无法横移 */
+ 268:remote/rc_dbus.c **** #endif
+ 269:remote/rc_dbus.c **** 
+ 270:remote/rc_dbus.c ****     /* 3) 麦轮混控：差速/麦轮公式 + 归一化斜坡限速（在 mecanum.c 里） */
+ 271:remote/rc_dbus.c ****     Mecanum_Mix(fwd, strafe, spin, enabled, RC_WheelOut);
+ 922              		.loc 1 271 5 is_stmt 1 view .LVU282
+ 923 007a 9849     		ldr	r1, .L134+8
+ 924 007c 3046     		mov	r0, r6
+ 925 007e B0EE681A 		vmov.f32	s2, s17
+ 926 0082 B0EE480A 		vmov.f32	s0, s16
+ 927 0086 FFF7FEFF 		bl	Mecanum_Mix
+ 928              	.LVL58:
+ 272:remote/rc_dbus.c **** 
+ 273:remote/rc_dbus.c ****     /* 4) 失联超过 RC_FAILSAFE_MS 后强制刹停：斜坡已被旁路，必须硬置零 */
+ 274:remote/rc_dbus.c ****     if (!online && ((now - RC_Data.last_tick) > RC_FAILSAFE_MS))
+ 929              		.loc 1 274 5 view .LVU283
+ 930              		.loc 1 274 8 is_stmt 0 view .LVU284
+ 931 008a 2CB9     		cbnz	r4, .L67
+ 932              		.loc 1 274 35 discriminator 1 view .LVU285
+ 933 008c 914B     		ldr	r3, .L134
+ 934 008e 9B6A     		ldr	r3, [r3, #40]
+ 935              		.loc 1 274 26 discriminator 1 view .LVU286
+ 936 0090 FF1A     		subs	r7, r7, r3
+ 937              	.LVL59:
+ 938              		.loc 1 274 17 discriminator 1 view .LVU287
+ 939 0092 B7F5FA7F 		cmp	r7, #500
+ 940 0096 15D8     		bhi	.L103
+ 941              	.L67:
+ 942              	.LBB18:
+ 943              	.LBB19:
+ 275:remote/rc_dbus.c ****     {
+ 276:remote/rc_dbus.c ****         for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 277:remote/rc_dbus.c ****         {
+ 278:remote/rc_dbus.c ****             RC_WheelOut[i] = 0.0f;
+ 279:remote/rc_dbus.c ****         }
+ 280:remote/rc_dbus.c ****         Mecanum_Reset();
+ 281:remote/rc_dbus.c ****     }
+ 282:remote/rc_dbus.c **** 
+ 283:remote/rc_dbus.c ****     /* 5) 归一化目标 → 安培 → 原始值 → 0x200 帧
+ 284:remote/rc_dbus.c ****      *    CAN2 的 4 个槽位 = 底盘四轮：ID1=左前 ID2=右前 ID3=右后 ID4=左后
+ 285:remote/rc_dbus.c ****      *    （与 MECANUM_DIR[] 的下标顺序、mecanum.h 的 MEC_WHEEL_LF/LB/RB/RF 一一对应�
+ 286:remote/rc_dbus.c ****     static const float s_wheel_sign[MECANUM_WHEEL_NUM] =
+ 287:remote/rc_dbus.c ****     {
+ 288:remote/rc_dbus.c **** #if (MECANUM_WHEEL_NUM == 4)
+ 289:remote/rc_dbus.c ****         M1_SIGN, M2_SIGN, M3_SIGN, M4_SIGN
+ 290:remote/rc_dbus.c **** #else
+ 291:remote/rc_dbus.c ****         M1_SIGN, M4_SIGN
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 23
+
+
+ 292:remote/rc_dbus.c **** #endif
+ 293:remote/rc_dbus.c ****     };
+ 294:remote/rc_dbus.c **** 
+ 295:remote/rc_dbus.c ****     float   max_a = (float)RC_MAX_CURRENT_A;
+ 296:remote/rc_dbus.c ****     int16_t raw[MECANUM_WHEEL_NUM];
+ 297:remote/rc_dbus.c **** 
+ 298:remote/rc_dbus.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 299:remote/rc_dbus.c ****     {
+ 300:remote/rc_dbus.c ****         float a = s_wheel_sign[i] * RC_WheelOut[i] * max_a;
+ 301:remote/rc_dbus.c **** 
+ 302:remote/rc_dbus.c ****         /* 硬性绝对限幅：不论参数怎么配，都不允许超过 RC_ABS_CURRENT_A */
+ 303:remote/rc_dbus.c ****         if (a >  RC_ABS_CURRENT_A) a =  RC_ABS_CURRENT_A;
+ 944              		.loc 1 303 38 discriminator 1 view .LVU288
+ 945 0098 0023     		movs	r3, #0
+ 946 009a 26E0     		b	.L71
+ 947              	.LVL60:
+ 948              	.L101:
+ 949              		.loc 1 303 38 discriminator 1 view .LVU289
+ 950              	.LBE19:
+ 951              	.LBE18:
+ 261:remote/rc_dbus.c **** 
+ 952              		.loc 1 261 47 discriminator 2 view .LVU290
+ 953 009c DFED998A 		vldr.32	s17, .L134+48
+ 265:remote/rc_dbus.c **** #else
+ 954              		.loc 1 265 51 discriminator 2 view .LVU291
+ 955 00a0 F0EE680A 		vmov.f32	s1, s17
+ 956 00a4 E9E7     		b	.L66
+ 957              	.LVL61:
+ 958              	.L102:
+ 265:remote/rc_dbus.c **** #else
+ 959              		.loc 1 265 51 discriminator 2 view .LVU292
+ 960 00a6 DFED970A 		vldr.32	s1, .L134+48
+ 961 00aa E6E7     		b	.L66
+ 962              	.LVL62:
+ 963              	.L69:
+ 964              	.LBB22:
+ 278:remote/rc_dbus.c ****         }
+ 965              		.loc 1 278 13 is_stmt 1 view .LVU293
+ 278:remote/rc_dbus.c ****         }
+ 966              		.loc 1 278 28 is_stmt 0 view .LVU294
+ 967 00ac 8B4A     		ldr	r2, .L134+8
+ 968 00ae 02EB8302 		add	r2, r2, r3, lsl #2
+ 969 00b2 0021     		movs	r1, #0
+ 970 00b4 1160     		str	r1, [r2]	@ float
+ 276:remote/rc_dbus.c ****         {
+ 971              		.loc 1 276 53 is_stmt 1 discriminator 3 view .LVU295
+ 972 00b6 0133     		adds	r3, r3, #1
+ 973              	.LVL63:
+ 276:remote/rc_dbus.c ****         {
+ 974              		.loc 1 276 53 is_stmt 0 discriminator 3 view .LVU296
+ 975 00b8 DBB2     		uxtb	r3, r3
+ 976              	.LVL64:
+ 977              	.L68:
+ 276:remote/rc_dbus.c ****         {
+ 978              		.loc 1 276 31 is_stmt 1 discriminator 1 view .LVU297
+ 979 00ba 032B     		cmp	r3, #3
+ 980 00bc F6D9     		bls	.L69
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 24
+
+
+ 981              	.LBE22:
+ 280:remote/rc_dbus.c ****     }
+ 982              		.loc 1 280 9 view .LVU298
+ 983 00be FFF7FEFF 		bl	Mecanum_Reset
+ 984              	.LVL65:
+ 280:remote/rc_dbus.c ****     }
+ 985              		.loc 1 280 9 is_stmt 0 view .LVU299
+ 986 00c2 E9E7     		b	.L67
+ 987              	.LVL66:
+ 988              	.L103:
+ 989              	.LBB23:
+ 276:remote/rc_dbus.c ****         {
+ 990              		.loc 1 276 22 view .LVU300
+ 991 00c4 2346     		mov	r3, r4
+ 992 00c6 F8E7     		b	.L68
+ 993              	.LVL67:
+ 994              	.L104:
+ 276:remote/rc_dbus.c ****         {
+ 995              		.loc 1 276 22 view .LVU301
+ 996              	.LBE23:
+ 997              	.LBB24:
+ 998              	.LBB20:
+ 999              		.loc 1 303 38 discriminator 1 view .LVU302
+ 1000 00c8 F1EE087A 		vmov.f32	s15, #6.0e+0
+ 1001              	.LVL68:
+ 1002              	.L70:
+ 304:remote/rc_dbus.c ****         if (a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+ 305:remote/rc_dbus.c **** 
+ 306:remote/rc_dbus.c ****         /* 安培 → C620 原始值(±16384 ↔ ±20A, 见C620手册) */
+ 307:remote/rc_dbus.c ****         raw[i] = (int16_t)(a / 20.0f * 16384.0f);
+ 1003              		.loc 1 307 9 is_stmt 1 view .LVU303
+ 1004              		.loc 1 307 30 is_stmt 0 view .LVU304
+ 1005 00cc F3EE046A 		vmov.f32	s13, #2.0e+1
+ 1006 00d0 87EEA67A 		vdiv.f32	s14, s15, s13
+ 1007              		.loc 1 307 18 view .LVU305
+ 1008 00d4 BEEEC97A 		vcvt.s32.f32	s14, s14, #14
+ 1009              		.loc 1 307 16 view .LVU306
+ 1010 00d8 02A9     		add	r1, sp, #8
+ 1011 00da 01EB4202 		add	r2, r1, r2, lsl #1
+ 1012 00de 17EE101A 		vmov	r1, s14	@ int
+ 1013 00e2 22F8081C 		strh	r1, [r2, #-8]	@ movhi
+ 1014              	.LBE20:
+ 298:remote/rc_dbus.c ****     {
+ 1015              		.loc 1 298 49 is_stmt 1 discriminator 2 view .LVU307
+ 1016 00e6 0133     		adds	r3, r3, #1
+ 1017              	.LVL69:
+ 298:remote/rc_dbus.c ****     {
+ 1018              		.loc 1 298 49 is_stmt 0 discriminator 2 view .LVU308
+ 1019 00e8 DBB2     		uxtb	r3, r3
+ 1020              	.LVL70:
+ 1021              	.L71:
+ 298:remote/rc_dbus.c ****     {
+ 1022              		.loc 1 298 27 is_stmt 1 discriminator 1 view .LVU309
+ 1023 00ea 032B     		cmp	r3, #3
+ 1024 00ec 21D8     		bhi	.L132
+ 1025              	.LBB21:
+ 300:remote/rc_dbus.c **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 25
+
+
+ 1026              		.loc 1 300 9 view .LVU310
+ 300:remote/rc_dbus.c **** 
+ 1027              		.loc 1 300 31 is_stmt 0 view .LVU311
+ 1028 00ee 1A46     		mov	r2, r3
+ 1029 00f0 7B49     		ldr	r1, .L134+12
+ 1030 00f2 01EB8301 		add	r1, r1, r3, lsl #2
+ 1031 00f6 D1ED007A 		vldr.32	s15, [r1]
+ 300:remote/rc_dbus.c **** 
+ 1032              		.loc 1 300 48 view .LVU312
+ 1033 00fa 7849     		ldr	r1, .L134+8
+ 1034 00fc 01EB8301 		add	r1, r1, r3, lsl #2
+ 1035 0100 91ED007A 		vldr.32	s14, [r1]
+ 300:remote/rc_dbus.c **** 
+ 1036              		.loc 1 300 35 view .LVU313
+ 1037 0104 67EE877A 		vmul.f32	s15, s15, s14
+ 300:remote/rc_dbus.c **** 
+ 1038              		.loc 1 300 15 view .LVU314
+ 1039 0108 B1EE047A 		vmov.f32	s14, #5.0e+0
+ 1040 010c 67EE877A 		vmul.f32	s15, s15, s14
+ 1041              	.LVL71:
+ 303:remote/rc_dbus.c ****         if (a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+ 1042              		.loc 1 303 9 is_stmt 1 view .LVU315
+ 303:remote/rc_dbus.c ****         if (a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+ 1043              		.loc 1 303 12 is_stmt 0 view .LVU316
+ 1044 0110 B1EE087A 		vmov.f32	s14, #6.0e+0
+ 1045 0114 F4EEC77A 		vcmpe.f32	s15, s14
+ 1046 0118 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1047 011c D4DC     		bgt	.L104
+ 304:remote/rc_dbus.c **** 
+ 1048              		.loc 1 304 9 is_stmt 1 view .LVU317
+ 304:remote/rc_dbus.c **** 
+ 1049              		.loc 1 304 12 is_stmt 0 view .LVU318
+ 1050 011e B9EE087A 		vmov.f32	s14, #-6.0e+0
+ 1051 0122 F4EEC77A 		vcmpe.f32	s15, s14
+ 1052 0126 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1053 012a CFD5     		bpl	.L70
+ 304:remote/rc_dbus.c **** 
+ 1054              		.loc 1 304 38 discriminator 1 view .LVU319
+ 1055 012c F9EE087A 		vmov.f32	s15, #-6.0e+0
+ 1056              	.LVL72:
+ 304:remote/rc_dbus.c **** 
+ 1057              		.loc 1 304 38 discriminator 1 view .LVU320
+ 1058 0130 CCE7     		b	.L70
+ 1059              	.LVL73:
+ 1060              	.L132:
+ 304:remote/rc_dbus.c **** 
+ 1061              		.loc 1 304 38 discriminator 1 view .LVU321
+ 1062              	.LBE21:
+ 1063              	.LBE24:
+ 308:remote/rc_dbus.c ****     }
+ 309:remote/rc_dbus.c **** 
+ 310:remote/rc_dbus.c ****     /* 6) 云台 GM6020（ID1）：限位 + 超速兜底 + 斜坡 + 安全开关 */
+ 311:remote/rc_dbus.c ****     float gim  = online ? RC_Norm(RC_CH_GIMBAL) : 0.0f;
+ 1064              		.loc 1 311 5 is_stmt 1 view .LVU322
+ 1065              		.loc 1 311 49 is_stmt 0 view .LVU323
+ 1066 0132 FCB1     		cbz	r4, .L106
+ 1067              		.loc 1 311 27 discriminator 1 view .LVU324
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 26
+
+
+ 1068 0134 674B     		ldr	r3, .L134
+ 1069              	.LVL74:
+ 1070              		.loc 1 311 27 discriminator 1 view .LVU325
+ 1071 0136 1888     		ldrh	r0, [r3]
+ 1072 0138 FFF7FEFF 		bl	RC_Norm
+ 1073              	.LVL75:
+ 1074              	.L73:
+ 312:remote/rc_dbus.c ****     float volt = GM6020_SIGN * gim * GM6020_VOLT_MAX;
+ 1075              		.loc 1 312 5 is_stmt 1 view .LVU326
+ 1076              		.loc 1 312 11 is_stmt 0 view .LVU327
+ 1077 013c DFED697A 		vldr.32	s15, .L134+16
+ 1078 0140 20EE678A 		vnmul.f32	s16, s0, s15
+ 1079              	.LVL76:
+ 313:remote/rc_dbus.c **** 
+ 314:remote/rc_dbus.c ****     /* ① 反馈超时 → 断电（没有反馈就等于没有限位） */
+ 315:remote/rc_dbus.c ****     if ((HAL_GetTick() - gim6020.last_tick) > GM_FEEDBACK_TIMEOUT_MS)
+ 1080              		.loc 1 315 5 is_stmt 1 view .LVU328
+ 1081              		.loc 1 315 10 is_stmt 0 view .LVU329
+ 1082 0144 FFF7FEFF 		bl	HAL_GetTick
+ 1083              	.LVL77:
+ 1084              		.loc 1 315 33 discriminator 1 view .LVU330
+ 1085 0148 674B     		ldr	r3, .L134+20
+ 1086 014a 9B68     		ldr	r3, [r3, #8]
+ 1087              		.loc 1 315 24 discriminator 1 view .LVU331
+ 1088 014c C01A     		subs	r0, r0, r3
+ 1089              		.loc 1 315 8 discriminator 1 view .LVU332
+ 1090 014e 6428     		cmp	r0, #100
+ 1091 0150 01D9     		bls	.L74
+ 316:remote/rc_dbus.c ****         volt = 0.0f;
+ 1092              		.loc 1 316 14 view .LVU333
+ 1093 0152 9FED6C8A 		vldr.32	s16, .L134+48
+ 1094              	.LVL78:
+ 1095              	.L74:
+ 317:remote/rc_dbus.c **** 
+ 318:remote/rc_dbus.c ****     /* ② 超速兜底：不管角度算得对不对，转太快就断 */
+ 319:remote/rc_dbus.c ****     if (gim6020.rpm > GM_RPM_LIMIT || gim6020.rpm < -GM_RPM_LIMIT)
+ 1096              		.loc 1 319 5 is_stmt 1 view .LVU334
+ 1097              		.loc 1 319 16 is_stmt 0 view .LVU335
+ 1098 0156 644B     		ldr	r3, .L134+20
+ 1099 0158 5B88     		ldrh	r3, [r3, #2]
+ 1100 015a 1BB2     		sxth	r3, r3
+ 1101              		.loc 1 319 8 view .LVU336
+ 1102 015c B3F5C87F 		cmp	r3, #400
+ 1103 0160 0BDC     		bgt	.L108
+ 1104              		.loc 1 319 46 discriminator 1 view .LVU337
+ 1105 0162 614B     		ldr	r3, .L134+20
+ 1106 0164 5B88     		ldrh	r3, [r3, #2]
+ 1107 0166 1BB2     		sxth	r3, r3
+ 1108              		.loc 1 319 36 discriminator 1 view .LVU338
+ 1109 0168 13F5C87F 		cmn	r3, #400
+ 1110 016c 07DA     		bge	.L75
+ 320:remote/rc_dbus.c ****         volt = 0.0f;
+ 1111              		.loc 1 320 14 view .LVU339
+ 1112 016e 9FED658A 		vldr.32	s16, .L134+48
+ 1113              	.LVL79:
+ 1114              		.loc 1 320 14 view .LVU340
+ 1115 0172 04E0     		b	.L75
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 27
+
+
+ 1116              	.LVL80:
+ 1117              	.L106:
+ 311:remote/rc_dbus.c ****     float volt = GM6020_SIGN * gim * GM6020_VOLT_MAX;
+ 1118              		.loc 1 311 49 discriminator 2 view .LVU341
+ 1119 0174 9FED630A 		vldr.32	s0, .L134+48
+ 1120 0178 E0E7     		b	.L73
+ 1121              	.LVL81:
+ 1122              	.L108:
+ 1123              		.loc 1 320 14 view .LVU342
+ 1124 017a 9FED628A 		vldr.32	s16, .L134+48
+ 1125              	.LVL82:
+ 1126              	.L75:
+ 321:remote/rc_dbus.c **** 
+ 322:remote/rc_dbus.c **** 
+ 323:remote/rc_dbus.c ****     /* ④ 斜坡：每拍最多变 GM_VOLT_SLEW，避免扭矩冲击 */
+ 324:remote/rc_dbus.c ****     static float volt_prev = 0.0f;
+ 1127              		.loc 1 324 5 is_stmt 1 view .LVU343
+ 325:remote/rc_dbus.c ****     if (volt > volt_prev + GM_VOLT_SLEW) volt = volt_prev + GM_VOLT_SLEW;
+ 1128              		.loc 1 325 5 view .LVU344
+ 1129              		.loc 1 325 26 is_stmt 0 view .LVU345
+ 1130 017e 5B4B     		ldr	r3, .L134+24
+ 1131 0180 93ED009A 		vldr.32	s18, [r3]
+ 1132 0184 DFED5A7A 		vldr.32	s15, .L134+28
+ 1133 0188 79EE277A 		vadd.f32	s15, s18, s15
+ 1134              		.loc 1 325 8 view .LVU346
+ 1135 018c F4EEC87A 		vcmpe.f32	s15, s16
+ 1136 0190 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1137 0194 01D4     		bmi	.L76
+ 1138 0196 F0EE487A 		vmov.f32	s15, s16
+ 1139              	.L76:
+ 1140              	.LVL83:
+ 326:remote/rc_dbus.c ****     if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+ 1141              		.loc 1 326 5 is_stmt 1 view .LVU347
+ 1142              		.loc 1 326 26 is_stmt 0 view .LVU348
+ 1143 019a 9FED557A 		vldr.32	s14, .L134+28
+ 1144 019e 39EE479A 		vsub.f32	s18, s18, s14
+ 1145              		.loc 1 326 8 view .LVU349
+ 1146 01a2 B4EEE79A 		vcmpe.f32	s18, s15
+ 1147 01a6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1148 01aa 01DC     		bgt	.L77
+ 1149 01ac B0EE679A 		vmov.f32	s18, s15
+ 1150              	.L77:
+ 1151              	.LVL84:
+ 327:remote/rc_dbus.c **** 
+ 328:remote/rc_dbus.c ****     /* ⑤ 安全开关：=1 时强制零输出（只用来量角度，电机不动） */
+ 329:remote/rc_dbus.c ****  /* ⑦ 云台 pitch：右摇杆垂直 → 6020 ID2（有机械限位） */
+ 330:remote/rc_dbus.c ****     float pit    = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;
+ 1152              		.loc 1 330 5 is_stmt 1 view .LVU350
+ 1153              		.loc 1 330 57 is_stmt 0 view .LVU351
+ 1154 01b0 0CB3     		cbz	r4, .L110
+ 1155              		.loc 1 330 29 discriminator 1 view .LVU352
+ 1156 01b2 484B     		ldr	r3, .L134
+ 1157 01b4 5888     		ldrh	r0, [r3, #2]
+ 1158 01b6 FFF7FEFF 		bl	RC_Norm
+ 1159              	.LVL85:
+ 1160              	.L78:
+ 331:remote/rc_dbus.c ****     float volt_p = GM_PITCH_SIGN * pit * GM_PITCH_VOLT_MAX;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 28
+
+
+ 1161              		.loc 1 331 5 is_stmt 1 view .LVU353
+ 1162              		.loc 1 331 11 is_stmt 0 view .LVU354
+ 1163 01ba DFED4E7A 		vldr.32	s15, .L134+32
+ 1164 01be 60EE278A 		vmul.f32	s17, s0, s15
+ 1165              	.LVL86:
+ 332:remote/rc_dbus.c ****     int32_t ap   = (int32_t)gim_pitch.angle;
+ 1166              		.loc 1 332 5 is_stmt 1 view .LVU355
+ 1167              		.loc 1 332 38 is_stmt 0 view .LVU356
+ 1168 01c2 4D4E     		ldr	r6, .L134+36
+ 1169              	.LVL87:
+ 1170              		.loc 1 332 38 view .LVU357
+ 1171 01c4 3488     		ldrh	r4, [r6]
+ 1172 01c6 A4B2     		uxth	r4, r4
+ 1173              	.LVL88:
+ 333:remote/rc_dbus.c **** 
+ 334:remote/rc_dbus.c ****     /* ① 反馈超时 → 断电 */
+ 335:remote/rc_dbus.c ****     if ((HAL_GetTick() - gim_pitch.last_tick) > GM_FEEDBACK_TIMEOUT_MS)
+ 1174              		.loc 1 335 5 is_stmt 1 view .LVU358
+ 1175              		.loc 1 335 10 is_stmt 0 view .LVU359
+ 1176 01c8 FFF7FEFF 		bl	HAL_GetTick
+ 1177              	.LVL89:
+ 1178              		.loc 1 335 35 discriminator 1 view .LVU360
+ 1179 01cc B368     		ldr	r3, [r6, #8]
+ 1180              		.loc 1 335 24 discriminator 1 view .LVU361
+ 1181 01ce C01A     		subs	r0, r0, r3
+ 1182              		.loc 1 335 8 discriminator 1 view .LVU362
+ 1183 01d0 6428     		cmp	r0, #100
+ 1184 01d2 01D9     		bls	.L79
+ 336:remote/rc_dbus.c ****         volt_p = 0.0f;
+ 1185              		.loc 1 336 16 view .LVU363
+ 1186 01d4 DFED4B8A 		vldr.32	s17, .L134+48
+ 1187              	.LVL90:
+ 1188              	.L79:
+ 337:remote/rc_dbus.c **** 
+ 338:remote/rc_dbus.c ****     /* ② 超速兜底 */
+ 339:remote/rc_dbus.c ****     if (gim_pitch.rpm > GM_RPM_LIMIT || gim_pitch.rpm < -GM_RPM_LIMIT)
+ 1189              		.loc 1 339 5 is_stmt 1 view .LVU364
+ 1190              		.loc 1 339 18 is_stmt 0 view .LVU365
+ 1191 01d8 474B     		ldr	r3, .L134+36
+ 1192 01da 5B88     		ldrh	r3, [r3, #2]
+ 1193 01dc 1BB2     		sxth	r3, r3
+ 1194              		.loc 1 339 8 view .LVU366
+ 1195 01de B3F5C87F 		cmp	r3, #400
+ 1196 01e2 0BDC     		bgt	.L112
+ 1197              		.loc 1 339 50 discriminator 1 view .LVU367
+ 1198 01e4 444B     		ldr	r3, .L134+36
+ 1199 01e6 5B88     		ldrh	r3, [r3, #2]
+ 1200 01e8 1BB2     		sxth	r3, r3
+ 1201              		.loc 1 339 38 discriminator 1 view .LVU368
+ 1202 01ea 13F5C87F 		cmn	r3, #400
+ 1203 01ee 07DA     		bge	.L80
+ 340:remote/rc_dbus.c ****         volt_p = 0.0f;
+ 1204              		.loc 1 340 16 view .LVU369
+ 1205 01f0 DFED448A 		vldr.32	s17, .L134+48
+ 1206              	.LVL91:
+ 1207              		.loc 1 340 16 view .LVU370
+ 1208 01f4 04E0     		b	.L80
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 29
+
+
+ 1209              	.LVL92:
+ 1210              	.L110:
+ 330:remote/rc_dbus.c ****     float volt_p = GM_PITCH_SIGN * pit * GM_PITCH_VOLT_MAX;
+ 1211              		.loc 1 330 57 discriminator 2 view .LVU371
+ 1212 01f6 9FED430A 		vldr.32	s0, .L134+48
+ 1213 01fa DEE7     		b	.L78
+ 1214              	.LVL93:
+ 1215              	.L112:
+ 1216              		.loc 1 340 16 view .LVU372
+ 1217 01fc DFED418A 		vldr.32	s17, .L134+48
+ 1218              	.LVL94:
+ 1219              	.L80:
+ 341:remote/rc_dbus.c **** 
+ 342:remote/rc_dbus.c ****     /* ③ 角度限位：界外只许往回收，界内按比例减速 */
+ 343:remote/rc_dbus.c ****     if (ap >= GM_PITCH_ANGLE_MAX || ap <= GM_PITCH_ANGLE_MIN)
+ 1220              		.loc 1 343 5 is_stmt 1 view .LVU373
+ 1221              		.loc 1 343 34 is_stmt 0 view .LVU374
+ 1222 0200 621E     		subs	r2, r4, #1
+ 1223              		.loc 1 343 8 view .LVU375
+ 1224 0202 41F6FD73 		movw	r3, #8189
+ 1225 0206 9A42     		cmp	r2, r3
+ 1226 0208 14D9     		bls	.L81
+ 344:remote/rc_dbus.c ****     {
+ 345:remote/rc_dbus.c ****         if ((ap >= GM_PITCH_ANGLE_MAX && volt_p > 0.0f) ||
+ 1227              		.loc 1 345 9 is_stmt 1 view .LVU376
+ 1228              		.loc 1 345 12 is_stmt 0 view .LVU377
+ 1229 020a 41F6FE73 		movw	r3, #8190
+ 1230 020e 9C42     		cmp	r4, r3
+ 1231 0210 07DD     		ble	.L82
+ 1232              		.loc 1 345 39 discriminator 1 view .LVU378
+ 1233 0212 F5EEC08A 		vcmpe.f32	s17, #0
+ 1234 0216 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1235 021a 02DD     		ble	.L82
+ 346:remote/rc_dbus.c ****             (ap <= GM_PITCH_ANGLE_MIN && volt_p < 0.0f))
+ 347:remote/rc_dbus.c ****             volt_p = 0.0f;
+ 1236              		.loc 1 347 20 view .LVU379
+ 1237 021c DFED398A 		vldr.32	s17, .L134+48
+ 1238              	.LVL95:
+ 1239              		.loc 1 347 20 view .LVU380
+ 1240 0220 19E0     		b	.L83
+ 1241              	.LVL96:
+ 1242              	.L82:
+ 345:remote/rc_dbus.c ****             (ap <= GM_PITCH_ANGLE_MIN && volt_p < 0.0f))
+ 1243              		.loc 1 345 57 discriminator 3 view .LVU381
+ 1244 0222 C4B9     		cbnz	r4, .L83
+ 346:remote/rc_dbus.c ****             (ap <= GM_PITCH_ANGLE_MIN && volt_p < 0.0f))
+ 1245              		.loc 1 346 39 view .LVU382
+ 1246 0224 F5EEC08A 		vcmpe.f32	s17, #0
+ 1247 0228 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1248 022c 13D5     		bpl	.L83
+ 1249              		.loc 1 347 20 view .LVU383
+ 1250 022e DFED358A 		vldr.32	s17, .L134+48
+ 1251              	.LVL97:
+ 1252              		.loc 1 347 20 view .LVU384
+ 1253 0232 10E0     		b	.L83
+ 1254              	.LVL98:
+ 1255              	.L81:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 30
+
+
+ 348:remote/rc_dbus.c ****     }
+ 349:remote/rc_dbus.c ****     else if (ap > GM_PITCH_ANGLE_MAX - GM_PITCH_SOFT_ZONE)
+ 1256              		.loc 1 349 10 is_stmt 1 view .LVU385
+ 1257              		.loc 1 349 13 is_stmt 0 view .LVU386
+ 1258 0234 41F63773 		movw	r3, #7991
+ 1259 0238 9C42     		cmp	r4, r3
+ 1260 023a 3DDD     		ble	.L84
+ 350:remote/rc_dbus.c ****     {
+ 351:remote/rc_dbus.c ****         volt_p *= (float)(GM_PITCH_ANGLE_MAX - ap) / (float)GM_PITCH_SOFT_ZONE;
+ 1261              		.loc 1 351 9 is_stmt 1 view .LVU387
+ 1262              		.loc 1 351 46 is_stmt 0 view .LVU388
+ 1263 023c 41F6FF73 		movw	r3, #8191
+ 1264 0240 1B1B     		subs	r3, r3, r4
+ 1265              		.loc 1 351 19 view .LVU389
+ 1266 0242 07EE903A 		vmov	s15, r3	@ int
+ 1267 0246 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 1268              		.loc 1 351 52 view .LVU390
+ 1269 024a DFED296A 		vldr.32	s13, .L134+28
+ 1270 024e 87EEA67A 		vdiv.f32	s14, s15, s13
+ 1271              		.loc 1 351 16 view .LVU391
+ 1272 0252 68EE878A 		vmul.f32	s17, s17, s14
+ 1273              	.LVL99:
+ 1274              	.L83:
+ 352:remote/rc_dbus.c ****     }
+ 353:remote/rc_dbus.c ****     else if (ap < GM_PITCH_ANGLE_MIN + GM_PITCH_SOFT_ZONE)
+ 354:remote/rc_dbus.c ****     {
+ 355:remote/rc_dbus.c ****         volt_p *= (float)(ap - GM_PITCH_ANGLE_MIN) / (float)GM_PITCH_SOFT_ZONE;
+ 356:remote/rc_dbus.c ****     }
+ 357:remote/rc_dbus.c **** 
+ 358:remote/rc_dbus.c ****     /* ④ 斜坡 */
+ 359:remote/rc_dbus.c ****     static float vp_prev = 0.0f;
+ 1275              		.loc 1 359 5 is_stmt 1 view .LVU392
+ 360:remote/rc_dbus.c ****     if (volt_p > vp_prev + GM_VOLT_SLEW) volt_p = vp_prev + GM_VOLT_SLEW;
+ 1276              		.loc 1 360 5 view .LVU393
+ 1277              		.loc 1 360 26 is_stmt 0 view .LVU394
+ 1278 0256 294B     		ldr	r3, .L134+40
+ 1279 0258 93ED008A 		vldr.32	s16, [r3]
+ 1280 025c DFED247A 		vldr.32	s15, .L134+28
+ 1281 0260 78EE277A 		vadd.f32	s15, s16, s15
+ 1282              		.loc 1 360 8 view .LVU395
+ 1283 0264 F4EEE87A 		vcmpe.f32	s15, s17
+ 1284 0268 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1285 026c 01D4     		bmi	.L85
+ 1286 026e F0EE687A 		vmov.f32	s15, s17
+ 1287              	.L85:
+ 1288              	.LVL100:
+ 361:remote/rc_dbus.c ****     if (volt_p < vp_prev - GM_VOLT_SLEW) volt_p = vp_prev - GM_VOLT_SLEW;
+ 1289              		.loc 1 361 5 is_stmt 1 view .LVU396
+ 1290              		.loc 1 361 26 is_stmt 0 view .LVU397
+ 1291 0272 9FED1F7A 		vldr.32	s14, .L134+28
+ 1292 0276 38EE478A 		vsub.f32	s16, s16, s14
+ 1293              		.loc 1 361 8 view .LVU398
+ 1294 027a B4EEE78A 		vcmpe.f32	s16, s15
+ 1295 027e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1296 0282 01DC     		bgt	.L86
+ 1297 0284 B0EE678A 		vmov.f32	s16, s15
+ 1298              	.L86:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 31
+
+
+ 1299              	.LVL101:
+ 362:remote/rc_dbus.c ****     vp_prev = volt_p;
+ 1300              		.loc 1 362 5 is_stmt 1 view .LVU399
+ 1301              		.loc 1 362 13 is_stmt 0 view .LVU400
+ 1302 0288 1C4B     		ldr	r3, .L134+40
+ 1303 028a 83ED008A 		vstr.32	s16, [r3]
+ 363:remote/rc_dbus.c **** 
+ 364:remote/rc_dbus.c ****     /* ⑧ 摩擦轮：左拨杆上 → 3508 ID2/ID3 反向同电流 */
+ 365:remote/rc_dbus.c **** #if (FRIC_ENABLE_USE_LEFT)
+ 366:remote/rc_dbus.c ****     uint8_t fric_sw = (RC_Data.s_left  == FRIC_ENABLE_SW);
+ 1304              		.loc 1 366 5 is_stmt 1 view .LVU401
+ 1305              		.loc 1 366 31 is_stmt 0 view .LVU402
+ 1306 028e 114B     		ldr	r3, .L134
+ 1307 0290 1B7A     		ldrb	r3, [r3, #8]	@ zero_extendqisi2
+ 1308              	.LVL102:
+ 367:remote/rc_dbus.c **** #else
+ 368:remote/rc_dbus.c ****     uint8_t fric_sw = (RC_Data.s_right == FRIC_ENABLE_SW);
+ 369:remote/rc_dbus.c **** #endif
+ 370:remote/rc_dbus.c **** 
+ 371:remote/rc_dbus.c ****     float fric_tgt = (online && fric_sw) ? FRIC_CURRENT_A : 0.0f;
+ 1309              		.loc 1 371 5 is_stmt 1 view .LVU403
+ 1310              		.loc 1 371 30 is_stmt 0 view .LVU404
+ 1311 0292 012B     		cmp	r3, #1
+ 1312 0294 14BF     		ite	ne
+ 1313 0296 0025     		movne	r5, #0
+ 1314 0298 05F00105 		andeq	r5, r5, #1
+ 1315              		.loc 1 371 59 view .LVU405
+ 1316 029c A5B3     		cbz	r5, .L116
+ 1317              		.loc 1 371 59 discriminator 1 view .LVU406
+ 1318 029e F7EE008A 		vmov.f32	s17, #1.0e+0
+ 1319              	.L87:
+ 1320              	.LVL103:
+ 372:remote/rc_dbus.c **** 
+ 373:remote/rc_dbus.c ****     if (dj_motor[1].temp > FRIC_TEMP_LIMIT || dj_motor[2].temp > FRIC_TEMP_LIMIT)
+ 1321              		.loc 1 373 5 is_stmt 1 view .LVU407
+ 1322              		.loc 1 373 20 is_stmt 0 view .LVU408
+ 1323 02a2 174B     		ldr	r3, .L134+44
+ 1324 02a4 9B7C     		ldrb	r3, [r3, #18]	@ zero_extendqisi2
+ 1325              		.loc 1 373 8 view .LVU409
+ 1326 02a6 3C2B     		cmp	r3, #60
+ 1327 02a8 31D8     		bhi	.L117
+ 1328              		.loc 1 373 58 discriminator 1 view .LVU410
+ 1329 02aa 154B     		ldr	r3, .L134+44
+ 1330 02ac 9B7F     		ldrb	r3, [r3, #30]	@ zero_extendqisi2
+ 1331              		.loc 1 373 44 discriminator 1 view .LVU411
+ 1332 02ae 3C2B     		cmp	r3, #60
+ 1333 02b0 2FD9     		bls	.L88
+ 374:remote/rc_dbus.c ****         fric_tgt = 0.0f;
+ 1334              		.loc 1 374 18 view .LVU412
+ 1335 02b2 DFED148A 		vldr.32	s17, .L134+48
+ 1336              	.LVL104:
+ 1337              		.loc 1 374 18 view .LVU413
+ 1338 02b6 2CE0     		b	.L88
+ 1339              	.LVL105:
+ 1340              	.L84:
+ 353:remote/rc_dbus.c ****     {
+ 1341              		.loc 1 353 10 is_stmt 1 view .LVU414
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 32
+
+
+ 353:remote/rc_dbus.c ****     {
+ 1342              		.loc 1 353 13 is_stmt 0 view .LVU415
+ 1343 02b8 C72C     		cmp	r4, #199
+ 1344 02ba CCDC     		bgt	.L83
+ 355:remote/rc_dbus.c ****     }
+ 1345              		.loc 1 355 9 is_stmt 1 view .LVU416
+ 355:remote/rc_dbus.c ****     }
+ 1346              		.loc 1 355 19 is_stmt 0 view .LVU417
+ 1347 02bc 07EE904A 		vmov	s15, r4	@ int
+ 1348 02c0 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 355:remote/rc_dbus.c ****     }
+ 1349              		.loc 1 355 52 view .LVU418
+ 1350 02c4 DFED0A6A 		vldr.32	s13, .L134+28
+ 1351 02c8 87EEA67A 		vdiv.f32	s14, s15, s13
+ 355:remote/rc_dbus.c ****     }
+ 1352              		.loc 1 355 16 view .LVU419
+ 1353 02cc 68EE878A 		vmul.f32	s17, s17, s14
+ 1354              	.LVL106:
+ 355:remote/rc_dbus.c ****     }
+ 1355              		.loc 1 355 16 view .LVU420
+ 1356 02d0 C1E7     		b	.L83
+ 1357              	.L135:
+ 1358 02d2 00BF     		.align	2
+ 1359              	.L134:
+ 1360 02d4 00000000 		.word	RC_Data
+ 1361 02d8 00000000 		.word	rc_enable_since
+ 1362 02dc 00000000 		.word	RC_WheelOut
+ 1363 02e0 00000000 		.word	s_wheel_sign.3
+ 1364 02e4 00606A46 		.word	1181376512
+ 1365 02e8 00000000 		.word	gim6020
+ 1366 02ec 00000000 		.word	volt_prev.2
+ 1367 02f0 00004843 		.word	1128792064
+ 1368 02f4 00803B46 		.word	1178304512
+ 1369 02f8 00000000 		.word	gim_pitch
+ 1370 02fc 00000000 		.word	vp_prev.1
+ 1371 0300 00000000 		.word	dj_motor
+ 1372 0304 00000000 		.word	0
+ 1373              	.LVL107:
+ 1374              	.L116:
+ 371:remote/rc_dbus.c **** 
+ 1375              		.loc 1 371 59 discriminator 2 view .LVU421
+ 1376 0308 5FED028A 		vldr.32	s17, .L134+48
+ 1377 030c C9E7     		b	.L87
+ 1378              	.LVL108:
+ 1379              	.L117:
+ 1380              		.loc 1 374 18 view .LVU422
+ 1381 030e 5FED038A 		vldr.32	s17, .L134+48
+ 1382              	.LVL109:
+ 1383              	.L88:
+ 375:remote/rc_dbus.c ****     if ((HAL_GetTick() - dj_motor[1].last_tick) > FRIC_TIMEOUT_MS ||
+ 1384              		.loc 1 375 5 is_stmt 1 view .LVU423
+ 1385              		.loc 1 375 10 is_stmt 0 view .LVU424
+ 1386 0312 FFF7FEFF 		bl	HAL_GetTick
+ 1387              	.LVL110:
+ 1388              		.loc 1 375 37 discriminator 1 view .LVU425
+ 1389 0316 4E4B     		ldr	r3, .L136
+ 1390 0318 5B69     		ldr	r3, [r3, #20]
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 33
+
+
+ 1391              		.loc 1 375 24 discriminator 1 view .LVU426
+ 1392 031a C01A     		subs	r0, r0, r3
+ 1393              		.loc 1 375 8 discriminator 1 view .LVU427
+ 1394 031c 41F28833 		movw	r3, #5000
+ 1395 0320 9842     		cmp	r0, r3
+ 1396 0322 53D9     		bls	.L133
+ 376:remote/rc_dbus.c ****         (HAL_GetTick() - dj_motor[2].last_tick) > FRIC_TIMEOUT_MS)
+ 377:remote/rc_dbus.c ****         fric_tgt = 0.0f;
+ 1397              		.loc 1 377 18 view .LVU428
+ 1398 0324 DFED4B8A 		vldr.32	s17, .L136+4
+ 1399              	.LVL111:
+ 1400              	.L89:
+ 378:remote/rc_dbus.c **** 
+ 379:remote/rc_dbus.c ****     static float fric_a = 0.0f;
+ 1401              		.loc 1 379 5 is_stmt 1 view .LVU429
+ 380:remote/rc_dbus.c ****     if      (fric_tgt > fric_a + FRIC_RAMP_A_PER_MS) fric_a += FRIC_RAMP_A_PER_MS;
+ 1402              		.loc 1 380 5 view .LVU430
+ 1403              		.loc 1 380 32 is_stmt 0 view .LVU431
+ 1404 0328 4B4B     		ldr	r3, .L136+8
+ 1405 032a 93ED007A 		vldr.32	s14, [r3]
+ 1406 032e DFED4B7A 		vldr.32	s15, .L136+12
+ 1407 0332 77EE277A 		vadd.f32	s15, s14, s15
+ 1408              		.loc 1 380 13 view .LVU432
+ 1409 0336 F4EEE87A 		vcmpe.f32	s15, s17
+ 1410 033a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1411 033e 51D5     		bpl	.L128
+ 1412              		.loc 1 380 54 is_stmt 1 discriminator 1 view .LVU433
+ 1413              		.loc 1 380 61 is_stmt 0 discriminator 1 view .LVU434
+ 1414 0340 C3ED007A 		vstr.32	s15, [r3]
+ 1415              	.L92:
+ 381:remote/rc_dbus.c ****     else if (fric_tgt < fric_a - FRIC_RAMP_A_PER_MS) fric_a -= FRIC_RAMP_A_PER_MS;
+ 382:remote/rc_dbus.c ****     else                                             fric_a  = fric_tgt;
+ 383:remote/rc_dbus.c **** 
+ 384:remote/rc_dbus.c ****     int16_t fric_l;
+ 1416              		.loc 1 384 5 is_stmt 1 view .LVU435
+ 385:remote/rc_dbus.c ****     int16_t fric_r;
+ 1417              		.loc 1 385 5 view .LVU436
+ 386:remote/rc_dbus.c **** 
+ 387:remote/rc_dbus.c ****     if (fric_tgt > 0.0001f)
+ 1418              		.loc 1 387 5 view .LVU437
+ 1419              		.loc 1 387 8 is_stmt 0 view .LVU438
+ 1420 0344 DFED467A 		vldr.32	s15, .L136+16
+ 1421 0348 F4EEE78A 		vcmpe.f32	s17, s15
+ 1422 034c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1423 0350 59DD     		ble	.L130
+ 388:remote/rc_dbus.c ****     {
+ 389:remote/rc_dbus.c ****         /* 正常出力：两轮反向，把弹丸往外挤 */
+ 390:remote/rc_dbus.c ****         fric_l = (int16_t)(FRIC_L_SIGN * fric_a / 20.0f * 16384.0f);
+ 1424              		.loc 1 390 9 is_stmt 1 view .LVU439
+ 1425              		.loc 1 390 40 is_stmt 0 view .LVU440
+ 1426 0352 414B     		ldr	r3, .L136+8
+ 1427 0354 93ED007A 		vldr.32	s14, [r3]
+ 1428 0358 B1EE477A 		vneg.f32	s14, s14
+ 1429              		.loc 1 390 49 view .LVU441
+ 1430 035c F3EE046A 		vmov.f32	s13, #2.0e+1
+ 1431 0360 C7EE267A 		vdiv.f32	s15, s14, s13
+ 1432              		.loc 1 390 57 view .LVU442
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 34
+
+
+ 1433 0364 9FED3F7A 		vldr.32	s14, .L136+20
+ 1434 0368 67EE877A 		vmul.f32	s15, s15, s14
+ 1435              		.loc 1 390 16 view .LVU443
+ 1436 036c BDEEE77A 		vcvt.s32.f32	s14, s15
+ 1437 0370 17EE103A 		vmov	r3, s14	@ int
+ 1438 0374 1DB2     		sxth	r5, r3
+ 1439              	.LVL112:
+ 391:remote/rc_dbus.c ****         fric_r = (int16_t)(FRIC_R_SIGN * fric_a / 20.0f * 16384.0f);
+ 1440              		.loc 1 391 9 is_stmt 1 view .LVU444
+ 1441              		.loc 1 391 16 is_stmt 0 view .LVU445
+ 1442 0376 F1EE677A 		vneg.f32	s15, s15
+ 1443 037a FDEEE77A 		vcvt.s32.f32	s15, s15
+ 1444 037e 17EE903A 		vmov	r3, s15	@ int
+ 1445 0382 1CB2     		sxth	r4, r3
+ 1446              	.LVL113:
+ 1447              	.L97:
+ 392:remote/rc_dbus.c ****     }
+ 393:remote/rc_dbus.c ****     else
+ 394:remote/rc_dbus.c ****     {
+ 395:remote/rc_dbus.c ****         /* 松杆：反向小电流主动刹车，否则纯靠惯性会滑很久 */
+ 396:remote/rc_dbus.c ****         int16_t brake = (int16_t)(FRIC_BRAKE_A / 20.0f * 16384.0f);
+ 397:remote/rc_dbus.c **** 
+ 398:remote/rc_dbus.c ****         if (dj_motor[1].rpm >  FRIC_BRAKE_RPM)
+ 399:remote/rc_dbus.c ****         {
+ 400:remote/rc_dbus.c ****             fric_l = -brake;
+ 401:remote/rc_dbus.c ****         }
+ 402:remote/rc_dbus.c ****         else if (dj_motor[1].rpm < -FRIC_BRAKE_RPM)
+ 403:remote/rc_dbus.c ****         {
+ 404:remote/rc_dbus.c ****             fric_l =  brake;
+ 405:remote/rc_dbus.c ****         }
+ 406:remote/rc_dbus.c ****         else
+ 407:remote/rc_dbus.c ****         {
+ 408:remote/rc_dbus.c ****             fric_l = 0;
+ 409:remote/rc_dbus.c ****         }
+ 410:remote/rc_dbus.c **** 
+ 411:remote/rc_dbus.c ****         if (dj_motor[2].rpm >  FRIC_BRAKE_RPM)
+ 412:remote/rc_dbus.c ****         {
+ 413:remote/rc_dbus.c ****             fric_r = -brake;
+ 414:remote/rc_dbus.c ****         }
+ 415:remote/rc_dbus.c ****         else if (dj_motor[2].rpm < -FRIC_BRAKE_RPM)
+ 416:remote/rc_dbus.c ****         {
+ 417:remote/rc_dbus.c ****             fric_r =  brake;
+ 418:remote/rc_dbus.c ****         }
+ 419:remote/rc_dbus.c ****         else
+ 420:remote/rc_dbus.c ****         {
+ 421:remote/rc_dbus.c ****             fric_r = 0;
+ 422:remote/rc_dbus.c ****         }
+ 423:remote/rc_dbus.c ****     }
+ 424:remote/rc_dbus.c **** 
+ 425:remote/rc_dbus.c ****     /* ⑤ 安全开关：yaw / pitch / 摩擦轮 全部清零 */
+ 426:remote/rc_dbus.c **** #if GM_SAFE_NO_OUTPUT
+ 427:remote/rc_dbus.c ****     volt   = 0.0f;
+ 428:remote/rc_dbus.c ****     volt_p = 0.0f;
+ 429:remote/rc_dbus.c ****     fric_l = 0;
+ 430:remote/rc_dbus.c ****     fric_r = 0;
+ 431:remote/rc_dbus.c **** #endif
+ 432:remote/rc_dbus.c ****     volt_prev = volt;           /* ★ 记下本拍输出，下一拍才能继续爬 */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 35
+
+
+ 1448              		.loc 1 432 5 is_stmt 1 view .LVU446
+ 1449              		.loc 1 432 15 is_stmt 0 view .LVU447
+ 1450 0384 384B     		ldr	r3, .L136+24
+ 1451 0386 83ED009A 		vstr.32	s18, [r3]
+ 433:remote/rc_dbus.c **** 
+ 434:remote/rc_dbus.c ****     /* ⑥ 发送：CAN2 = 底盘四轮 + yaw；CAN1 = 摩擦轮 + pitch */
+ 435:remote/rc_dbus.c **** #if (FRIC_USE_CAN1)
+ 436:remote/rc_dbus.c ****   #if (MECANUM_WHEEL_NUM == 4)
+ 437:remote/rc_dbus.c ****     DJ3508_Send_I_Can2(raw[0], raw[1], raw[2], raw[3]); /* CAN2：四轮 0x200 槽位全用 */
+ 1452              		.loc 1 437 5 is_stmt 1 view .LVU448
+ 1453 038a BDF90630 		ldrsh	r3, [sp, #6]
+ 1454 038e BDF90420 		ldrsh	r2, [sp, #4]
+ 1455 0392 BDF90210 		ldrsh	r1, [sp, #2]
+ 1456 0396 BDF90000 		ldrsh	r0, [sp]
+ 1457 039a FFF7FEFF 		bl	DJ3508_Send_I_Can2
+ 1458              	.LVL114:
+ 438:remote/rc_dbus.c ****   #else
+ 439:remote/rc_dbus.c ****     DJ3508_Send_I_Can2(raw[0], 0, 0, raw[1]);           /* CAN2：ID1 底盘左 / ID4 底盘右 */
+ 440:remote/rc_dbus.c ****   #endif
+ 441:remote/rc_dbus.c ****     DJ6020_Send_V_Can2((int16_t)volt, 0);       /* CAN2：yaw ID1 */
+ 1459              		.loc 1 441 5 view .LVU449
+ 1460              		.loc 1 441 24 is_stmt 0 view .LVU450
+ 1461 039e BDEEC99A 		vcvt.s32.f32	s18, s18
+ 1462              	.LVL115:
+ 1463              		.loc 1 441 5 view .LVU451
+ 1464 03a2 0021     		movs	r1, #0
+ 1465 03a4 19EE103A 		vmov	r3, s18	@ int
+ 1466 03a8 18B2     		sxth	r0, r3
+ 1467 03aa FFF7FEFF 		bl	DJ6020_Send_V_Can2
+ 1468              	.LVL116:
+ 442:remote/rc_dbus.c ****     DJ3508_Send_Can1(fric_l, fric_r);           /* CAN1：摩擦轮 ID2 / ID3 */
+ 1469              		.loc 1 442 5 is_stmt 1 view .LVU452
+ 1470 03ae 2146     		mov	r1, r4
+ 1471 03b0 2846     		mov	r0, r5
+ 1472 03b2 FFF7FEFF 		bl	DJ3508_Send_Can1
+ 1473              	.LVL117:
+ 443:remote/rc_dbus.c ****     DJ6020_Send_Can1((int16_t)volt_p);          /* CAN1：pitch ID2 */
+ 1474              		.loc 1 443 5 view .LVU453
+ 1475              		.loc 1 443 22 is_stmt 0 view .LVU454
+ 1476 03b6 BDEEC88A 		vcvt.s32.f32	s16, s16
+ 1477              	.LVL118:
+ 1478              		.loc 1 443 5 view .LVU455
+ 1479 03ba 18EE103A 		vmov	r3, s16	@ int
+ 1480 03be 18B2     		sxth	r0, r3
+ 1481 03c0 FFF7FEFF 		bl	DJ6020_Send_Can1
+ 1482              	.LVL119:
+ 444:remote/rc_dbus.c **** #else
+ 445:remote/rc_dbus.c ****   #if (MECANUM_WHEEL_NUM != 2)
+ 446:remote/rc_dbus.c ****     #error "four-wheel chassis requires FRIC_USE_CAN1=1 (ID2/ID3 slot conflict)"
+ 447:remote/rc_dbus.c ****   #endif
+ 448:remote/rc_dbus.c ****     DJ3508_Send_I_Can2(raw[0], fric_l, fric_r, raw[1]);
+ 449:remote/rc_dbus.c ****     DJ6020_Send_V_Can2((int16_t)volt, (int16_t)volt_p);
+ 450:remote/rc_dbus.c **** #endif
+ 451:remote/rc_dbus.c **** }
+ 1483              		.loc 1 451 1 view .LVU456
+ 1484 03c4 03B0     		add	sp, sp, #12
+ 1485              	.LCFI7:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 36
+
+
+ 1486              		.cfi_remember_state
+ 1487              		.cfi_def_cfa_offset 36
+ 1488              		@ sp needed
+ 1489 03c6 BDEC048B 		vldm	sp!, {d8-d9}
+ 1490              	.LCFI8:
+ 1491              		.cfi_restore 82
+ 1492              		.cfi_restore 83
+ 1493              		.cfi_restore 80
+ 1494              		.cfi_restore 81
+ 1495              		.cfi_def_cfa_offset 20
+ 1496 03ca F0BD     		pop	{r4, r5, r6, r7, pc}
+ 1497              	.LVL120:
+ 1498              	.L133:
+ 1499              	.LCFI9:
+ 1500              		.cfi_restore_state
+ 376:remote/rc_dbus.c ****         fric_tgt = 0.0f;
+ 1501              		.loc 1 376 10 view .LVU457
+ 1502 03cc FFF7FEFF 		bl	HAL_GetTick
+ 1503              	.LVL121:
+ 376:remote/rc_dbus.c ****         fric_tgt = 0.0f;
+ 1504              		.loc 1 376 37 discriminator 1 view .LVU458
+ 1505 03d0 1F4B     		ldr	r3, .L136
+ 1506 03d2 1B6A     		ldr	r3, [r3, #32]
+ 376:remote/rc_dbus.c ****         fric_tgt = 0.0f;
+ 1507              		.loc 1 376 24 discriminator 1 view .LVU459
+ 1508 03d4 C01A     		subs	r0, r0, r3
+ 375:remote/rc_dbus.c ****         (HAL_GetTick() - dj_motor[2].last_tick) > FRIC_TIMEOUT_MS)
+ 1509              		.loc 1 375 67 discriminator 1 view .LVU460
+ 1510 03d6 41F28833 		movw	r3, #5000
+ 1511 03da 9842     		cmp	r0, r3
+ 1512 03dc A4D9     		bls	.L89
+ 377:remote/rc_dbus.c **** 
+ 1513              		.loc 1 377 18 view .LVU461
+ 1514 03de DFED1D8A 		vldr.32	s17, .L136+4
+ 1515              	.LVL122:
+ 377:remote/rc_dbus.c **** 
+ 1516              		.loc 1 377 18 view .LVU462
+ 1517 03e2 A1E7     		b	.L89
+ 1518              	.LVL123:
+ 1519              	.L128:
+ 381:remote/rc_dbus.c ****     else                                             fric_a  = fric_tgt;
+ 1520              		.loc 1 381 10 is_stmt 1 view .LVU463
+ 381:remote/rc_dbus.c ****     else                                             fric_a  = fric_tgt;
+ 1521              		.loc 1 381 32 is_stmt 0 view .LVU464
+ 1522 03e4 DFED1D7A 		vldr.32	s15, .L136+12
+ 1523 03e8 37EE677A 		vsub.f32	s14, s14, s15
+ 381:remote/rc_dbus.c ****     else                                             fric_a  = fric_tgt;
+ 1524              		.loc 1 381 13 view .LVU465
+ 1525 03ec B4EEE87A 		vcmpe.f32	s14, s17
+ 1526 03f0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1527 03f4 03DD     		ble	.L129
+ 381:remote/rc_dbus.c ****     else                                             fric_a  = fric_tgt;
+ 1528              		.loc 1 381 54 is_stmt 1 discriminator 1 view .LVU466
+ 381:remote/rc_dbus.c ****     else                                             fric_a  = fric_tgt;
+ 1529              		.loc 1 381 61 is_stmt 0 discriminator 1 view .LVU467
+ 1530 03f6 184B     		ldr	r3, .L136+8
+ 1531 03f8 83ED007A 		vstr.32	s14, [r3]
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 37
+
+
+ 1532 03fc A2E7     		b	.L92
+ 1533              	.L129:
+ 382:remote/rc_dbus.c **** 
+ 1534              		.loc 1 382 54 is_stmt 1 view .LVU468
+ 382:remote/rc_dbus.c **** 
+ 1535              		.loc 1 382 62 is_stmt 0 view .LVU469
+ 1536 03fe 164B     		ldr	r3, .L136+8
+ 1537 0400 C3ED008A 		vstr.32	s17, [r3]
+ 1538 0404 9EE7     		b	.L92
+ 1539              	.L130:
+ 1540              	.LBB25:
+ 396:remote/rc_dbus.c **** 
+ 1541              		.loc 1 396 9 is_stmt 1 view .LVU470
+ 1542              	.LVL124:
+ 398:remote/rc_dbus.c ****         {
+ 1543              		.loc 1 398 9 view .LVU471
+ 398:remote/rc_dbus.c ****         {
+ 1544              		.loc 1 398 24 is_stmt 0 view .LVU472
+ 1545 0406 124B     		ldr	r3, .L136
+ 1546 0408 DB89     		ldrh	r3, [r3, #14]
+ 1547 040a 1BB2     		sxth	r3, r3
+ 398:remote/rc_dbus.c ****         {
+ 1548              		.loc 1 398 12 view .LVU473
+ 1549 040c B3F5967F 		cmp	r3, #300
+ 1550 0410 08DC     		bgt	.L121
+ 402:remote/rc_dbus.c ****         {
+ 1551              		.loc 1 402 14 is_stmt 1 view .LVU474
+ 402:remote/rc_dbus.c ****         {
+ 1552              		.loc 1 402 29 is_stmt 0 view .LVU475
+ 1553 0412 0F4B     		ldr	r3, .L136
+ 1554 0414 DB89     		ldrh	r3, [r3, #14]
+ 1555 0416 1BB2     		sxth	r3, r3
+ 402:remote/rc_dbus.c ****         {
+ 1556              		.loc 1 402 17 view .LVU476
+ 1557 0418 13F5967F 		cmn	r3, #300
+ 1558 041c 12DA     		bge	.L122
+ 404:remote/rc_dbus.c ****         }
+ 1559              		.loc 1 404 20 view .LVU477
+ 1560 041e 40F28F25 		movw	r5, #655
+ 1561 0422 00E0     		b	.L98
+ 1562              	.L121:
+ 400:remote/rc_dbus.c ****         }
+ 1563              		.loc 1 400 20 view .LVU478
+ 1564 0424 114D     		ldr	r5, .L136+28
+ 1565              	.L98:
+ 1566              	.LVL125:
+ 411:remote/rc_dbus.c ****         {
+ 1567              		.loc 1 411 9 is_stmt 1 view .LVU479
+ 411:remote/rc_dbus.c ****         {
+ 1568              		.loc 1 411 24 is_stmt 0 view .LVU480
+ 1569 0426 0A4B     		ldr	r3, .L136
+ 1570 0428 5B8B     		ldrh	r3, [r3, #26]
+ 1571 042a 1BB2     		sxth	r3, r3
+ 411:remote/rc_dbus.c ****         {
+ 1572              		.loc 1 411 12 view .LVU481
+ 1573 042c B3F5967F 		cmp	r3, #300
+ 1574 0430 0ADC     		bgt	.L123
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 38
+
+
+ 415:remote/rc_dbus.c ****         {
+ 1575              		.loc 1 415 14 is_stmt 1 view .LVU482
+ 415:remote/rc_dbus.c ****         {
+ 1576              		.loc 1 415 29 is_stmt 0 view .LVU483
+ 1577 0432 074B     		ldr	r3, .L136
+ 1578 0434 5B8B     		ldrh	r3, [r3, #26]
+ 1579 0436 1BB2     		sxth	r3, r3
+ 415:remote/rc_dbus.c ****         {
+ 1580              		.loc 1 415 17 view .LVU484
+ 1581 0438 13F5967F 		cmn	r3, #300
+ 1582 043c 06DA     		bge	.L124
+ 417:remote/rc_dbus.c ****         }
+ 1583              		.loc 1 417 20 view .LVU485
+ 1584 043e 40F28F24 		movw	r4, #655
+ 1585              	.LVL126:
+ 417:remote/rc_dbus.c ****         }
+ 1586              		.loc 1 417 20 view .LVU486
+ 1587 0442 9FE7     		b	.L97
+ 1588              	.LVL127:
+ 1589              	.L122:
+ 408:remote/rc_dbus.c ****         }
+ 1590              		.loc 1 408 20 view .LVU487
+ 1591 0444 0025     		movs	r5, #0
+ 1592 0446 EEE7     		b	.L98
+ 1593              	.LVL128:
+ 1594              	.L123:
+ 413:remote/rc_dbus.c ****         }
+ 1595              		.loc 1 413 20 view .LVU488
+ 1596 0448 084C     		ldr	r4, .L136+28
+ 1597              	.LVL129:
+ 413:remote/rc_dbus.c ****         }
+ 1598              		.loc 1 413 20 view .LVU489
+ 1599 044a 9BE7     		b	.L97
+ 1600              	.LVL130:
+ 1601              	.L124:
+ 421:remote/rc_dbus.c ****         }
+ 1602              		.loc 1 421 20 view .LVU490
+ 1603 044c 0024     		movs	r4, #0
+ 1604              	.LVL131:
+ 421:remote/rc_dbus.c ****         }
+ 1605              		.loc 1 421 20 view .LVU491
+ 1606 044e 99E7     		b	.L97
+ 1607              	.L137:
+ 1608              		.align	2
+ 1609              	.L136:
+ 1610 0450 00000000 		.word	dj_motor
+ 1611 0454 00000000 		.word	0
+ 1612 0458 00000000 		.word	fric_a.0
+ 1613 045c 0AD7A33C 		.word	1017370378
+ 1614 0460 17B7D138 		.word	953267991
+ 1615 0464 00008046 		.word	1182793728
+ 1616 0468 00000000 		.word	volt_prev.2
+ 1617 046c 71FDFFFF 		.word	-655
+ 1618              	.LBE25:
+ 1619              		.cfi_endproc
+ 1620              	.LFE152:
+ 1622              		.section	.text.HAL_UARTEx_RxEventCallback,"ax",%progbits
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 39
+
+
+ 1623              		.align	1
+ 1624              		.global	HAL_UARTEx_RxEventCallback
+ 1625              		.syntax unified
+ 1626              		.thumb
+ 1627              		.thumb_func
+ 1629              	HAL_UARTEx_RxEventCallback:
+ 1630              	.LVL132:
+ 1631              	.LFB153:
+ 452:remote/rc_dbus.c **** 
+ 453:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+ 454:remote/rc_dbus.c **** /* UART 空闲中断回调：一帧收完由 HAL 调用                                */
+ 455:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+ 456:remote/rc_dbus.c **** void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+ 457:remote/rc_dbus.c **** {
+ 1632              		.loc 1 457 1 is_stmt 1 view -0
+ 1633              		.cfi_startproc
+ 1634              		@ args = 0, pretend = 0, frame = 0
+ 1635              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1636              		.loc 1 457 1 is_stmt 0 view .LVU493
+ 1637 0000 08B5     		push	{r3, lr}
+ 1638              	.LCFI10:
+ 1639              		.cfi_def_cfa_offset 8
+ 1640              		.cfi_offset 3, -8
+ 1641              		.cfi_offset 14, -4
+ 458:remote/rc_dbus.c ****     if (huart->Instance == UART5)
+ 1642              		.loc 1 458 5 is_stmt 1 view .LVU494
+ 1643              		.loc 1 458 14 is_stmt 0 view .LVU495
+ 1644 0002 0268     		ldr	r2, [r0]
+ 1645              		.loc 1 458 8 view .LVU496
+ 1646 0004 114B     		ldr	r3, .L146
+ 1647 0006 9A42     		cmp	r2, r3
+ 1648 0008 00D0     		beq	.L144
+ 1649              	.LVL133:
+ 1650              	.L138:
+ 459:remote/rc_dbus.c ****     {
+ 460:remote/rc_dbus.c ****         /* 只有真正打开了 D-Cache 才需要做 cache 维护。
+ 461:remote/rc_dbus.c ****          * 本工程 D-Cache 关闭（SCB->CCR.DC=0），实测此处若无条件调用
+ 462:remote/rc_dbus.c ****          * SCB_InvalidateDCache_by_Addr() 会在第一帧到达时触发
+ 463:remote/rc_dbus.c ****          * HardFault（CFSR.IMPRECISERR），导致摇杆永远没反应。 */
+ 464:remote/rc_dbus.c ****         if ((SCB->CCR & SCB_CCR_DC_Msk) != 0U)
+ 465:remote/rc_dbus.c ****         {
+ 466:remote/rc_dbus.c ****             SCB_InvalidateDCache_by_Addr((uint32_t *)dbus_buf, sizeof(dbus_buf));
+ 467:remote/rc_dbus.c ****         }
+ 468:remote/rc_dbus.c **** 
+ 469:remote/rc_dbus.c ****         if (Size >= DBUS_FRAME_LEN)
+ 470:remote/rc_dbus.c ****         {
+ 471:remote/rc_dbus.c ****             /* 收到多帧时取最后一帧完整数据 */
+ 472:remote/rc_dbus.c ****             RC_Decode(&dbus_buf[Size - DBUS_FRAME_LEN]);
+ 473:remote/rc_dbus.c ****         }
+ 474:remote/rc_dbus.c **** 
+ 475:remote/rc_dbus.c ****         RC_StartReceive();   /* 普通模式，需要重新启动 */
+ 476:remote/rc_dbus.c ****     }
+ 477:remote/rc_dbus.c **** }
+ 1651              		.loc 1 477 1 view .LVU497
+ 1652 000a 08BD     		pop	{r3, pc}
+ 1653              	.LVL134:
+ 1654              	.L144:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 40
+
+
+ 464:remote/rc_dbus.c ****         {
+ 1655              		.loc 1 464 9 is_stmt 1 view .LVU498
+ 464:remote/rc_dbus.c ****         {
+ 1656              		.loc 1 464 17 is_stmt 0 view .LVU499
+ 1657 000c 104B     		ldr	r3, .L146+4
+ 1658 000e 5B69     		ldr	r3, [r3, #20]
+ 464:remote/rc_dbus.c ****         {
+ 1659              		.loc 1 464 12 view .LVU500
+ 1660 0010 13F4803F 		tst	r3, #65536
+ 1661 0014 0ED0     		beq	.L140
+ 466:remote/rc_dbus.c ****         }
+ 1662              		.loc 1 466 13 is_stmt 1 view .LVU501
+ 1663              	.LVL135:
+ 1664              	.LBB26:
+ 1665              	.LBI26:
+ 1666              		.file 2 "Drivers/CMSIS/Include/cachel1_armv7.h"
+   1:Drivers/CMSIS/Include/cachel1_armv7.h **** /******************************************************************************
+   2:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @file     cachel1_armv7.h
+   3:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @brief    CMSIS Level 1 Cache API for Armv7-M and later
+   4:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @version  V1.0.3
+   5:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @date     17. March 2023
+   6:Drivers/CMSIS/Include/cachel1_armv7.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cachel1_armv7.h **** /*
+   8:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Copyright (c) 2020-2021 Arm Limited. All rights reserved.
+   9:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  10:Drivers/CMSIS/Include/cachel1_armv7.h ****  * SPDX-License-Identifier: Apache-2.0
+  11:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  12:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Licensed under the Apache License, Version 2.0 (the License); you may
+  13:Drivers/CMSIS/Include/cachel1_armv7.h ****  * not use this file except in compliance with the License.
+  14:Drivers/CMSIS/Include/cachel1_armv7.h ****  * You may obtain a copy of the License at
+  15:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  16:Drivers/CMSIS/Include/cachel1_armv7.h ****  * www.apache.org/licenses/LICENSE-2.0
+  17:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  18:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Unless required by applicable law or agreed to in writing, software
+  19:Drivers/CMSIS/Include/cachel1_armv7.h ****  * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+  20:Drivers/CMSIS/Include/cachel1_armv7.h ****  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  21:Drivers/CMSIS/Include/cachel1_armv7.h ****  * See the License for the specific language governing permissions and
+  22:Drivers/CMSIS/Include/cachel1_armv7.h ****  * limitations under the License.
+  23:Drivers/CMSIS/Include/cachel1_armv7.h ****  */
+  24:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  25:Drivers/CMSIS/Include/cachel1_armv7.h **** #if   defined ( __ICCARM__ )
+  26:Drivers/CMSIS/Include/cachel1_armv7.h ****   #pragma system_include         /* treat file as system include file for MISRA check */
+  27:Drivers/CMSIS/Include/cachel1_armv7.h **** #elif defined (__clang__)
+  28:Drivers/CMSIS/Include/cachel1_armv7.h ****   #pragma clang system_header    /* treat file as system include file */
+  29:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  30:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  31:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef ARM_CACHEL1_ARMV7_H
+  32:Drivers/CMSIS/Include/cachel1_armv7.h **** #define ARM_CACHEL1_ARMV7_H
+  33:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  34:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  35:Drivers/CMSIS/Include/cachel1_armv7.h ****   \ingroup  CMSIS_Core_FunctionInterface
+  36:Drivers/CMSIS/Include/cachel1_armv7.h ****   \defgroup CMSIS_Core_CacheFunctions Cache Functions
+  37:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief    Functions that configure Instruction and Data cache.
+  38:Drivers/CMSIS/Include/cachel1_armv7.h ****   @{
+  39:Drivers/CMSIS/Include/cachel1_armv7.h ****  */
+  40:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  41:Drivers/CMSIS/Include/cachel1_armv7.h **** /* Cache Size ID Register Macros */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 41
+
+
+  42:Drivers/CMSIS/Include/cachel1_armv7.h **** #define CCSIDR_WAYS(x)         (((x) & SCB_CCSIDR_ASSOCIATIVITY_Msk) >> SCB_CCSIDR_ASSOCIATIVITY_Po
+  43:Drivers/CMSIS/Include/cachel1_armv7.h **** #define CCSIDR_SETS(x)         (((x) & SCB_CCSIDR_NUMSETS_Msk      ) >> SCB_CCSIDR_NUMSETS_Pos     
+  44:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  45:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef __SCB_DCACHE_LINE_SIZE
+  46:Drivers/CMSIS/Include/cachel1_armv7.h **** #define __SCB_DCACHE_LINE_SIZE  32U /*!< Cortex-M7 cache line size is fixed to 32 bytes (8 words). 
+  47:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  48:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  49:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef __SCB_ICACHE_LINE_SIZE
+  50:Drivers/CMSIS/Include/cachel1_armv7.h **** #define __SCB_ICACHE_LINE_SIZE  32U /*!< Cortex-M7 cache line size is fixed to 32 bytes (8 words). 
+  51:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  52:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  53:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  54:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Enable I-Cache
+  55:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns on I-Cache
+  56:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  57:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_EnableICache (void)
+  58:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  59:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  60:Drivers/CMSIS/Include/cachel1_armv7.h ****     if (SCB->CCR & SCB_CCR_IC_Msk) return;  /* return if ICache is already enabled */
+  61:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  62:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  63:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  64:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;                     /* invalidate I-Cache */
+  65:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  66:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  67:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR |=  (uint32_t)SCB_CCR_IC_Msk;  /* enable I-Cache */
+  68:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  69:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  70:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+  71:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+  72:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  73:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  74:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  75:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Disable I-Cache
+  76:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns off I-Cache
+  77:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  78:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_DisableICache (void)
+  79:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  80:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  81:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  82:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  83:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR &= ~(uint32_t)SCB_CCR_IC_Msk;  /* disable I-Cache */
+  84:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;                     /* invalidate I-Cache */
+  85:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  86:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  87:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+  88:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+  89:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  90:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  91:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  92:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Invalidate I-Cache
+  93:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates I-Cache
+  94:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  95:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateICache (void)
+  96:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  97:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  98:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 42
+
+
+  99:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 100:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;
+ 101:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 102:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 103:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 104:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 105:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 106:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 107:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 108:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   I-Cache Invalidate by address
+ 109:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates I-Cache for the given address.
+ 110:Drivers/CMSIS/Include/cachel1_armv7.h ****            I-Cache is invalidated starting from a 32 byte aligned address in 32 byte granularity.
+ 111:Drivers/CMSIS/Include/cachel1_armv7.h ****            I-Cache memory blocks which are part of given address + given size are invalidated.
+ 112:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   addr    address
+ 113:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   isize   size of memory block (in number of bytes)
+ 114:Drivers/CMSIS/Include/cachel1_armv7.h **** */
+ 115:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateICache_by_Addr (volatile void *addr, int32_t isize)
+ 116:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 117:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+ 118:Drivers/CMSIS/Include/cachel1_armv7.h ****     if ( isize > 0 ) {
+ 119:Drivers/CMSIS/Include/cachel1_armv7.h ****        int32_t op_size = isize + (((uint32_t)addr) & (__SCB_ICACHE_LINE_SIZE - 1U));
+ 120:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_ICACHE_LINE_SIZE - 1U) */;
+ 121:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 122:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 123:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 124:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 125:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->ICIMVAU = op_addr;             /* register accepts only 32byte aligned values, only bi
+ 126:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_addr += __SCB_ICACHE_LINE_SIZE;
+ 127:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_size -= __SCB_ICACHE_LINE_SIZE;
+ 128:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while ( op_size > 0 );
+ 129:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 130:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 131:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 132:Drivers/CMSIS/Include/cachel1_armv7.h ****     }
+ 133:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 134:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 135:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 136:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 137:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 138:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Enable D-Cache
+ 139:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns on D-Cache
+ 140:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 141:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_EnableDCache (void)
+ 142:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 143:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 144:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 145:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 146:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 147:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 148:Drivers/CMSIS/Include/cachel1_armv7.h ****     if (SCB->CCR & SCB_CCR_DC_Msk) return;  /* return if DCache is already enabled */
+ 149:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 150:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 151:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 152:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 153:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 154:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 155:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* invalidate D-Cache */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 43
+
+
+ 156:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 157:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 158:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 159:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 160:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCISW = (((sets << SCB_DCISW_SET_Pos) & SCB_DCISW_SET_Msk) |
+ 161:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCISW_WAY_Pos) & SCB_DCISW_WAY_Msk)  );
+ 162:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 163:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 164:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 165:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 166:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 167:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 168:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 169:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR |=  (uint32_t)SCB_CCR_DC_Msk;  /* enable D-Cache */
+ 170:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 171:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 172:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 173:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 174:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 175:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 176:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 177:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 178:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Disable D-Cache
+ 179:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns off D-Cache
+ 180:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 181:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_DisableDCache (void)
+ 182:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 183:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 184:Drivers/CMSIS/Include/cachel1_armv7.h ****     struct {
+ 185:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 186:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 187:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 188:Drivers/CMSIS/Include/cachel1_armv7.h ****     } locals
+ 189:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if ((defined(__GNUC__) || defined(__clang__)) && !defined(__OPTIMIZE__))
+ 190:Drivers/CMSIS/Include/cachel1_armv7.h ****        __ALIGNED(__SCB_DCACHE_LINE_SIZE)
+ 191:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 192:Drivers/CMSIS/Include/cachel1_armv7.h ****     ;
+ 193:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 194:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 195:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 196:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 197:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR &= ~(uint32_t)SCB_CCR_DC_Msk;  /* disable D-Cache */
+ 198:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 199:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 200:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if !defined(__OPTIMIZE__)
+ 201:Drivers/CMSIS/Include/cachel1_armv7.h ****       /*
+ 202:Drivers/CMSIS/Include/cachel1_armv7.h ****        * For the endless loop issue with no optimization builds.
+ 203:Drivers/CMSIS/Include/cachel1_armv7.h ****        * More details, see https://github.com/ARM-software/CMSIS_5/issues/620
+ 204:Drivers/CMSIS/Include/cachel1_armv7.h ****        *
+ 205:Drivers/CMSIS/Include/cachel1_armv7.h ****        * The issue only happens when local variables are in stack. If
+ 206:Drivers/CMSIS/Include/cachel1_armv7.h ****        * local variables are saved in general purpose register, then the function
+ 207:Drivers/CMSIS/Include/cachel1_armv7.h ****        * is OK.
+ 208:Drivers/CMSIS/Include/cachel1_armv7.h ****        *
+ 209:Drivers/CMSIS/Include/cachel1_armv7.h ****        * When local variables are in stack, after disabling the cache, flush the
+ 210:Drivers/CMSIS/Include/cachel1_armv7.h ****        * local variables cache line for data consistency.
+ 211:Drivers/CMSIS/Include/cachel1_armv7.h ****        */
+ 212:Drivers/CMSIS/Include/cachel1_armv7.h ****       /* Clean and invalidate the local variable cache. */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 44
+
+
+ 213:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if defined(__ICCARM__)
+ 214:Drivers/CMSIS/Include/cachel1_armv7.h ****     /* As we can't align the stack to the cache line size, invalidate each of the variables */
+ 215:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.sets;
+ 216:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.ways;
+ 217:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.ccsidr;
+ 218:Drivers/CMSIS/Include/cachel1_armv7.h ****     #else
+ 219:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals;
+ 220:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 221:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 222:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 223:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 224:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 225:Drivers/CMSIS/Include/cachel1_armv7.h ****     locals.ccsidr = SCB->CCSIDR;
+ 226:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean & invalidate D-Cache */
+ 227:Drivers/CMSIS/Include/cachel1_armv7.h ****     locals.sets = (uint32_t)(CCSIDR_SETS(locals.ccsidr));
+ 228:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 229:Drivers/CMSIS/Include/cachel1_armv7.h ****       locals.ways = (uint32_t)(CCSIDR_WAYS(locals.ccsidr));
+ 230:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 231:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCISW = (((locals.sets << SCB_DCCISW_SET_Pos) & SCB_DCCISW_SET_Msk) |
+ 232:Drivers/CMSIS/Include/cachel1_armv7.h ****                        ((locals.ways << SCB_DCCISW_WAY_Pos) & SCB_DCCISW_WAY_Msk)  );
+ 233:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 234:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 235:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 236:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (locals.ways-- != 0U);
+ 237:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(locals.sets-- != 0U);
+ 238:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 239:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 240:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 241:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 242:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 243:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 244:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 245:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 246:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Invalidate D-Cache
+ 247:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates D-Cache
+ 248:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 249:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateDCache (void)
+ 250:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 251:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 252:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 253:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 254:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 255:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 256:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 257:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 258:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 259:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 260:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 261:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* invalidate D-Cache */
+ 262:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 263:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 264:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 265:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 266:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCISW = (((sets << SCB_DCISW_SET_Pos) & SCB_DCISW_SET_Msk) |
+ 267:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCISW_WAY_Pos) & SCB_DCISW_WAY_Msk)  );
+ 268:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 269:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 45
+
+
+ 270:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 271:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 272:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 273:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 274:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 275:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 276:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 277:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 278:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 279:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 280:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 281:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Clean D-Cache
+ 282:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Cleans D-Cache
+ 283:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 284:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_CleanDCache (void)
+ 285:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 286:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 287:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 288:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 289:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 290:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 291:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 292:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 293:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 294:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 295:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 296:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean D-Cache */
+ 297:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 298:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 299:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 300:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 301:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCSW = (((sets << SCB_DCCSW_SET_Pos) & SCB_DCCSW_SET_Msk) |
+ 302:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCCSW_WAY_Pos) & SCB_DCCSW_WAY_Msk)  );
+ 303:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 304:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 305:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 306:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 307:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 308:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 309:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 310:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 311:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 312:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 313:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 314:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 315:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 316:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Clean & Invalidate D-Cache
+ 317:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Cleans and Invalidates D-Cache
+ 318:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 319:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_CleanInvalidateDCache (void)
+ 320:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 321:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 322:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 323:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 324:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 325:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 326:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 46
+
+
+ 327:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 328:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 329:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 330:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 331:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean & invalidate D-Cache */
+ 332:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 333:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 334:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 335:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 336:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCISW = (((sets << SCB_DCCISW_SET_Pos) & SCB_DCCISW_SET_Msk) |
+ 337:Drivers/CMSIS/Include/cachel1_armv7.h ****                        ((ways << SCB_DCCISW_WAY_Pos) & SCB_DCCISW_WAY_Msk)  );
+ 338:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 339:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 340:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 341:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 342:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 343:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 344:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 345:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 346:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 347:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 348:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 349:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 350:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 351:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   D-Cache Invalidate by address
+ 352:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates D-Cache for the given address.
+ 353:Drivers/CMSIS/Include/cachel1_armv7.h ****            D-Cache is invalidated starting from a 32 byte aligned address in 32 byte granularity.
+ 354:Drivers/CMSIS/Include/cachel1_armv7.h ****            D-Cache memory blocks which are part of given address + given size are invalidated.
+ 355:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   addr    address
+ 356:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   dsize   size of memory block (in number of bytes)
+ 357:Drivers/CMSIS/Include/cachel1_armv7.h **** */
+ 358:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateDCache_by_Addr (volatile void *addr, int32_t dsize)
+ 1667              		.loc 2 358 27 view .LVU502
+ 1668              	.LBB27:
+ 359:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 360:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 361:Drivers/CMSIS/Include/cachel1_armv7.h ****     if ( dsize > 0 ) {
+ 1669              		.loc 2 361 5 view .LVU503
+ 1670              	.LBB28:
+ 362:Drivers/CMSIS/Include/cachel1_armv7.h ****        int32_t op_size = dsize + (((uint32_t)addr) & (__SCB_DCACHE_LINE_SIZE - 1U));
+ 1671              		.loc 2 362 8 view .LVU504
+ 1672              		.loc 2 362 36 is_stmt 0 view .LVU505
+ 1673 0016 0F4A     		ldr	r2, .L146+8
+ 1674              	.LVL136:
+ 363:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_DCACHE_LINE_SIZE - 1U) */;
+ 1675              		.loc 2 363 7 is_stmt 1 view .LVU506
+ 364:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 365:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 1676              		.loc 2 365 7 view .LVU507
+ 1677              	.LBB29:
+ 1678              	.LBI29:
+ 1679              		.file 3 "Drivers/CMSIS/Include/cmsis_gcc.h"
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS compiler GCC header file
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V5.4.1
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     27. May 2021
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 47
+
+
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /*
+   8:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Copyright (c) 2009-2021 Arm Limited. All rights reserved.
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****  * SPDX-License-Identifier: Apache-2.0
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Licensed under the Apache License, Version 2.0 (the License); you may
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****  * not use this file except in compliance with the License.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****  * You may obtain a copy of the License at
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****  * www.apache.org/licenses/LICENSE-2.0
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Unless required by applicable law or agreed to in writing, software
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****  * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****  * See the License for the specific language governing permissions and
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****  * limitations under the License.
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  24:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  25:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  26:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  27:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  28:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  29:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  30:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  31:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  32:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Fallback for __has_builtin */
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __has_builtin
+  36:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __has_builtin(x) (0)
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** /* CMSIS compiler specific defines */
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __ASM
+  41:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __ASM                                  __asm
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __INLINE
+  44:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __INLINE                               inline
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __STATIC_INLINE
+  47:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __STATIC_INLINE                        static inline
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  49:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __STATIC_FORCEINLINE
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __STATIC_FORCEINLINE                   __attribute__((always_inline)) static inline
+  51:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __NO_RETURN
+  53:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __NO_RETURN                            __attribute__((__noreturn__))
+  54:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  55:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __USED
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __USED                                 __attribute__((used))
+  57:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __WEAK
+  59:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __WEAK                                 __attribute__((weak))
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED
+  62:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED                               __attribute__((packed, aligned(1)))
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 48
+
+
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_STRUCT
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_STRUCT                        struct __attribute__((packed, aligned(1)))
+  66:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  67:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_UNION
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_UNION                         union __attribute__((packed, aligned(1)))
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32        /* deprecated */
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  72:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  73:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  74:Drivers/CMSIS/Include/cmsis_gcc.h ****   struct __attribute__((packed)) T_UINT32 { uint32_t v; };
+  75:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  76:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32(x)                  (((struct T_UINT32 *)(x))->v)
+  77:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  78:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_WRITE
+  79:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  80:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  81:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  82:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_WRITE { uint16_t v; };
+  83:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  84:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_WRITE(addr, val)    (void)((((struct T_UINT16_WRITE *)(void *)(addr))-
+  85:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  86:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_READ
+  87:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  88:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  89:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  90:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_READ { uint16_t v; };
+  91:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  92:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_READ(addr)          (((const struct T_UINT16_READ *)(const void *)(add
+  93:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  94:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32_WRITE
+  95:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  96:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  97:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  98:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT32_WRITE { uint32_t v; };
+  99:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+ 100:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32_WRITE(addr, val)    (void)((((struct T_UINT32_WRITE *)(void *)(addr))-
+ 101:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 102:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32_READ
+ 103:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+ 104:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+ 105:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+ 106:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT32_READ { uint32_t v; };
+ 107:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+ 108:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32_READ(addr)          (((const struct T_UINT32_READ *)(const void *)(add
+ 109:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 110:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __ALIGNED
+ 111:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __ALIGNED(x)                           __attribute__((aligned(x)))
+ 112:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 113:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __RESTRICT
+ 114:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __RESTRICT                             __restrict
+ 115:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 116:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __COMPILER_BARRIER
+ 117:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __COMPILER_BARRIER()                   __ASM volatile("":::"memory")
+ 118:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 119:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 49
+
+
+ 120:Drivers/CMSIS/Include/cmsis_gcc.h **** /* #########################  Startup and Lowlevel Init  ######################## */
+ 121:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 122:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __PROGRAM_START
+ 123:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 124:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 125:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Initializes data and bss sections
+ 126:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details This default implementations initialized all data and additional bss
+ 127:Drivers/CMSIS/Include/cmsis_gcc.h ****            sections relying on .copy.table and .zero.table specified properly
+ 128:Drivers/CMSIS/Include/cmsis_gcc.h ****            in the used linker script.
+ 129:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 130:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 131:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE __NO_RETURN void __cmsis_start(void)
+ 132:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 133:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern void _start(void) __NO_RETURN;
+ 134:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 135:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ 136:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t const* src;
+ 137:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
+ 138:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
+ 139:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __copy_table_t;
+ 140:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 141:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ 142:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
+ 143:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
+ 144:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __zero_table_t;
+ 145:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 146:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __copy_table_t __copy_table_start__;
+ 147:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __copy_table_t __copy_table_end__;
+ 148:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __zero_table_t __zero_table_start__;
+ 149:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __zero_table_t __zero_table_end__;
+ 150:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 151:Drivers/CMSIS/Include/cmsis_gcc.h ****   for (__copy_table_t const* pTable = &__copy_table_start__; pTable < &__copy_table_end__; ++pTable
+ 152:Drivers/CMSIS/Include/cmsis_gcc.h ****     for(uint32_t i=0u; i<pTable->wlen; ++i) {
+ 153:Drivers/CMSIS/Include/cmsis_gcc.h ****       pTable->dest[i] = pTable->src[i];
+ 154:Drivers/CMSIS/Include/cmsis_gcc.h ****     }
+ 155:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
+ 156:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 157:Drivers/CMSIS/Include/cmsis_gcc.h ****   for (__zero_table_t const* pTable = &__zero_table_start__; pTable < &__zero_table_end__; ++pTable
+ 158:Drivers/CMSIS/Include/cmsis_gcc.h ****     for(uint32_t i=0u; i<pTable->wlen; ++i) {
+ 159:Drivers/CMSIS/Include/cmsis_gcc.h ****       pTable->dest[i] = 0u;
+ 160:Drivers/CMSIS/Include/cmsis_gcc.h ****     }
+ 161:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
+ 162:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 163:Drivers/CMSIS/Include/cmsis_gcc.h ****   _start();
+ 164:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 165:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 166:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __PROGRAM_START           __cmsis_start
+ 167:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 168:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 169:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __INITIAL_SP
+ 170:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __INITIAL_SP              __StackTop
+ 171:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 172:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 173:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __STACK_LIMIT
+ 174:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __STACK_LIMIT             __StackLimit
+ 175:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 176:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 50
+
+
+ 177:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __VECTOR_TABLE
+ 178:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __VECTOR_TABLE            __Vectors
+ 179:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 180:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 181:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __VECTOR_TABLE_ATTRIBUTE
+ 182:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __VECTOR_TABLE_ATTRIBUTE  __attribute__((used, section(".vectors")))
+ 183:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 184:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 185:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+ 186:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __STACK_SEAL
+ 187:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __STACK_SEAL              __StackSeal
+ 188:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 189:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 190:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __TZ_STACK_SEAL_SIZE
+ 191:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __TZ_STACK_SEAL_SIZE      8U
+ 192:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 193:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 194:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __TZ_STACK_SEAL_VALUE
+ 195:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __TZ_STACK_SEAL_VALUE     0xFEF5EDA5FEF5EDA5ULL
+ 196:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 197:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 198:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 199:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __TZ_set_STACKSEAL_S (uint32_t* stackTop) {
+ 200:Drivers/CMSIS/Include/cmsis_gcc.h ****   *((uint64_t *)stackTop) = __TZ_STACK_SEAL_VALUE;
+ 201:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 202:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 203:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 204:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 205:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ##########################  Core Instruction Access  ######################### */
+ 206:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \defgroup CMSIS_Core_InstructionInterface CMSIS Core Instruction Interface
+ 207:Drivers/CMSIS/Include/cmsis_gcc.h ****   Access to dedicated instructions
+ 208:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+ 209:Drivers/CMSIS/Include/cmsis_gcc.h **** */
+ 210:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 211:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Define macros for porting to both thumb1 and thumb2.
+ 212:Drivers/CMSIS/Include/cmsis_gcc.h ****  * For thumb1, use low register (r0-r7), specified by constraint "l"
+ 213:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Otherwise, use general registers, specified by constraint "r" */
+ 214:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined (__thumb__) && !defined (__thumb2__)
+ 215:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_OUT_REG(r) "=l" (r)
+ 216:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_RW_REG(r) "+l" (r)
+ 217:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_USE_REG(r) "l" (r)
+ 218:Drivers/CMSIS/Include/cmsis_gcc.h **** #else
+ 219:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_OUT_REG(r) "=r" (r)
+ 220:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_RW_REG(r) "+r" (r)
+ 221:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_USE_REG(r) "r" (r)
+ 222:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 223:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 224:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 225:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   No Operation
+ 226:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details No Operation does nothing. This instruction can be used for code alignment purposes.
+ 227:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 228:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __NOP()                             __ASM volatile ("nop")
+ 229:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 230:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 231:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Wait For Interrupt
+ 232:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Wait For Interrupt is a hint instruction that suspends execution until one of a number o
+ 233:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 51
+
+
+ 234:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __WFI()                             __ASM volatile ("wfi":::"memory")
+ 235:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 236:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 237:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 238:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Wait For Event
+ 239:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Wait For Event is a hint instruction that permits the processor to enter
+ 240:Drivers/CMSIS/Include/cmsis_gcc.h ****            a low-power state until one of a number of events occurs.
+ 241:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 242:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __WFE()                             __ASM volatile ("wfe":::"memory")
+ 243:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 244:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 245:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 246:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Send Event
+ 247:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Send Event is a hint instruction. It causes an event to be signaled to the CPU.
+ 248:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 249:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __SEV()                             __ASM volatile ("sev")
+ 250:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 251:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 252:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 253:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Instruction Synchronization Barrier
+ 254:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Instruction Synchronization Barrier flushes the pipeline in the processor,
+ 255:Drivers/CMSIS/Include/cmsis_gcc.h ****            so that all instructions following the ISB are fetched from cache or memory,
+ 256:Drivers/CMSIS/Include/cmsis_gcc.h ****            after the instruction has been completed.
+ 257:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 258:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __ISB(void)
+ 259:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("isb 0xF":::"memory");
+ 261:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 262:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 263:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 264:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 265:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Data Synchronization Barrier
+ 266:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Acts as a special kind of Data Memory Barrier.
+ 267:Drivers/CMSIS/Include/cmsis_gcc.h ****            It completes when all explicit memory accesses before this instruction complete.
+ 268:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 269:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __DSB(void)
+ 1680              		.loc 3 269 27 view .LVU508
+ 1681              	.LBB30:
+ 270:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 271:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("dsb 0xF":::"memory");
+ 1682              		.loc 3 271 3 view .LVU509
+ 1683              		.syntax unified
+ 1684              	@ 271 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 1685 0018 BFF34F8F 		dsb 0xF
+ 1686              	@ 0 "" 2
+ 1687              		.thumb
+ 1688              		.syntax unified
+ 1689              	.LBE30:
+ 1690              	.LBE29:
+ 362:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_DCACHE_LINE_SIZE - 1U) */;
+ 1691              		.loc 2 362 16 is_stmt 0 view .LVU510
+ 1692 001c 2423     		movs	r3, #36
+ 1693              	.LVL137:
+ 1694              	.L141:
+ 366:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 367:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 1695              		.loc 2 367 7 is_stmt 1 view .LVU511
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 52
+
+
+ 368:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCIMVAC = op_addr;             /* register accepts only 32byte aligned values, only bi
+ 1696              		.loc 2 368 9 view .LVU512
+ 1697              		.loc 2 368 22 is_stmt 0 view .LVU513
+ 1698 001e 0C48     		ldr	r0, .L146+4
+ 1699 0020 C0F85C22 		str	r2, [r0, #604]
+ 369:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_addr += __SCB_DCACHE_LINE_SIZE;
+ 1700              		.loc 2 369 9 is_stmt 1 view .LVU514
+ 1701              		.loc 2 369 17 is_stmt 0 view .LVU515
+ 1702 0024 2032     		adds	r2, r2, #32
+ 1703              	.LVL138:
+ 370:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_size -= __SCB_DCACHE_LINE_SIZE;
+ 1704              		.loc 2 370 9 is_stmt 1 view .LVU516
+ 1705              		.loc 2 370 17 is_stmt 0 view .LVU517
+ 1706 0026 203B     		subs	r3, r3, #32
+ 1707              	.LVL139:
+ 371:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while ( op_size > 0 );
+ 1708              		.loc 2 371 25 is_stmt 1 discriminator 1 view .LVU518
+ 1709 0028 002B     		cmp	r3, #0
+ 1710 002a F8DC     		bgt	.L141
+ 372:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 373:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 1711              		.loc 2 373 7 view .LVU519
+ 1712              	.LBB31:
+ 1713              	.LBI31:
+ 269:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 1714              		.loc 3 269 27 view .LVU520
+ 1715              	.LBB32:
+ 1716              		.loc 3 271 3 view .LVU521
+ 1717              		.syntax unified
+ 1718              	@ 271 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 1719 002c BFF34F8F 		dsb 0xF
+ 1720              	@ 0 "" 2
+ 1721              		.thumb
+ 1722              		.syntax unified
+ 1723              	.LBE32:
+ 1724              	.LBE31:
+ 374:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 1725              		.loc 2 374 7 view .LVU522
+ 1726              	.LBB33:
+ 1727              	.LBI33:
+ 258:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 1728              		.loc 3 258 27 view .LVU523
+ 1729              	.LBB34:
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 1730              		.loc 3 260 3 view .LVU524
+ 1731              		.syntax unified
+ 1732              	@ 260 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 1733 0030 BFF36F8F 		isb 0xF
+ 1734              	@ 0 "" 2
+ 1735              	.LVL140:
+ 1736              		.thumb
+ 1737              		.syntax unified
+ 1738              	.L140:
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 1739              		.loc 3 260 3 is_stmt 0 view .LVU525
+ 1740              	.LBE34:
+ 1741              	.LBE33:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 53
+
+
+ 1742              	.LBE28:
+ 1743              	.LBE27:
+ 1744              	.LBE26:
+ 469:remote/rc_dbus.c ****         {
+ 1745              		.loc 1 469 9 is_stmt 1 view .LVU526
+ 469:remote/rc_dbus.c ****         {
+ 1746              		.loc 1 469 12 is_stmt 0 view .LVU527
+ 1747 0034 1129     		cmp	r1, #17
+ 1748 0036 02D8     		bhi	.L145
+ 1749              	.LVL141:
+ 1750              	.L142:
+ 475:remote/rc_dbus.c ****     }
+ 1751              		.loc 1 475 9 is_stmt 1 view .LVU528
+ 1752 0038 FFF7FEFF 		bl	RC_StartReceive
+ 1753              	.LVL142:
+ 1754              		.loc 1 477 1 is_stmt 0 view .LVU529
+ 1755 003c E5E7     		b	.L138
+ 1756              	.LVL143:
+ 1757              	.L145:
+ 472:remote/rc_dbus.c ****         }
+ 1758              		.loc 1 472 13 is_stmt 1 view .LVU530
+ 472:remote/rc_dbus.c ****         }
+ 1759              		.loc 1 472 38 is_stmt 0 view .LVU531
+ 1760 003e 1239     		subs	r1, r1, #18
+ 1761              	.LVL144:
+ 472:remote/rc_dbus.c ****         }
+ 1762              		.loc 1 472 13 view .LVU532
+ 1763 0040 0448     		ldr	r0, .L146+8
+ 1764 0042 0844     		add	r0, r0, r1
+ 1765 0044 FFF7FEFF 		bl	RC_Decode
+ 1766              	.LVL145:
+ 1767 0048 F6E7     		b	.L142
+ 1768              	.L147:
+ 1769 004a 00BF     		.align	2
+ 1770              	.L146:
+ 1771 004c 00500040 		.word	1073762304
+ 1772 0050 00ED00E0 		.word	-536810240
+ 1773 0054 00000000 		.word	dbus_buf
+ 1774              		.cfi_endproc
+ 1775              	.LFE153:
+ 1777              		.section	.text.HAL_UART_ErrorCallback,"ax",%progbits
+ 1778              		.align	1
+ 1779              		.global	HAL_UART_ErrorCallback
+ 1780              		.syntax unified
+ 1781              		.thumb
+ 1782              		.thumb_func
+ 1784              	HAL_UART_ErrorCallback:
+ 1785              	.LVL146:
+ 1786              	.LFB154:
+ 478:remote/rc_dbus.c **** 
+ 479:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+ 480:remote/rc_dbus.c **** /* UART 错误回调（ORE/FE/NE/PE）                                        */
+ 481:remote/rc_dbus.c **** /*   HAL 一旦报错就会把接收整个拆掉（关 IDLE/DMA），如果这里不重开，      
+ 482:remote/rc_dbus.c **** /*   接收链会永久静默 —— 这正是“摇杆怎么推都没反应”的典型死法之�
+ 483:remote/rc_dbus.c **** /* ------------------------------------------------------------------ */
+ 484:remote/rc_dbus.c **** void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+ 485:remote/rc_dbus.c **** {
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 54
+
+
+ 1787              		.loc 1 485 1 is_stmt 1 view -0
+ 1788              		.cfi_startproc
+ 1789              		@ args = 0, pretend = 0, frame = 0
+ 1790              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1791              		.loc 1 485 1 is_stmt 0 view .LVU534
+ 1792 0000 08B5     		push	{r3, lr}
+ 1793              	.LCFI11:
+ 1794              		.cfi_def_cfa_offset 8
+ 1795              		.cfi_offset 3, -8
+ 1796              		.cfi_offset 14, -4
+ 486:remote/rc_dbus.c ****     if (huart->Instance == UART5)
+ 1797              		.loc 1 486 5 is_stmt 1 view .LVU535
+ 1798              		.loc 1 486 14 is_stmt 0 view .LVU536
+ 1799 0002 0368     		ldr	r3, [r0]
+ 1800              		.loc 1 486 8 view .LVU537
+ 1801 0004 084A     		ldr	r2, .L152
+ 1802 0006 9342     		cmp	r3, r2
+ 1803 0008 00D0     		beq	.L151
+ 1804              	.LVL147:
+ 1805              	.L148:
+ 487:remote/rc_dbus.c ****     {
+ 488:remote/rc_dbus.c ****         __HAL_UART_CLEAR_OREFLAG(huart);
+ 489:remote/rc_dbus.c ****         __HAL_UART_CLEAR_FEFLAG(huart);
+ 490:remote/rc_dbus.c ****         __HAL_UART_CLEAR_NEFLAG(huart);
+ 491:remote/rc_dbus.c ****         __HAL_UART_CLEAR_PEFLAG(huart);
+ 492:remote/rc_dbus.c ****         RC_StartReceive();
+ 493:remote/rc_dbus.c ****     }
+ 494:remote/rc_dbus.c **** }
+ 1806              		.loc 1 494 1 view .LVU538
+ 1807 000a 08BD     		pop	{r3, pc}
+ 1808              	.LVL148:
+ 1809              	.L151:
+ 488:remote/rc_dbus.c ****         __HAL_UART_CLEAR_FEFLAG(huart);
+ 1810              		.loc 1 488 9 is_stmt 1 view .LVU539
+ 1811 000c 0822     		movs	r2, #8
+ 1812 000e 1A62     		str	r2, [r3, #32]
+ 489:remote/rc_dbus.c ****         __HAL_UART_CLEAR_NEFLAG(huart);
+ 1813              		.loc 1 489 9 view .LVU540
+ 1814 0010 0368     		ldr	r3, [r0]
+ 1815 0012 0222     		movs	r2, #2
+ 1816 0014 1A62     		str	r2, [r3, #32]
+ 490:remote/rc_dbus.c ****         __HAL_UART_CLEAR_PEFLAG(huart);
+ 1817              		.loc 1 490 9 view .LVU541
+ 1818 0016 0368     		ldr	r3, [r0]
+ 1819 0018 0422     		movs	r2, #4
+ 1820 001a 1A62     		str	r2, [r3, #32]
+ 491:remote/rc_dbus.c ****         RC_StartReceive();
+ 1821              		.loc 1 491 9 view .LVU542
+ 1822 001c 0368     		ldr	r3, [r0]
+ 1823 001e 0122     		movs	r2, #1
+ 1824 0020 1A62     		str	r2, [r3, #32]
+ 492:remote/rc_dbus.c ****     }
+ 1825              		.loc 1 492 9 view .LVU543
+ 1826 0022 FFF7FEFF 		bl	RC_StartReceive
+ 1827              	.LVL149:
+ 1828              		.loc 1 494 1 is_stmt 0 view .LVU544
+ 1829 0026 F0E7     		b	.L148
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 55
+
+
+ 1830              	.L153:
+ 1831              		.align	2
+ 1832              	.L152:
+ 1833 0028 00500040 		.word	1073762304
+ 1834              		.cfi_endproc
+ 1835              	.LFE154:
+ 1837              		.section	.bss.fric_a.0,"aw",%nobits
+ 1838              		.align	2
+ 1841              	fric_a.0:
+ 1842 0000 00000000 		.space	4
+ 1843              		.section	.bss.vp_prev.1,"aw",%nobits
+ 1844              		.align	2
+ 1847              	vp_prev.1:
+ 1848 0000 00000000 		.space	4
+ 1849              		.section	.bss.volt_prev.2,"aw",%nobits
+ 1850              		.align	2
+ 1853              	volt_prev.2:
+ 1854 0000 00000000 		.space	4
+ 1855              		.section	.rodata.s_wheel_sign.3,"a"
+ 1856              		.align	2
+ 1859              	s_wheel_sign.3:
+ 1860 0000 0000803F 		.word	1065353216
+ 1861 0004 0000803F 		.word	1065353216
+ 1862 0008 0000803F 		.word	1065353216
+ 1863 000c 0000803F 		.word	1065353216
+ 1864              		.section	.dma_buffer,"aw"
+ 1865              		.align	5
+ 1868              	dbus_buf:
+ 1869 0000 00000000 		.space	36
+ 1869      00000000 
+ 1869      00000000 
+ 1869      00000000 
+ 1869      00000000 
+ 1870              		.section	.bss.rc_enable_since,"aw",%nobits
+ 1871              		.align	2
+ 1874              	rc_enable_since:
+ 1875 0000 00000000 		.space	4
+ 1876              		.global	RC_WheelOut
+ 1877              		.section	.bss.RC_WheelOut,"aw",%nobits
+ 1878              		.align	2
+ 1881              	RC_WheelOut:
+ 1882 0000 00000000 		.space	16
+ 1882      00000000 
+ 1882      00000000 
+ 1882      00000000 
+ 1883              		.global	RC_Data
+ 1884              		.section	.bss.RC_Data,"aw",%nobits
+ 1885              		.align	2
+ 1888              	RC_Data:
+ 1889 0000 00000000 		.space	48
+ 1889      00000000 
+ 1889      00000000 
+ 1889      00000000 
+ 1889      00000000 
+ 1890              		.text
+ 1891              	.Letext0:
+ 1892              		.file 4 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 56
+
+
+ 1893              		.file 5 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 1894              		.file 6 "Drivers/CMSIS/Include/core_cm7.h"
+ 1895              		.file 7 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 1896              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 1897              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_dma.h"
+ 1898              		.file 10 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h"
+ 1899              		.file 11 "remote/rc_dbus.h"
+ 1900              		.file 12 "Core/Inc/usart.h"
+ 1901              		.file 13 "modules/DJ_Motor.h"
+ 1902              		.file 14 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14
+ 1903              		.file 15 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h"
+ 1904              		.file 16 "modules/mecanum.h"
+ 1905              		.file 17 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ 1906              		.file 18 "<built-in>"
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 57
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 rc_dbus.c
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:20     .text.RC_StartReceive:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:26     .text.RC_StartReceive:00000000 RC_StartReceive
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:154    .text.RC_StartReceive:000000ac $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1868   .dma_buffer:00000000 dbus_buf
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:162    .text.RC_Init:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:168    .text.RC_Init:00000000 RC_Init
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:199    .text.RC_Init:00000018 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1888   .bss.RC_Data:00000000 RC_Data
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:204    .text.RC_SwitchAutoName:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:210    .text.RC_SwitchAutoName:00000000 RC_SwitchAutoName
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:446    .text.RC_SwitchAutoName:000000e4 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:451    .text.RC_Decode:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:457    .text.RC_Decode:00000000 RC_Decode
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:646    .text.RC_Decode:000000c8 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:651    .text.RC_IsOnline:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:657    .text.RC_IsOnline:00000000 RC_IsOnline
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:689    .text.RC_IsOnline:0000001c $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:694    .text.RC_Norm:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:700    .text.RC_Norm:00000000 RC_Norm
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:779    .text.RC_Norm:00000060 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:785    .text.RC_Control_Task:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:791    .text.RC_Control_Task:00000000 RC_Control_Task
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1360   .text.RC_Control_Task:000002d4 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1874   .bss.rc_enable_since:00000000 rc_enable_since
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1881   .bss.RC_WheelOut:00000000 RC_WheelOut
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1859   .rodata.s_wheel_sign.3:00000000 s_wheel_sign.3
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1853   .bss.volt_prev.2:00000000 volt_prev.2
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1847   .bss.vp_prev.1:00000000 vp_prev.1
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1376   .text.RC_Control_Task:00000308 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1610   .text.RC_Control_Task:00000450 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1841   .bss.fric_a.0:00000000 fric_a.0
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1623   .text.HAL_UARTEx_RxEventCallback:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1629   .text.HAL_UARTEx_RxEventCallback:00000000 HAL_UARTEx_RxEventCallback
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1771   .text.HAL_UARTEx_RxEventCallback:0000004c $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1778   .text.HAL_UART_ErrorCallback:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1784   .text.HAL_UART_ErrorCallback:00000000 HAL_UART_ErrorCallback
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1833   .text.HAL_UART_ErrorCallback:00000028 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1838   .bss.fric_a.0:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1844   .bss.vp_prev.1:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1850   .bss.volt_prev.2:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1856   .rodata.s_wheel_sign.3:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1865   .dma_buffer:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1871   .bss.rc_enable_since:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1878   .bss.RC_WheelOut:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s:1885   .bss.RC_Data:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_UARTEx_ReceiveToIdle_DMA
+HAL_UART_AbortReceive
+huart5
+memset
+HAL_GetTick
+Mecanum_Mix
+Mecanum_Reset
+gim6020
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc1gV1gp.s 			page 58
+
+
+gim_pitch
+dj_motor
+DJ3508_Send_I_Can2
+DJ6020_Send_V_Can2
+DJ3508_Send_Can1
+DJ6020_Send_Can1

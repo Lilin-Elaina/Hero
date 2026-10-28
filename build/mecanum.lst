@@ -1,0 +1,588 @@
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"mecanum.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "modules/mecanum.c"
+  19              		.section	.text.mec_slew,"ax",%progbits
+  20              		.align	1
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  25              	mec_slew:
+  26              	.LVL0:
+  27              	.LFB146:
+   1:modules/mecanum.c **** 
+   2:modules/mecanum.c **** #include "mecanum.h"
+   3:modules/mecanum.c **** /* 逆运动学（摇杆指令 → 各轮转速），Vx=前进 Vy=横移(向右为正) Wz=自转(�
+   4:modules/mecanum.c ****  *   4 轮麦轮： V_LF = Vx + Vy + Wz      V_RF = Vx - Vy - Wz
+   5:modules/mecanum.c ****  *              V_LB = Vx - Vy + Wz      V_RB = Vx + Vy - Wz     
+   6:modules/mecanum.c ****  *            （符号见下面的 MECANUM_DIR[]，改装配只改表不改公式）
+   7:modules/mecanum.c ****  */
+   8:modules/mecanum.c **** #if (MECANUM_WHEEL_NUM == 2)
+   9:modules/mecanum.c **** //麦轮方向结构体，设定各轮在各运动状态的旋转方向
+  10:modules/mecanum.c **** const Mecanum_Dir_t MECANUM_DIR[MECANUM_WHEEL_NUM] =
+  11:modules/mecanum.c **** {
+  12:modules/mecanum.c ****     { +1.0f, 0.0f, +1.0f },     /* [0] 左轮 */
+  13:modules/mecanum.c ****     { +1.0f, 0.0f, -1.0f },     /* [1] 右轮 */
+  14:modules/mecanum.c **** };
+  15:modules/mecanum.c **** #else
+  16:modules/mecanum.c **** /* 四轮麦轮（X 型辊子）符号表
+  17:modules/mecanum.c ****  *   下标顺序 0=左前 1=右前 2=右后 3=左后，与 C620 拨码 ID1/ID2/ID3/ID4 一一对�
+  18:modules/mecanum.c ****  *   列含义：fwd = 前进(+x)  strafe = 横移(+y 向左)  spin = 自转(+w 顺时针/右转)
+  19:modules/mecanum.c ****  */ 
+  20:modules/mecanum.c **** const Mecanum_Dir_t MECANUM_DIR[MECANUM_WHEEL_NUM] =
+  21:modules/mecanum.c **** {
+  22:modules/mecanum.c ****     { +1.0f, -1.0f, +1.0f },    /* [0] 左前 LF：前进+ 横移+ 自转+ */
+  23:modules/mecanum.c ****     { +1.0f, -1.0f, -1.0f },    /* [1] 右前 RF：前进+ 横移- 自转- */
+  24:modules/mecanum.c ****     { +1.0f, +1.0f, -1.0f },    /* [2] 右后 RB：前进+ 横移+ 自转- */
+  25:modules/mecanum.c ****     { +1.0f, +1.0f, +1.0f },    /* [3] 左后 LB：前进+ 横移- 自转+ */
+  26:modules/mecanum.c **** };
+  27:modules/mecanum.c **** #endif
+  28:modules/mecanum.c **** 
+  29:modules/mecanum.c **** /* 斜坡内部状态：上一拍实际输出的归一化指令 */
+  30:modules/mecanum.c **** static float mec_prev[MECANUM_WHEEL_NUM] = {0};
+  31:modules/mecanum.c **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 2
+
+
+  32:modules/mecanum.c **** /* ------------------------------------------------------------------ */
+  33:modules/mecanum.c **** /* 单轮斜坡：把 cur 朝 tgt 移动，每拍最多走 max_step                     */
+  34:modules/mecanum.c **** /* ------------------------------------------------------------------ */
+  35:modules/mecanum.c **** static float mec_slew(float cur, float tgt, float max_step)
+  36:modules/mecanum.c **** {
+  28              		.loc 1 36 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  37:modules/mecanum.c ****     float d = tgt - cur;
+  33              		.loc 1 37 5 view .LVU1
+  34              		.loc 1 37 11 is_stmt 0 view .LVU2
+  35 0000 70EEC00A 		vsub.f32	s1, s1, s0
+  36              	.LVL1:
+  38:modules/mecanum.c **** 
+  39:modules/mecanum.c ****     if (d >  max_step) d =  max_step;
+  37              		.loc 1 39 5 is_stmt 1 view .LVU3
+  38              		.loc 1 39 8 is_stmt 0 view .LVU4
+  39 0004 F4EEC10A 		vcmpe.f32	s1, s2
+  40 0008 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  41 000c 01DD     		ble	.L2
+  42              		.loc 1 39 26 discriminator 1 view .LVU5
+  43 000e F0EE410A 		vmov.f32	s1, s2
+  44              	.LVL2:
+  45              	.L2:
+  40:modules/mecanum.c ****     if (d < -max_step) d = -max_step;
+  46              		.loc 1 40 5 is_stmt 1 view .LVU6
+  47              		.loc 1 40 13 is_stmt 0 view .LVU7
+  48 0012 B1EE411A 		vneg.f32	s2, s2
+  49              	.LVL3:
+  50              		.loc 1 40 8 view .LVU8
+  51 0016 B4EEE01A 		vcmpe.f32	s2, s1
+  52 001a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  53 001e 01DC     		bgt	.L3
+  54 0020 B0EE601A 		vmov.f32	s2, s1
+  55              	.L3:
+  56              	.LVL4:
+  41:modules/mecanum.c **** 
+  42:modules/mecanum.c ****     return cur + d;
+  57              		.loc 1 42 5 is_stmt 1 view .LVU9
+  43:modules/mecanum.c **** }
+  58              		.loc 1 43 1 is_stmt 0 view .LVU10
+  59 0024 31EE000A 		vadd.f32	s0, s2, s0
+  60              	.LVL5:
+  61              		.loc 1 43 1 view .LVU11
+  62 0028 7047     		bx	lr
+  63              		.cfi_endproc
+  64              	.LFE146:
+  66              		.section	.text.Mecanum_Reset,"ax",%progbits
+  67              		.align	1
+  68              		.global	Mecanum_Reset
+  69              		.syntax unified
+  70              		.thumb
+  71              		.thumb_func
+  73              	Mecanum_Reset:
+  74              	.LFB147:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 3
+
+
+  44:modules/mecanum.c **** 
+  45:modules/mecanum.c **** /* ------------------------------------------------------------------ */
+  46:modules/mecanum.c **** void Mecanum_Reset(void)
+  47:modules/mecanum.c **** {
+  75              		.loc 1 47 1 is_stmt 1 view -0
+  76              		.cfi_startproc
+  77              		@ args = 0, pretend = 0, frame = 0
+  78              		@ frame_needed = 0, uses_anonymous_args = 0
+  79              		@ link register save eliminated.
+  48:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+  80              		.loc 1 48 5 view .LVU13
+  81              	.LBB2:
+  82              		.loc 1 48 10 view .LVU14
+  83              	.LVL6:
+  84              		.loc 1 48 18 is_stmt 0 view .LVU15
+  85 0000 0023     		movs	r3, #0
+  86              		.loc 1 48 5 view .LVU16
+  87 0002 06E0     		b	.L6
+  88              	.LVL7:
+  89              	.L7:
+  49:modules/mecanum.c ****     {
+  50:modules/mecanum.c ****         mec_prev[i] = 0.0f;
+  90              		.loc 1 50 9 is_stmt 1 view .LVU17
+  91              		.loc 1 50 21 is_stmt 0 view .LVU18
+  92 0004 044A     		ldr	r2, .L8
+  93 0006 02EB8302 		add	r2, r2, r3, lsl #2
+  94 000a 0021     		movs	r1, #0
+  95 000c 1160     		str	r1, [r2]	@ float
+  48:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+  96              		.loc 1 48 49 is_stmt 1 discriminator 3 view .LVU19
+  97 000e 0133     		adds	r3, r3, #1
+  98              	.LVL8:
+  48:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+  99              		.loc 1 48 49 is_stmt 0 discriminator 3 view .LVU20
+ 100 0010 DBB2     		uxtb	r3, r3
+ 101              	.LVL9:
+ 102              	.L6:
+  48:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 103              		.loc 1 48 27 is_stmt 1 discriminator 1 view .LVU21
+ 104 0012 032B     		cmp	r3, #3
+ 105 0014 F6D9     		bls	.L7
+ 106              	.LBE2:
+  51:modules/mecanum.c ****     }
+  52:modules/mecanum.c **** }
+ 107              		.loc 1 52 1 is_stmt 0 view .LVU22
+ 108 0016 7047     		bx	lr
+ 109              	.L9:
+ 110              		.align	2
+ 111              	.L8:
+ 112 0018 00000000 		.word	mec_prev
+ 113              		.cfi_endproc
+ 114              	.LFE147:
+ 116              		.section	.text.Mecanum_Mix,"ax",%progbits
+ 117              		.align	1
+ 118              		.global	Mecanum_Mix
+ 119              		.syntax unified
+ 120              		.thumb
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 4
+
+
+ 121              		.thumb_func
+ 123              	Mecanum_Mix:
+ 124              	.LVL10:
+ 125              	.LFB148:
+  53:modules/mecanum.c **** 
+  54:modules/mecanum.c **** /* ------------------------------------------------------------------ */
+  55:modules/mecanum.c **** /* 混控主体                                                            */
+  56:modules/mecanum.c **** /*   fwd/strafe/spin 已归一化到 [-1,1]，内部再做死区与比例缩放           */
+  57:modules/mecanum.c **** /*   out[] 返回各轮归一化目标（未乘最大电流，由协议层决定电流档位）    
+  58:modules/mecanum.c **** /*   dt_s 固定按 1kHz 设计 → 每拍步进 = 速率 / 1000                     */
+  59:modules/mecanum.c **** /* ------------------------------------------------------------------ */
+  60:modules/mecanum.c **** void Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
+  61:modules/mecanum.c ****                  float *out)
+  62:modules/mecanum.c **** {
+ 126              		.loc 1 62 1 is_stmt 1 view -0
+ 127              		.cfi_startproc
+ 128              		@ args = 0, pretend = 0, frame = 0
+ 129              		@ frame_needed = 0, uses_anonymous_args = 0
+ 130              		.loc 1 62 1 is_stmt 0 view .LVU24
+ 131 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 132              	.LCFI0:
+ 133              		.cfi_def_cfa_offset 24
+ 134              		.cfi_offset 3, -24
+ 135              		.cfi_offset 4, -20
+ 136              		.cfi_offset 5, -16
+ 137              		.cfi_offset 6, -12
+ 138              		.cfi_offset 7, -8
+ 139              		.cfi_offset 14, -4
+ 140 0002 2DED048B 		vpush.64	{d8, d9}
+ 141              	.LCFI1:
+ 142              		.cfi_def_cfa_offset 40
+ 143              		.cfi_offset 80, -40
+ 144              		.cfi_offset 81, -36
+ 145              		.cfi_offset 82, -32
+ 146              		.cfi_offset 83, -28
+ 147 0006 B0EE409A 		vmov.f32	s18, s0
+ 148 000a 0E46     		mov	r6, r1
+  63:modules/mecanum.c ****     float vx, vy, wz;
+ 149              		.loc 1 63 5 is_stmt 1 view .LVU25
+  64:modules/mecanum.c ****     float step_up   = MEC_ACCEL_NORM / 1000.0f;     /* 1kHz 控制周期 */
+ 150              		.loc 1 64 5 view .LVU26
+ 151              	.LVL11:
+  65:modules/mecanum.c ****     float step_down = MEC_STOP_NORM  / 1000.0f;
+ 152              		.loc 1 65 5 view .LVU27
+  66:modules/mecanum.c ****     float step;
+ 153              		.loc 1 66 5 view .LVU28
+  67:modules/mecanum.c ****      /*逆解算摇杆值得到各轮速度*//*将摇杆值归一化后的值进行比例缩放，�
+  68:modules/mecanum.c ****     /* 1) 速度指令合成：摇杆比例缩放 + 归一化后残留死区清零 */
+  69:modules/mecanum.c ****     vx = fwd    * MEC_MAX_LINEAR;
+ 154              		.loc 1 69 5 view .LVU29
+  70:modules/mecanum.c ****     vy = strafe * MEC_MAX_LINEAR * MEC_STRAFE_RATIO;
+ 155              		.loc 1 70 5 view .LVU30
+ 156              		.loc 1 70 8 is_stmt 0 view .LVU31
+ 157 000c DFED4C7A 		vldr.32	s15, .L41
+ 158 0010 60EEA78A 		vmul.f32	s17, s1, s15
+ 159              	.LVL12:
+  71:modules/mecanum.c ****     wz = spin   * MEC_MAX_SPIN   * MEC_SPIN_RATIO;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 5
+
+
+ 160              		.loc 1 71 5 is_stmt 1 view .LVU32
+ 161              		.loc 1 71 8 is_stmt 0 view .LVU33
+ 162 0014 DFED4B7A 		vldr.32	s15, .L41+4
+ 163 0018 21EE278A 		vmul.f32	s16, s2, s15
+ 164              	.LVL13:
+  72:modules/mecanum.c **** //进行速度归一化死区判断
+  73:modules/mecanum.c ****     if ((vx > -MEC_DEADBAND_NORM) && (vx < MEC_DEADBAND_NORM)) vx = 0.0f;
+ 165              		.loc 1 73 5 is_stmt 1 view .LVU34
+ 166              		.loc 1 73 8 is_stmt 0 view .LVU35
+ 167 001c DFED4A7A 		vldr.32	s15, .L41+8
+ 168 0020 B4EEE70A 		vcmpe.f32	s0, s15
+ 169 0024 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 170 0028 08DD     		ble	.L11
+ 171              		.loc 1 73 35 discriminator 1 view .LVU36
+ 172 002a DFED487A 		vldr.32	s15, .L41+12
+ 173 002e B4EEE70A 		vcmpe.f32	s0, s15
+ 174 0032 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 175 0036 01D5     		bpl	.L11
+ 176              		.loc 1 73 67 discriminator 2 view .LVU37
+ 177 0038 9FED459A 		vldr.32	s18, .L41+16
+ 178              	.L11:
+ 179              	.LVL14:
+  74:modules/mecanum.c ****     if ((vy > -MEC_DEADBAND_NORM) && (vy < MEC_DEADBAND_NORM)) vy = 0.0f;
+ 180              		.loc 1 74 5 is_stmt 1 view .LVU38
+ 181              		.loc 1 74 8 is_stmt 0 view .LVU39
+ 182 003c DFED427A 		vldr.32	s15, .L41+8
+ 183 0040 F4EEE78A 		vcmpe.f32	s17, s15
+ 184 0044 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 185 0048 08DD     		ble	.L13
+ 186              		.loc 1 74 35 discriminator 1 view .LVU40
+ 187 004a DFED407A 		vldr.32	s15, .L41+12
+ 188 004e F4EEE78A 		vcmpe.f32	s17, s15
+ 189 0052 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 190 0056 01D5     		bpl	.L13
+ 191              		.loc 1 74 67 discriminator 2 view .LVU41
+ 192 0058 DFED3D8A 		vldr.32	s17, .L41+16
+ 193              	.LVL15:
+ 194              	.L13:
+  75:modules/mecanum.c ****     if ((wz > -MEC_DEADBAND_NORM) && (wz < MEC_DEADBAND_NORM)) wz = 0.0f;
+ 195              		.loc 1 75 5 is_stmt 1 view .LVU42
+ 196              		.loc 1 75 8 is_stmt 0 view .LVU43
+ 197 005c DFED3A7A 		vldr.32	s15, .L41+8
+ 198 0060 B4EEE78A 		vcmpe.f32	s16, s15
+ 199 0064 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 200 0068 08DD     		ble	.L15
+ 201              		.loc 1 75 35 discriminator 1 view .LVU44
+ 202 006a DFED387A 		vldr.32	s15, .L41+12
+ 203 006e B4EEE78A 		vcmpe.f32	s16, s15
+ 204 0072 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 205 0076 01D5     		bpl	.L15
+ 206              		.loc 1 75 67 discriminator 2 view .LVU45
+ 207 0078 9FED358A 		vldr.32	s16, .L41+16
+ 208              	.LVL16:
+ 209              	.L15:
+  76:modules/mecanum.c **** 
+  77:modules/mecanum.c ****     /* 2) 未使能（失联/拨杆没到位）：目标强制 0，且用更快的回零速度 */
+  78:modules/mecanum.c ****     if (!enabled)
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 6
+
+
+ 210              		.loc 1 78 5 is_stmt 1 view .LVU46
+ 211              		.loc 1 78 8 is_stmt 0 view .LVU47
+ 212 007c 40B9     		cbnz	r0, .L27
+  79:modules/mecanum.c ****     {
+  80:modules/mecanum.c ****         vx = 0.0f;
+  81:modules/mecanum.c ****         vy = 0.0f;
+  82:modules/mecanum.c ****         wz = 0.0f;
+  83:modules/mecanum.c ****         step = step_down;
+ 213              		.loc 1 83 14 view .LVU48
+ 214 007e 354F     		ldr	r7, .L41+20
+  82:modules/mecanum.c ****         step = step_down;
+ 215              		.loc 1 82 12 view .LVU49
+ 216 0080 9FED338A 		vldr.32	s16, .L41+16
+ 217              	.LVL17:
+  81:modules/mecanum.c ****         wz = 0.0f;
+ 218              		.loc 1 81 12 view .LVU50
+ 219 0084 F0EE488A 		vmov.f32	s17, s16
+ 220              	.LVL18:
+  80:modules/mecanum.c ****         vy = 0.0f;
+ 221              		.loc 1 80 12 view .LVU51
+ 222 0088 B0EE489A 		vmov.f32	s18, s16
+ 223              	.LVL19:
+ 224              	.L17:
+  84:modules/mecanum.c ****     }
+  85:modules/mecanum.c ****     else
+  86:modules/mecanum.c ****     {
+  87:modules/mecanum.c ****         step = step_up;
+  88:modules/mecanum.c ****     }
+  89:modules/mecanum.c **** 
+  90:modules/mecanum.c ****     /* 3) 逐轮解算 + 斜坡限速 */
+  91:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 225              		.loc 1 91 5 is_stmt 1 view .LVU52
+ 226              	.LBB3:
+ 227              		.loc 1 91 10 view .LVU53
+ 228              		.loc 1 91 18 is_stmt 0 view .LVU54
+ 229 008c 0024     		movs	r4, #0
+ 230              		.loc 1 91 5 view .LVU55
+ 231 008e 1FE0     		b	.L18
+ 232              	.LVL20:
+ 233              	.L27:
+ 234              		.loc 1 91 5 view .LVU56
+ 235              	.LBE3:
+  87:modules/mecanum.c ****     }
+ 236              		.loc 1 87 14 view .LVU57
+ 237 0090 314F     		ldr	r7, .L41+24
+ 238 0092 FBE7     		b	.L17
+ 239              	.LVL21:
+ 240              	.L39:
+ 241              	.LBB6:
+ 242              	.LBB4:
+  92:modules/mecanum.c ****     {//得到各轮各方向符号进而解算各轮获得的速度
+  93:modules/mecanum.c ****         const Mecanum_Dir_t *d = &MECANUM_DIR[i];
+  94:modules/mecanum.c ****         float tgt = d->fwd * vx + d->strafe * vy + d->spin * wz;
+  95:modules/mecanum.c **** 
+  96:modules/mecanum.c ****         /* 限幅到 ±1：斜推摇杆时不会越界 */
+  97:modules/mecanum.c ****         if (tgt >  1.0f) tgt =  1.0f;
+  98:modules/mecanum.c ****         if (tgt < -1.0f) tgt = -1.0f;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 7
+
+
+ 243              		.loc 1 98 9 is_stmt 1 view .LVU58
+ 244              		.loc 1 98 12 is_stmt 0 view .LVU59
+ 245 0094 FFEE007A 		vmov.f32	s15, #-1.0e+0
+ 246 0098 F4EEE70A 		vcmpe.f32	s1, s15
+ 247 009c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 248 00a0 37D5     		bpl	.L19
+ 249              		.loc 1 98 30 discriminator 1 view .LVU60
+ 250 00a2 FFEE000A 		vmov.f32	s1, #-1.0e+0
+ 251              	.LVL22:
+ 252              		.loc 1 98 30 discriminator 1 view .LVU61
+ 253 00a6 39E0     		b	.L20
+ 254              	.LVL23:
+ 255              	.L40:
+  99:modules/mecanum.c **** 
+ 100:modules/mecanum.c ****         /* 松杆回零比加速更快，保证“松手就停”的手感 *//*进行每次归一�
+ 101:modules/mecanum.c ****         float s = (tgt == 0.0f || (mec_prev[i] * tgt < 0.0f)) ? step_down : step;
+ 256              		.loc 1 101 75 discriminator 3 view .LVU62
+ 257 00a8 9FED2C1A 		vldr.32	s2, .L41+28
+ 258 00ac 01E0     		b	.L21
+ 259              	.LVL24:
+ 260              	.L30:
+ 261              		.loc 1 101 75 discriminator 3 view .LVU63
+ 262 00ae 9FED2B1A 		vldr.32	s2, .L41+28
+ 263              	.LVL25:
+ 264              	.L21:
+ 102:modules/mecanum.c **** 
+ 103:modules/mecanum.c ****         //将本次变化完的归一化值传到out输出
+ 104:modules/mecanum.c ****         mec_prev[i] = mec_slew(mec_prev[i], tgt, s);
+ 265              		.loc 1 104 9 is_stmt 1 view .LVU64
+ 266              		.loc 1 104 23 is_stmt 0 view .LVU65
+ 267 00b2 2B4D     		ldr	r5, .L41+32
+ 268 00b4 05EB8105 		add	r5, r5, r1, lsl #2
+ 269 00b8 95ED000A 		vldr.32	s0, [r5]
+ 270 00bc FFF7FEFF 		bl	mec_slew
+ 271              	.LVL26:
+ 272              		.loc 1 104 21 discriminator 1 view .LVU66
+ 273 00c0 85ED000A 		vstr.32	s0, [r5]
+ 105:modules/mecanum.c ****         out[i] = mec_prev[i];
+ 274              		.loc 1 105 9 is_stmt 1 view .LVU67
+ 275              		.loc 1 105 12 is_stmt 0 view .LVU68
+ 276 00c4 06EB8403 		add	r3, r6, r4, lsl #2
+ 277              		.loc 1 105 16 view .LVU69
+ 278 00c8 83ED000A 		vstr.32	s0, [r3]
+ 279              	.LBE4:
+  91:modules/mecanum.c ****     {//得到各轮各方向符号进而解算各轮获得的速度
+ 280              		.loc 1 91 49 is_stmt 1 discriminator 2 view .LVU70
+ 281 00cc 0134     		adds	r4, r4, #1
+ 282              	.LVL27:
+  91:modules/mecanum.c ****     {//得到各轮各方向符号进而解算各轮获得的速度
+ 283              		.loc 1 91 49 is_stmt 0 discriminator 2 view .LVU71
+ 284 00ce E4B2     		uxtb	r4, r4
+ 285              	.LVL28:
+ 286              	.L18:
+  91:modules/mecanum.c ****     {//得到各轮各方向符号进而解算各轮获得的速度
+ 287              		.loc 1 91 27 is_stmt 1 discriminator 1 view .LVU72
+ 288 00d0 032C     		cmp	r4, #3
+ 289 00d2 32D8     		bhi	.L38
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 8
+
+
+ 290              	.LBB5:
+  93:modules/mecanum.c ****         float tgt = d->fwd * vx + d->strafe * vy + d->spin * wz;
+ 291              		.loc 1 93 9 view .LVU73
+  93:modules/mecanum.c ****         float tgt = d->fwd * vx + d->strafe * vy + d->spin * wz;
+ 292              		.loc 1 93 46 is_stmt 0 view .LVU74
+ 293 00d4 2146     		mov	r1, r4
+ 294              	.LVL29:
+  94:modules/mecanum.c **** 
+ 295              		.loc 1 94 9 is_stmt 1 view .LVU75
+  94:modules/mecanum.c **** 
+ 296              		.loc 1 94 22 is_stmt 0 view .LVU76
+ 297 00d6 04EB4402 		add	r2, r4, r4, lsl #1
+ 298 00da 224B     		ldr	r3, .L41+36
+ 299 00dc 03EB8203 		add	r3, r3, r2, lsl #2
+ 300 00e0 D3ED000A 		vldr.32	s1, [r3]
+  94:modules/mecanum.c **** 
+ 301              		.loc 1 94 28 view .LVU77
+ 302 00e4 60EE890A 		vmul.f32	s1, s1, s18
+  94:modules/mecanum.c **** 
+ 303              		.loc 1 94 36 view .LVU78
+ 304 00e8 D3ED017A 		vldr.32	s15, [r3, #4]
+  94:modules/mecanum.c **** 
+ 305              		.loc 1 94 45 view .LVU79
+ 306 00ec 67EEA87A 		vmul.f32	s15, s15, s17
+  94:modules/mecanum.c **** 
+ 307              		.loc 1 94 33 view .LVU80
+ 308 00f0 70EEA70A 		vadd.f32	s1, s1, s15
+  94:modules/mecanum.c **** 
+ 309              		.loc 1 94 53 view .LVU81
+ 310 00f4 D3ED027A 		vldr.32	s15, [r3, #8]
+  94:modules/mecanum.c **** 
+ 311              		.loc 1 94 60 view .LVU82
+ 312 00f8 67EE887A 		vmul.f32	s15, s15, s16
+  94:modules/mecanum.c **** 
+ 313              		.loc 1 94 15 view .LVU83
+ 314 00fc 70EEA70A 		vadd.f32	s1, s1, s15
+ 315              	.LVL30:
+  97:modules/mecanum.c ****         if (tgt < -1.0f) tgt = -1.0f;
+ 316              		.loc 1 97 9 is_stmt 1 view .LVU84
+  97:modules/mecanum.c ****         if (tgt < -1.0f) tgt = -1.0f;
+ 317              		.loc 1 97 12 is_stmt 0 view .LVU85
+ 318 0100 F7EE007A 		vmov.f32	s15, #1.0e+0
+ 319 0104 F4EEE70A 		vcmpe.f32	s1, s15
+ 320 0108 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 321 010c C2DD     		ble	.L39
+  97:modules/mecanum.c ****         if (tgt < -1.0f) tgt = -1.0f;
+ 322              		.loc 1 97 30 discriminator 1 view .LVU86
+ 323 010e F7EE000A 		vmov.f32	s1, #1.0e+0
+ 324              	.LVL31:
+ 325              	.L19:
+ 101:modules/mecanum.c **** 
+ 326              		.loc 1 101 9 is_stmt 1 view .LVU87
+ 101:modules/mecanum.c **** 
+ 327              		.loc 1 101 75 is_stmt 0 view .LVU88
+ 328 0112 F5EE400A 		vcmp.f32	s1, #0
+ 329 0116 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 330 011a C8D0     		beq	.L30
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 9
+
+
+ 331              	.LVL32:
+ 332              	.L20:
+ 101:modules/mecanum.c **** 
+ 333              		.loc 1 101 44 discriminator 2 view .LVU89
+ 334 011c 104B     		ldr	r3, .L41+32
+ 335 011e 03EB8103 		add	r3, r3, r1, lsl #2
+ 336 0122 D3ED007A 		vldr.32	s15, [r3]
+ 101:modules/mecanum.c **** 
+ 337              		.loc 1 101 48 discriminator 2 view .LVU90
+ 338 0126 67EEA07A 		vmul.f32	s15, s15, s1
+ 101:modules/mecanum.c **** 
+ 339              		.loc 1 101 32 discriminator 2 view .LVU91
+ 340 012a F5EEC07A 		vcmpe.f32	s15, #0
+ 341 012e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 342 0132 B9D4     		bmi	.L40
+ 101:modules/mecanum.c **** 
+ 343              		.loc 1 101 75 discriminator 4 view .LVU92
+ 344 0134 01EE107A 		vmov	s2, r7
+ 345 0138 BBE7     		b	.L21
+ 346              	.LVL33:
+ 347              	.L38:
+ 101:modules/mecanum.c **** 
+ 348              		.loc 1 101 75 discriminator 4 view .LVU93
+ 349              	.LBE5:
+ 350              	.LBE6:
+ 106:modules/mecanum.c ****     }
+ 107:modules/mecanum.c **** }
+ 351              		.loc 1 107 1 view .LVU94
+ 352 013a BDEC048B 		vldm	sp!, {d8-d9}
+ 353              	.LCFI2:
+ 354              		.cfi_restore 82
+ 355              		.cfi_restore 83
+ 356              		.cfi_restore 80
+ 357              		.cfi_restore 81
+ 358              		.cfi_def_cfa_offset 24
+ 359              	.LVL34:
+ 360              		.loc 1 107 1 view .LVU95
+ 361 013e F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 362              	.LVL35:
+ 363              	.L42:
+ 364              		.loc 1 107 1 view .LVU96
+ 365              		.align	2
+ 366              	.L41:
+ 367 0140 9A99593F 		.word	1062836634
+ 368 0144 9A99193F 		.word	1058642330
+ 369 0148 0AD7A3BC 		.word	-1130113270
+ 370 014c 0AD7A33C 		.word	1017370378
+ 371 0150 00000000 		.word	0
+ 372 0154 6F12833B 		.word	998445679
+ 373 0158 A69BC43A 		.word	985963430
+ 374 015c 6F12833B 		.word	998445679
+ 375 0160 00000000 		.word	mec_prev
+ 376 0164 00000000 		.word	MECANUM_DIR
+ 377              		.cfi_endproc
+ 378              	.LFE148:
+ 380              		.section	.bss.mec_prev,"aw",%nobits
+ 381              		.align	2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 10
+
+
+ 384              	mec_prev:
+ 385 0000 00000000 		.space	16
+ 385      00000000 
+ 385      00000000 
+ 385      00000000 
+ 386              		.global	MECANUM_DIR
+ 387              		.section	.rodata.MECANUM_DIR,"a"
+ 388              		.align	2
+ 391              	MECANUM_DIR:
+ 392 0000 0000803F 		.word	1065353216
+ 393 0004 000080BF 		.word	-1082130432
+ 394 0008 0000803F 		.word	1065353216
+ 395 000c 0000803F 		.word	1065353216
+ 396 0010 000080BF 		.word	-1082130432
+ 397 0014 000080BF 		.word	-1082130432
+ 398 0018 0000803F 		.word	1065353216
+ 399 001c 0000803F 		.word	1065353216
+ 400 0020 000080BF 		.word	-1082130432
+ 401 0024 0000803F 		.word	1065353216
+ 402 0028 0000803F 		.word	1065353216
+ 403 002c 0000803F 		.word	1065353216
+ 404              		.text
+ 405              	.Letext0:
+ 406              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 407              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 408              		.file 4 "modules/mecanum.h"
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s 			page 11
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 mecanum.c
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:20     .text.mec_slew:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:25     .text.mec_slew:00000000 mec_slew
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:67     .text.Mecanum_Reset:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:73     .text.Mecanum_Reset:00000000 Mecanum_Reset
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:112    .text.Mecanum_Reset:00000018 $d
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:384    .bss.mec_prev:00000000 mec_prev
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:117    .text.Mecanum_Mix:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:123    .text.Mecanum_Mix:00000000 Mecanum_Mix
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:367    .text.Mecanum_Mix:00000140 $d
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:391    .rodata.MECANUM_DIR:00000000 MECANUM_DIR
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:381    .bss.mec_prev:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccro9yHX.s:388    .rodata.MECANUM_DIR:00000000 $d
+
+NO UNDEFINED SYMBOLS

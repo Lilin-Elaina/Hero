@@ -1,0 +1,45 @@
+{
+    "version": "2.0.0",
+    "options": {
+        "cwd": "${workspaceFolder}"
+    },
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make",
+            "args": ["-j"],
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "rebuild",
+            "type": "shell",
+            "command": "make",
+            "args": ["clean", "all", "-j"],
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "flash",
+            "type": "shell",
+            "command": "make",
+            "args": ["flash"],
+            "dependsOn": ["build"],
+            "problemMatcher": []
+        },
+        {
+            "label": "flash (J-Link, no rebuild)",
+            "type": "shell",
+            "command": "make",
+            "args": ["flash"],
+            "problemMatcher": []
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make",
+            "args": ["clean"],
+            "problemMatcher": []
+        }
+    ]
+}

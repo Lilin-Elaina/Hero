@@ -1,0 +1,10 @@
+si SWD
+speed 4000
+device STM32H723VG
+connect
+r
+h
+loadfile build/Remote_Control.hex
+r
+g
+qc

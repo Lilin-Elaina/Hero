@@ -1,0 +1,355 @@
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"bsp.can.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "bsp/bsp.can.c"
+  19              		.section	.text.FDCAN2_Start,"ax",%progbits
+  20              		.align	1
+  21              		.global	FDCAN2_Start
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	FDCAN2_Start:
+  27              	.LFB146:
+   1:bsp/bsp.can.c **** #include "main.h"
+   2:bsp/bsp.can.c **** #include "bsp.can.h"
+   3:bsp/bsp.can.c **** #include "fdcan.h"
+   4:bsp/bsp.can.c **** /*
+   5:bsp/bsp.can.c ****  * @ brief: 开启fdcan2，并启动fdcan2的总线关闭中断与fifo0接收中断（控制底盘�
+   6:bsp/bsp.can.c ****  * @ note:过滤器的配置必须在启动fdcan2之前。 
+   7:bsp/bsp.can.c ****  */
+   8:bsp/bsp.can.c **** void FDCAN2_Start(void)
+   9:bsp/bsp.can.c **** { 
+  28              		.loc 1 9 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 32
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  37 0002 88B0     		sub	sp, sp, #32
+  38              	.LCFI1:
+  39              		.cfi_def_cfa_offset 40
+  10:bsp/bsp.can.c ****     FDCAN_FilterTypeDef sFilterConfig = {
+  40              		.loc 1 10 5 view .LVU1
+  41              		.loc 1 10 25 is_stmt 0 view .LVU2
+  42 0004 EC46     		mov	ip, sp
+  43 0006 0E4C     		ldr	r4, .L3
+  44 0008 0FCC     		ldmia	r4!, {r0, r1, r2, r3}
+  45 000a ACE80F00 		stmia	ip!, {r0, r1, r2, r3}
+  46 000e 94E80F00 		ldm	r4, {r0, r1, r2, r3}
+  47 0012 8CE80F00 		stm	ip, {r0, r1, r2, r3}
+  11:bsp/bsp.can.c **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s 			page 2
+
+
+  12:bsp/bsp.can.c ****     .FilterType = FDCAN_FILTER_MASK,
+  13:bsp/bsp.can.c ****     .FilterIndex = 0,
+  14:bsp/bsp.can.c ****     .FilterConfig = FDCAN_FILTER_TO_RXFIFO0,
+  15:bsp/bsp.can.c ****     .IdType = FDCAN_STANDARD_ID,
+  16:bsp/bsp.can.c ****     .FilterID1 = 0x000,
+  17:bsp/bsp.can.c ****     .FilterID2 = 0x000,
+  18:bsp/bsp.can.c ****     .IsCalibrationMsg = 0, // 是否检验消息
+  19:bsp/bsp.can.c ****     .RxBufferIndex = 0, // 接收缓冲区编号
+  20:bsp/bsp.can.c ****     };
+  21:bsp/bsp.can.c **** 
+  22:bsp/bsp.can.c ****     HAL_FDCAN_ConfigFilter(&hfdcan2, &sFilterConfig);//配置启动
+  48              		.loc 1 22 5 is_stmt 1 view .LVU3
+  49 0016 0B4C     		ldr	r4, .L3+4
+  50 0018 6946     		mov	r1, sp
+  51 001a 2046     		mov	r0, r4
+  52 001c FFF7FEFF 		bl	HAL_FDCAN_ConfigFilter
+  53              	.LVL0:
+  23:bsp/bsp.can.c ****     HAL_FDCAN_Start(&hfdcan2);
+  54              		.loc 1 23 5 view .LVU4
+  55 0020 2046     		mov	r0, r4
+  56 0022 FFF7FEFF 		bl	HAL_FDCAN_Start
+  57              	.LVL1:
+  24:bsp/bsp.can.c ****     HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_BUS_OFF, 0);
+  58              		.loc 1 24 5 view .LVU5
+  59 0026 0022     		movs	r2, #0
+  60 0028 4FF00071 		mov	r1, #33554432
+  61 002c 2046     		mov	r0, r4
+  62 002e FFF7FEFF 		bl	HAL_FDCAN_ActivateNotification
+  63              	.LVL2:
+  25:bsp/bsp.can.c ****     HAL_FDCAN_ActivateNotification(&hfdcan2, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+  64              		.loc 1 25 5 view .LVU6
+  65 0032 0022     		movs	r2, #0
+  66 0034 0121     		movs	r1, #1
+  67 0036 2046     		mov	r0, r4
+  68 0038 FFF7FEFF 		bl	HAL_FDCAN_ActivateNotification
+  69              	.LVL3:
+  26:bsp/bsp.can.c **** }
+  70              		.loc 1 26 1 is_stmt 0 view .LVU7
+  71 003c 08B0     		add	sp, sp, #32
+  72              	.LCFI2:
+  73              		.cfi_def_cfa_offset 8
+  74              		@ sp needed
+  75 003e 10BD     		pop	{r4, pc}
+  76              	.L4:
+  77              		.align	2
+  78              	.L3:
+  79 0040 00000000 		.word	.LANCHOR0
+  80 0044 00000000 		.word	hfdcan2
+  81              		.cfi_endproc
+  82              	.LFE146:
+  84              		.section	.text.FDCAN1_Start,"ax",%progbits
+  85              		.align	1
+  86              		.global	FDCAN1_Start
+  87              		.syntax unified
+  88              		.thumb
+  89              		.thumb_func
+  91              	FDCAN1_Start:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s 			page 3
+
+
+  92              	.LFB147:
+  27:bsp/bsp.can.c **** 
+  28:bsp/bsp.can.c **** /*
+  29:bsp/bsp.can.c ****  *@brief :配置fdcan1过滤器，开启fdcan1，启动fdcan1的总线关闭中断与接收消息�
+  30:bsp/bsp.can.c ****  */
+  31:bsp/bsp.can.c **** void FDCAN1_Start(void)
+  32:bsp/bsp.can.c **** {
+  93              		.loc 1 32 1 is_stmt 1 view -0
+  94              		.cfi_startproc
+  95              		@ args = 0, pretend = 0, frame = 32
+  96              		@ frame_needed = 0, uses_anonymous_args = 0
+  97 0000 10B5     		push	{r4, lr}
+  98              	.LCFI3:
+  99              		.cfi_def_cfa_offset 8
+ 100              		.cfi_offset 4, -8
+ 101              		.cfi_offset 14, -4
+ 102 0002 88B0     		sub	sp, sp, #32
+ 103              	.LCFI4:
+ 104              		.cfi_def_cfa_offset 40
+  33:bsp/bsp.can.c ****     FDCAN_FilterTypeDef sFilterConfig = {
+ 105              		.loc 1 33 5 view .LVU9
+ 106              		.loc 1 33 25 is_stmt 0 view .LVU10
+ 107 0004 EC46     		mov	ip, sp
+ 108 0006 0E4C     		ldr	r4, .L7
+ 109 0008 0FCC     		ldmia	r4!, {r0, r1, r2, r3}
+ 110 000a ACE80F00 		stmia	ip!, {r0, r1, r2, r3}
+ 111 000e 94E80F00 		ldm	r4, {r0, r1, r2, r3}
+ 112 0012 8CE80F00 		stm	ip, {r0, r1, r2, r3}
+  34:bsp/bsp.can.c **** 
+  35:bsp/bsp.can.c ****     .FilterType = FDCAN_FILTER_MASK,
+  36:bsp/bsp.can.c ****     .FilterIndex = 0,
+  37:bsp/bsp.can.c ****     .FilterConfig = FDCAN_FILTER_TO_RXFIFO0,
+  38:bsp/bsp.can.c ****     .IdType = FDCAN_STANDARD_ID,
+  39:bsp/bsp.can.c ****     .FilterID1 = 0x000,
+  40:bsp/bsp.can.c ****     .FilterID2 = 0x000,
+  41:bsp/bsp.can.c ****     .IsCalibrationMsg = 0,
+  42:bsp/bsp.can.c ****     .RxBufferIndex = 0,
+  43:bsp/bsp.can.c ****     };
+  44:bsp/bsp.can.c **** 
+  45:bsp/bsp.can.c ****     HAL_FDCAN_ConfigFilter(&hfdcan1, &sFilterConfig);
+ 113              		.loc 1 45 5 is_stmt 1 view .LVU11
+ 114 0016 0B4C     		ldr	r4, .L7+4
+ 115 0018 6946     		mov	r1, sp
+ 116 001a 2046     		mov	r0, r4
+ 117 001c FFF7FEFF 		bl	HAL_FDCAN_ConfigFilter
+ 118              	.LVL4:
+  46:bsp/bsp.can.c ****     HAL_FDCAN_Start(&hfdcan1);
+ 119              		.loc 1 46 5 view .LVU12
+ 120 0020 2046     		mov	r0, r4
+ 121 0022 FFF7FEFF 		bl	HAL_FDCAN_Start
+ 122              	.LVL5:
+  47:bsp/bsp.can.c ****     HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_BUS_OFF, 0);
+ 123              		.loc 1 47 5 view .LVU13
+ 124 0026 0022     		movs	r2, #0
+ 125 0028 4FF00071 		mov	r1, #33554432
+ 126 002c 2046     		mov	r0, r4
+ 127 002e FFF7FEFF 		bl	HAL_FDCAN_ActivateNotification
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s 			page 4
+
+
+ 128              	.LVL6:
+  48:bsp/bsp.can.c ****     HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+ 129              		.loc 1 48 5 view .LVU14
+ 130 0032 0022     		movs	r2, #0
+ 131 0034 0121     		movs	r1, #1
+ 132 0036 2046     		mov	r0, r4
+ 133 0038 FFF7FEFF 		bl	HAL_FDCAN_ActivateNotification
+ 134              	.LVL7:
+  49:bsp/bsp.can.c **** }
+ 135              		.loc 1 49 1 is_stmt 0 view .LVU15
+ 136 003c 08B0     		add	sp, sp, #32
+ 137              	.LCFI5:
+ 138              		.cfi_def_cfa_offset 8
+ 139              		@ sp needed
+ 140 003e 10BD     		pop	{r4, pc}
+ 141              	.L8:
+ 142              		.align	2
+ 143              	.L7:
+ 144 0040 00000000 		.word	.LANCHOR0
+ 145 0044 00000000 		.word	hfdcan1
+ 146              		.cfi_endproc
+ 147              	.LFE147:
+ 149              		.section	.text.HAL_FDCAN_ErrorStatusCallback,"ax",%progbits
+ 150              		.align	1
+ 151              		.global	HAL_FDCAN_ErrorStatusCallback
+ 152              		.syntax unified
+ 153              		.thumb
+ 154              		.thumb_func
+ 156              	HAL_FDCAN_ErrorStatusCallback:
+ 157              	.LVL8:
+ 158              	.LFB148:
+  50:bsp/bsp.can.c **** 
+  51:bsp/bsp.can.c **** /* 
+  52:bsp/bsp.can.c ****  *@brief:总线关闭处理，关闭总线再重开
+  53:bsp/bsp.can.c ****  */
+  54:bsp/bsp.can.c **** void HAL_FDCAN_ErrorStatusCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t ErrorStatusITs)
+  55:bsp/bsp.can.c **** {  
+ 159              		.loc 1 55 1 is_stmt 1 view -0
+ 160              		.cfi_startproc
+ 161              		@ args = 0, pretend = 0, frame = 0
+ 162              		@ frame_needed = 0, uses_anonymous_args = 0
+  56:bsp/bsp.can.c ****     if ((ErrorStatusITs & FDCAN_IT_BUS_OFF) == 0 )
+ 163              		.loc 1 56 5 view .LVU17
+ 164              		.loc 1 56 8 is_stmt 0 view .LVU18
+ 165 0000 11F0007F 		tst	r1, #33554432
+ 166 0004 12D0     		beq	.L13
+  55:bsp/bsp.can.c ****     if ((ErrorStatusITs & FDCAN_IT_BUS_OFF) == 0 )
+ 167              		.loc 1 55 1 view .LVU19
+ 168 0006 08B5     		push	{r3, lr}
+ 169              	.LCFI6:
+ 170              		.cfi_def_cfa_offset 8
+ 171              		.cfi_offset 3, -8
+ 172              		.cfi_offset 14, -4
+  57:bsp/bsp.can.c ****     {
+  58:bsp/bsp.can.c ****         return;
+  59:bsp/bsp.can.c ****     }
+  60:bsp/bsp.can.c **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s 			page 5
+
+
+  61:bsp/bsp.can.c ****     if (hfdcan->Instance == FDCAN2)
+ 173              		.loc 1 61 5 is_stmt 1 view .LVU20
+ 174              		.loc 1 61 15 is_stmt 0 view .LVU21
+ 175 0008 0368     		ldr	r3, [r0]
+ 176              		.loc 1 61 8 view .LVU22
+ 177 000a 094A     		ldr	r2, .L18
+ 178 000c 9342     		cmp	r3, r2
+ 179 000e 03D0     		beq	.L16
+  62:bsp/bsp.can.c ****     {
+  63:bsp/bsp.can.c ****         HAL_FDCAN_Stop(hfdcan);
+  64:bsp/bsp.can.c ****         FDCAN2_Start();
+  65:bsp/bsp.can.c ****     }
+  66:bsp/bsp.can.c ****     else if (hfdcan->Instance == FDCAN1)
+ 180              		.loc 1 66 10 is_stmt 1 view .LVU23
+ 181              		.loc 1 66 13 is_stmt 0 view .LVU24
+ 182 0010 084A     		ldr	r2, .L18+4
+ 183 0012 9342     		cmp	r3, r2
+ 184 0014 05D0     		beq	.L17
+ 185              	.LVL9:
+ 186              	.L9:
+  67:bsp/bsp.can.c ****     {
+  68:bsp/bsp.can.c ****         HAL_FDCAN_Stop(hfdcan);
+  69:bsp/bsp.can.c ****         FDCAN1_Start();
+  70:bsp/bsp.can.c ****     }
+  71:bsp/bsp.can.c **** }
+ 187              		.loc 1 71 1 view .LVU25
+ 188 0016 08BD     		pop	{r3, pc}
+ 189              	.LVL10:
+ 190              	.L16:
+  63:bsp/bsp.can.c ****         FDCAN2_Start();
+ 191              		.loc 1 63 9 is_stmt 1 view .LVU26
+ 192 0018 FFF7FEFF 		bl	HAL_FDCAN_Stop
+ 193              	.LVL11:
+  64:bsp/bsp.can.c ****     }
+ 194              		.loc 1 64 9 view .LVU27
+ 195 001c FFF7FEFF 		bl	FDCAN2_Start
+ 196              	.LVL12:
+ 197 0020 F9E7     		b	.L9
+ 198              	.LVL13:
+ 199              	.L17:
+  68:bsp/bsp.can.c ****         FDCAN1_Start();
+ 200              		.loc 1 68 9 view .LVU28
+ 201 0022 FFF7FEFF 		bl	HAL_FDCAN_Stop
+ 202              	.LVL14:
+  69:bsp/bsp.can.c ****     }
+ 203              		.loc 1 69 9 view .LVU29
+ 204 0026 FFF7FEFF 		bl	FDCAN1_Start
+ 205              	.LVL15:
+ 206 002a F4E7     		b	.L9
+ 207              	.LVL16:
+ 208              	.L13:
+ 209              	.LCFI7:
+ 210              		.cfi_def_cfa_offset 0
+ 211              		.cfi_restore 3
+ 212              		.cfi_restore 14
+  69:bsp/bsp.can.c ****     }
+ 213              		.loc 1 69 9 is_stmt 0 view .LVU30
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s 			page 6
+
+
+ 214 002c 7047     		bx	lr
+ 215              	.L19:
+ 216 002e 00BF     		.align	2
+ 217              	.L18:
+ 218 0030 00A40040 		.word	1073783808
+ 219 0034 00A00040 		.word	1073782784
+ 220              		.cfi_endproc
+ 221              	.LFE148:
+ 223              		.section	.rodata
+ 224              		.align	2
+ 225              		.set	.LANCHOR0,. + 0
+ 226              	.LC0:
+ 227 0000 00000000 		.word	0
+ 228 0004 00000000 		.word	0
+ 229 0008 02000000 		.word	2
+ 230 000c 01000000 		.word	1
+ 231 0010 00000000 		.word	0
+ 232 0014 00000000 		.word	0
+ 233 0018 00000000 		.word	0
+ 234 001c 00000000 		.word	0
+ 235              		.text
+ 236              	.Letext0:
+ 237              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 238              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 239              		.file 4 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 240              		.file 5 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h"
+ 241              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 242              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_fdcan.h"
+ 243              		.file 8 "Core/Inc/fdcan.h"
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s 			page 7
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 bsp.can.c
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:20     .text.FDCAN2_Start:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:26     .text.FDCAN2_Start:00000000 FDCAN2_Start
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:79     .text.FDCAN2_Start:00000040 $d
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:85     .text.FDCAN1_Start:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:91     .text.FDCAN1_Start:00000000 FDCAN1_Start
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:144    .text.FDCAN1_Start:00000040 $d
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:150    .text.HAL_FDCAN_ErrorStatusCallback:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:156    .text.HAL_FDCAN_ErrorStatusCallback:00000000 HAL_FDCAN_ErrorStatusCallback
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:218    .text.HAL_FDCAN_ErrorStatusCallback:00000030 $d
+C:\Users\elaina\AppData\Local\Temp\ccGQVVCF.s:224    .rodata:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_FDCAN_ConfigFilter
+HAL_FDCAN_Start
+HAL_FDCAN_ActivateNotification
+hfdcan2
+hfdcan1
+HAL_FDCAN_Stop
