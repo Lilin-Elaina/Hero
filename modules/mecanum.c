@@ -1,28 +1,24 @@
 
 #include "mecanum.h"
-/* 逆运动学（摇杆指令 → 各轮转速），Vx=前进 Vy=横移(向右为正) Wz=自转(顺时针为正)
- *   4 轮麦轮： V_LF = Vx + Vy + Wz      V_RF = Vx - Vy - Wz
- *              V_LB = Vx - Vy + Wz      V_RB = Vx + Vy - Wz     
- *            （符号见下面的 MECANUM_DIR[]，改装配只改表不改公式）
- */
-#if (MECANUM_WHEEL_NUM == 2)
+/*底盘混控 ：归一化目标输入   ，得到各轮归一化指令 */
+#if (MECANUM_WHEEL_NUM == 4)
 //麦轮方向结构体，设定各轮在各运动状态的旋转方向
+
+/*
+ *   列序列 ：fwd  strafe  spin
+ *    LF = vx - vy - wz
+ *   RF = vx + vy + wz
+ *   RB = vx - vy + wz
+ *   LB = vx + vy - wz
+ *
+ *   
+ */
 const Mecanum_Dir_t MECANUM_DIR[MECANUM_WHEEL_NUM] =
 {
-    { +1.0f, 0.0f, +1.0f },     /* [0] 左轮 */
-    { +1.0f, 0.0f, -1.0f },     /* [1] 右轮 */
-};
-#else
-/* 四轮麦轮（X 型辊子）符号表
- *   下标顺序 0=左前 1=右前 2=右后 3=左后，与 C620 拨码 ID1/ID2/ID3/ID4 一一对应
- *   列含义：fwd = 前进(+x)  strafe = 横移(+y 向左)  spin = 自转(+w 顺时针/右转)
- */ 
-const Mecanum_Dir_t MECANUM_DIR[MECANUM_WHEEL_NUM] =
-{
-    { +1.0f, -1.0f, +1.0f },    /* [0] 左前 LF：前进+ 横移+ 自转+ */
-    { +1.0f, -1.0f, -1.0f },    /* [1] 右前 RF：前进+ 横移- 自转- */
-    { +1.0f, +1.0f, -1.0f },    /* [2] 右后 RB：前进+ 横移+ 自转- */
-    { +1.0f, +1.0f, +1.0f },    /* [3] 左后 LB：前进+ 横移- 自转+ */
+    { +1.0f, -1.0f, -1.0f },    /* [0] 左前 LF： */
+    { +1.0f, +1.0f, +1.0f },    /* [1] 右前 RF： */
+    { +1.0f, -1.0f, +1.0f },    /* [2] 右后 RB： */
+    { +1.0f, +1.0f, -1.0f },    /* [3] 左后 LB： */
 };
 #endif
 
@@ -55,7 +51,9 @@ void Mecanum_Reset(void)
 /* 混控主体                                                            */
 /*   fwd/strafe/spin 已归一化到 [-1,1]，内部再做死区与比例缩放           */
 /*   out[] 返回各轮归一化目标（未乘最大电流，由协议层决定电流档位）       */
-/*   dt_s 固定按 1kHz 设计 → 每拍步进 = 速率 / 1000                     */
+/*   dt_s 固定按 1kHz 设计 → 每拍步进 = 速率 / 1000       
+ * 根据摇杆值在xyz的值进行运算得到各轮速度归一化值，轮速由每1ms爬升
+*/
 /* ------------------------------------------------------------------ */
 void Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
                  float *out)

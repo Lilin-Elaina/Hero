@@ -3,7 +3,7 @@
 #include "bsp.can.h"
 #include "fdcan.h"
 /*
- *@brief :发送控制底盘电机的电流报文（id2，3留0）
+ *@brief :发送控制底盘电机的电流报文（）
  */
 HAL_StatusTypeDef DJ3508_Send_I_Can2(int16_t ID1_I, int16_t ID2_I, int16_t ID3_I, int16_t ID4_I)
 {
@@ -20,7 +20,7 @@ HAL_StatusTypeDef DJ3508_Send_I_Can2(int16_t ID1_I, int16_t ID2_I, int16_t ID3_I
     };
       
     int16_t I_Raw[4] = {ID1_I, ID2_I, ID3_I, ID4_I};
-    
+    /*限流处理*/
       for(uint8_t i = 0; i < 4; i++) 
     {
         if(I_Raw[i] > 16384)
@@ -164,7 +164,7 @@ volatile GM6020_State_t gim6020 = {0};
 volatile GM6020_State_t gim_pitch = {0};
 volatile GM6020_State_t dj_motor[4] = {0};   /* CAN1：摩擦轮 ID2/ID3 */
 volatile GM6020_State_t dj_wheel[4] = {0};   /* CAN2：底盘四轮 ID1~ID4 */
-/* ---- 诊断计数器（只读观察，不参与控制）---- */
+/* ---- 诊断计数器（只读观察，不参与控制）（调试排错时使用）---- */
 volatile uint32_t can_rx_total   = 0;   /* 收到的总帧数 */
 volatile uint32_t can_rx_205     = 0;   /* 其中 0x205 的帧数 */
 volatile uint32_t can_rx_last_id = 0;   /* 最近一帧的 CAN ID */
@@ -192,6 +192,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             /* ★ 两条总线上的 3508 反馈 ID 会撞车：CAN2 是底盘四轮 ID1~ID4，
              *   CAN1 是摩擦轮 ID2/ID3。必须按总线分流，否则两边互相覆盖，
              *   表现为“温度/转速乱跳”“摩擦轮温度误触发保护”。 */
+             /*6020反馈帧结构体适用于3508*/
             volatile GM6020_State_t *st = (hfdcan->Instance == FDCAN2) ? &dj_wheel[i]
                                                                        : &dj_motor[i];
             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
