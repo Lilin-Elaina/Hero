@@ -1,6 +1,6 @@
 #ifndef __RC_DBUS_H
 #define __RC_DBUS_H     
-/*控制各电机，解码，的宏定义以及函数声明*/
+
 #include "main.h"
 
 /* DT7+DR16 进行解码文件，通过发送无线帧，到DR16，DR16通过DBUS协议发送反串口电平，经过妙板硬件反电平，输出正常串口电平 进行解码。*/
@@ -10,7 +10,7 @@
 #define RC_CH_MID        1024    /* 摇杆通道中值     */
 #define RC_CH_MIN        364     /* 摇杆通道最小值     */
 #define RC_CH_MAX        1684    /* 摇杆通道最大值     */
-#define RC_DEADBAND      20      /* 摇杆中位死区     */
+#define RC_DEADBAND      20      /* 中位死区     */
 #define RC_OFFLINE_MS    100     /*超过100ms认为失联（失联时间） */
 
 /* ---- 控制参数（按需要改）------------------------------------------ */
@@ -33,71 +33,46 @@
 #define RC_ENABLE_DELAY_MS 100   /* 使能条件需连续保持这么久才真正放行（防抖软启动） */
 #define RC_FAILSAFE_MS    500    /* 失联后开始强制刹停的时间（配合斜坡，不是硬断） */
 
-/*
-+ * CAN2 底盘电机指令方向补偿。
-+ * 乘在整轮输出上，同时作用于前进、横移和自转。
-+ * +1：保持混控输出符号；-1：反转混控输出符号。
-+ * 数值沿用本车已验证配置，按 CAN 电机 ID 排列。
-+ */
-#define MOTOR_POL_ID1    (+1.0f)   /* 左前 LF */
-#define MOTOR_POL_ID2    (-1.0f)   /* 右前 RF */
-#define MOTOR_POL_ID3    (-1.0f)   /* 右后 RB */
-#define MOTOR_POL_ID4    (+1.0f)   /* 左后 LB */
+/* 电机方向：电机装在底盘左侧/右侧时，为避免整车“转圈”，其中一侧通常要取反。
+ * 判断方法见 _rc_dbus_control_logic.md 第 5 节“首次通电自检”。
+ * 四轮对应关系（与 mecanum.h 的 MEC_WHEEL_LF/LB/RB/RF 一致）：
+ *   ID1=左前  ID2=右前  ID3=右后  ID4=左后
+ * ★ 整车“前进变后退”就四个一起翻；“原地打转”就把某一侧两个一起翻。 */
+#define M1_SIGN          (+1.0f) /* 左前(ID1)转向取反就改成 -1.0f */
+#define M2_SIGN          (+1.0f) /* 左后(ID2) */
+#define M3_SIGN          (+1.0f) /* 右后(ID3) */
+#define M4_SIGN          (+1.0f) /* 右前(ID4) */
 
-/*通道映射*/
-#define RC_CH_FWD        RC_Data .ch[3]  /* 左摇杆上下 = 前进/后退 */
-#define RC_CH_TURN       RC_Data .wheel  /* 左摇杆左右 = 自转 */
-#define RC_CH_STRAFE     RC_Data.ch[2]   /* 右摇杆左右 = 横移 */
+/* ---- 摇杆通道映射（依据官方 sbus_to_rc 解码，见说明文档第 1.4 节）----
+ * 官方 18 字节帧解析出的 4 个摇杆：
+ *   ch[0] = 右摇杆水平  ch[1] = 右摇杆垂直  ch[2] = 左摇杆水平  ch[3] = 左摇杆垂直
+ * 出厂默认“左手油门”，所以：
+ *   前进/后退 = ch[3]（左摇杆上下）
+ *   自转      = ch[2]（左摇杆左右），也可换成 ch[0]（右摇杆左右）
+ *   横移      = ch[0]（右摇杆左右；2 个轮子时无意义，补到 4 轮才启用）
+ * ★ 2026-10-23 修正：原来下面两行和这段注释正好接反（推前进变原地转） */
+#define RC_CH_FWD        RC_Data.ch[2]   /* 左摇杆上下 = 前进/后退 */
+#define RC_CH_TURN       RC_Data.ch[3]   /* 左摇杆左右 = 自转 */
+#define RC_CH_STRAFE     RC_Data.ch[0]   /* 右摇杆左右 = 横移（与云台 yaw 共用，见下） */
 /* ---- 云台 GM6020（只控 ID1）---- */
-#define RC_CH_GIMBAL     RC_Data.ch[0]   /* 右摇杆水平； */
+#define RC_CH_GIMBAL     RC_Data.ch[0]   /* 右摇杆水平；没反应就改 ch[1] */
 #define GM6020_VOLT_MAX  15000.0f         /* 电压上限（约 8V） */
 #define GM6020_SIGN      (-1.0f)         /* 方向反了就 -1.0f */
 
-/*云台yaw */
+/* ---- 软件限位（原始角度 0~8191，先填占位值，实测后改）---- */
+#define GM_ANGLE_MIN     5000           /* 允许的最小角度 */
+#define GM_ANGLE_MAX     7000         /* 允许的最大角度 */
+#define GM_SOFT_ZONE     300             /* 提前 300 counts（约 13°）开始减速 */
 #define GM_FEEDBACK_TIMEOUT_MS  100      /* 超过 100ms 没反馈 → 输出 0 */
 #define GM_RPM_LIMIT     400.0f          /* 超速兜底：|rpm| 超过这个值就断电压 */
 #define GM_VOLT_SLEW     200.0f          /* 斜坡：每 1ms 电压最多变化这么多 */
-/* ==============================================================================
- * 云台pitch:位置P + 速度PI环 ->转矩电压
- * 
- * 信号流:摇杆——参考角s_ref——位置p（角度差——目标转速）
- *                -速度pi——0x1FF
- * 
- * 量纲（8192 counts/圈 = 360）
- *     1 count ~0.044°      1rpm  ~136.5 counts/s
- *6020 电压量程 ±30000，空载约 320rpm ⇒ 1 rpm ≈ 94 电压单位
- *    位置环 POS_KP = 1/(τ×136.5)，τ≈30ms → 0.25
- *    速度环 SPD_KP ≈ 94×α，α≈1 → 100
- * ================================================================================*/
-
-#define RC_CH_GIMBAL_PITCH      RC_Data.ch[1]     /*右摇杆垂直*/
-#define GM_PITCH_CALIBRATED     1               /*标定完改1使能*/
-#define GM_PITCH_SIGN           (+1.0f)           /*位置方向*/
-#define GM_PITCH_RPM_SIGN       (+1.0f)           /*转速方向*/
-#define GM_PITCH_ANGLE_MIN      3600              /*机械限min*/
-#define GM_PITCH_ANGLE_MAX      4700              /*机械限位max*/
-#define GM_PITCH_ANGLE_MARGIN   50                /*留余count量*/
-
-#define GM_PITCH_HOME_ANGLE     4100               /*回中值*/
-#define GM_PITCH_HOME_RATE      500.0f             /*回中角速度counts/s*/
-#define GM_PITCH_MANUAL_RATE    1500.0f            /*满杆角速度*/
-#define GM_PITCH_HOME_TOL       8                  /*回中到位判定的余量counts值*/
-
-
-#define GM_PITCH_WAIT_MS         100               /*接管前“稳定+摇杆居中”要保持多久*/
-#define GM_PITCH_STICK_DEAD      0.10f             /*摇杆视为居中的阈值*/
-#define GM_PITCH_HOME_RPM_TOL    30.0f             /*回中判断停稳的转速*/
-#define GM_PITCH_HOME_SETTLE_MS  200                /*回中到位需保持多久*/
-#define GM_PITCH_HOME_TIMEOUT_MS 3000                /*回中超时 ——故障*/
-#define GM_PITCH_POS_KP         0.25               /*位置p   rpm/counts*/                
-#define GM_PITCH_RPM_MAX        200.0f             /*位置环输出上限 rpm  */
-#define GM_PITCH_SPD_KP        100.0f             /*速度p    volt/rpm*/
-#define GM_PITCH_SPD_KI         650.0f             /*速度i    volt/（rpm*s）*/
-#define GM_PITCH_I_MAX          15000.0f           /*积分限幅（电压单位）*/
-#define GM_PITCH_VOLT_MAX       15000.0f           /*总输出限幅*/
-#define GM_PITCH_TEMP_LIMIT     65                 /*温控值*/
-#define GM_PITCH_HOME_ENABLE    1 
-#define GM_PITCH_CATCH_RPM      60.0f              
+/* ---- 云台 pitch（6020 ID2）---- */
+#define RC_CH_GIMBAL_PITCH    RC_Data.ch[1]    /* 右摇杆垂直 */
+#define GM_PITCH_SIGN         (+1.0f)          /* 方向反了改 -1.0f */
+#define GM_PITCH_VOLT_MAX     12000.0f         /* 电压上限 */
+#define GM_PITCH_ANGLE_MIN    0                /* ★ 先不限位，量完再收紧 */
+#define GM_PITCH_ANGLE_MAX    8191             /* ★ 先不限位，量完再收紧 */
+#define GM_PITCH_SOFT_ZONE    200              /* 提前约 8.8° 减速 */
 
 /* ---- 摩擦轮（3508 ID2 / ID3）---- */
 #define FRIC_ENABLE_USE_LEFT  1                /* 1=左拨杆 0=右拨杆 */
@@ -174,7 +149,7 @@ extern RC_TypeDef RC_Data;
 
 /* 最近一次 RC_Control_Task 算出的各轮归一化目标 [-1,1]（调试观察用）
  * 下标见 
- *                   4 轮时 [0]=左前 [1]=右前 [2]=右后 [3]=左后 */
+ *                   4 轮时 [0]=左前 [1]=左后 [2]=右后 [3]=右前 */
 extern float RC_WheelOut[];
 
 void  RC_Init(void);                 /* 启动 DBUS 接收（UART5 + DMA + IDLE） */
@@ -186,5 +161,7 @@ float RC_Norm(uint16_t ch);          /* 归一化函数，摇杆 → -1.0~+1.0�
 
 /* 每个控制周期调用一次：解码后的摇杆 →3508 的电流指令 */
 void RC_Control_Task(void);
+
+
 
 #endif

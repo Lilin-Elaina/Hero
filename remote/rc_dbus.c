@@ -33,7 +33,7 @@ static uint8_t dbus_buf[DBUS_FRAME_LEN * 2];
 #endif
 
 void RC_StartReceive(void)
-{//启动dbus数据的idle dma接收中断
+{
     /* 上一帧若因溢出/噪声卡在 ORE，不清掉就再也收不到新数据 */
     __HAL_UART_CLEAR_OREFLAG(&huart5);
 
@@ -53,7 +53,6 @@ void RC_StartReceive(void)
     }
 }
 
-/*清除摇杆数据，在线状态，确定拨杆，开启接收*/
 void RC_Init(void)
 {
     memset(&RC_Data, 0, sizeof(RC_Data));
@@ -215,181 +214,16 @@ float RC_Norm(uint16_t ch)
     if (n < -1.0f) n = -1.0f;
     return n;
 }
-/* ==================================================================
- *  云台 pitch 双环（6020 ID2，1 kHz 调用）
- *
- *  三个状态：0=未接管  1=回中  2=正常
- *  未接管时要求摇杆居中，且参考角永远从"当前位置"起步 → 不会瞬移、
- *  不会有劣弧、不会一拨使能就跟着摇杆飞。
- *
- *  为什么积分只放速度环：两个积分串联相位滞后 180°，必然振荡。
- * ================================================================== */
-
-
- /*求绝对值 */
-static float pitch_abs(float v)
- {
-     return (v < 0.0f) ? -v : v;
- }
-
-/*对值进行范围限定*/
-static float pitch_clamp(float v, float lo, float hi)
-{
-    if (v < lo) v = lo;
-    if (v > hi) v = hi;
-    return v;
-}
-
-/* 把 cur 朝 tgt 限速推进一步（counts） */
-static float pitch_step(float cur, float tgt, float max_step)
-{
-    float d = tgt - cur;
-
-    if (d >  max_step) d =  max_step;
-    if (d < -max_step) d = -max_step;
-    return cur + d;
-}
-/*通过位置与速度环对pitch电机进行控制*/
-static float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
-{
-    static float s_ref = 0.0f;          /* 参考角，连续量（counts） */
-    static float s_i   = 0.0f;          /* 速度环积分（电压单位）   */
-    static uint8_t  s_stage = 0;        /*状态*/
-    static uint8_t   s_homed   = 0;     /*是否回中*/
-    static uint32_t  s_home_since = 0;  /*回中时间判定基准*/
-    static float     s_stick_f = 0.0f;  /*滤波后的摇杆值*/
-
-    const float lo = (float)(GM_PITCH_ANGLE_MIN + GM_PITCH_ANGLE_MARGIN);
-    const float hi = (float)(GM_PITCH_ANGLE_MAX - GM_PITCH_ANGLE_MARGIN);
-    const float home = (float)GM_PITCH_HOME_ANGLE;
-
- if (!GM_PITCH_CALIBRATED || !online || !armed)
-    {
-        s_stage = 0;
-        s_i     = 0.0f;
-        return 0.0f;
-    }
-
-    float cur = (float)gim_pitch.angle;
-    float rpm = GM_PITCH_RPM_SIGN * (float)gim_pitch.rpm;
-    float err, rpm_des, volt;
-
-
- if ((HAL_GetTick() - gim_pitch.last_tick) > GM_FEEDBACK_TIMEOUT_MS ||
-        gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
-        pitch_abs(rpm) > GM_RPM_LIMIT ||
-        cur < (float)GM_PITCH_ANGLE_MIN ||
-        cur > (float)GM_PITCH_ANGLE_MAX)
-    {
-        s_stage = 0;
-        s_i     = 0.0f;
-        return 0.0f;
-    }
-
-     s_stick_f += (stick - s_stick_f) * 0.08f;
-
-    /* ③ 接管条件：刚开始上电只看摇杆是否居中 */
-    if (s_stage == 0 && pitch_abs(stick) > GM_PITCH_STICK_DEAD)
-    {
-        return 0.0f;
-    }
-  /*此时遥控器在线，开始进行判断*/
-if(s_stage == 0)
-{
-    s_ref = cur;
-    s_i   = 0.0f;
-    s_home_since = HAL_GetTick() | 1u;     /* 接管时记一次起点，供回中计时用 */
-    s_stage = ( GM_PITCH_HOME_ENABLE && !s_homed) ? 1 : 2;
-    return 0.0f;
-}
-
-/*在线之后进行判断，若未回中，开始回中*/
-if(s_stage == 1)
-{
-    /*若一直没符合下面置2的三个条件时触发*/
-    if ((HAL_GetTick() - s_home_since) > GM_PITCH_HOME_TIMEOUT_MS)
-    {
-        /* 回中失败：就地按住，不反复顶、也不锁死，可控 */
-        s_ref        = cur;
-        s_i          = 0.0f;
-        s_homed      = 1;
-        s_stage      = 2;
-        s_home_since = 0;
-        return 0.0f;
-    }
-      s_ref = pitch_step(s_ref, home,GM_PITCH_HOME_RATE * 0.001f );
-
-      if (pitch_abs(s_ref - home) <= 1.0f &&
-          pitch_abs(rpm)        <  GM_PITCH_CATCH_RPM &&
-          pitch_abs(cur - home) <= 60.0f)
-    {
-       s_ref  = home;
-       s_homed = 1;
-       s_stage = 2;
-       s_home_since = 0;
-    }
-}
-else
-{
-    s_ref += s_stick_f * GM_PITCH_MANUAL_RATE * 0.001f;
-}
-
-if(s_ref < lo) s_ref = lo;
-if(s_ref > hi) s_ref = hi;
-
-err   = s_ref - cur;
-rpm_des = pitch_clamp(GM_PITCH_POS_KP * err, -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
-
-
-err = rpm_des - rpm;
-volt = GM_PITCH_SPD_KP * err + s_i;
-
-if(pitch_abs(volt) < GM_PITCH_VOLT_MAX)
-{
-s_i += GM_PITCH_SPD_KI * err * 0.001f;
-s_i = pitch_clamp(s_i, -GM_PITCH_I_MAX,GM_PITCH_I_MAX);
-}
-
-volt = pitch_clamp(GM_PITCH_SPD_KP* err + s_i, -GM_PITCH_VOLT_MAX,GM_PITCH_VOLT_MAX);
-
-    /* 软墙：距离边界 soft 以内，把"往外推"的力按比例衰减到 0，
-       避免"出力/不出力"每毫秒硬切换导致的高频起振 */
-    const float soft = 60.0f;
-
-    if (cur <= lo)
-    {
-        /* 已经在墙外：只允许往回走的力 */
-        if (volt < 0.0f) volt = 0.0f;
-    }
-    else if (cur >= hi)
-    {
-        if (volt > 0.0f) volt = 0.0f;
-    }
-    else if (cur < lo + soft && volt < 0.0f)
-    {
-        /* 靠近下限：往下推的力按比例减小，贴墙时正好为 0 */
-        volt *= (cur - lo) / soft;
-    }
-    else if (cur > hi - soft && volt > 0.0f)
-    {
-        /* 靠近上限：往上推的力按比例减小 */
-        volt *= (hi - cur) / soft;
-    }
-
-return GM_PITCH_SIGN * volt;
-
-}
-
- 
 
 /* ------------------------------------------------------------------ */
 /* 控制任务：1kHz 调用一次                                              */
 /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              */
 /* ------------------------------------------------------------------ */
 void RC_Control_Task(void)
-{     /*通信在线判断*/
+{
     uint32_t now = HAL_GetTick();
 
+    /* 1) 通信在线判断：>100ms 没收到新帧 = 遥控器/接收机失联 */
     uint8_t online = RC_IsOnline(now);
 
 #if (RC_ENABLE_SW_POS != 0)
@@ -427,9 +261,10 @@ void RC_Control_Task(void)
     float spin = online ? RC_Norm(RC_CH_TURN) : 0.0f;
 
 #if (MECANUM_WHEEL_NUM == 4)
-   
+    /* 4 轮补齐后：右摇杆左右 = 横移（平移不转向），自转另给通道再用 spin */
     float strafe = online ? RC_Norm(RC_CH_STRAFE) : 0.0f;
-
+#else
+    float strafe = 0.0f;      /* 只有 2 个轮子时无法横移 */
 #endif
 
     /* 3) 麦轮混控：差速/麦轮公式 + 归一化斜坡限速（在 mecanum.c 里） */
@@ -445,12 +280,15 @@ void RC_Control_Task(void)
         Mecanum_Reset();
     }
 
-    /*Mix得到各轮归一化目标，现在进行方向设定与电流限幅*/
+    /* 5) 归一化目标 → 安培 → 原始值 → 0x200 帧
+     *    CAN2 的 4 个槽位 = 底盘四轮：ID1=左前 ID2=右前 ID3=右后 ID4=左后
+     *    （与 MECANUM_DIR[] 的下标顺序、mecanum.h 的 MEC_WHEEL_LF/LB/RB/RF 一一对应） */
     static const float s_wheel_sign[MECANUM_WHEEL_NUM] =
     {
 #if (MECANUM_WHEEL_NUM == 4)
-        MOTOR_POL_ID1, MOTOR_POL_ID2, MOTOR_POL_ID3, MOTOR_POL_ID4
-
+        M1_SIGN, M2_SIGN, M3_SIGN, M4_SIGN
+#else
+        M1_SIGN, M4_SIGN
 #endif
     };
 
@@ -469,7 +307,7 @@ void RC_Control_Task(void)
         raw[i] = (int16_t)(a / 20.0f * 16384.0f);
     }
 
-    /* 6) 云台 GM6020（yaw）：限位 + 超速兜底 + 斜坡 + 安全开关 */
+    /* 6) 云台 GM6020（ID1）：限位 + 超速兜底 + 斜坡 + 安全开关 */
     float gim  = online ? RC_Norm(RC_CH_GIMBAL) : 0.0f;
     float volt = GM6020_SIGN * gim * GM6020_VOLT_MAX;
 
@@ -481,16 +319,47 @@ void RC_Control_Task(void)
     if (gim6020.rpm > GM_RPM_LIMIT || gim6020.rpm < -GM_RPM_LIMIT)
         volt = 0.0f;
 
+
     /* ④ 斜坡：每拍最多变 GM_VOLT_SLEW，避免扭矩冲击 */
     static float volt_prev = 0.0f;
     if (volt > volt_prev + GM_VOLT_SLEW) volt = volt_prev + GM_VOLT_SLEW;
     if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
 
-    
- 
-     /*pitch电机赋值*/
-      float pit  = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;
-      float volt_p = RC_Pitch_Control(online, 1u, pit);
+    /* ⑤ 安全开关：=1 时强制零输出（只用来量角度，电机不动） */
+ /* ⑦ 云台 pitch：右摇杆垂直 → 6020 ID2（有机械限位） */
+    float pit    = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;
+    float volt_p = GM_PITCH_SIGN * pit * GM_PITCH_VOLT_MAX;
+    int32_t ap   = (int32_t)gim_pitch.angle;
+
+    /* ① 反馈超时 → 断电 */
+    if ((HAL_GetTick() - gim_pitch.last_tick) > GM_FEEDBACK_TIMEOUT_MS)
+        volt_p = 0.0f;
+
+    /* ② 超速兜底 */
+    if (gim_pitch.rpm > GM_RPM_LIMIT || gim_pitch.rpm < -GM_RPM_LIMIT)
+        volt_p = 0.0f;
+
+    /* ③ 角度限位：界外只许往回收，界内按比例减速 */
+    if (ap >= GM_PITCH_ANGLE_MAX || ap <= GM_PITCH_ANGLE_MIN)
+    {
+        if ((ap >= GM_PITCH_ANGLE_MAX && volt_p > 0.0f) ||
+            (ap <= GM_PITCH_ANGLE_MIN && volt_p < 0.0f))
+            volt_p = 0.0f;
+    }
+    else if (ap > GM_PITCH_ANGLE_MAX - GM_PITCH_SOFT_ZONE)
+    {
+        volt_p *= (float)(GM_PITCH_ANGLE_MAX - ap) / (float)GM_PITCH_SOFT_ZONE;
+    }
+    else if (ap < GM_PITCH_ANGLE_MIN + GM_PITCH_SOFT_ZONE)
+    {
+        volt_p *= (float)(ap - GM_PITCH_ANGLE_MIN) / (float)GM_PITCH_SOFT_ZONE;
+    }
+
+    /* ④ 斜坡 */
+    static float vp_prev = 0.0f;
+    if (volt_p > vp_prev + GM_VOLT_SLEW) volt_p = vp_prev + GM_VOLT_SLEW;
+    if (volt_p < vp_prev - GM_VOLT_SLEW) volt_p = vp_prev - GM_VOLT_SLEW;
+    vp_prev = volt_p;
 
     /* ⑧ 摩擦轮：左拨杆上 → 3508 ID2/ID3 反向同电流 */
 #if (FRIC_ENABLE_USE_LEFT)
@@ -521,7 +390,7 @@ void RC_Control_Task(void)
         fric_l = (int16_t)(FRIC_L_SIGN * fric_a / 20.0f * 16384.0f);
         fric_r = (int16_t)(FRIC_R_SIGN * fric_a / 20.0f * 16384.0f);
     }
-    else//若未给值即拨杆不在上
+    else
     {
         /* 松杆：反向小电流主动刹车，否则纯靠惯性会滑很久 */
         int16_t brake = (int16_t)(FRIC_BRAKE_A / 20.0f * 16384.0f);
@@ -566,12 +435,18 @@ void RC_Control_Task(void)
 #if (FRIC_USE_CAN1)
   #if (MECANUM_WHEEL_NUM == 4)
     DJ3508_Send_I_Can2(raw[0], raw[1], raw[2], raw[3]); /* CAN2：四轮 0x200 槽位全用 */
- 
+  #else
+    DJ3508_Send_I_Can2(raw[0], 0, 0, raw[1]);           /* CAN2：ID1 底盘左 / ID4 底盘右 */
   #endif
     DJ6020_Send_V_Can2((int16_t)volt, 0);       /* CAN2：yaw ID1 */
     DJ3508_Send_Can1(fric_l, fric_r);           /* CAN1：摩擦轮 ID2 / ID3 */
     DJ6020_Send_Can1((int16_t)volt_p);          /* CAN1：pitch ID2 */
-
+#else
+  #if (MECANUM_WHEEL_NUM != 2)
+    #error "four-wheel chassis requires FRIC_USE_CAN1=1 (ID2/ID3 slot conflict)"
+  #endif
+    DJ3508_Send_I_Can2(raw[0], fric_l, fric_r, raw[1]);
+    DJ6020_Send_V_Can2((int16_t)volt, (int16_t)volt_p);
 #endif
 }
 

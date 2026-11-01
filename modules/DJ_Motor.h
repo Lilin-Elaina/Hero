@@ -23,7 +23,7 @@ typedef struct
 extern volatile GM6020_State_t gim6020;
 extern volatile GM6020_State_t gim_pitch;
 extern volatile GM6020_State_t dj_motor[4];  /* CAN1 上的 3508：ID1~ID4（本工程用 ID2/ID3 摩擦轮） */
-extern volatile GM6020_State_t dj_wheel[4];  /* CAN2 上的 3508：底盘四轮 LF/RF/RB/LB（ID1~ID4） */
+extern volatile GM6020_State_t dj_wheel[4];  /* CAN2 上的 3508：底盘四轮 LF/LB/RB/RF（ID1~ID4） */
 /* 诊断计数器：看 CAN 接收到底通不通 *//*排错结构体*/
 extern volatile uint32_t can_rx_total;
 extern volatile uint32_t can_rx_205;

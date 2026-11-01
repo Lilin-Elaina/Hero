@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
   29:Core/Src/main.c **** #include "rc_dbus.h"
   30:Core/Src/main.c **** #include "mecanum.h"
   31:Core/Src/main.c **** #include "bsp.can.h"
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 2
 
 
   32:Core/Src/main.c **** /* USER CODE END Includes */
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
   86:Core/Src/main.c **** 
   87:Core/Src/main.c ****   /* Configure the system clock */
   88:Core/Src/main.c ****   SystemClock_Config();
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 3
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 3
 
 
   89:Core/Src/main.c **** 
@@ -145,130 +145,129 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  110:Core/Src/main.c ****   /* USER CODE BEGIN WHILE */
  111:Core/Src/main.c **** uint32_t rc_last_tick = 0;
  112:Core/Src/main.c **** while (1) {
- 113:Core/Src/main.c ****   /*约1ms调用一次*/
- 114:Core/Src/main.c ****     uint32_t now = HAL_GetTick();
- 115:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
- 116:Core/Src/main.c ****         rc_last_tick = now;
- 117:Core/Src/main.c ****         RC_Control_Task();
- 118:Core/Src/main.c ****     }
- 119:Core/Src/main.c ****    //DJ3508_Send_I_Can2(1000,1000,1000,1000);
- 120:Core/Src/main.c ****     /* USER CODE END WHILE */
- 121:Core/Src/main.c **** 
- 122:Core/Src/main.c ****     /* USER CODE BEGIN 3 */
- 123:Core/Src/main.c **** }
- 124:Core/Src/main.c ****   /* USER CODE END 3 */
- 125:Core/Src/main.c **** }
- 126:Core/Src/main.c **** 
- 127:Core/Src/main.c **** /**
- 128:Core/Src/main.c ****   * @brief System Clock Configuration
- 129:Core/Src/main.c ****   * @retval None
- 130:Core/Src/main.c ****   */
- 131:Core/Src/main.c **** void SystemClock_Config(void)
- 132:Core/Src/main.c **** {
- 133:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
- 134:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
- 135:Core/Src/main.c **** 
- 136:Core/Src/main.c ****   /** Supply configuration update enable
- 137:Core/Src/main.c ****   */
- 138:Core/Src/main.c ****   HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
- 139:Core/Src/main.c **** 
- 140:Core/Src/main.c ****   /** Configure the main internal regulator output voltage
- 141:Core/Src/main.c ****   */
- 142:Core/Src/main.c ****   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
- 143:Core/Src/main.c **** 
- 144:Core/Src/main.c ****   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
- 145:Core/Src/main.c **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 4
+ 113:Core/Src/main.c ****     uint32_t now = HAL_GetTick();
+ 114:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
+ 115:Core/Src/main.c ****         rc_last_tick = now;
+ 116:Core/Src/main.c ****         RC_Control_Task();
+ 117:Core/Src/main.c ****     }
+ 118:Core/Src/main.c ****    //DJ3508_Send_I_Can2(1000,1000,1000,1000);
+ 119:Core/Src/main.c ****     /* USER CODE END WHILE */
+ 120:Core/Src/main.c **** 
+ 121:Core/Src/main.c ****     /* USER CODE BEGIN 3 */
+ 122:Core/Src/main.c **** }
+ 123:Core/Src/main.c ****   /* USER CODE END 3 */
+ 124:Core/Src/main.c **** }
+ 125:Core/Src/main.c **** 
+ 126:Core/Src/main.c **** /**
+ 127:Core/Src/main.c ****   * @brief System Clock Configuration
+ 128:Core/Src/main.c ****   * @retval None
+ 129:Core/Src/main.c ****   */
+ 130:Core/Src/main.c **** void SystemClock_Config(void)
+ 131:Core/Src/main.c **** {
+ 132:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+ 133:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+ 134:Core/Src/main.c **** 
+ 135:Core/Src/main.c ****   /** Supply configuration update enable
+ 136:Core/Src/main.c ****   */
+ 137:Core/Src/main.c ****   HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
+ 138:Core/Src/main.c **** 
+ 139:Core/Src/main.c ****   /** Configure the main internal regulator output voltage
+ 140:Core/Src/main.c ****   */
+ 141:Core/Src/main.c ****   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+ 142:Core/Src/main.c **** 
+ 143:Core/Src/main.c ****   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+ 144:Core/Src/main.c **** 
+ 145:Core/Src/main.c ****   /** Initializes the RCC Oscillators according to the specified parameters
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 4
 
 
- 146:Core/Src/main.c ****   /** Initializes the RCC Oscillators according to the specified parameters
- 147:Core/Src/main.c ****   * in the RCC_OscInitTypeDef structure.
- 148:Core/Src/main.c ****   */
- 149:Core/Src/main.c ****   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
- 150:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
- 151:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
- 152:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
- 153:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
- 154:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
- 155:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
- 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
- 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
- 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
- 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
- 160:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
- 161:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
- 162:Core/Src/main.c ****   {
- 163:Core/Src/main.c ****     Error_Handler();
- 164:Core/Src/main.c ****   }
- 165:Core/Src/main.c **** 
- 166:Core/Src/main.c ****   /** Initializes the CPU, AHB and APB buses clocks
- 167:Core/Src/main.c ****   */
- 168:Core/Src/main.c ****   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
- 169:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
- 170:Core/Src/main.c ****                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
- 171:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
- 172:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
- 173:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
- 174:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
- 175:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
- 176:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
- 177:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
- 178:Core/Src/main.c **** 
- 179:Core/Src/main.c ****   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
- 180:Core/Src/main.c ****   {
- 181:Core/Src/main.c ****     Error_Handler();
- 182:Core/Src/main.c ****   }
- 183:Core/Src/main.c **** }
- 184:Core/Src/main.c **** 
- 185:Core/Src/main.c **** /**
- 186:Core/Src/main.c ****   * @brief Peripherals Common Clock Configuration
- 187:Core/Src/main.c ****   * @retval None
- 188:Core/Src/main.c ****   */
- 189:Core/Src/main.c **** void PeriphCommonClock_Config(void)
- 190:Core/Src/main.c **** {
- 191:Core/Src/main.c ****   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
- 192:Core/Src/main.c **** 
- 193:Core/Src/main.c ****   /** Initializes the peripherals clock
- 194:Core/Src/main.c ****   */
- 195:Core/Src/main.c ****   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
- 196:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
- 197:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
- 198:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
- 199:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
- 200:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
- 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
- 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 5
+ 146:Core/Src/main.c ****   * in the RCC_OscInitTypeDef structure.
+ 147:Core/Src/main.c ****   */
+ 148:Core/Src/main.c ****   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+ 149:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+ 150:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+ 151:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+ 152:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
+ 153:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
+ 154:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
+ 155:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
+ 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
+ 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+ 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+ 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
+ 160:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+ 161:Core/Src/main.c ****   {
+ 162:Core/Src/main.c ****     Error_Handler();
+ 163:Core/Src/main.c ****   }
+ 164:Core/Src/main.c **** 
+ 165:Core/Src/main.c ****   /** Initializes the CPU, AHB and APB buses clocks
+ 166:Core/Src/main.c ****   */
+ 167:Core/Src/main.c ****   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+ 168:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+ 169:Core/Src/main.c ****                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
+ 170:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+ 171:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+ 172:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+ 173:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+ 174:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+ 175:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+ 176:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+ 177:Core/Src/main.c **** 
+ 178:Core/Src/main.c ****   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+ 179:Core/Src/main.c ****   {
+ 180:Core/Src/main.c ****     Error_Handler();
+ 181:Core/Src/main.c ****   }
+ 182:Core/Src/main.c **** }
+ 183:Core/Src/main.c **** 
+ 184:Core/Src/main.c **** /**
+ 185:Core/Src/main.c ****   * @brief Peripherals Common Clock Configuration
+ 186:Core/Src/main.c ****   * @retval None
+ 187:Core/Src/main.c ****   */
+ 188:Core/Src/main.c **** void PeriphCommonClock_Config(void)
+ 189:Core/Src/main.c **** {
+ 190:Core/Src/main.c ****   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+ 191:Core/Src/main.c **** 
+ 192:Core/Src/main.c ****   /** Initializes the peripherals clock
+ 193:Core/Src/main.c ****   */
+ 194:Core/Src/main.c ****   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
+ 195:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
+ 196:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
+ 197:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
+ 198:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
+ 199:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
+ 200:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+ 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+ 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 5
 
 
- 203:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
- 204:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
- 205:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
- 206:Core/Src/main.c ****   {
- 207:Core/Src/main.c ****     Error_Handler();
- 208:Core/Src/main.c ****   }
- 209:Core/Src/main.c **** }
- 210:Core/Src/main.c **** 
- 211:Core/Src/main.c **** /* USER CODE BEGIN 4 */
- 212:Core/Src/main.c **** 
- 213:Core/Src/main.c **** /* USER CODE END 4 */
- 214:Core/Src/main.c **** 
- 215:Core/Src/main.c **** /**
- 216:Core/Src/main.c ****   * @brief  This function is executed in case of error occurrence.
- 217:Core/Src/main.c ****   * @retval None
- 218:Core/Src/main.c ****   */
- 219:Core/Src/main.c **** void Error_Handler(void)
- 220:Core/Src/main.c **** {
-  28              		.loc 1 220 1 view -0
+ 203:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+ 204:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+ 205:Core/Src/main.c ****   {
+ 206:Core/Src/main.c ****     Error_Handler();
+ 207:Core/Src/main.c ****   }
+ 208:Core/Src/main.c **** }
+ 209:Core/Src/main.c **** 
+ 210:Core/Src/main.c **** /* USER CODE BEGIN 4 */
+ 211:Core/Src/main.c **** 
+ 212:Core/Src/main.c **** /* USER CODE END 4 */
+ 213:Core/Src/main.c **** 
+ 214:Core/Src/main.c **** /**
+ 215:Core/Src/main.c ****   * @brief  This function is executed in case of error occurrence.
+ 216:Core/Src/main.c ****   * @retval None
+ 217:Core/Src/main.c ****   */
+ 218:Core/Src/main.c **** void Error_Handler(void)
+ 219:Core/Src/main.c **** {
+  28              		.loc 1 219 1 view -0
   29              		.cfi_startproc
   30              		@ Volatile: function does not return.
   31              		@ args = 0, pretend = 0, frame = 0
   32              		@ frame_needed = 0, uses_anonymous_args = 0
   33              		@ link register save eliminated.
- 221:Core/Src/main.c ****   /* USER CODE BEGIN Error_Handler_Debug */
- 222:Core/Src/main.c ****   /* User can add his own implementation to report the HAL error return state */
- 223:Core/Src/main.c ****   __disable_irq();
-  34              		.loc 1 223 3 view .LVU1
+ 220:Core/Src/main.c ****   /* USER CODE BEGIN Error_Handler_Debug */
+ 221:Core/Src/main.c ****   /* User can add his own implementation to report the HAL error return state */
+ 222:Core/Src/main.c ****   __disable_irq();
+  34              		.loc 1 222 3 view .LVU1
   35              	.LBB4:
   36              	.LBI4:
   37              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
@@ -298,10 +297,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
   24:Drivers/CMSIS/Include/cmsis_gcc.h **** 
   25:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
   26:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 6
-
-
   27:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 6
+
+
   28:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
   29:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
   30:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
@@ -358,10 +357,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
   81:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
   82:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_WRITE { uint16_t v; };
   83:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 7
-
-
   84:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_WRITE(addr, val)    (void)((((struct T_UINT16_WRITE *)(void *)(addr))-
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 7
+
+
   85:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
   86:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_READ
   87:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
@@ -418,10 +417,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  138:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
  139:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __copy_table_t;
  140:Drivers/CMSIS/Include/cmsis_gcc.h **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 8
-
-
  141:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 8
+
+
  142:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
  143:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
  144:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __zero_table_t;
@@ -478,10 +477,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  195:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __TZ_STACK_SEAL_VALUE     0xFEF5EDA5FEF5EDA5ULL
  196:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
  197:Drivers/CMSIS/Include/cmsis_gcc.h **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 9
-
-
  198:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 9
+
+
  199:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __TZ_set_STACKSEAL_S (uint32_t* stackTop) {
  200:Drivers/CMSIS/Include/cmsis_gcc.h ****   *((uint64_t *)stackTop) = __TZ_STACK_SEAL_VALUE;
  201:Drivers/CMSIS/Include/cmsis_gcc.h **** }
@@ -538,10 +537,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  252:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
  253:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Instruction Synchronization Barrier
  254:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Instruction Synchronization Barrier flushes the pipeline in the processor,
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 10
-
-
  255:Drivers/CMSIS/Include/cmsis_gcc.h ****            so that all instructions following the ISB are fetched from cache or memory,
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 10
+
+
  256:Drivers/CMSIS/Include/cmsis_gcc.h ****            after the instruction has been completed.
  257:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  258:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __ISB(void)
@@ -598,10 +597,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  309:Drivers/CMSIS/Include/cmsis_gcc.h ****   \return               Reversed value
  310:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  311:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE uint32_t __REV16(uint32_t value)
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 11
-
-
  312:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 11
+
+
  313:Drivers/CMSIS/Include/cmsis_gcc.h ****   uint32_t result;
  314:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  315:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM ("rev16 %0, %1" : __CMSIS_GCC_OUT_REG (result) : __CMSIS_GCC_USE_REG (value) );
@@ -658,10 +657,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  366:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  367:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
  368:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Reverse bit order of value
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 12
-
-
  369:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Reverses the bit order of the given value.
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 12
+
+
  370:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    value  Value to reverse
  371:Drivers/CMSIS/Include/cmsis_gcc.h ****   \return               Reversed value
  372:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
@@ -718,10 +717,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  423:Drivers/CMSIS/Include/cmsis_gcc.h ****      (defined (__ARM_ARCH_7EM__     ) && (__ARM_ARCH_7EM__     == 1)) || \
  424:Drivers/CMSIS/Include/cmsis_gcc.h ****      (defined (__ARM_ARCH_8M_MAIN__ ) && (__ARM_ARCH_8M_MAIN__ == 1)) || \
  425:Drivers/CMSIS/Include/cmsis_gcc.h ****      (defined (__ARM_ARCH_8M_BASE__ ) && (__ARM_ARCH_8M_BASE__ == 1))    )
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 13
-
-
  426:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 13
+
+
  427:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   LDR Exclusive (8 bit)
  428:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Executes a exclusive LDR instruction for 8 bit value.
  429:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    ptr  Pointer to data
@@ -778,10 +777,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  480:Drivers/CMSIS/Include/cmsis_gcc.h ****    __ASM volatile ("ldrex %0, %1" : "=r" (result) : "Q" (*addr) );
  481:Drivers/CMSIS/Include/cmsis_gcc.h ****    return(result);
  482:Drivers/CMSIS/Include/cmsis_gcc.h **** }
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 14
-
-
  483:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 14
+
+
  484:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  485:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
  486:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   STR Exclusive (8 bit)
@@ -838,10 +837,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  537:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Remove the exclusive lock
  538:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Removes the exclusive lock which is created by LDREX.
  539:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 15
-
-
  540:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __CLREX(void)
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 15
+
+
  541:Drivers/CMSIS/Include/cmsis_gcc.h **** {
  542:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("clrex" ::: "memory");
  543:Drivers/CMSIS/Include/cmsis_gcc.h **** }
@@ -898,10 +897,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  594:Drivers/CMSIS/Include/cmsis_gcc.h **** {
  595:Drivers/CMSIS/Include/cmsis_gcc.h ****   uint32_t result;
  596:Drivers/CMSIS/Include/cmsis_gcc.h **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 16
-
-
  597:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("rrx %0, %1" : __CMSIS_GCC_OUT_REG (result) : __CMSIS_GCC_USE_REG (value) );
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 16
+
+
  598:Drivers/CMSIS/Include/cmsis_gcc.h ****   return(result);
  599:Drivers/CMSIS/Include/cmsis_gcc.h **** }
  600:Drivers/CMSIS/Include/cmsis_gcc.h **** 
@@ -958,10 +957,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  651:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  652:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE uint32_t __LDRT(volatile uint32_t *ptr)
  653:Drivers/CMSIS/Include/cmsis_gcc.h **** {
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 17
-
-
  654:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t result;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 17
+
+
  655:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  656:Drivers/CMSIS/Include/cmsis_gcc.h ****    __ASM volatile ("ldrt %0, %1" : "=r" (result) : "Q" (*ptr) );
  657:Drivers/CMSIS/Include/cmsis_gcc.h ****    return(result);
@@ -1018,10 +1017,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  708:Drivers/CMSIS/Include/cmsis_gcc.h **** {
  709:Drivers/CMSIS/Include/cmsis_gcc.h ****   if ((sat >= 1U) && (sat <= 32U))
  710:Drivers/CMSIS/Include/cmsis_gcc.h ****   {
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 18
-
-
  711:Drivers/CMSIS/Include/cmsis_gcc.h ****     const int32_t max = (int32_t)((1U << (sat - 1U)) - 1U);
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 18
+
+
  712:Drivers/CMSIS/Include/cmsis_gcc.h ****     const int32_t min = -1 - max ;
  713:Drivers/CMSIS/Include/cmsis_gcc.h ****     if (val > max)
  714:Drivers/CMSIS/Include/cmsis_gcc.h ****     {
@@ -1078,10 +1077,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  765:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  766:Drivers/CMSIS/Include/cmsis_gcc.h ****    __ASM volatile ("ldab %0, %1" : "=r" (result) : "Q" (*ptr) : "memory" );
  767:Drivers/CMSIS/Include/cmsis_gcc.h ****    return ((uint8_t) result);
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 19
-
-
  768:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 19
+
+
  769:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  770:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  771:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
@@ -1138,10 +1137,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  822:Drivers/CMSIS/Include/cmsis_gcc.h **** }
  823:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  824:Drivers/CMSIS/Include/cmsis_gcc.h **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 20
-
-
  825:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 20
+
+
  826:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Store-Release (32 bit)
  827:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Executes a STL instruction for 32 bit values.
  828:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]  value  Value to store
@@ -1198,10 +1197,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  879:Drivers/CMSIS/Include/cmsis_gcc.h **** }
  880:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  881:Drivers/CMSIS/Include/cmsis_gcc.h **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 21
-
-
  882:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 21
+
+
  883:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Store-Release Exclusive (8 bit)
  884:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Executes a STLB exclusive instruction for 8 bit values.
  885:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]  value  Value to store
@@ -1258,10 +1257,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  936:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  937:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  938:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 22
-
-
  939:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 22
+
+
  940:Drivers/CMSIS/Include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
  941:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
  942:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
@@ -1297,13 +1296,13 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
   47              	.L2:
   48              	.LBE5:
   49              	.LBE4:
- 224:Core/Src/main.c ****   while (1)
-  50              		.loc 1 224 3 view .LVU4
- 225:Core/Src/main.c ****   {
- 226:Core/Src/main.c ****   }
-  51              		.loc 1 226 3 view .LVU5
- 224:Core/Src/main.c ****   while (1)
-  52              		.loc 1 224 9 view .LVU6
+ 223:Core/Src/main.c ****   while (1)
+  50              		.loc 1 223 3 view .LVU4
+ 224:Core/Src/main.c ****   {
+ 225:Core/Src/main.c ****   }
+  51              		.loc 1 225 3 view .LVU5
+ 223:Core/Src/main.c ****   while (1)
+  52              		.loc 1 223 9 view .LVU6
   53 0002 FEE7     		b	.L2
   54              		.cfi_endproc
   55              	.LFE149:
@@ -1315,13 +1314,13 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
   62              		.thumb_func
   64              	SystemClock_Config:
   65              	.LFB147:
- 132:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  66              		.loc 1 132 1 view -0
+ 131:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  66              		.loc 1 131 1 view -0
   67              		.cfi_startproc
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 23
-
-
   68              		@ args = 0, pretend = 0, frame = 112
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 23
+
+
   69              		@ frame_needed = 0, uses_anonymous_args = 0
   70 0000 00B5     		push	{lr}
   71              	.LCFI0:
@@ -1330,212 +1329,212 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
   74 0002 9DB0     		sub	sp, sp, #116
   75              	.LCFI1:
   76              		.cfi_def_cfa_offset 120
- 133:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  77              		.loc 1 133 3 view .LVU8
- 133:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  78              		.loc 1 133 22 is_stmt 0 view .LVU9
+ 132:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  77              		.loc 1 132 3 view .LVU8
+ 132:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  78              		.loc 1 132 22 is_stmt 0 view .LVU9
   79 0004 4C22     		movs	r2, #76
   80 0006 0021     		movs	r1, #0
   81 0008 09A8     		add	r0, sp, #36
   82 000a FFF7FEFF 		bl	memset
   83              	.LVL0:
- 134:Core/Src/main.c **** 
-  84              		.loc 1 134 3 is_stmt 1 view .LVU10
- 134:Core/Src/main.c **** 
-  85              		.loc 1 134 22 is_stmt 0 view .LVU11
+ 133:Core/Src/main.c **** 
+  84              		.loc 1 133 3 is_stmt 1 view .LVU10
+ 133:Core/Src/main.c **** 
+  85              		.loc 1 133 22 is_stmt 0 view .LVU11
   86 000e 2022     		movs	r2, #32
   87 0010 0021     		movs	r1, #0
   88 0012 01A8     		add	r0, sp, #4
   89 0014 FFF7FEFF 		bl	memset
   90              	.LVL1:
- 138:Core/Src/main.c **** 
-  91              		.loc 1 138 3 is_stmt 1 view .LVU12
+ 137:Core/Src/main.c **** 
+  91              		.loc 1 137 3 is_stmt 1 view .LVU12
   92 0018 0220     		movs	r0, #2
   93 001a FFF7FEFF 		bl	HAL_PWREx_ConfigSupply
   94              	.LVL2:
- 142:Core/Src/main.c **** 
-  95              		.loc 1 142 3 view .LVU13
+ 141:Core/Src/main.c **** 
+  95              		.loc 1 141 3 view .LVU13
   96              	.LBB6:
- 142:Core/Src/main.c **** 
-  97              		.loc 1 142 3 view .LVU14
+ 141:Core/Src/main.c **** 
+  97              		.loc 1 141 3 view .LVU14
   98 001e 0023     		movs	r3, #0
   99 0020 0093     		str	r3, [sp]
- 142:Core/Src/main.c **** 
- 100              		.loc 1 142 3 view .LVU15
+ 141:Core/Src/main.c **** 
+ 100              		.loc 1 141 3 view .LVU15
  101 0022 204B     		ldr	r3, .L10
  102 0024 9A69     		ldr	r2, [r3, #24]
  103 0026 22F44042 		bic	r2, r2, #49152
  104 002a 9A61     		str	r2, [r3, #24]
- 142:Core/Src/main.c **** 
- 105              		.loc 1 142 3 view .LVU16
+ 141:Core/Src/main.c **** 
+ 105              		.loc 1 141 3 view .LVU16
  106 002c 9B69     		ldr	r3, [r3, #24]
  107 002e 03F44043 		and	r3, r3, #49152
  108 0032 0093     		str	r3, [sp]
- 142:Core/Src/main.c **** 
- 109              		.loc 1 142 3 view .LVU17
+ 141:Core/Src/main.c **** 
+ 109              		.loc 1 141 3 view .LVU17
  110 0034 009B     		ldr	r3, [sp]
  111              	.LBE6:
- 142:Core/Src/main.c **** 
- 112              		.loc 1 142 3 view .LVU18
- 144:Core/Src/main.c **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 24
+ 141:Core/Src/main.c **** 
+ 112              		.loc 1 141 3 view .LVU18
+ 143:Core/Src/main.c **** 
+ 113              		.loc 1 143 3 view .LVU19
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 24
 
 
- 113              		.loc 1 144 3 view .LVU19
  114              	.L4:
- 144:Core/Src/main.c **** 
- 115              		.loc 1 144 48 discriminator 1 view .LVU20
- 144:Core/Src/main.c **** 
- 116              		.loc 1 144 9 discriminator 1 view .LVU21
- 144:Core/Src/main.c **** 
- 117              		.loc 1 144 10 is_stmt 0 discriminator 1 view .LVU22
+ 143:Core/Src/main.c **** 
+ 115              		.loc 1 143 48 discriminator 1 view .LVU20
+ 143:Core/Src/main.c **** 
+ 116              		.loc 1 143 9 discriminator 1 view .LVU21
+ 143:Core/Src/main.c **** 
+ 117              		.loc 1 143 10 is_stmt 0 discriminator 1 view .LVU22
  118 0036 1B4B     		ldr	r3, .L10
  119 0038 9B69     		ldr	r3, [r3, #24]
- 144:Core/Src/main.c **** 
- 120              		.loc 1 144 9 discriminator 1 view .LVU23
+ 143:Core/Src/main.c **** 
+ 120              		.loc 1 143 9 discriminator 1 view .LVU23
  121 003a 13F4005F 		tst	r3, #8192
  122 003e FAD0     		beq	.L4
- 149:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
- 123              		.loc 1 149 3 is_stmt 1 view .LVU24
- 149:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
- 124              		.loc 1 149 36 is_stmt 0 view .LVU25
+ 148:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+ 123              		.loc 1 148 3 is_stmt 1 view .LVU24
+ 148:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+ 124              		.loc 1 148 36 is_stmt 0 view .LVU25
  125 0040 0122     		movs	r2, #1
  126 0042 0992     		str	r2, [sp, #36]
- 150:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
- 127              		.loc 1 150 3 is_stmt 1 view .LVU26
- 150:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
- 128              		.loc 1 150 30 is_stmt 0 view .LVU27
+ 149:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+ 127              		.loc 1 149 3 is_stmt 1 view .LVU26
+ 149:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+ 128              		.loc 1 149 30 is_stmt 0 view .LVU27
  129 0044 4FF48033 		mov	r3, #65536
  130 0048 0A93     		str	r3, [sp, #40]
- 151:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
- 131              		.loc 1 151 3 is_stmt 1 view .LVU28
- 151:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
- 132              		.loc 1 151 34 is_stmt 0 view .LVU29
+ 150:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+ 131              		.loc 1 150 3 is_stmt 1 view .LVU28
+ 150:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+ 132              		.loc 1 150 34 is_stmt 0 view .LVU29
  133 004a 0223     		movs	r3, #2
  134 004c 1293     		str	r3, [sp, #72]
- 152:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
- 135              		.loc 1 152 3 is_stmt 1 view .LVU30
- 152:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
- 136              		.loc 1 152 35 is_stmt 0 view .LVU31
+ 151:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
+ 135              		.loc 1 151 3 is_stmt 1 view .LVU30
+ 151:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
+ 136              		.loc 1 151 35 is_stmt 0 view .LVU31
  137 004e 1393     		str	r3, [sp, #76]
- 153:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
- 138              		.loc 1 153 3 is_stmt 1 view .LVU32
- 153:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
- 139              		.loc 1 153 30 is_stmt 0 view .LVU33
+ 152:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
+ 138              		.loc 1 152 3 is_stmt 1 view .LVU32
+ 152:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
+ 139              		.loc 1 152 30 is_stmt 0 view .LVU33
  140 0050 0521     		movs	r1, #5
  141 0052 1491     		str	r1, [sp, #80]
- 154:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
- 142              		.loc 1 154 3 is_stmt 1 view .LVU34
- 154:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
- 143              		.loc 1 154 30 is_stmt 0 view .LVU35
+ 153:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
+ 142              		.loc 1 153 3 is_stmt 1 view .LVU34
+ 153:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
+ 143              		.loc 1 153 30 is_stmt 0 view .LVU35
  144 0054 6E21     		movs	r1, #110
  145 0056 1591     		str	r1, [sp, #84]
- 155:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
- 146              		.loc 1 155 3 is_stmt 1 view .LVU36
- 155:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
- 147              		.loc 1 155 30 is_stmt 0 view .LVU37
+ 154:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
+ 146              		.loc 1 154 3 is_stmt 1 view .LVU36
+ 154:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
+ 147              		.loc 1 154 30 is_stmt 0 view .LVU37
  148 0058 1692     		str	r2, [sp, #88]
- 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
- 149              		.loc 1 156 3 is_stmt 1 view .LVU38
- 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 25
+ 155:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
+ 149              		.loc 1 155 3 is_stmt 1 view .LVU38
+ 155:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
+ 150              		.loc 1 155 30 is_stmt 0 view .LVU39
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 25
 
 
- 150              		.loc 1 156 30 is_stmt 0 view .LVU39
  151 005a 1793     		str	r3, [sp, #92]
- 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
- 152              		.loc 1 157 3 is_stmt 1 view .LVU40
- 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
- 153              		.loc 1 157 30 is_stmt 0 view .LVU41
+ 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+ 152              		.loc 1 156 3 is_stmt 1 view .LVU40
+ 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+ 153              		.loc 1 156 30 is_stmt 0 view .LVU41
  154 005c 1893     		str	r3, [sp, #96]
- 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
- 155              		.loc 1 158 3 is_stmt 1 view .LVU42
- 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
- 156              		.loc 1 158 32 is_stmt 0 view .LVU43
+ 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+ 155              		.loc 1 157 3 is_stmt 1 view .LVU42
+ 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+ 156              		.loc 1 157 32 is_stmt 0 view .LVU43
  157 005e 0823     		movs	r3, #8
  158 0060 1993     		str	r3, [sp, #100]
- 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
- 159              		.loc 1 159 3 is_stmt 1 view .LVU44
- 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
- 160              		.loc 1 159 35 is_stmt 0 view .LVU45
+ 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
+ 159              		.loc 1 158 3 is_stmt 1 view .LVU44
+ 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
+ 160              		.loc 1 158 35 is_stmt 0 view .LVU45
  161 0062 0023     		movs	r3, #0
  162 0064 1A93     		str	r3, [sp, #104]
- 160:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
- 163              		.loc 1 160 3 is_stmt 1 view .LVU46
- 160:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
- 164              		.loc 1 160 34 is_stmt 0 view .LVU47
+ 159:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+ 163              		.loc 1 159 3 is_stmt 1 view .LVU46
+ 159:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+ 164              		.loc 1 159 34 is_stmt 0 view .LVU47
  165 0066 1B93     		str	r3, [sp, #108]
- 161:Core/Src/main.c ****   {
- 166              		.loc 1 161 3 is_stmt 1 view .LVU48
- 161:Core/Src/main.c ****   {
- 167              		.loc 1 161 7 is_stmt 0 view .LVU49
+ 160:Core/Src/main.c ****   {
+ 166              		.loc 1 160 3 is_stmt 1 view .LVU48
+ 160:Core/Src/main.c ****   {
+ 167              		.loc 1 160 7 is_stmt 0 view .LVU49
  168 0068 09A8     		add	r0, sp, #36
  169 006a FFF7FEFF 		bl	HAL_RCC_OscConfig
  170              	.LVL3:
- 161:Core/Src/main.c ****   {
- 171              		.loc 1 161 6 discriminator 1 view .LVU50
+ 160:Core/Src/main.c ****   {
+ 171              		.loc 1 160 6 discriminator 1 view .LVU50
  172 006e A0B9     		cbnz	r0, .L8
- 168:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
- 173              		.loc 1 168 3 is_stmt 1 view .LVU51
- 168:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
- 174              		.loc 1 168 31 is_stmt 0 view .LVU52
+ 167:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+ 173              		.loc 1 167 3 is_stmt 1 view .LVU51
+ 167:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+ 174              		.loc 1 167 31 is_stmt 0 view .LVU52
  175 0070 3F23     		movs	r3, #63
  176 0072 0193     		str	r3, [sp, #4]
- 171:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
- 177              		.loc 1 171 3 is_stmt 1 view .LVU53
- 171:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
- 178              		.loc 1 171 34 is_stmt 0 view .LVU54
+ 170:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+ 177              		.loc 1 170 3 is_stmt 1 view .LVU53
+ 170:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+ 178              		.loc 1 170 34 is_stmt 0 view .LVU54
  179 0074 0321     		movs	r1, #3
  180 0076 0291     		str	r1, [sp, #8]
- 172:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
- 181              		.loc 1 172 3 is_stmt 1 view .LVU55
- 172:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
- 182              		.loc 1 172 35 is_stmt 0 view .LVU56
+ 171:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+ 181              		.loc 1 171 3 is_stmt 1 view .LVU55
+ 171:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+ 182              		.loc 1 171 35 is_stmt 0 view .LVU56
  183 0078 0023     		movs	r3, #0
  184 007a 0393     		str	r3, [sp, #12]
- 173:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
- 185              		.loc 1 173 3 is_stmt 1 view .LVU57
- 173:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
- 186              		.loc 1 173 35 is_stmt 0 view .LVU58
+ 172:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+ 185              		.loc 1 172 3 is_stmt 1 view .LVU57
+ 172:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+ 186              		.loc 1 172 35 is_stmt 0 view .LVU58
  187 007c 0823     		movs	r3, #8
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 26
-
-
  188 007e 0493     		str	r3, [sp, #16]
- 174:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
- 189              		.loc 1 174 3 is_stmt 1 view .LVU59
- 174:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
- 190              		.loc 1 174 36 is_stmt 0 view .LVU60
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 26
+
+
+ 173:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+ 189              		.loc 1 173 3 is_stmt 1 view .LVU59
+ 173:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+ 190              		.loc 1 173 36 is_stmt 0 view .LVU60
  191 0080 4023     		movs	r3, #64
  192 0082 0593     		str	r3, [sp, #20]
- 175:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
- 193              		.loc 1 175 3 is_stmt 1 view .LVU61
- 175:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
- 194              		.loc 1 175 36 is_stmt 0 view .LVU62
+ 174:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+ 193              		.loc 1 174 3 is_stmt 1 view .LVU61
+ 174:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+ 194              		.loc 1 174 36 is_stmt 0 view .LVU62
  195 0084 0693     		str	r3, [sp, #24]
- 176:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
- 196              		.loc 1 176 3 is_stmt 1 view .LVU63
- 176:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
- 197              		.loc 1 176 36 is_stmt 0 view .LVU64
+ 175:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+ 196              		.loc 1 175 3 is_stmt 1 view .LVU63
+ 175:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+ 197              		.loc 1 175 36 is_stmt 0 view .LVU64
  198 0086 4FF48062 		mov	r2, #1024
  199 008a 0792     		str	r2, [sp, #28]
- 177:Core/Src/main.c **** 
- 200              		.loc 1 177 3 is_stmt 1 view .LVU65
- 177:Core/Src/main.c **** 
- 201              		.loc 1 177 36 is_stmt 0 view .LVU66
+ 176:Core/Src/main.c **** 
+ 200              		.loc 1 176 3 is_stmt 1 view .LVU65
+ 176:Core/Src/main.c **** 
+ 201              		.loc 1 176 36 is_stmt 0 view .LVU66
  202 008c 0893     		str	r3, [sp, #32]
- 179:Core/Src/main.c ****   {
- 203              		.loc 1 179 3 is_stmt 1 view .LVU67
- 179:Core/Src/main.c ****   {
- 204              		.loc 1 179 7 is_stmt 0 view .LVU68
+ 178:Core/Src/main.c ****   {
+ 203              		.loc 1 178 3 is_stmt 1 view .LVU67
+ 178:Core/Src/main.c ****   {
+ 204              		.loc 1 178 7 is_stmt 0 view .LVU68
  205 008e 01A8     		add	r0, sp, #4
  206 0090 FFF7FEFF 		bl	HAL_RCC_ClockConfig
  207              	.LVL4:
- 179:Core/Src/main.c ****   {
- 208              		.loc 1 179 6 discriminator 1 view .LVU69
+ 178:Core/Src/main.c ****   {
+ 208              		.loc 1 178 6 discriminator 1 view .LVU69
  209 0094 18B9     		cbnz	r0, .L9
- 183:Core/Src/main.c **** 
- 210              		.loc 1 183 1 view .LVU70
+ 182:Core/Src/main.c **** 
+ 210              		.loc 1 182 1 view .LVU70
  211 0096 1DB0     		add	sp, sp, #116
  212              	.LCFI2:
  213              		.cfi_remember_state
@@ -1545,23 +1544,23 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  217              	.L8:
  218              	.LCFI3:
  219              		.cfi_restore_state
- 163:Core/Src/main.c ****   }
- 220              		.loc 1 163 5 is_stmt 1 view .LVU71
+ 162:Core/Src/main.c ****   }
+ 220              		.loc 1 162 5 is_stmt 1 view .LVU71
  221 009a FFF7FEFF 		bl	Error_Handler
  222              	.LVL5:
  223              	.L9:
- 181:Core/Src/main.c ****   }
- 224              		.loc 1 181 5 view .LVU72
+ 180:Core/Src/main.c ****   }
+ 224              		.loc 1 180 5 view .LVU72
  225 009e FFF7FEFF 		bl	Error_Handler
  226              	.LVL6:
  227              	.L11:
  228 00a2 00BF     		.align	2
  229              	.L10:
  230 00a4 00480258 		.word	1476544512
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 27
-
-
  231              		.cfi_endproc
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 27
+
+
  232              	.LFE147:
  234              		.section	.text.PeriphCommonClock_Config,"ax",%progbits
  235              		.align	1
@@ -1571,8 +1570,8 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  239              		.thumb_func
  241              	PeriphCommonClock_Config:
  242              	.LFB148:
- 190:Core/Src/main.c ****   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
- 243              		.loc 1 190 1 view -0
+ 189:Core/Src/main.c ****   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+ 243              		.loc 1 189 1 view -0
  244              		.cfi_startproc
  245              		@ args = 0, pretend = 0, frame = 184
  246              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -1584,82 +1583,82 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  252 0002 AEB0     		sub	sp, sp, #184
  253              	.LCFI5:
  254              		.cfi_def_cfa_offset 192
- 191:Core/Src/main.c **** 
- 255              		.loc 1 191 3 view .LVU74
- 191:Core/Src/main.c **** 
- 256              		.loc 1 191 28 is_stmt 0 view .LVU75
+ 190:Core/Src/main.c **** 
+ 255              		.loc 1 190 3 view .LVU74
+ 190:Core/Src/main.c **** 
+ 256              		.loc 1 190 28 is_stmt 0 view .LVU75
  257 0004 B822     		movs	r2, #184
  258 0006 0021     		movs	r1, #0
  259 0008 6846     		mov	r0, sp
  260 000a FFF7FEFF 		bl	memset
  261              	.LVL7:
- 195:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
- 262              		.loc 1 195 3 is_stmt 1 view .LVU76
- 195:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
- 263              		.loc 1 195 44 is_stmt 0 view .LVU77
+ 194:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
+ 262              		.loc 1 194 3 is_stmt 1 view .LVU76
+ 194:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
+ 263              		.loc 1 194 44 is_stmt 0 view .LVU77
  264 000e 4FF40042 		mov	r2, #32768
  265 0012 0023     		movs	r3, #0
  266 0014 CDE90023 		strd	r2, [sp]
- 196:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
- 267              		.loc 1 196 3 is_stmt 1 view .LVU78
- 196:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
- 268              		.loc 1 196 34 is_stmt 0 view .LVU79
+ 195:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
+ 267              		.loc 1 195 3 is_stmt 1 view .LVU78
+ 195:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
+ 268              		.loc 1 195 34 is_stmt 0 view .LVU79
  269 0018 0323     		movs	r3, #3
  270 001a 0293     		str	r3, [sp, #8]
- 197:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
- 271              		.loc 1 197 3 is_stmt 1 view .LVU80
- 197:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
- 272              		.loc 1 197 34 is_stmt 0 view .LVU81
+ 196:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
+ 271              		.loc 1 196 3 is_stmt 1 view .LVU80
+ 196:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
+ 272              		.loc 1 196 34 is_stmt 0 view .LVU81
  273 001c 2823     		movs	r3, #40
  274 001e 0393     		str	r3, [sp, #12]
- 198:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
- 275              		.loc 1 198 3 is_stmt 1 view .LVU82
- 198:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
- 276              		.loc 1 198 34 is_stmt 0 view .LVU83
+ 197:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
+ 275              		.loc 1 197 3 is_stmt 1 view .LVU82
+ 197:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
+ 276              		.loc 1 197 34 is_stmt 0 view .LVU83
  277 0020 0223     		movs	r3, #2
  278 0022 0493     		str	r3, [sp, #16]
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 28
+ 198:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 28
 
 
- 199:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
- 279              		.loc 1 199 3 is_stmt 1 view .LVU84
- 199:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
- 280              		.loc 1 199 34 is_stmt 0 view .LVU85
+ 279              		.loc 1 198 3 is_stmt 1 view .LVU84
+ 198:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
+ 280              		.loc 1 198 34 is_stmt 0 view .LVU85
  281 0024 0422     		movs	r2, #4
  282 0026 0592     		str	r2, [sp, #20]
- 200:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
- 283              		.loc 1 200 3 is_stmt 1 view .LVU86
- 200:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
- 284              		.loc 1 200 34 is_stmt 0 view .LVU87
+ 199:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+ 283              		.loc 1 199 3 is_stmt 1 view .LVU86
+ 199:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+ 284              		.loc 1 199 34 is_stmt 0 view .LVU87
  285 0028 0693     		str	r3, [sp, #24]
- 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
- 286              		.loc 1 201 3 is_stmt 1 view .LVU88
- 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
- 287              		.loc 1 201 36 is_stmt 0 view .LVU89
+ 200:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+ 286              		.loc 1 200 3 is_stmt 1 view .LVU88
+ 200:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+ 287              		.loc 1 200 36 is_stmt 0 view .LVU89
  288 002a C023     		movs	r3, #192
  289 002c 0793     		str	r3, [sp, #28]
- 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
- 290              		.loc 1 202 3 is_stmt 1 view .LVU90
- 203:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
- 291              		.loc 1 203 3 view .LVU91
- 204:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
- 292              		.loc 1 204 3 view .LVU92
- 204:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
- 293              		.loc 1 204 43 is_stmt 0 view .LVU93
+ 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+ 290              		.loc 1 201 3 is_stmt 1 view .LVU90
+ 202:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+ 291              		.loc 1 202 3 view .LVU91
+ 203:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+ 292              		.loc 1 203 3 view .LVU92
+ 203:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+ 293              		.loc 1 203 43 is_stmt 0 view .LVU93
  294 002e 4FF00053 		mov	r3, #536870912
  295 0032 1B93     		str	r3, [sp, #108]
- 205:Core/Src/main.c ****   {
- 296              		.loc 1 205 3 is_stmt 1 view .LVU94
- 205:Core/Src/main.c ****   {
- 297              		.loc 1 205 7 is_stmt 0 view .LVU95
+ 204:Core/Src/main.c ****   {
+ 296              		.loc 1 204 3 is_stmt 1 view .LVU94
+ 204:Core/Src/main.c ****   {
+ 297              		.loc 1 204 7 is_stmt 0 view .LVU95
  298 0034 6846     		mov	r0, sp
  299 0036 FFF7FEFF 		bl	HAL_RCCEx_PeriphCLKConfig
  300              	.LVL8:
- 205:Core/Src/main.c ****   {
- 301              		.loc 1 205 6 discriminator 1 view .LVU96
+ 204:Core/Src/main.c ****   {
+ 301              		.loc 1 204 6 discriminator 1 view .LVU96
  302 003a 08B9     		cbnz	r0, .L15
- 209:Core/Src/main.c **** 
- 303              		.loc 1 209 1 view .LVU97
+ 208:Core/Src/main.c **** 
+ 303              		.loc 1 208 1 view .LVU97
  304 003c 2EB0     		add	sp, sp, #184
  305              	.LCFI6:
  306              		.cfi_remember_state
@@ -1669,8 +1668,8 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  310              	.L15:
  311              	.LCFI7:
  312              		.cfi_restore_state
- 207:Core/Src/main.c ****   }
- 313              		.loc 1 207 5 is_stmt 1 view .LVU98
+ 206:Core/Src/main.c ****   }
+ 313              		.loc 1 206 5 is_stmt 1 view .LVU98
  314 0040 FFF7FEFF 		bl	Error_Handler
  315              	.LVL9:
  316              		.cfi_endproc
@@ -1678,10 +1677,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  319              		.section	.text.main,"ax",%progbits
  320              		.align	1
  321              		.global	main
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 29
-
-
  322              		.syntax unified
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 29
+
+
  323              		.thumb
  324              		.thumb_func
  326              	main:
@@ -1738,10 +1737,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  366              		.loc 1 105 3 view .LVU109
  367 0026 FFF7FEFF 		bl	FDCAN1_Start
  368              	.LVL19:
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 30
-
-
  106:Core/Src/main.c ****   /* USER CODE END 2 */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 30
+
+
  369              		.loc 1 106 3 view .LVU110
  370 002a FFF7FEFF 		bl	RC_Init
  371              	.LVL20:
@@ -1757,35 +1756,35 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  378 0030 2546     		mov	r5, r4
  379              	.L17:
  380              	.LVL22:
- 112:Core/Src/main.c ****   /*约1ms调用一次*/
+ 112:Core/Src/main.c ****     uint32_t now = HAL_GetTick();
  381              		.loc 1 112 1 is_stmt 1 view .LVU114
  382              	.LBB7:
- 114:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
- 383              		.loc 1 114 5 view .LVU115
- 114:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
- 384              		.loc 1 114 20 is_stmt 0 view .LVU116
+ 113:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
+ 383              		.loc 1 113 5 view .LVU115
+ 113:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
+ 384              		.loc 1 113 20 is_stmt 0 view .LVU116
  385 0032 FFF7FEFF 		bl	HAL_GetTick
  386              	.LVL23:
  387 0036 0446     		mov	r4, r0
  388              	.LVL24:
- 115:Core/Src/main.c ****         rc_last_tick = now;
- 389              		.loc 1 115 5 is_stmt 1 view .LVU117
- 115:Core/Src/main.c ****         rc_last_tick = now;
- 390              		.loc 1 115 23 is_stmt 0 view .LVU118
+ 114:Core/Src/main.c ****         rc_last_tick = now;
+ 389              		.loc 1 114 5 is_stmt 1 view .LVU117
+ 114:Core/Src/main.c ****         rc_last_tick = now;
+ 390              		.loc 1 114 23 is_stmt 0 view .LVU118
  391 0038 431B     		subs	r3, r0, r5
- 115:Core/Src/main.c ****         rc_last_tick = now;
- 392              		.loc 1 115 8 view .LVU119
+ 114:Core/Src/main.c ****         rc_last_tick = now;
+ 392              		.loc 1 114 8 view .LVU119
  393 003a 002B     		cmp	r3, #0
  394 003c F9DD     		ble	.L17
- 116:Core/Src/main.c ****         RC_Control_Task();
- 395              		.loc 1 116 9 is_stmt 1 view .LVU120
+ 115:Core/Src/main.c ****         RC_Control_Task();
+ 395              		.loc 1 115 9 is_stmt 1 view .LVU120
  396              	.LVL25:
- 117:Core/Src/main.c ****     }
- 397              		.loc 1 117 9 view .LVU121
+ 116:Core/Src/main.c ****     }
+ 397              		.loc 1 116 9 view .LVU121
  398 003e FFF7FEFF 		bl	RC_Control_Task
  399              	.LVL26:
- 117:Core/Src/main.c ****     }
- 400              		.loc 1 117 9 is_stmt 0 view .LVU122
+ 116:Core/Src/main.c ****     }
+ 400              		.loc 1 116 9 is_stmt 0 view .LVU122
  401 0042 F5E7     		b	.L18
  402              	.LBE7:
  403              		.cfi_endproc
@@ -1798,10 +1797,10 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  411              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
  412              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc.h"
  413              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc_ex.h"
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 31
-
-
  414              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pwr_ex.h"
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 31
+
+
  415              		.file 10 "remote/rc_dbus.h"
  416              		.file 11 "bsp/bsp.can.h"
  417              		.file 12 "Core/Inc/fdcan.h"
@@ -1810,20 +1809,20 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 1
  420              		.file 15 "Core/Inc/gpio.h"
  421              		.file 16 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
  422              		.file 17 "<built-in>"
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s 			page 32
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s 			page 32
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 main.c
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:20     .text.Error_Handler:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:26     .text.Error_Handler:00000000 Error_Handler
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:58     .text.SystemClock_Config:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:64     .text.SystemClock_Config:00000000 SystemClock_Config
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:230    .text.SystemClock_Config:000000a4 $d
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:235    .text.PeriphCommonClock_Config:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:241    .text.PeriphCommonClock_Config:00000000 PeriphCommonClock_Config
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:320    .text.main:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccq1GupQ.s:326    .text.main:00000000 main
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:20     .text.Error_Handler:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:26     .text.Error_Handler:00000000 Error_Handler
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:58     .text.SystemClock_Config:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:64     .text.SystemClock_Config:00000000 SystemClock_Config
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:230    .text.SystemClock_Config:000000a4 $d
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:235    .text.PeriphCommonClock_Config:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:241    .text.PeriphCommonClock_Config:00000000 PeriphCommonClock_Config
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:320    .text.main:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccTXzWHf.s:326    .text.main:00000000 main
 
 UNDEFINED SYMBOLS
 memset

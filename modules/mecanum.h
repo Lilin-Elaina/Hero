@@ -11,9 +11,9 @@
   #define MEC_WHEEL_R       1     /* 右轮索引 */
 #else
   #define MEC_WHEEL_LF      0
-  #define MEC_WHEEL_RF      1
+  #define MEC_WHEEL_LB      1
   #define MEC_WHEEL_RB      2
-  #define MEC_WHEEL_LB      3
+  #define MEC_WHEEL_RF      3
 #endif
 
 /* ==================================================================
