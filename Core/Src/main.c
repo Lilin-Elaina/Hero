@@ -110,6 +110,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 uint32_t rc_last_tick = 0;
 while (1) {
+  /*约1ms调用一次*/
     uint32_t now = HAL_GetTick();
     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
         rc_last_tick = now;
