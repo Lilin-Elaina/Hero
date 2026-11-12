@@ -14,8 +14,8 @@
 #define RC_OFFLINE_MS    100     /*超过100ms认为失联（失联时间） */
 
 /* ---- 控制参数（按需要改）------------------------------------------ */
-#define RC_MAX_CURRENT_A  5.0f   /* 单电机最大电流(A)，建议先 1.0~2.0 试 */
-#define RC_ABS_CURRENT_A  6.0f   /* 硬性绝对上限(A)，任何情况都不超过     */
+#define RC_MAX_CURRENT_A  7.0f   /* 单电机最大电流(A)，建议先 1.0~2.0 试 */
+#define RC_ABS_CURRENT_A  8.0f   /* 硬性绝对上限(A)，任何情况都不超过     */
 /* 拨杆位置编码（官方解码：1=上 2=下 3=中） */
 #define RC_SW_MID          3
 #define RC_SW_UP           1
@@ -32,6 +32,36 @@
                                   * 若调试时发现左右命名反了，把 RC_Data.sw_swap 置 1 即可 */
 #define RC_ENABLE_DELAY_MS 100   /* 使能条件需连续保持这么久才真正放行（防抖软启动） */
 #define RC_FAILSAFE_MS    500    /* 失联后开始强制刹停的时间（配合斜坡，不是硬断） */
+
+/*===================================================
+ *   底盘四轮速度闭环
+ *=================================================== */
+
+#define RC_WHEEL_ENABLE_PID    1        /*1 启动pid*/
+#define RC_WHEEL_SPD_DT_S      0.001f   /*1ms调用一次*/
+
+#define RC_WHEEL_RPM_MAX       8000.0f   /*rpm*/
+#define RC_WHEEL_SPD_KP        0.002f      /*速度环比例系数*/
+#define RC_WHEEL_SPD_KI        0.002f     /*速度环积分系数*/
+#define RC_WHEEL_FF_A_PER_RPM  0.0f       /*前馈系数：未标定前保持0*/
+#define RC_WHEEL_I_MAX         1.5f       /*积分只做静差微调，封顶1.5A*/
+
+#define RC_WHEEL_STOP_KP       0.002f     /*回中制动系数A/rpm：输出=-STOP_KP*rpm，恒逆实测转速*/
+#define RC_WHEEL_STOP_A        3.5f       /*回中制动限流A*/
+#define RC_WHEEL_STOP_QUIET_RPM 50.0f     /*轮速低于此值撤掉制动电流，杜绝静止残余顶力*/
+
+#define RC_WHEEL_FEEDBACK_MS   100u        /*超过这个时间没反馈就认为失联，输出 0 */
+#define RC_WHEEL_TEMP_LIMIT    75u        /*温控值，超过这个温度就不输出电流*/
+#define RC_WHEEL_FAULT_ISOLATE 0      /*整车断电 */
+
+
+extern  volatile uint8_t  RC_WheelFault;   /* 1=在线，0=失联 */
+void    RC_Wheel_Reset(void);
+
+/* 每个轮子的目标转速 rpm——专供 Ozone 观察，控制逻辑不读它。
+ * 下标：0=左前 1=右前 2=右后 3=左后（= MECANUM_WHEEL_NUM）
+ * 已乘 MOTOR_POL 极性，单位 rpm，范围 ±RC_WHEEL_RPM_MAX(8000) */
+extern float RC_WheelRef[4];
 
 /*
 + * CAN2 底盘电机指令方向补偿。
@@ -74,14 +104,18 @@
 #define GM_PITCH_CALIBRATED     1               /*标定完改1使能*/
 #define GM_PITCH_SIGN           (+1.0f)           /*位置方向*/
 #define GM_PITCH_RPM_SIGN       (+1.0f)           /*转速方向*/
-#define GM_PITCH_ANGLE_MIN      3600              /*机械限min*/
-#define GM_PITCH_ANGLE_MAX      4700              /*机械限位max*/
-#define GM_PITCH_ANGLE_MARGIN   50                /*留余count量*/
+#define GM_PITCH_ANGLE_MIN      3450              /*机械限min*/
+#define GM_PITCH_ANGLE_MAX      4790              /*机械限位max*/
+#define GM_PITCH_ANGLE_MARGIN   40                /*留余count量*/
 
 #define GM_PITCH_HOME_ANGLE     4100               /*回中值*/
 #define GM_PITCH_HOME_RATE      500.0f             /*回中角速度counts/s*/
-#define GM_PITCH_MANUAL_RATE    1500.0f            /*满杆角速度*/
+#define GM_PITCH_MANUAL_RATE    1800.0f            /*满杆角速度*/
 #define GM_PITCH_HOME_TOL       8                  /*回中到位判定的余量counts值*/
+#define GM_PITCH_ACCEL          12000.0f            /*加速度*/
+#define GM_PITCH_DECEL          12000.0f           /*减速度*/
+
+
 
 
 #define GM_PITCH_WAIT_MS         100               /*接管前“稳定+摇杆居中”要保持多久*/
@@ -89,12 +123,16 @@
 #define GM_PITCH_HOME_RPM_TOL    30.0f             /*回中判断停稳的转速*/
 #define GM_PITCH_HOME_SETTLE_MS  200                /*回中到位需保持多久*/
 #define GM_PITCH_HOME_TIMEOUT_MS 3000                /*回中超时 ——故障*/
-#define GM_PITCH_POS_KP         0.25               /*位置p   rpm/counts*/                
+#define GM_PITCH_POS_KP         0.17              /*位置p   rpm/counts*/                
 #define GM_PITCH_RPM_MAX        200.0f             /*位置环输出上限 rpm  */
-#define GM_PITCH_SPD_KP        100.0f             /*速度p    volt/rpm*/
-#define GM_PITCH_SPD_KI         650.0f             /*速度i    volt/（rpm*s）*/
-#define GM_PITCH_I_MAX          15000.0f           /*积分限幅（电压单位）*/
-#define GM_PITCH_VOLT_MAX       15000.0f           /*总输出限幅*/
+#define GM_PITCH_SPD_KP        105.0f             /*速度p    volt/rpm*/
+#define GM_PITCH_SPD_KI        310.0f             /*速度i    volt/（rpm*s）*/
+#define GM_PITCH_I_MAX          10000.0f            /*积分限幅（电压单位）
+                                                    * 静止时 volt = s_i（速度环 P 项贡献为 0），
+                                                    * 所以要 > 顶住重力所需的电压 */
+#define GM_PITCH_GRAV_FF        2500.0f             /*重力前馈（电压码）：顶住云台自重的常量电压
+                                                    * 标定法：FF=0 静止读 s_i 稳态值，原样（含符号）填进来 */
+#define GM_PITCH_VOLT_MAX       18000.0f           /*总输出限幅*/
 #define GM_PITCH_TEMP_LIMIT     65                 /*温控值*/
 #define GM_PITCH_HOME_ENABLE    1 
 #define GM_PITCH_CATCH_RPM      60.0f              

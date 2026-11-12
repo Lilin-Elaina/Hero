@@ -222,7 +222,7 @@ float RC_Norm(uint16_t ch)
  *  未接管时要求摇杆居中，且参考角永远从"当前位置"起步 → 不会瞬移、
  *  不会有劣弧、不会一拨使能就跟着摇杆飞。
  *
- *  为什么积分只放速度环：两个积分串联相位滞后 180°，必然振荡。
+ *  采用位置环 + 速度环的双环控制，位置环输出目标速度，速度环输出电压。
  * ================================================================== */
 
 
@@ -258,6 +258,8 @@ static float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
     static uint8_t   s_homed   = 0;     /*是否回中*/
     static uint32_t  s_home_since = 0;  /*回中时间判定基准*/
     static float     s_stick_f = 0.0f;  /*滤波后的摇杆值*/
+    static float     s_v = 0.0f;        /*手控参考速度*/
+
 
     const float lo = (float)(GM_PITCH_ANGLE_MIN + GM_PITCH_ANGLE_MARGIN);
     const float hi = (float)(GM_PITCH_ANGLE_MAX - GM_PITCH_ANGLE_MARGIN);
@@ -267,6 +269,7 @@ static float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
     {
         s_stage = 0;
         s_i     = 0.0f;
+    
         return 0.0f;
     }
 
@@ -286,18 +289,22 @@ static float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
         return 0.0f;
     }
 
-     s_stick_f += (stick - s_stick_f) * 0.08f;
+     s_stick_f += (stick - s_stick_f) * 0.2f;
 
     /* ③ 接管条件：刚开始上电只看摇杆是否居中 */
     if (s_stage == 0 && pitch_abs(stick) > GM_PITCH_STICK_DEAD)
     {
         return 0.0f;
     }
+    /* 本拍参考角的起点，供下面的参考速度前馈使用 */
+    const float s_ref_old = s_ref;
+
   /*此时遥控器在线，开始进行判断*/
 if(s_stage == 0)
 {
     s_ref = cur;
     s_i   = 0.0f;
+    s_v   = 0.0f;
     s_home_since = HAL_GetTick() | 1u;     /* 接管时记一次起点，供回中计时用 */
     s_stage = ( GM_PITCH_HOME_ENABLE && !s_homed) ? 1 : 2;
     return 0.0f;
@@ -306,6 +313,7 @@ if(s_stage == 0)
 /*在线之后进行判断，若未回中，开始回中*/
 if(s_stage == 1)
 {
+    s_v = 0.0f;
     /*若一直没符合下面置2的三个条件时触发*/
     if ((HAL_GetTick() - s_home_since) > GM_PITCH_HOME_TIMEOUT_MS)
     {
@@ -331,30 +339,55 @@ if(s_stage == 1)
 }
 else
 {
-    s_ref += s_stick_f * GM_PITCH_MANUAL_RATE * 0.001f;
+      float v_tgt = s_stick_f * GM_PITCH_MANUAL_RATE;
+      float braking = (v_tgt * s_v < 0.0f)  ||
+      (pitch_abs(v_tgt) < pitch_abs(s_v)) ;
+
+      float a = (braking) ? GM_PITCH_DECEL : GM_PITCH_ACCEL;
+      float dv = a * 0.001f;
+
+      if(v_tgt > s_v + dv)      s_v += dv;
+      else if(v_tgt < s_v - dv) s_v -= dv;
+      else                      s_v = v_tgt;
+
+
+      s_ref += s_v * 0.001f;
+
+
 }
 
 if(s_ref < lo) s_ref = lo;
 if(s_ref > hi) s_ref = hi;
 
-err   = s_ref - cur;
-rpm_des = pitch_clamp(GM_PITCH_POS_KP * err, -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+    /* 参考速度前馈：参考角这一拍走了多少 → 折算成 rpm，直接叠加到 rpm_des。
+     * 位置环只有 P，匀速跟踪时必然留下恒定滞后 err = RATE/(136.53*POS_KP)，
+     * 这个非零误差会被速度环积分一路累积到 I_MAX；参考一停、积分却还满着，
+     * 表现出来就是"冲过头 + 回调很慢"。加了前馈，跟踪误差归零，
+     * 积分只负责扛重力那一点。
+     * 136.53 = 8192/60，即 1 rpm 对应的 counts/s。 */
+    {
+        float v_ff = (s_ref - s_ref_old) * 1000.0f / 136.53f;   /* counts/s → rpm */
+
+        err     = s_ref - cur;
+        rpm_des = pitch_clamp(GM_PITCH_POS_KP * err + v_ff,
+                              -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+    }
 
 
 err = rpm_des - rpm;
-volt = GM_PITCH_SPD_KP * err + s_i;
+volt = GM_PITCH_SPD_KP * err + s_i + GM_PITCH_GRAV_FF;
 
-if(pitch_abs(volt) < GM_PITCH_VOLT_MAX)
+if(pitch_abs(volt) < GM_PITCH_VOLT_MAX || (volt >= GM_PITCH_VOLT_MAX && err < 0.0f) || (volt <= -GM_PITCH_VOLT_MAX && err > 0.0f))
 {
 s_i += GM_PITCH_SPD_KI * err * 0.001f;
 s_i = pitch_clamp(s_i, -GM_PITCH_I_MAX,GM_PITCH_I_MAX);
 }
 
-volt = pitch_clamp(GM_PITCH_SPD_KP* err + s_i, -GM_PITCH_VOLT_MAX,GM_PITCH_VOLT_MAX);
+volt = pitch_clamp(GM_PITCH_SPD_KP* err + s_i + GM_PITCH_GRAV_FF, -GM_PITCH_VOLT_MAX,GM_PITCH_VOLT_MAX);
 
     /* 软墙：距离边界 soft 以内，把"往外推"的力按比例衰减到 0，
        避免"出力/不出力"每毫秒硬切换导致的高频起振 */
-    const float soft = 60.0f;
+    const float soft = 120.0f;
 
     if (cur <= lo)
     {
@@ -379,8 +412,54 @@ volt = pitch_clamp(GM_PITCH_SPD_KP* err + s_i, -GM_PITCH_VOLT_MAX,GM_PITCH_VOLT_
 return GM_PITCH_SIGN * volt;
 
 }
+/*=============底盘四轮速度闭环===========*/
+ volatile uint8_t RC_WheelFault = 0; /*轮子故障标志位，1表示有轮子故障，0表示正常*/
 
- 
+static float s_wheel_i[MECANUM_WHEEL_NUM];
+
+/* 目标轮速镜像（只给调试器看，控制里不读） */
+float RC_WheelRef[4] = {0.0f};
+
+static float wheel_abs(float x )
+{
+    return (x < 0.0f) ? -x : x;
+}
+
+static float wheel_clamp(float v, float lo, float hi)
+{
+    if (v < lo) v = lo;
+    if (v > hi) v = hi;
+    return v;
+}
+
+void RC_Wheel_Reset()
+{
+     uint8_t i;
+
+     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
+     {
+         s_wheel_i[i] = 0.0f;
+     }
+}
+
+  /*单轮速度  PI  :前馈 + P +条件积分 + 输出限幅*/
+static float RC_Wheel_Speed_PI(uint8_t id, float ref , float rpm, float limit)
+{
+    float err  = ref - rpm;
+    float a_ff = RC_WHEEL_FF_A_PER_RPM * ref;
+    float a    = a_ff + RC_WHEEL_SPD_KP * err + s_wheel_i[id];
+
+    if(wheel_abs(a) < limit || (a >= limit && err < 0.0f) || (a <= -limit && err > 0.0f))
+    {
+        s_wheel_i[id] += RC_WHEEL_SPD_KI * err * RC_WHEEL_SPD_DT_S;
+        s_wheel_i[id] = wheel_clamp(s_wheel_i[id], -RC_WHEEL_I_MAX, RC_WHEEL_I_MAX);
+    }
+
+    a = a_ff + RC_WHEEL_SPD_KP * err + s_wheel_i[id];
+    
+    return wheel_clamp(a, -limit, limit);
+
+}
 
 /* ------------------------------------------------------------------ */
 /* 控制任务：1kHz 调用一次                                              */
@@ -425,48 +504,116 @@ void RC_Control_Task(void)
     /* 2) 摇杆归一化：死区内为 0，范围 -1.0 ~ +1.0 */
     float fwd  = online ?  RC_Norm(RC_CH_FWD)  : 0.0f;
     float spin = online ? RC_Norm(RC_CH_TURN) : 0.0f;
-
+    float strafe = 0.0f;
 #if (MECANUM_WHEEL_NUM == 4)
    
-    float strafe = online ? RC_Norm(RC_CH_STRAFE) : 0.0f;
+   strafe  =online ? RC_Norm(RC_CH_STRAFE) : 0.0f;
 
 #endif
 
-    /* 3) 麦轮混控：差速/麦轮公式 + 归一化斜坡限速（在 mecanum.c 里） */
-    Mecanum_Mix(fwd, strafe, spin, enabled, RC_WheelOut);
+   uint8_t mix_state = Mecanum_Mix(fwd, strafe, spin, enabled, RC_WheelOut);
 
-    /* 4) 失联超过 RC_FAILSAFE_MS 后强制刹停：斜坡已被旁路，必须硬置零 */
-    if (!online && ((now - RC_Data.last_tick) > RC_FAILSAFE_MS))
+   if(!online && ((now - RC_Data.last_tick) > RC_FAILSAFE_MS))
+{
+    for(uint8_t i = 0 ; i < MECANUM_WHEEL_NUM; i++)
     {
-        for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
-        {
-            RC_WheelOut[i] = 0.0f;
-        }
-        Mecanum_Reset();
+        RC_WheelOut[i] = 0.0f;
     }
+   
+    Mecanum_Reset();
+    RC_Wheel_Reset();
+    mix_state = 2u;
+}
 
-    /*Mix得到各轮归一化目标，现在进行方向设定与电流限幅*/
-    static const float s_wheel_sign[MECANUM_WHEEL_NUM] =
+static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
+    MOTOR_POL_ID1, MOTOR_POL_ID2, MOTOR_POL_ID3, MOTOR_POL_ID4};
+
+     float max_a = (float )RC_MAX_CURRENT_A;
+     int16_t  raw[MECANUM_WHEEL_NUM];
+     uint8_t  fault_mask = 0u;
+
+
+    for (uint8_t i = 0 ; i < MECANUM_WHEEL_NUM; i++)
     {
-#if (MECANUM_WHEEL_NUM == 4)
-        MOTOR_POL_ID1, MOTOR_POL_ID2, MOTOR_POL_ID3, MOTOR_POL_ID4
+        raw[i] = 0;
+        RC_WheelRef[i] = 0.0f;      /* 断使能/故障时不残留上一拍目标值 */
+        
+        if((HAL_GetTick() - dj_wheel[i].last_tick) > RC_WHEEL_FEEDBACK_MS)
+         {
+                fault_mask |= (uint8_t)(1u << i);
+         }
+        if(dj_wheel[i].temp > RC_WHEEL_TEMP_LIMIT)
+         {
+                fault_mask |= (uint8_t)(1u << i);
+         }
 
-#endif
-    };
+    }
+      RC_WheelFault = fault_mask;
 
-    float   max_a = (float)RC_MAX_CURRENT_A;
-    int16_t raw[MECANUM_WHEEL_NUM];
-
-    for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+      if(mix_state == 2u || (fault_mask != 0u && RC_WHEEL_FAULT_ISOLATE == 0))
     {
-        float a = s_wheel_sign[i] * RC_WheelOut[i] * max_a;
+      RC_Wheel_Reset();
+      for(uint8_t i = 0 ; i < MECANUM_WHEEL_NUM; i++)
+      {
+          raw[i] = 0;
+          RC_WheelRef[i] = 0.0f;
+      }
 
-        /* 硬性绝对限幅：不论参数怎么配，都不允许超过 RC_ABS_CURRENT_A */
-        if (a >  RC_ABS_CURRENT_A) a =  RC_ABS_CURRENT_A;
-        if (a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+    }
+    else if (mix_state == 1u)
+    {
+      /* 整车回中：当拍四轮积分与目标归零，跳过普通 PI；
+       * 用实测转速做纯 P 反刹（恒逆着运动方向），停稳后撤掉电流 */
+      Mecanum_Reset();                    /* 旧斜坡一并清掉，重新推杆从零起步 */
+      for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+      {
+          float rpm = (float)dj_wheel[i].rpm;
+          float a;
 
-        /* 安培 → C620 原始值(±16384 ↔ ±20A, 见C620手册) */
+          s_wheel_i[i]   = 0.0f;
+          RC_WheelRef[i] = 0.0f;
+
+          if (wheel_abs(rpm) < RC_WHEEL_STOP_QUIET_RPM)
+          {
+              a = 0.0f;
+          }
+          else
+          {
+              a = wheel_clamp(-RC_WHEEL_STOP_KP * rpm, -RC_WHEEL_STOP_A, RC_WHEEL_STOP_A);
+          }
+
+          raw[i] = (int16_t)(a / 20.0f * 16384.0f);
+      }
+    }
+    else {
+
+      for(uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+     {
+       if(RC_WHEEL_FAULT_ISOLATE == 1 && (fault_mask & (uint8_t)(1u << i)))
+       {
+          s_wheel_i[i] = 0.0f;
+          raw[i] = 0;
+          continue;
+       }
+
+      float  ref = s_wheel_sign[i] * RC_WheelOut[i] * RC_WHEEL_RPM_MAX;
+      float  a;
+
+      RC_WheelRef[i] = ref;      /* 调试镜像：该轮目标转速 */
+
+      #if (RC_WHEEL_ENABLE_PID ==1)
+        a = RC_Wheel_Speed_PI(i, ref, dj_wheel[i].rpm, max_a);
+      #else 
+        (void)ref;
+        a = s_wheel_sign[i] * RC_WheelOut[i] * max_a;
+      #endif
+
+      if(a > RC_ABS_CURRENT_A) a = RC_ABS_CURRENT_A;
+      if(a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+
         raw[i] = (int16_t)(a / 20.0f * 16384.0f);
+
+     }
     }
 
     /* 6) 云台 GM6020（yaw）：限位 + 超速兜底 + 斜坡 + 安全开关 */
@@ -486,8 +633,6 @@ void RC_Control_Task(void)
     if (volt > volt_prev + GM_VOLT_SLEW) volt = volt_prev + GM_VOLT_SLEW;
     if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
 
-    
- 
      /*pitch电机赋值*/
       float pit  = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;
       float volt_p = RC_Pitch_Control(online, 1u, pit);
