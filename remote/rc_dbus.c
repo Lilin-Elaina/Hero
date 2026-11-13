@@ -707,16 +707,19 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
     if (rpm_d >  SPIN_YAW_RPM_MAX) rpm_d =  SPIN_YAW_RPM_MAX;
     if (rpm_d < -SPIN_YAW_RPM_MAX) rpm_d = -SPIN_YAW_RPM_MAX;
 
-    /* ⑥ 复用已验证的速度环（同一套 GM_YAW_SPD_KP / 限幅），积分只补零偏 */
+    /* ⑥ 关节速度环：反电势前馈 + P + 慢积分。
+     * 前馈是这套的关键：6020 想稳在 33 rpm，必须有 ≈3133 单位的反电势电压；
+     * 只靠 P 拿，就要 3133/300 ≈ 10 rpm 的稳态速度误差，
+     * 折算到航向上就是几十度——这就是"一段时间后被带偏"的来历。 */
     err_v = rpm_d - (float)gim6020.rpm;
-    volt  = GM_YAW_SPD_KP * err_v + s_spin_i;
+    volt  = SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + s_spin_i;
 
     if ((volt < GM_YAW_VOLT_MAX) && (volt > -GM_YAW_VOLT_MAX)) {
         s_spin_i += SPIN_YAW_KI * err_v * 0.001f;
         if (s_spin_i >  SPIN_YAW_I_MAX) s_spin_i =  SPIN_YAW_I_MAX;
         if (s_spin_i < -SPIN_YAW_I_MAX) s_spin_i = -SPIN_YAW_I_MAX;
     }
-    volt = GM_YAW_SPD_KP * err_v + s_spin_i;
+    volt = SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + s_spin_i;
 
     if (volt >  GM_YAW_VOLT_MAX) volt =  GM_YAW_VOLT_MAX;
     if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;

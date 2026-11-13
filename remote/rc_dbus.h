@@ -93,9 +93,16 @@
  * 结构：世界航向 P → 关节转速前馈（实测底盘角速度）→ 复用 SPD_KP 速度环。
  * 与 GM_YAW_HOLD_* 那套"挪位置目标"的稳向并行存在，靠模式选择二选一。 */
 #define SPIN_YAW_AIM_RATE   220.0f      /* 摇杆满杆的世界目标角速度 deg/s */
-#define SPIN_YAW_POS_KP     3.0f        /* 航向误差(deg) → 角速度(deg/s)，1/s。抖就降到 2 */
-#define SPIN_YAW_KI         30.0f       /* 速度环积分 V/(rpm·s)：只补零偏，别给大 */
-#define SPIN_YAW_I_MAX      1000.0f     /* 积分限幅（电压单位，≈10 rpm） */
+#define SPIN_YAW_KV         94.0f       /* 反电势前馈：电压单位/rpm（≈30000 单位 / 320 rpm）。
+                                          * 转 200°/s = 33 rpm 要 3133 单位，全靠 P 顶就要
+                                          * 60°/s 的稳态误差；有了它误差≈0 */
+#define SPIN_YAW_POS_KP     2.0f        /* 航向误差(deg) → 角速度(deg/s)，1/s。
+                                          * 低频来回晃就降到 1.0，跟得慢就升到 2.5 */
+#define SPIN_YAW_SPD_KP     300.0f      /* 世界角速度环 P：V per rpm（1800 V per deg/s）。
+                                          * 与跟随共用口径但独立可调；高频抖就降到 200 */
+#define SPIN_YAW_KI         120.0f      /* 只补摩擦/负载偏差：有 KV 前馈后不需要大积分，
+                                          * 大了反而在稳态附近来回蹭 */
+#define SPIN_YAW_I_MAX      4000.0f     /* 积分限幅（电压单位，≈42 rpm 的稳态电压） */
 #define SPIN_YAW_RPM_MAX    250.0f      /* 关节转速上限 rpm（同 GM_YAW_RPM_MAX） */
 #define SPIN_YAW_RATE_MAX   600.0f      /* 修正角速度上限 deg/s：防止 180° 折返错误把关节打满 */
 
