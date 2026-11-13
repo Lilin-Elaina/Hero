@@ -484,6 +484,7 @@ static float   s_hold_i    = 0.0f;   /* 稳向积分（deg/s），只在底盘�
 static float   s_spin_ref   = 0.0f;  /* 世界航向目标 deg（多圈连续） */
 static float   s_spin_i     = 0.0f;  /* 速度环积分（电压单位） */
 static uint8_t s_spin_ready = 0u;
+static uint16_t s_spin_bad  = 0u;   /* 失控计数（WorldYawRate 长时间超限） */
 
 volatile float RC_SpinYaw = 0.0f;
 volatile float RC_SpinWch = 0.0f;
@@ -677,8 +678,28 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
     /* ③ 目标世界角速度 = 摇杆那份 + 把误差拉回 */
     w_cmd = aim + SPIN_YAW_POS_KP * e;
 
+    if (w_cmd >  SPIN_YAW_RATE_MAX) w_cmd =  SPIN_YAW_RATE_MAX;
+    if (w_cmd < -SPIN_YAW_RATE_MAX) w_cmd = -SPIN_YAW_RATE_MAX;
+
     /* ④ 实测底盘角速度 = 枪口世界角速度 − 关节角速度（1 rpm = 6 °/s） */
     w_chassis = (float)INS_WorldYawRate - 6.0f * (float)gim6020.rpm;
+
+    /* ④.5 失控兜底：世界角速度长时间超 ±800 °/s，说明这条环在正反馈
+     * （符号/方向接反），收油并把目标拉回当前航向，绝不让它一直疯转。
+     * 正常工况下 ω_world 被钉在 0 附近，不可能触发。 */
+    if ((INS_WorldYawRate > 800.0f) || (INS_WorldYawRate < -800.0f)) {
+        if (s_spin_bad < 300u) s_spin_bad++;
+        if (s_spin_bad >= 300u) {
+            s_spin_ref = (float)INS_WorldYaw;
+            s_spin_i   = 0.0f;
+            s_spin_bad = 0u;
+            RC_SpinWch = w_chassis;
+            RC_YawVolt = 0.0f;
+            return 0.0f;
+        }
+    } else {
+        s_spin_bad = 0u;
+    }
 
     /* ⑤ 关节该转多少：ω_joint = w_cmd − ω_chassis，换成 rpm */
     rpm_d = (w_cmd - w_chassis) * (1.0f / 6.0f);

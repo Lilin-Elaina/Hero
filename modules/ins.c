@@ -99,9 +99,10 @@ static uint8_t s_inited;
 #define MAHONY_ACC_GATE  1.5f         /* |a| 偏离 1g 超此值(m/s^2) → 重力修正降到 10% */
 #define MAHONY_WARMUP    1000u        /* 收敛 1 s 后才对外发布 */
 /* 世界垂直轴 = SIGN·(ω·v)，v = 世界“上”在体轴系的投影。
- * 静止水平时应与既有约定 ω_yaw = -Gyro[0] 一致 → 取 -1；
- * 若小陀螺下越转越跑（补偿方向反了），改 +1。 */
-#define INS_WORLD_YAW_SIGN  (-1.0f)
+ * 判据：静止水平时它必须等于既有约定 ω_yaw = -Gyro[0]。
+ * 板子 x 轴朝下（所以当年才要那个负号）→ a_x≈-9.8 → v≈(-1,0,0)
+ * → g·v = -g0 → 要再取负一次才是 -g0，故 SIGN = +1。 */
+#define INS_WORLD_YAW_SIGN  (+1.0f)
 
 volatile float   INS_WorldYawRate;
 volatile float   INS_WorldYaw;

@@ -97,6 +97,7 @@
 #define SPIN_YAW_KI         30.0f       /* 速度环积分 V/(rpm·s)：只补零偏，别给大 */
 #define SPIN_YAW_I_MAX      1000.0f     /* 积分限幅（电压单位，≈10 rpm） */
 #define SPIN_YAW_RPM_MAX    250.0f      /* 关节转速上限 rpm（同 GM_YAW_RPM_MAX） */
+#define SPIN_YAW_RATE_MAX   600.0f      /* 修正角速度上限 deg/s：防止 180° 折返错误把关节打满 */
 
 
 extern  volatile uint8_t  RC_WheelFault;   /* 1=在线，0=失联 */
