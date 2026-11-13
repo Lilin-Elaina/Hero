@@ -13,6 +13,7 @@
 #include "spi.h"
 #include "main.h"
 #include <string.h>
+#include <math.h>
 
 /* ======================= 引脚 ======================= */
 #define INS_CS_PORT        GPIOC
@@ -84,6 +85,136 @@ volatile uint8_t  INS_GyroDump[16];
 
 static float s_sum[3];      /* 标定累加 */
 static uint8_t s_inited;
+
+/* ======================= Mahony 姿态解算 =======================
+ * 目的：拿到「世界垂直轴」上的角速度。板子竖直绑在枪架上，体轴 x 指上，
+ * pitch 一动 x 轴就离开竖直，-Gyro[0] 不再是世界偏航角速度，必须用重力
+ * 方向把陀螺投影到竖直轴上：ω_world = ω·v，v = 世界“上”在体轴系的投影。
+ * 无磁力计 → 偏航角靠陀螺积分，零偏偏移会让 INS_WorldYaw 缓慢漂移（正常）。
+ */
+#define MAHONY_KP        10.0f
+#define MAHONY_KI        0.008f
+#define MAHONY_HALFT     0.0005f      /* 1 kHz 的半个采样周期 */
+#define MAHONY_DT        0.001f
+#define MAHONY_ACC_GATE  1.5f         /* |a| 偏离 1g 超此值(m/s^2) → 重力修正降到 10% */
+#define MAHONY_WARMUP    1000u        /* 收敛 1 s 后才对外发布 */
+/* 世界垂直轴 = SIGN·(ω·v)，v = 世界“上”在体轴系的投影。
+ * 静止水平时应与既有约定 ω_yaw = -Gyro[0] 一致 → 取 -1；
+ * 若小陀螺下越转越跑（补偿方向反了），改 +1。 */
+#define INS_WORLD_YAW_SIGN  (-1.0f)
+
+volatile float   INS_WorldYawRate;
+volatile float   INS_WorldYaw;
+volatile float   INS_RollDeg;
+volatile float   INS_PitchDeg;
+volatile uint8_t INS_AhrsReady;
+
+static float    s_q0 = 1.0f, s_q1 = 0.0f, s_q2 = 0.0f, s_q3 = 0.0f;
+static float    s_exi, s_eyi, s_ezi;
+static uint16_t s_ahrs_cnt;
+
+static void ins_ahrs_step(float gx, float gy, float gz, float ax, float ay, float az)
+{
+    float norm = sqrtf(ax * ax + ay * ay + az * az);
+    float vx, vy, vz, ex, ey, ez, kp;
+    float q0q0, q0q1, q0q2, q1q1, q1q3, q2q2, q2q3, q3q3;
+    float t0, t1, t2, t3;
+    float gx_r = gx, gy_r = gy, gz_r = gz;
+
+    if (norm < 1.0f) {                    /* 数据无效，本拍跳过 */
+        return;
+    }
+
+    ax /= norm;
+    ay /= norm;
+    az /= norm;
+
+    q0q0 = s_q0 * s_q0;
+    q0q1 = s_q0 * s_q1;
+    q0q2 = s_q0 * s_q2;
+    q1q1 = s_q1 * s_q1;
+    q1q3 = s_q1 * s_q3;
+    q2q2 = s_q2 * s_q2;
+    q2q3 = s_q2 * s_q3;
+    q3q3 = s_q3 * s_q3;
+
+    /* 估计的重力方向（世界“上”在体轴系） */
+    vx = 2.0f * (q1q3 - q0q2);
+    vy = 2.0f * (q0q1 + q2q3);
+    vz = q0q0 - q1q1 - q2q2 + q3q3;
+
+    /* 实测重力与估计重力的叉积 = 姿态误差 */
+    ex = ay * vz - az * vy;
+    ey = az * vx - ax * vz;
+    ez = ax * vy - ay * vx;
+
+    /* 机体线加速度大时加速度计不可信，削弱修正，避免把姿态带偏 */
+    kp = MAHONY_KP;
+    if (fabsf(norm - 9.80665f) > MAHONY_ACC_GATE) {
+        kp *= 0.1f;
+    }
+
+    s_exi += ex * (MAHONY_KI * MAHONY_DT);
+    s_eyi += ey * (MAHONY_KI * MAHONY_DT);
+    s_ezi += ez * (MAHONY_KI * MAHONY_DT);
+
+    gx += kp * ex + s_exi;
+    gy += kp * ey + s_eyi;
+    gz += kp * ez + s_ezi;
+
+    /* 四元数积分 */
+    t0 = s_q0;
+    t1 = s_q1;
+    t2 = s_q2;
+    t3 = s_q3;
+    s_q0 += (-t1 * gx - t2 * gy - t3 * gz) * MAHONY_HALFT;
+    s_q1 += ( t0 * gx + t2 * gz - t3 * gy) * MAHONY_HALFT;
+    s_q2 += ( t0 * gy - t1 * gz + t3 * gx) * MAHONY_HALFT;
+    s_q3 += ( t0 * gz + t1 * gy - t2 * gx) * MAHONY_HALFT;
+
+    /* 归一化 */
+    norm = sqrtf(s_q0 * s_q0 + s_q1 * s_q1 + s_q2 * s_q2 + s_q3 * s_q3);
+    if (norm < 1e-6f) {
+        s_q0 = 1.0f; s_q1 = 0.0f; s_q2 = 0.0f; s_q3 = 0.0f;
+        return;
+    }
+    s_q0 /= norm;
+    s_q1 /= norm;
+    s_q2 /= norm;
+    s_q3 /= norm;
+
+    /* 用更新后的姿态重算竖直轴，把实测角速度投影上去（倾斜补偿的核心） */
+    q0q0 = s_q0 * s_q0;
+    q0q1 = s_q0 * s_q1;
+    q0q2 = s_q0 * s_q2;
+    q1q1 = s_q1 * s_q1;
+    q1q3 = s_q1 * s_q3;
+    q2q2 = s_q2 * s_q2;
+    q2q3 = s_q2 * s_q3;
+    q3q3 = s_q3 * s_q3;
+    vx = 2.0f * (q1q3 - q0q2);
+    vy = 2.0f * (q0q1 + q2q3);
+    vz = q0q0 - q1q1 - q2q2 + q3q3;
+
+    /* 负号是为了和既有约定 ω_yaw = -INS_Gyro[0] 对齐（静止水平时两者相等） */
+    INS_WorldYawRate = INS_WORLD_YAW_SIGN * (gx_r * vx + gy_r * vy + gz_r * vz) * 57.2957795f;
+
+    if (s_ahrs_cnt < MAHONY_WARMUP) {
+        s_ahrs_cnt++;
+        if (s_ahrs_cnt == MAHONY_WARMUP) {
+            INS_AhrsReady = 1u;
+        }
+        return;                     /* 收敛期内只跑姿态，不发布积分 */
+    }
+
+    INS_WorldYaw += INS_WorldYawRate * MAHONY_DT;
+    if (INS_WorldYaw >  36000.0f) INS_WorldYaw -= 72000.0f;
+    if (INS_WorldYaw < -36000.0f) INS_WorldYaw += 72000.0f;
+
+    /* 调试：传感器体系下的欧拉角 */
+    INS_RollDeg  = atan2f(2.0f * (q2q3 + q0q1), 1.0f - 2.0f * (q1q1 + q2q2)) * 57.2957795f;
+    INS_PitchDeg = asinf(2.0f * (q0q2 - q1q3)) * 57.2957795f;
+}
 
 /* ======================= 底层读写 ======================= */
 
@@ -441,4 +572,8 @@ void INS_Task(void)
     for (i = 0; i < 3; i++) {
         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
     }
+
+    /* ---- Mahony：世界偏航角速度 / 世界偏航角（倾斜补偿） ---- */
+    ins_ahrs_step(INS_Gyro[0], INS_Gyro[1], INS_Gyro[2],
+                  INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
 }

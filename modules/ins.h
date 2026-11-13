@@ -40,6 +40,17 @@ extern volatile float    INS_Acc[3];     /* m/s^2 */
 extern volatile float    INS_Gyro[3];    /* rad/s，已去零偏、已低通 */
 extern volatile float    INS_Bias[3];    /* 零偏（rad/s） */
 
+/* ---------------- 姿态解算输出（Mahony，倾斜补偿） ----------------
+ * 板子竖直绑在枪架上，体轴 x 指“上”。世界垂直轴在体轴系里的投影 v
+ * 随 pitch/roll 变化，所以世界偏航角速度 = ω·v，不能用 -Gyro[0] 代替。
+ * 单位：deg/s、deg。WorldYaw 为多圈连续值（不 wrap），差值自己去 180 折返。
+ */
+extern volatile float    INS_WorldYawRate;  /* 世界垂直轴角速度 deg/s，CCW+ */
+extern volatile float    INS_WorldYaw;      /* 世界偏航角 deg，多圈连续 */
+extern volatile float    INS_RollDeg;       /* 调试用 */
+extern volatile float    INS_PitchDeg;      /* 调试用 */
+extern volatile uint8_t  INS_AhrsReady;     /* 1 = 四元数已收敛 */
+
 /* ---------------- 调试：寄存器快照（0x00~0x0F） ---------------- */
 extern volatile uint8_t  INS_AccDump[16];   /* [0] 应为 0x1E */
 extern volatile uint8_t  INS_GyroDump[16];  /* [0] 应为 0x0F */
