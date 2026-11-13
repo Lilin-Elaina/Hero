@@ -8,7 +8,9 @@
 #include "usart.h"
 #include "DJ_Motor.h"
 #include "mecanum.h"
+#include "ins.h"
 #include <string.h>
+#include <math.h>
 
 RC_TypeDef RC_Data = {0};
 
@@ -419,6 +421,12 @@ static float s_wheel_i[MECANUM_WHEEL_NUM];
 
 /* 目标轮速镜像（只给调试器看，控制里不读） */
 float RC_WheelRef[4] = {0.0f};
+/* 调试镜像：yaw 闭环内部量（只读，给 Ozone 看） */
+volatile float RC_YawRef    = 0.0f;   /* 目标角 counts */
+volatile float RC_YawErr    = 0.0f;   /* 角度误差 counts */
+volatile float RC_YawRpmDes = 0.0f;   /* 位置环输出的目标转速 rpm */
+volatile float RC_YawVolt   = 0.0f;   /* 最终电压指令 */
+volatile float RC_YawI      = 0.0f;   /* 速度环积分 */
 
 static float wheel_abs(float x )
 {
@@ -461,6 +469,182 @@ static float RC_Wheel_Speed_PI(uint8_t id, float ref , float rpm, float limit)
 
 }
 
+/* ======================= 云台 yaw 角度闭环 ======================= */
+static float   s_yaw_ref   = 0.0f;   /* 目标角（counts） */
+static float   s_yaw_i     = 0.0f;   /* 速度环积分（电压单位） */
+static uint8_t s_yaw_ready = 0u;
+
+static float yaw_wrap(float d)
+{
+    while (d >  4096.0f) d -= 8192.0f;
+    while (d < -4096.0f) d += 8192.0f;
+    return d;
+}
+
+/* 枪口相对车头的夹角 α（度，-180 ~ +180）
+ * 逆时针（俯视）为正，即 α>0 表示枪口偏向车头左侧 */
+volatile float RC_GunAngle = 0.0f;
+
+float RC_GetOffsetAngle(void)
+{
+    /* 反馈失效时不能拿最后一帧冻结的角度当 α：
+     * 那份角度不再变化，跟随环会以为"还差这么多"，底盘就一直转下去。
+     * 这时按"枪口对正车头"处理（α=0），车仍能按车体系行驶。 */
+    if ((HAL_GetTick() - gim6020.last_tick) > GM_FEEDBACK_TIMEOUT_MS) {
+        RC_GunAngle = 0.0f;
+        return 0.0f;
+    }
+
+    float d = yaw_wrap((float)gim6020.angle - GM_YAW_ALIGN_COUNT);
+    d = d * 360.0f / 8192.0f;          /* counts → 度 */
+    RC_GunAngle = d;
+    return d;
+}
+
+float RC_Yaw_Control(uint8_t online, float stick)
+{
+    const float cur = (float)gim6020.angle;
+    /* 反馈超时等同离线：目标/积分/接管状态一起清，恢复后按当时的实际角重新接管
+     * （否则会拿最后一帧的旧角度当目标，恢复瞬间被拽一下） */
+    const uint8_t fresh = ((HAL_GetTick() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
+    uint8_t s_ins_fresh = 0u;
+    float d_ref, err, rpm_d, err_v, volt;
+
+    /* IMU 采样新鲜度：INS_Sample 每成功采一帧 +1，20 ms 不动 = SPI 挂了。
+     * 读失败时 INS_Gyro[] 会停在最后一帧，拿它做稳向补偿等于一直补一个假转速。 */
+    {
+        static uint32_t s_i_cnt = 0u;
+        static uint32_t s_i_tick = 0u;
+        uint32_t t_now = HAL_GetTick();
+
+        if (INS_Sample != s_i_cnt) {
+            s_i_cnt  = INS_Sample;
+            s_i_tick = t_now;
+        }
+        if ((INS_Ready != 0u) && ((t_now - s_i_tick) <= 20u)) {
+            s_ins_fresh = 1u;
+        }
+    }
+
+    if ((online == 0u) || (fresh == 0u) || (s_yaw_ready == 0u)) {
+        s_yaw_ref   = cur;
+        s_yaw_i     = 0.0f;
+        s_yaw_ready = (uint8_t)((online != 0u) && (fresh != 0u));
+        RC_YawRef    = s_yaw_ref;
+        RC_YawErr    = 0.0f;
+        RC_YawRpmDes = 0.0f;
+        RC_YawVolt   = 0.0f;
+        RC_YawI      = s_yaw_i;
+        return 0.0f;
+    }
+
+    /* ① 摇杆 → 目标角增量（松杆保持）
+     * 加一个加速度限制：原来松杆瞬间 d_ref 从满值直接掉到 0，
+     * 位置目标（积分项）和速度前馈同时阶跃，制动冲击很大。
+     * 这里限制每拍的变化量，满杆约 100 ms 加满 / 松掉。 */
+    {
+        static float s_dref = 0.0f;
+        float dref_tgt = GM6020_SIGN * GM_YAW_STICK_RATE * stick * 0.001f;
+        float dd = dref_tgt - s_dref;
+
+        if (dd >  GM_YAW_STICK_ACCEL) dd =  GM_YAW_STICK_ACCEL;
+        if (dd < -GM_YAW_STICK_ACCEL) dd = -GM_YAW_STICK_ACCEL;
+
+        s_dref += dd;
+        d_ref   = s_dref;
+    }
+    s_yaw_ref += d_ref;
+
+    /* ①.2 松杆就不攒积分
+     * 云台 yaw 是水平轴，没有重力要顶；松杆后位置环的 P 项足够把角度按住。
+     * 积分只在"主动推杆"时有用，松杆还留着它，就会慢慢把枪口顶偏再弹回来。 */
+    if (d_ref == 0.0f) {
+        s_yaw_i = 0.0f;
+    }
+
+    /* ①.5 底盘转动补偿（稳向）
+     * 问题：目标角是「相对车头」的，车头一转，枪口就跟着转。
+     * 做法：车体转多少，目标角就反向退多少 → 枪口在世界里不动。
+     * 只在「确实在转」时积分，静止完全不积分 → 没有零偏漂移。 */
+    {
+        /* IMU 绑在枪架上（跟着 yaw/pitch 一起动），INS_Gyro[0] 读到的是
+         * 「枪口」角速度 = 底盘角速度 + 关节角速度。
+         * 稳向只该补底盘那一份。
+         * 关节角速度必须用「实测」而不是摇杆指令：松杆那一拍指令已经归零，
+         * 云台还在转，用指令会把这段余速误当成底盘在转，把目标反向拉走
+         * （一边制动、一边被目标拽回来）。
+         * 实测 rpm 有 1 rpm(=6°/s) 的量化台阶，先低通再减；
+         * 操作手正在快转（|关节角速度| 超过 GM_YAW_STAB_JOINT_MAX）时直接让位，
+         * 那一小段本来就是他手动在控，稳向不掺和。 */
+        float wz_muzzle = -(float)INS_Gyro[0] * 57.2957795f;   /* 枪口角速度 deg/s */
+        float wz_joint  = 0.0f;
+        uint8_t stab_ok = 1u;
+#if (GM_YAW_STAB_JOINT_FF)
+        {
+            static float s_joint_dps = 0.0f;
+
+            s_joint_dps += ((float)gim6020.rpm * 6.0f - s_joint_dps) * GM_YAW_JOINT_LPF;
+            wz_joint = s_joint_dps;
+
+            if ((wz_joint > GM_YAW_STAB_JOINT_MAX) || (wz_joint < -GM_YAW_STAB_JOINT_MAX)) {
+                stab_ok = 0u;
+            }
+        }
+#endif
+        float wz_chassis = wz_muzzle - wz_joint;               /* 底盘角速度 deg/s */
+
+        /* IMU 采样停了就不要再积分：INS_Gyro[] 会停在最后一帧，越积越偏 */
+        if ((stab_ok != 0u) && (s_ins_fresh != 0u) &&
+            (wz_chassis > GM_YAW_STAB_DEAD || wz_chassis < -GM_YAW_STAB_DEAD)) {
+            s_yaw_ref -= GM_YAW_STAB_SIGN * wz_chassis * GM_YAW_COUNT_PER_DEG * 0.001f;
+        }
+    }
+
+    s_yaw_ref  = cur + yaw_wrap(s_yaw_ref - cur);   /* 折到 ±4096，防绕圈 */
+
+    /* ② 位置 P + 速度前馈 */
+    err   = yaw_wrap(s_yaw_ref - cur);
+
+    /* ②.5 到位清零积分
+     * 现象：快转到位、定住 1~2 s 后又小幅度回摆一下。
+     * 原因：到位瞬间速度环还留着正向积分，位置环慢慢把角度拽回来，
+     *       积分一点点卸，卸完才不动 —— 那一下回摆就是它在卸。
+     * 做法：位置误差和转速都小到"已经到位"时，直接把积分清掉。 */
+    if ((err < GM_YAW_ARRIVE_CNT) && (err > -GM_YAW_ARRIVE_CNT) &&
+        (gim6020.rpm < GM_YAW_ARRIVE_RPM) && (gim6020.rpm > -GM_YAW_ARRIVE_RPM)) {
+        s_yaw_i = 0.0f;
+    }
+
+    rpm_d = GM_YAW_POS_DIR * GM_YAW_ANG_KP * err
+          + d_ref * 1000.0f / 136.53f
+          - GM_YAW_POS_DIR * GM_YAW_ANG_KD * (float)gim6020.rpm;   /* D：临近目标先减速，别冲过去 */
+    if (rpm_d >  GM_YAW_RPM_MAX) rpm_d =  GM_YAW_RPM_MAX;
+    if (rpm_d < -GM_YAW_RPM_MAX) rpm_d = -GM_YAW_RPM_MAX;
+
+    /* ③ 速度 PI（条件积分 + 限幅） */
+    err_v = rpm_d - (float)gim6020.rpm;
+    volt  = GM_YAW_SPD_KP * err_v + s_yaw_i;
+
+    if ((volt < GM_YAW_VOLT_MAX) && (volt > -GM_YAW_VOLT_MAX)) {
+        s_yaw_i += GM_YAW_SPD_KI * err_v * 0.001f;
+        if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+        if (s_yaw_i < -GM_YAW_I_MAX) s_yaw_i = -GM_YAW_I_MAX;
+    }
+    volt = GM_YAW_SPD_KP * err_v + s_yaw_i;
+
+    if (volt >  GM_YAW_VOLT_MAX) volt =  GM_YAW_VOLT_MAX;
+    if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;
+
+    /* 调试镜像 */
+    RC_YawRef    = s_yaw_ref;
+    RC_YawErr    = err;
+    RC_YawRpmDes = rpm_d;
+    RC_YawVolt   = volt;
+    RC_YawI      = s_yaw_i;
+
+    return volt;
+}
+
 /* ------------------------------------------------------------------ */
 /* 控制任务：1kHz 调用一次                                              */
 /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              */
@@ -473,12 +657,84 @@ void RC_Control_Task(void)
 
 #if (RC_ENABLE_SW_POS != 0)
   #if (RC_ENABLE_USE_LEFT)
-    uint8_t armed = (RC_Data.s_left  == RC_ENABLE_SW_POS);
+    #define RC_ARM_SW   (RC_Data.s_left)
   #else
-    uint8_t armed = (RC_Data.s_right == RC_ENABLE_SW_POS);
+    #define RC_ARM_SW   (RC_Data.s_right)
   #endif
 #else
-    uint8_t armed = 1;
+  #define RC_ARM_SW     1
+#endif
+
+    /* 右拨杆三挡：下=底盘失能 / 中=跟随 / 上=小陀螺
+     * 去抖：位置连续 40ms 不变才认（上电慢 40ms），一变化就重新计时；
+     * 位域单帧错乱读到的“别的值”一律按失能处理（安全侧）。 */
+#if (RC_ENABLE_SW_POS == 0)
+    uint8_t armed     = 1u;
+    uint8_t follow_on = 0u;
+    uint8_t spin_mode = 0u;
+#else
+    static uint8_t  s_sw_prev = 0u;
+    static uint16_t s_sw_cnt  = 0u;
+
+    uint8_t sw_now = (uint8_t)RC_ARM_SW;
+
+    if (sw_now == s_sw_prev) {
+        if (s_sw_cnt < 60u) s_sw_cnt++;
+    } else {
+        s_sw_prev = sw_now;
+        s_sw_cnt  = 0u;
+    }
+
+    uint8_t sw_ok = (s_sw_cnt >= 40u);
+
+    uint8_t armed     = 0u;
+    uint8_t follow_on = 0u;
+    uint8_t spin_mode = 0u;
+
+    if (sw_ok) {
+        if (sw_now == RC_SW_MID) {          /* 中位：底盘跟随 */
+            armed     = 1u;
+            follow_on = 1u;
+        } else if (sw_now == RC_SW_UP) {    /* 上位：小陀螺，底盘自己转 */
+            armed     = 1u;
+            spin_mode = 1u;
+        }
+    }
+
+    /* 自动运动（跟随/小陀螺）必须有可信反馈：云台角、IMU、四轮 任一路失效就退出。
+     * 只关这两个模式，底盘仍可手推，不会整车瘫掉。 */
+    {
+        uint32_t t_now = HAL_GetTick();
+        uint8_t  yaw_ok   = ((t_now - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
+        uint8_t  ins_ok   = ((INS_Ready != 0u) && (INS_CalDone != 0u)) ? 1u : 0u;
+        uint8_t  wheel_ok = 1u;
+        uint8_t  wi;
+
+        for (wi = 0u; wi < MECANUM_WHEEL_NUM; wi++) {
+            if ((t_now - dj_wheel[wi].last_tick) > RC_WHEEL_FEEDBACK_MS) {
+                wheel_ok = 0u;
+            }
+        }
+
+        /* 采样停摆（SPI 读失败）等同于没有 IMU */
+        {
+            static uint32_t s_i_cnt = 0u;
+            static uint32_t s_i_tick = 0u;
+
+            if (INS_Sample != s_i_cnt) {
+                s_i_cnt  = INS_Sample;
+                s_i_tick = t_now;
+            }
+            if ((t_now - s_i_tick) > 20u) {
+                ins_ok = 0u;
+            }
+        }
+
+        if ((yaw_ok == 0u) || (ins_ok == 0u) || (wheel_ok == 0u)) {
+            follow_on = 0u;
+            spin_mode = 0u;
+        }
+    }
 #endif
 
     uint8_t enabled = (online && armed);
@@ -504,11 +760,70 @@ void RC_Control_Task(void)
     /* 2) 摇杆归一化：死区内为 0，范围 -1.0 ~ +1.0 */
     float fwd  = online ?  RC_Norm(RC_CH_FWD)  : 0.0f;
     float spin = online ? RC_Norm(RC_CH_TURN) : 0.0f;
+
+    /* 小陀螺模式：底盘自己转起来，转轮再叠加一点微调 */
+    if (spin_mode != 0u)
+    {
+        spin = GM_SPIN_BASE + RC_SPIN_TRIM * spin;
+        if (spin >  1.0f) spin =  1.0f;
+        if (spin < -1.0f) spin = -1.0f;
+    }
     float strafe = 0.0f;
 #if (MECANUM_WHEEL_NUM == 4)
    
    strafe  =online ? RC_Norm(RC_CH_STRAFE) : 0.0f;
 
+#endif
+
+#if (GM_GUN_ANGLE_ENABLE)
+    float alpha_deg = RC_GetOffsetAngle();         /* 枪口相对车头，度，+ 为左 */
+
+    /* 枪口系 → 车体系：摇杆方向按枪口朝向解释
+     * 实车标定（2026-11-13）：α=0 / α=±180 正确，α=±90 两组全反
+     * → 旋转方向取反（等价于用 -α 旋转），0 和 180 不受影响
+     *   fwd_b = cosα·vx_g - sinα·vy_g
+     *   vy_b  = sinα·vx_g + cosα·vy_g
+     * α=0 时必须是单位阵（推左就往左），这条是判据 */
+    {
+        float a = GM_GUN_ANGLE_SIGN * alpha_deg * 0.017453292f;
+        float c = cosf(a);
+        float s = sinf(a);
+        float fwd_g    = fwd;
+        float strafe_g = strafe;
+
+        fwd    = c * fwd_g - s * strafe_g;
+        strafe = s * fwd_g + c * strafe_g;
+    }
+
+    /* 底盘跟随（右拨杆中位）：车头追向枪口，α→0
+     * 只用云台编码器，零漂、不积分。
+     * 结构 = 死区 + 比例 P + 固定起步量 KICK + 限幅，没有 I 项：
+     * 纯 P 在最后几度只剩几十分之一的指令、推不动车，所以加一个常数起步量；
+     * 若出现"转一下、停一下、又转"，先调 KICK 和轮速响应，别一味加 KICK。 */
+    if (follow_on != 0u)
+    {
+        float e = alpha_deg;
+
+        if      (e >  RC_FOLLOW_DEAD) e -= RC_FOLLOW_DEAD;
+        else if (e < -RC_FOLLOW_DEAD) e += RC_FOLLOW_DEAD;
+        else                          e  = 0.0f;
+
+        if (e != 0.0f)
+        {
+            /* 起步量 + 比例：纯比例的尾巴只剩几十分之一的指令，推不动车 → 拖 */
+            float mag = RC_FOLLOW_KP * ((e > 0.0f) ? e : -e) + RC_FOLLOW_KICK;
+
+            /* 起步量 + 比例；RC_FOLLOW_SIGN 之前定义了却没参与输出，已接上 */
+            spin = RC_FOLLOW_SIGN * ((e > 0.0f) ? 1.0f : -1.0f) * mag;
+        }
+        else
+        {
+            spin = 0.0f;
+        }
+
+        if (spin >  RC_FOLLOW_MAX) spin =  RC_FOLLOW_MAX;
+        if (spin < -RC_FOLLOW_MAX) spin = -RC_FOLLOW_MAX;
+    }
 #endif
 
    uint8_t mix_state = Mecanum_Mix(fwd, strafe, spin, enabled, RC_WheelOut);
@@ -573,6 +888,14 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
           s_wheel_i[i]   = 0.0f;
           RC_WheelRef[i] = 0.0f;
 
+          /* 故障轮：反馈已停更，它的 rpm 是最后一帧的旧值，
+           * 拿它算刹车会一直往已停的轮子上灌逆向电流 → 直接给 0 */
+          if ((fault_mask & (uint8_t)(1u << i)) != 0u)
+          {
+              raw[i] = 0;
+              continue;
+          }
+
           if (wheel_abs(rpm) < RC_WHEEL_STOP_QUIET_RPM)
           {
               a = 0.0f;
@@ -618,20 +941,30 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
 
     /* 6) 云台 GM6020（yaw）：限位 + 超速兜底 + 斜坡 + 安全开关 */
     float gim  = online ? RC_Norm(RC_CH_GIMBAL) : 0.0f;
-    float volt = GM6020_SIGN * gim * GM6020_VOLT_MAX;
+    float volt = RC_Yaw_Control(online, gim);
 
-    /* ① 反馈超时 → 断电（没有反馈就等于没有限位） */
+    /* ① 反馈超时 / 遥控离线 → 断电（没有反馈就等于没有限位） */
+    uint8_t yaw_kill = 0u;
+    if (online == 0u)
+        yaw_kill = 1u;
     if ((HAL_GetTick() - gim6020.last_tick) > GM_FEEDBACK_TIMEOUT_MS)
-        volt = 0.0f;
+        yaw_kill = 1u;
 
     /* ② 超速兜底：不管角度算得对不对，转太快就断 */
     if (gim6020.rpm > GM_RPM_LIMIT || gim6020.rpm < -GM_RPM_LIMIT)
-        volt = 0.0f;
+        yaw_kill = 1u;
 
-    /* ④ 斜坡：每拍最多变 GM_VOLT_SLEW，避免扭矩冲击 */
+    /* ④ 斜坡：每拍最多变 GM_VOLT_SLEW，避免扭矩冲击
+     *    故障时不能走斜坡——否则上一拍 18000，这一拍只是 17800，
+     *    要 90 ms 才掉到 0，等于故障期间还在给扭矩。直接把斜坡状态也清掉。 */
     static float volt_prev = 0.0f;
-    if (volt > volt_prev + GM_VOLT_SLEW) volt = volt_prev + GM_VOLT_SLEW;
-    if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+    if (yaw_kill != 0u) {
+        volt      = 0.0f;
+        volt_prev = 0.0f;       /* 恢复时从 0 重新往上爬 */
+    } else {
+        if (volt > volt_prev + GM_VOLT_SLEW) volt = volt_prev + GM_VOLT_SLEW;
+        if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+    }
 
      /*pitch电机赋值*/
       float pit  = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;

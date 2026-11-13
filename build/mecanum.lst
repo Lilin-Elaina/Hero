@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
   29:modules/mecanum.c **** /* 单轮斜坡：把 cur 朝 tgt 移动，每拍最多走 max_step                     */
   30:modules/mecanum.c **** /* ------------------------------------------------------------------ */
   31:modules/mecanum.c **** static float mec_slew(float cur, float tgt, float max_step)
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 2
 
 
   32:modules/mecanum.c **** {
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
   41:modules/mecanum.c **** /* ------------------------------------------------------------------ */
   42:modules/mecanum.c **** void Mecanum_Reset(void)
   43:modules/mecanum.c **** {
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 3
 
 
   44:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  116              	.LVL10:
   44:modules/mecanum.c ****     {
  117              		.loc 1 44 18 is_stmt 0 view .LVU21
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 4
 
 
  118 0000 0023     		movs	r3, #0
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
   62:modules/mecanum.c **** /* ------------------------------------------------------------------ */
   63:modules/mecanum.c **** uint8_t Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
   64:modules/mecanum.c ****                  float *out)
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 5
 
 
   65:modules/mecanum.c **** { 
@@ -287,7 +287,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
   76:modules/mecanum.c **** 
   77:modules/mecanum.c ****      /*逆解算摇杆值得到各轮归一化的值*//*将摇杆值归一化后的值进行比例�
   78:modules/mecanum.c ****     /* 1) 速度指令合成：摇杆比例缩放 + 归一化后残留死区清零 */
-  79:modules/mecanum.c **** 
+  79:modules/mecanum.c ****  
   80:modules/mecanum.c ****     if(!enabled)
  191              		.loc 1 80 5 view .LVU38
  192              		.loc 1 80 7 is_stmt 0 view .LVU39
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  197 0016 F0EE418A 		vmov.f32	s17, s2
   81:modules/mecanum.c **** {
   82:modules/mecanum.c ****     Mecanum_Reset();
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 6
 
 
   83:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
@@ -306,7 +306,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
   85:modules/mecanum.c ****         out[i] = 0.0f;
   86:modules/mecanum.c ****     }
   87:modules/mecanum.c ****     return 2u;
-  88:modules/mecanum.c **** }
+  88:modules/mecanum.c **** }                
   89:modules/mecanum.c **** 
   90:modules/mecanum.c **** //进行速度归一化死区判断
   91:modules/mecanum.c ****     if (mec_abs(fwd)    < MEC_DEADBAND_NORM) fwd    = 0.0f;
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  239              		.loc 1 95 5 is_stmt 1 view .LVU52
   96:modules/mecanum.c ****     vy = strafe * MEC_MAX_LINEAR * MEC_STRAFE_RATIO;
  240              		.loc 1 96 5 view .LVU53
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 7
 
 
  241              		.loc 1 96 8 is_stmt 0 view .LVU54
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  287 00ac 05EB8403 		add	r3, r5, r4, lsl #2
   85:modules/mecanum.c ****     }
  288              		.loc 1 85 16 view .LVU69
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 8
 
 
  289 00b0 0022     		movs	r2, #0
@@ -436,7 +436,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  298              		.loc 1 83 18 is_stmt 1 discriminator 1 view .LVU72
  299 00b8 032C     		cmp	r4, #3
  300 00ba F7D9     		bls	.L18
-  87:modules/mecanum.c **** }
+  87:modules/mecanum.c **** }                
  301              		.loc 1 87 12 is_stmt 0 view .LVU73
  302 00bc 0220     		movs	r0, #2
  303 00be ACE0     		b	.L19
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  331 00e6 032C     		cmp	r4, #3
  332 00e8 EAD9     		bls	.L25
  105:modules/mecanum.c ****         }
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 9
 
 
  106:modules/mecanum.c ****         return 1u;
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  379 0126 04AA     		add	r2, sp, #16
  380 0128 02EB8302 		add	r2, r2, r3, lsl #2
  381 012c 42ED047A 		vstr.32	s15, [r2, #-16]
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 10
 
 
  113:modules/mecanum.c **** 
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  120:modules/mecanum.c ****    
  424              		.loc 1 120 17 view .LVU112
  425 0172 0126     		movs	r6, #1
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 11
 
 
  119:modules/mecanum.c ****      accel_only = 1u;
@@ -613,7 +613,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  433              	.LBB7:
  434              	.LBB5:
  125:modules/mecanum.c ****     {
- 126:modules/mecanum.c **** 
+ 126:modules/mecanum.c ****  
  127:modules/mecanum.c ****         float d = mec_abs(tgt[i] - mec_prev[i]);
  128:modules/mecanum.c ****         if (d > dmax) dmax = d;
  129:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  466              		.loc 1 127 19 view .LVU125
  467 01a4 38EE680A 		vsub.f32	s0, s16, s17
  468 01a8 FFF7FEFF 		bl	mec_abs
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 12
 
 
  469              	.LVL46:
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  512 01d6 1DE0     		b	.L38
  513              	.LVL53:
  514              	.L47:
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 13
 
 
  133:modules/mecanum.c ****     k    = (dmax <= step) ? 1.0f : (step / dmax);
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  558              	.LVL58:
  559              	.L19:
  143:modules/mecanum.c **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 14
 
 
  144:modules/mecanum.c **** }
@@ -838,27 +838,27 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 1
  615              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  616              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  617              		.file 4 "modules/mecanum.h"
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 15
 
 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s 			page 16
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 mecanum.c
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:20     .text.mec_slew:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:25     .text.mec_slew:00000000 mec_slew
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:67     .text.mec_abs:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:72     .text.mec_abs:00000000 mec_abs
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:100    .text.Mecanum_Reset:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:106    .text.Mecanum_Reset:00000000 Mecanum_Reset
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:145    .text.Mecanum_Reset:00000018 $d
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:593    .bss.mec_prev:00000000 mec_prev
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:150    .text.Mecanum_Mix:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:156    .text.Mecanum_Mix:00000000 Mecanum_Mix
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:578    .text.Mecanum_Mix:00000224 $d
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:600    .rodata.MECANUM_DIR:00000000 MECANUM_DIR
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:590    .bss.mec_prev:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccbPTH0S.s:597    .rodata.MECANUM_DIR:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:20     .text.mec_slew:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:25     .text.mec_slew:00000000 mec_slew
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:67     .text.mec_abs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:72     .text.mec_abs:00000000 mec_abs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:100    .text.Mecanum_Reset:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:106    .text.Mecanum_Reset:00000000 Mecanum_Reset
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:145    .text.Mecanum_Reset:00000018 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:593    .bss.mec_prev:00000000 mec_prev
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:150    .text.Mecanum_Mix:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:156    .text.Mecanum_Mix:00000000 Mecanum_Mix
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:578    .text.Mecanum_Mix:00000224 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:600    .rodata.MECANUM_DIR:00000000 MECANUM_DIR
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:590    .bss.mec_prev:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxrBvfg.s:597    .rodata.MECANUM_DIR:00000000 $d
 
 NO UNDEFINED SYMBOLS

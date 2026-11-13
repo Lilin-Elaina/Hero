@@ -43,7 +43,7 @@
 #define RC_WHEEL_RPM_MAX       8000.0f   /*rpm*/
 #define RC_WHEEL_SPD_KP        0.002f      /*速度环比例系数*/
 #define RC_WHEEL_SPD_KI        0.002f     /*速度环积分系数*/
-#define RC_WHEEL_FF_A_PER_RPM  0.0f       /*前馈系数：未标定前保持0*/
+#define RC_WHEEL_FF_A_PER_RPM  0.0008f    /*前馈系数：按 7758rpm≈7A 估的起点，实测再校准*/
 #define RC_WHEEL_I_MAX         1.5f       /*积分只做静差微调，封顶1.5A*/
 
 #define RC_WHEEL_STOP_KP       0.002f     /*回中制动系数A/rpm：输出=-STOP_KP*rpm，恒逆实测转速*/
@@ -52,7 +52,37 @@
 
 #define RC_WHEEL_FEEDBACK_MS   100u        /*超过这个时间没反馈就认为失联，输出 0 */
 #define RC_WHEEL_TEMP_LIMIT    75u        /*温控值，超过这个温度就不输出电流*/
-#define RC_WHEEL_FAULT_ISOLATE 0      /*整车断电 */
+#define RC_WHEEL_FAULT_ISOLATE 1      /*1=只停故障轮，其余三轮照跑；0=整车断电*/
+
+/* ---- 底盘跟随（右拨杆中位）：把车头追向枪口，α→0 ----
+ * 用云台编码器算相对角，零漂、不依赖陀螺；速度环仍在下面闭环 */
+#define RC_FOLLOW_KP       0.014f   /*自转指令 / 度：α=10° 给 0.14（原 0.020，降速用这个）*/
+#define RC_FOLLOW_KICK     0.035f   /*起步量：死区外至少给这么多，否则小角度推不动车（原 0.050）*/
+#define RC_FOLLOW_DEAD     3.0f     /*死区，度：±3° 内不纠，免得到位后左右蹭（原 2.5）*/
+#define RC_FOLLOW_MAX      0.80f    /*自转指令上限（占满量程比例）：只当大角度余量，
+                                     *不要用它降速——削顶会让车头一顿一顿地爬，
+                                     *那一下一下的脉冲会经稳向传到云台上*/
+#define RC_FOLLOW_SIGN     1.0f     /*方向：实车若越追越偏就改成 -1.0f*/
+
+/* ---- 小陀螺（右拨杆上位）：底盘基础自转 ---- */
+#define GM_SPIN_BASE       0.45f    /*基础自转指令（占满量程）：0.45 约半速*/
+#define RC_SPIN_TRIM       0.50f    /*转轮摇杆对自转的微调权重*/
+
+/* ---- 枪口系换系 ---- */
+#define GM_GUN_ANGLE_SIGN  1.0f     /*α 方向：若云台朝左时 α 反而变小就改 -1.0f*/
+
+/* ---- 云台稳向（底盘转动补偿）---- */
+#define GM_YAW_STAB_SIGN   1.0f         /*方向：逆时针推车，枪口若跟着转就改 -1.0f*/
+#define GM_YAW_STAB_DEAD     2.0f       /*底盘角速度低于此值不补（deg/s）：静止时完全不积分，无零偏漂移
+                                         *★注意：跟随模式必须开着它。关掉后底盘转、关节角不变，
+                                         *  跟随环永远看不到误差收敛，就会一直自转下去。*/
+#define GM_YAW_COUNT_PER_DEG 22.755556f /*8192/360：度 → 编码器 count*/
+#define GM_YAW_STAB_JOINT_FF 1u         /*1=用实测关节角速度修正（推荐）；
+                                         *0=退回"把枪口角速度当底盘角速度"的旧做法*/
+#define GM_YAW_JOINT_LPF     0.30f      /*关节角速度低通系数（1kHz 下 ≈3ms）：
+                                         *实测 rpm 有 1rpm=6°/s 的台阶，不平滑会抖*/
+#define GM_YAW_STAB_JOINT_MAX 20.0f     /*|关节角速度| 超过此值(deg/s)时稳向让位：
+                                         *操作手在快转，这一段由他手动控制*/
 
 
 extern  volatile uint8_t  RC_WheelFault;   /* 1=在线，0=失联 */
@@ -62,6 +92,12 @@ void    RC_Wheel_Reset(void);
  * 下标：0=左前 1=右前 2=右后 3=左后（= MECANUM_WHEEL_NUM）
  * 已乘 MOTOR_POL 极性，单位 rpm，范围 ±RC_WHEEL_RPM_MAX(8000) */
 extern float RC_WheelRef[4];
+/* yaw 闭环调试镜像（Ozone 直接写变量名） */
+extern volatile float RC_YawRef;      /* 目标角 counts */
+extern volatile float RC_YawErr;      /* 角度误差 counts */
+extern volatile float RC_YawRpmDes;   /* 目标转速 rpm */
+extern volatile float RC_YawVolt;     /* 输出电圧 */
+extern volatile float RC_YawI;        /* 速度环积分 */
 
 /*
 + * CAN2 底盘电机指令方向补偿。
@@ -87,6 +123,38 @@ extern float RC_WheelRef[4];
 #define GM_FEEDBACK_TIMEOUT_MS  100      /* 超过 100ms 没反馈 → 输出 0 */
 #define GM_RPM_LIMIT     400.0f          /* 超速兜底：|rpm| 超过这个值就断电压 */
 #define GM_VOLT_SLEW     200.0f          /* 斜坡：每 1ms 电压最多变化这么多 */
+
+/* ---- 云台 yaw 角度闭环（2026-11-13 实测标定后启用）----
+ *  实测：逆时针（俯视）= gim6020.angle 增大 = gim6020.rpm 为正
+ *        INS_Gyro[0] 在同一转动下为负 ⇒ ω_yaw = -INS_Gyro[0]
+ *  信号流：摇杆 → 目标角 s_ref → 位置P → 目标转速 → 速度PI → 电压
+ */
+#define GM_YAW_POS_DIR      1.0f         /* 角度误差→转速：正 rpm 使 angle 增大 */
+#define GM_YAW_STICK_RATE   5000.0f      /* 满杆目标角速度 counts/s ≈ 220°/s */
+#define GM_YAW_STICK_ACCEL  0.05f        /* 每拍允许的 d_ref 变化量（counts/ms/拍）：
+                                          *0.05 → 满杆约 100ms 加满，松杆同样斜坡退出*/
+#define GM_YAW_ANG_KP       0.22f        /* 位置 P：rpm / count */
+#define GM_YAW_ANG_KD       0.60f        /* 位置 D：rpm / rpm，临近目标先减速，抑制停偏后慢慢爬回 */
+#define GM_YAW_RPM_MAX      250.0f       /* 目标转速限幅 */
+#define GM_YAW_SPD_KP       300.0f       /* 速度 P：电压 / rpm */
+#define GM_YAW_SPD_KI       80.0f        /* 速度 I：只修静差，调大容易低频摆 */
+#define GM_YAW_I_MAX        8000.0f      /* 积分限幅 */
+#define GM_YAW_ARRIVE_CNT   30.0f        /* 到位判定：位置误差 counts（30≈1.3°） */
+#define GM_YAW_ARRIVE_RPM   15.0f        /* 到位判定：转速 rpm，两条同时满足就清积分 */
+#define GM_YAW_VOLT_MAX     18000.0f     /* 电压限幅 */
+
+/* ---- 枪口系平移（阶段 3/4）----
+ *  ALIGN = 云台正对车头时 gim6020.angle 的读数（2026-11-13 实测 = 100）
+ *  α = wrap(angle - ALIGN)：α>0 表示枪口在车头左侧（逆时针）
+ *  摇杆按枪口方向解释：v_body = R(α) · v_gun
+ *        vx_b = cosα·vx_g - sinα·vy_g
+ *        vy_b = sinα·vx_g + cosα·vy_g
+ *  GM_GUN_ANGLE_ENABLE = 0 时退回纯车体系（摇杆方向 = 车头方向）
+ */
+#define GM_YAW_ALIGN_COUNT   100.0f
+#define GM_GUN_ANGLE_ENABLE  1u
+
+extern volatile float RC_GunAngle;       /* 调试镜像：当前 α（度，-180~+180） */
 /* ==============================================================================
  * 云台pitch:位置P + 速度PI环 ->转矩电压
  * 

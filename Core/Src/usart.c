@@ -94,18 +94,18 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     /* UART5 clock enable */
     __HAL_RCC_UART5_CLK_ENABLE();
 
-    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
     /**UART5 GPIO Configuration
-    PB13     ------> UART5_TX
+    PC12     ------> UART5_TX
     PD2     ------> UART5_RX
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF14_UART5;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    GPIO_InitStruct.Alternate = GPIO_AF8_UART5;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     GPIO_InitStruct.Pin = GPIO_PIN_2;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -134,7 +134,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* uartHandle)
     __HAL_LINKDMA(uartHandle,hdmarx,hdma_uart5_rx);
 
     /* UART5 interrupt Init */
-    HAL_NVIC_SetPriority(UART5_IRQn, 1, 0);
+    HAL_NVIC_SetPriority(UART5_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(UART5_IRQn);
   /* USER CODE BEGIN UART5_MspInit 1 */
 
@@ -154,10 +154,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* uartHandle)
     __HAL_RCC_UART5_CLK_DISABLE();
 
     /**UART5 GPIO Configuration
-    PB13     ------> UART5_TX
+    PC12     ------> UART5_TX
     PD2     ------> UART5_RX
     */
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_13);
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_12);
 
     HAL_GPIO_DeInit(GPIOD, GPIO_PIN_2);
 

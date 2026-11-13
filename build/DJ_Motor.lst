@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
   47 0008 1546     		mov	r5, r2
   48 000a 9E46     		mov	lr, r3
   10:modules/DJ_Motor.c ****     const FDCAN_TxHeaderTypeDef TxHeader = {
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 2
 
 
   49              		.loc 1 10 5 is_stmt 1 view .LVU2
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
   81              		.loc 1 32 13 is_stmt 1 view .LVU13
   82              		.loc 1 32 22 is_stmt 0 view .LVU14
   83 003e 0EAA     		add	r2, sp, #56
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 3
 
 
   84 0040 02EB4301 		add	r1, r2, r3, lsl #1
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  124              		.loc 1 38 10 view .LVU27
  125              	.LVL7:
  126              		.loc 1 38 6 is_stmt 0 view .LVU28
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 4
 
 
  127 007a 0FE0     		b	.L6
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  172 00ae 00BF     		.align	2
  173              	.L10:
  174 00b0 00000000 		.word	.LANCHOR0
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 5
 
 
  175 00b4 00000000 		.word	hfdcan2
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
   58:modules/DJ_Motor.c ****         .FDFormat = DISABLE,
   59:modules/DJ_Motor.c ****         .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
   60:modules/DJ_Motor.c ****         .MessageMarker = 0
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 6
 
 
   61:modules/DJ_Motor.c ****     };
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  253 0048 03DA     		bge	.L14
   79:modules/DJ_Motor.c ****     {
   80:modules/DJ_Motor.c ****         ID2_V = -25000;
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 7
 
 
  254              		.loc 1 80 15 view .LVU60
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  298              	.L20:
  299 0078 24000000 		.word	.LANCHOR0+36
  300 007c 589EFFFF 		.word	-25000
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 8
 
 
  301 0080 00000000 		.word	hfdcan2
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  104:modules/DJ_Motor.c ****         .MessageMarker = 0
  105:modules/DJ_Motor.c ****     };
  106:modules/DJ_Motor.c **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 9
 
 
  107:modules/DJ_Motor.c ****      uint8_t  TxData[8] = {0};
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  386              		.loc 1 117 11 is_stmt 1 view .LVU97
  387              		.loc 1 117 19 is_stmt 0 view .LVU98
  388 0058 0CA9     		add	r1, sp, #48
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 10
 
 
  389 005a 01EB4201 		add	r1, r1, r2, lsl #1
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  431              		.loc 1 129 1 view .LVU116
  432 00a2 0DB0     		add	sp, sp, #52
  433              	.LCFI8:
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 11
 
 
  434              		.cfi_def_cfa_offset 12
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  136:modules/DJ_Motor.c ****         .IdType = FDCAN_STANDARD_ID,
  137:modules/DJ_Motor.c ****         .TxFrameType = FDCAN_DATA_FRAME,
  138:modules/DJ_Motor.c ****         .DataLength = FDCAN_DLC_BYTES_8,
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 12
 
 
  139:modules/DJ_Motor.c ****         .ErrorStateIndicator = DISABLE,
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  517 0042 8DF80750 		strb	r5, [sp, #7]
  159:modules/DJ_Motor.c **** 
  160:modules/DJ_Motor.c ****         return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, TxData );
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 13
 
 
  518              		.loc 1 160 9 is_stmt 1 view .LVU137
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  557 0000 30B5     		push	{r4, r5, lr}
  558              	.LCFI12:
  559              		.cfi_def_cfa_offset 12
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 14
 
 
  560              		.cfi_offset 4, -12
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  592              		.loc 1 199 51 is_stmt 0 view .LVU154
  593 001c 9DF80220 		ldrb	r2, [sp, #2]	@ zero_extendqisi2
  594              		.loc 1 199 64 view .LVU155
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 15
 
 
  595 0020 9DF80330 		ldrb	r3, [sp, #3]	@ zero_extendqisi2
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  641 005c 0133     		adds	r3, r3, #1
  642 005e 1360     		str	r3, [r2]
  185:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 16
 
 
  643              		.loc 1 185 9 is_stmt 1 view .LVU175
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  681 008a 05EB8305 		add	r5, r5, r3, lsl #2
  682 008e C0E7     		b	.L42
  683              	.LVL49:
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 17
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 17
 
 
  684              	.L40:
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  722 00c8 1BB2     		sxth	r3, r3
  723              		.loc 1 217 33 view .LVU210
  724 00ca AB80     		strh	r3, [r5, #4]	@ movhi
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 18
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 18
 
 
  218:modules/DJ_Motor.c ****             gim_pitch.temp      = d[6];
@@ -1078,7 +1078,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  764 00fe 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
  209:modules/DJ_Motor.c ****             gim6020.temp      = d[6];
  765              		.loc 1 209 68 view .LVU230
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 19
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 19
 
 
  766 0102 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
@@ -1138,7 +1138,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  810              		.align	1
  813              	can_rx_last_d0:
  814 0000 0000     		.space	2
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 20
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 20
 
 
  815              		.global	can_rx_last_id
@@ -1198,7 +1198,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  871 000c 08000000 		.word	8
  872 0010 00000000 		.word	0
  873 0014 00000000 		.word	0
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 21
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 21
 
 
  874 0018 00000000 		.word	0
@@ -1225,43 +1225,43 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 1
  895              		.file 8 "modules/DJ_Motor.h"
  896              		.file 9 "Core/Inc/fdcan.h"
  897              		.file 10 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s 			page 22
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s 			page 22
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 DJ_Motor.c
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:20     .text.DJ3508_Send_I_Can2:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:26     .text.DJ3508_Send_I_Can2:00000000 DJ3508_Send_I_Can2
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:174    .text.DJ3508_Send_I_Can2:000000b0 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:180    .text.DJ6020_Send_V_Can2:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:186    .text.DJ6020_Send_V_Can2:00000000 DJ6020_Send_V_Can2
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:299    .text.DJ6020_Send_V_Can2:00000078 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:306    .text.DJ3508_Send_Can1:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:312    .text.DJ3508_Send_Can1:00000000 DJ3508_Send_Can1
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:442    .text.DJ3508_Send_Can1:000000a8 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:448    .text.DJ6020_Send_Can1:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:454    .text.DJ6020_Send_Can1:00000000 DJ6020_Send_Can1
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:536    .text.DJ6020_Send_Can1:00000054 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:543    .text.HAL_FDCAN_RxFifo0Callback:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:549    .text.HAL_FDCAN_RxFifo0Callback:00000000 HAL_FDCAN_RxFifo0Callback
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:796    .text.HAL_FDCAN_RxFifo0Callback:00000120 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:841    .bss.dj_wheel:00000000 dj_wheel
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:834    .bss.can_rx_total:00000000 can_rx_total
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:820    .bss.can_rx_last_id:00000000 can_rx_last_id
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:813    .bss.can_rx_last_d0:00000000 can_rx_last_d0
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:848    .bss.dj_motor:00000000 dj_motor
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:855    .bss.gim_pitch:00000000 gim_pitch
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:827    .bss.can_rx_205:00000000 can_rx_205
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:862    .bss.gim6020:00000000 gim6020
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:810    .bss.can_rx_last_d0:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:817    .bss.can_rx_last_id:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:824    .bss.can_rx_205:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:831    .bss.can_rx_total:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:838    .bss.dj_wheel:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:845    .bss.dj_motor:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:852    .bss.gim_pitch:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:859    .bss.gim6020:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\dsh-LwZu7i\ccASqPDb.s:865    .rodata:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:20     .text.DJ3508_Send_I_Can2:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:26     .text.DJ3508_Send_I_Can2:00000000 DJ3508_Send_I_Can2
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:174    .text.DJ3508_Send_I_Can2:000000b0 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:180    .text.DJ6020_Send_V_Can2:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:186    .text.DJ6020_Send_V_Can2:00000000 DJ6020_Send_V_Can2
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:299    .text.DJ6020_Send_V_Can2:00000078 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:306    .text.DJ3508_Send_Can1:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:312    .text.DJ3508_Send_Can1:00000000 DJ3508_Send_Can1
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:442    .text.DJ3508_Send_Can1:000000a8 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:448    .text.DJ6020_Send_Can1:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:454    .text.DJ6020_Send_Can1:00000000 DJ6020_Send_Can1
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:536    .text.DJ6020_Send_Can1:00000054 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:543    .text.HAL_FDCAN_RxFifo0Callback:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:549    .text.HAL_FDCAN_RxFifo0Callback:00000000 HAL_FDCAN_RxFifo0Callback
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:796    .text.HAL_FDCAN_RxFifo0Callback:00000120 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:841    .bss.dj_wheel:00000000 dj_wheel
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:834    .bss.can_rx_total:00000000 can_rx_total
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:820    .bss.can_rx_last_id:00000000 can_rx_last_id
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:813    .bss.can_rx_last_d0:00000000 can_rx_last_d0
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:848    .bss.dj_motor:00000000 dj_motor
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:855    .bss.gim_pitch:00000000 gim_pitch
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:827    .bss.can_rx_205:00000000 can_rx_205
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:862    .bss.gim6020:00000000 gim6020
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:810    .bss.can_rx_last_d0:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:817    .bss.can_rx_last_id:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:824    .bss.can_rx_205:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:831    .bss.can_rx_total:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:838    .bss.dj_wheel:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:845    .bss.dj_motor:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:852    .bss.gim_pitch:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:859    .bss.gim6020:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccb84vLh.s:865    .rodata:00000000 $d
 
 UNDEFINED SYMBOLS
 HAL_FDCAN_AddMessageToTxFifoQ

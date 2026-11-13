@@ -1,0 +1,2681 @@
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"ins.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "modules/ins.c"
+  19              		.section	.text.ins_cs,"ax",%progbits
+  20              		.align	1
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  25              	ins_cs:
+  26              	.LVL0:
+  27              	.LFB146:
+   1:modules/ins.c **** /**
+   2:modules/ins.c ****   ******************************************************************************
+   3:modules/ins.c ****   * @file    ins.c
+   4:modules/ins.c ****   * @brief   BMI088 驱动（SPI2 + 双片选），只做「读角速度」这一件事
+   5:modules/ins.c ****   *
+   6:modules/ins.c ****   *  片上资源：
+   7:modules/ins.c ****   *    SPI2  : PB13=SCK  PC2_C=MISO  PC1=MOSI   （CPOL=High, CPHA=2Edge, 4.125MHz）
+   8:modules/ins.c ****   *    CS    : PC0 = 加速度计,  PC3 = 陀螺      （低有效）
+   9:modules/ins.c ****   ******************************************************************************
+  10:modules/ins.c ****   */
+  11:modules/ins.c **** 
+  12:modules/ins.c **** #include "ins.h"
+  13:modules/ins.c **** #include "spi.h"
+  14:modules/ins.c **** #include "main.h"
+  15:modules/ins.c **** #include <string.h>
+  16:modules/ins.c **** 
+  17:modules/ins.c **** /* ======================= 引脚 ======================= */
+  18:modules/ins.c **** #define INS_CS_PORT        GPIOC
+  19:modules/ins.c **** #define INS_CS_ACC_PIN     GPIO_PIN_0
+  20:modules/ins.c **** #define INS_CS_GYRO_PIN    GPIO_PIN_3
+  21:modules/ins.c **** 
+  22:modules/ins.c **** #define INS_CS_ACC_LOW()   HAL_GPIO_WritePin(INS_CS_PORT, INS_CS_ACC_PIN,  GPIO_PIN_RESET)
+  23:modules/ins.c **** #define INS_CS_ACC_HIGH()  HAL_GPIO_WritePin(INS_CS_PORT, INS_CS_ACC_PIN,  GPIO_PIN_SET)
+  24:modules/ins.c **** #define INS_CS_GYRO_LOW()  HAL_GPIO_WritePin(INS_CS_PORT, INS_CS_GYRO_PIN, GPIO_PIN_RESET)
+  25:modules/ins.c **** #define INS_CS_GYRO_HIGH() HAL_GPIO_WritePin(INS_CS_PORT, INS_CS_GYRO_PIN, GPIO_PIN_SET)
+  26:modules/ins.c **** 
+  27:modules/ins.c **** /* dev: 0 = 加速度计, 1 = 陀螺 */
+  28:modules/ins.c **** #define DEV_ACC   0u
+  29:modules/ins.c **** #define DEV_GYRO  1u
+  30:modules/ins.c **** 
+  31:modules/ins.c **** /* ======================= 寄存器 ======================= */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 2
+
+
+  32:modules/ins.c **** /* 加速度计 */
+  33:modules/ins.c **** #define ACC_CHIP_ID     0x00u
+  34:modules/ins.c **** #define ACC_DATA        0x12u
+  35:modules/ins.c **** #define ACC_CONF        0x40u
+  36:modules/ins.c **** #define ACC_RANGE       0x41u
+  37:modules/ins.c **** #define ACC_PWR_CONF    0x7Cu
+  38:modules/ins.c **** #define ACC_PWR_CTRL    0x7Du
+  39:modules/ins.c **** #define ACC_SOFTRESET   0x7Eu
+  40:modules/ins.c **** 
+  41:modules/ins.c **** /* 陀螺 */
+  42:modules/ins.c **** #define GYRO_CHIP_ID    0x00u
+  43:modules/ins.c **** #define GYRO_RATE_DATA  0x02u
+  44:modules/ins.c **** #define GYRO_RANGE      0x0Fu
+  45:modules/ins.c **** #define GYRO_BANDWIDTH  0x10u
+  46:modules/ins.c **** #define GYRO_LPM1       0x11u
+  47:modules/ins.c **** #define GYRO_SOFTRESET  0x14u
+  48:modules/ins.c **** 
+  49:modules/ins.c **** #define ACC_CHIP_ID_VAL   0x1Eu
+  50:modules/ins.c **** #define GYRO_CHIP_ID_VAL  0x0Fu
+  51:modules/ins.c **** #define BMI_SOFTRESET_VAL 0xB6u
+  52:modules/ins.c **** 
+  53:modules/ins.c **** /* ======================= 量程 ======================= */
+  54:modules/ins.c **** /* 加速度 ±6g */
+  55:modules/ins.c **** #define INS_ACC_LSB     (6.0f * 9.80665f / 32768.0f)
+  56:modules/ins.c **** /* 陀螺 ±2000 dps */
+  57:modules/ins.c **** #define INS_GYRO_LSB    (2000.0f * 0.0174532925f / 32768.0f)
+  58:modules/ins.c **** 
+  59:modules/ins.c **** /* 零偏标定拍数（1 kHz 下 2 s） */
+  60:modules/ins.c **** #define INS_CAL_SAMPLES   2000u
+  61:modules/ins.c **** /* 标定期间角速度超此值判为「动过了」，结果不可信 */
+  62:modules/ins.c **** #define INS_CAL_MAX_DPS   5.0f
+  63:modules/ins.c **** /* 一阶低通系数：0.333 ≈ 100 Hz @1 kHz */
+  64:modules/ins.c **** #define INS_GYRO_LPF      0.3333f
+  65:modules/ins.c **** 
+  66:modules/ins.c **** /* ======================= 全局变量 ======================= */
+  67:modules/ins.c **** volatile uint8_t  INS_AccId;
+  68:modules/ins.c **** volatile uint8_t  INS_GyroId;
+  69:modules/ins.c **** volatile uint8_t  INS_Ready;
+  70:modules/ins.c **** volatile uint8_t  INS_CalDone;
+  71:modules/ins.c **** volatile uint16_t INS_CalCnt;
+  72:modules/ins.c **** volatile uint32_t INS_Sample;
+  73:modules/ins.c **** volatile uint8_t  INS_Err;
+  74:modules/ins.c **** 
+  75:modules/ins.c **** volatile int16_t  INS_AccRaw[3];
+  76:modules/ins.c **** volatile int16_t  INS_GyroRaw[3];
+  77:modules/ins.c **** volatile float    INS_Acc[3];
+  78:modules/ins.c **** volatile float    INS_Gyro[3];
+  79:modules/ins.c **** volatile float    INS_Bias[3];
+  80:modules/ins.c **** 
+  81:modules/ins.c **** /* 调试用：两个芯片 0x00~0x0F 寄存器快照，用于判断 SPI 是位错位还是字节�
+  82:modules/ins.c **** volatile uint8_t  INS_AccDump[16];
+  83:modules/ins.c **** volatile uint8_t  INS_GyroDump[16];
+  84:modules/ins.c **** 
+  85:modules/ins.c **** static float s_sum[3];      /* 标定累加 */
+  86:modules/ins.c **** static uint8_t s_inited;
+  87:modules/ins.c **** 
+  88:modules/ins.c **** /* ======================= 底层读写 ======================= */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 3
+
+
+  89:modules/ins.c **** 
+  90:modules/ins.c **** static void ins_cs(uint8_t dev, uint8_t low)
+  91:modules/ins.c **** {
+  28              		.loc 1 91 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		.loc 1 91 1 is_stmt 0 view .LVU1
+  33 0000 08B5     		push	{r3, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 3, -8
+  37              		.cfi_offset 14, -4
+  92:modules/ins.c ****     if (dev == DEV_ACC) {
+  38              		.loc 1 92 5 is_stmt 1 view .LVU2
+  39              		.loc 1 92 8 is_stmt 0 view .LVU3
+  40 0002 60B9     		cbnz	r0, .L2
+  93:modules/ins.c ****         if (low) INS_CS_ACC_LOW(); else INS_CS_ACC_HIGH();
+  41              		.loc 1 93 9 is_stmt 1 view .LVU4
+  42              		.loc 1 93 12 is_stmt 0 view .LVU5
+  43 0004 29B1     		cbz	r1, .L3
+  44              		.loc 1 93 18 is_stmt 1 discriminator 1 view .LVU6
+  45 0006 0022     		movs	r2, #0
+  46 0008 0121     		movs	r1, #1
+  47              	.LVL1:
+  48              		.loc 1 93 18 is_stmt 0 discriminator 1 view .LVU7
+  49 000a 0B48     		ldr	r0, .L7
+  50              	.LVL2:
+  51              		.loc 1 93 18 discriminator 1 view .LVU8
+  52 000c FFF7FEFF 		bl	HAL_GPIO_WritePin
+  53              	.LVL3:
+  54              	.L1:
+  94:modules/ins.c ****     } else {
+  95:modules/ins.c ****         if (low) INS_CS_GYRO_LOW(); else INS_CS_GYRO_HIGH();
+  96:modules/ins.c ****     }
+  97:modules/ins.c **** }
+  55              		.loc 1 97 1 view .LVU9
+  56 0010 08BD     		pop	{r3, pc}
+  57              	.LVL4:
+  58              	.L3:
+  93:modules/ins.c ****         if (low) INS_CS_ACC_LOW(); else INS_CS_ACC_HIGH();
+  59              		.loc 1 93 41 is_stmt 1 discriminator 2 view .LVU10
+  60 0012 0122     		movs	r2, #1
+  61 0014 1146     		mov	r1, r2
+  62              	.LVL5:
+  93:modules/ins.c ****         if (low) INS_CS_ACC_LOW(); else INS_CS_ACC_HIGH();
+  63              		.loc 1 93 41 is_stmt 0 discriminator 2 view .LVU11
+  64 0016 0848     		ldr	r0, .L7
+  65              	.LVL6:
+  93:modules/ins.c ****         if (low) INS_CS_ACC_LOW(); else INS_CS_ACC_HIGH();
+  66              		.loc 1 93 41 discriminator 2 view .LVU12
+  67 0018 FFF7FEFF 		bl	HAL_GPIO_WritePin
+  68              	.LVL7:
+  69 001c F8E7     		b	.L1
+  70              	.LVL8:
+  71              	.L2:
+  95:modules/ins.c ****     }
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 4
+
+
+  72              		.loc 1 95 9 is_stmt 1 view .LVU13
+  95:modules/ins.c ****     }
+  73              		.loc 1 95 12 is_stmt 0 view .LVU14
+  74 001e 29B1     		cbz	r1, .L5
+  95:modules/ins.c ****     }
+  75              		.loc 1 95 18 is_stmt 1 discriminator 1 view .LVU15
+  76 0020 0022     		movs	r2, #0
+  77 0022 0821     		movs	r1, #8
+  78              	.LVL9:
+  95:modules/ins.c ****     }
+  79              		.loc 1 95 18 is_stmt 0 discriminator 1 view .LVU16
+  80 0024 0448     		ldr	r0, .L7
+  81              	.LVL10:
+  95:modules/ins.c ****     }
+  82              		.loc 1 95 18 discriminator 1 view .LVU17
+  83 0026 FFF7FEFF 		bl	HAL_GPIO_WritePin
+  84              	.LVL11:
+  85 002a F1E7     		b	.L1
+  86              	.LVL12:
+  87              	.L5:
+  95:modules/ins.c ****     }
+  88              		.loc 1 95 42 is_stmt 1 discriminator 2 view .LVU18
+  89 002c 0122     		movs	r2, #1
+  90 002e 0821     		movs	r1, #8
+  91              	.LVL13:
+  95:modules/ins.c ****     }
+  92              		.loc 1 95 42 is_stmt 0 discriminator 2 view .LVU19
+  93 0030 0148     		ldr	r0, .L7
+  94              	.LVL14:
+  95:modules/ins.c ****     }
+  95              		.loc 1 95 42 discriminator 2 view .LVU20
+  96 0032 FFF7FEFF 		bl	HAL_GPIO_WritePin
+  97              	.LVL15:
+  98              		.loc 1 97 1 view .LVU21
+  99 0036 EBE7     		b	.L1
+ 100              	.L8:
+ 101              		.align	2
+ 102              	.L7:
+ 103 0038 00080258 		.word	1476528128
+ 104              		.cfi_endproc
+ 105              	.LFE146:
+ 107              		.section	.text.ins_read_at,"ax",%progbits
+ 108              		.align	1
+ 109              		.syntax unified
+ 110              		.thumb
+ 111              		.thumb_func
+ 113              	ins_read_at:
+ 114              	.LVL16:
+ 115              	.LFB147:
+  98:modules/ins.c **** 
+  99:modules/ins.c **** /* 读寄存器时要丢弃的哑字节个数（上电后由 ins_detect_skip() 实测校准）
+ 100:modules/ins.c ****  * 2026-11-13：实测两个芯片都比原先假设的少 1 个哑字节——
+ 101:modules/ins.c ****  *   原先 acc=2 / gyro=1，读回 ID = 0x23 / 0x22，且读 0x00~0x0F 时
+ 102:modules/ins.c ****  *   数据整体错后一个寄存器（陀螺的 0x02~0x07 数据出现在 dump[1..6]），
+ 103:modules/ins.c ****  *   说明多丢了 1 个字节。默认改成 acc=1 / gyro=0，上电再自动确认。 */
+ 104:modules/ins.c **** static uint8_t s_skip_acc  = 1u;
+ 105:modules/ins.c **** static uint8_t s_skip_gyro = 0u;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 5
+
+
+ 106:modules/ins.c **** 
+ 107:modules/ins.c **** /**
+ 108:modules/ins.c ****   * @brief  用指定的哑字节数读 1 个寄存器（探测/校验用）
+ 109:modules/ins.c ****   */
+ 110:modules/ins.c **** static uint8_t ins_read_at(uint8_t dev, uint8_t skip, uint8_t reg)
+ 111:modules/ins.c **** {
+ 116              		.loc 1 111 1 is_stmt 1 view -0
+ 117              		.cfi_startproc
+ 118              		@ args = 0, pretend = 0, frame = 8
+ 119              		@ frame_needed = 0, uses_anonymous_args = 0
+ 120              		.loc 1 111 1 is_stmt 0 view .LVU23
+ 121 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 122              	.LCFI1:
+ 123              		.cfi_def_cfa_offset 20
+ 124              		.cfi_offset 4, -20
+ 125              		.cfi_offset 5, -16
+ 126              		.cfi_offset 6, -12
+ 127              		.cfi_offset 7, -8
+ 128              		.cfi_offset 14, -4
+ 129 0002 85B0     		sub	sp, sp, #20
+ 130              	.LCFI2:
+ 131              		.cfi_def_cfa_offset 40
+ 132 0004 0546     		mov	r5, r0
+ 133 0006 0C46     		mov	r4, r1
+ 112:modules/ins.c ****     uint8_t  tx[4] = {0};
+ 134              		.loc 1 112 5 is_stmt 1 view .LVU24
+ 135              		.loc 1 112 14 is_stmt 0 view .LVU25
+ 136 0008 0026     		movs	r6, #0
+ 137 000a 0396     		str	r6, [sp, #12]
+ 113:modules/ins.c ****     uint8_t  rx[4] = {0};
+ 138              		.loc 1 113 5 is_stmt 1 view .LVU26
+ 139              		.loc 1 113 14 is_stmt 0 view .LVU27
+ 140 000c 0296     		str	r6, [sp, #8]
+ 114:modules/ins.c ****     uint16_t n = (uint16_t)(1u + skip + 1u);
+ 141              		.loc 1 114 5 is_stmt 1 view .LVU28
+ 142              		.loc 1 114 14 is_stmt 0 view .LVU29
+ 143 000e 8F1C     		adds	r7, r1, #2
+ 144              	.LVL17:
+ 115:modules/ins.c **** 
+ 116:modules/ins.c ****     tx[0] = (uint8_t)(reg | 0x80u);          /* bit7=1 → 读 */
+ 145              		.loc 1 116 5 is_stmt 1 view .LVU30
+ 146              		.loc 1 116 13 is_stmt 0 view .LVU31
+ 147 0010 42F08002 		orr	r2, r2, #128
+ 148              	.LVL18:
+ 149              		.loc 1 116 11 view .LVU32
+ 150 0014 8DF80C20 		strb	r2, [sp, #12]
+ 117:modules/ins.c **** 
+ 118:modules/ins.c ****     ins_cs(dev, 1);
+ 151              		.loc 1 118 5 is_stmt 1 view .LVU33
+ 152 0018 0121     		movs	r1, #1
+ 153              	.LVL19:
+ 154              		.loc 1 118 5 is_stmt 0 view .LVU34
+ 155 001a FFF7FEFF 		bl	ins_cs
+ 156              	.LVL20:
+ 119:modules/ins.c ****     HAL_SPI_TransmitReceive(&hspi2, tx, rx, n, 50);
+ 157              		.loc 1 119 5 is_stmt 1 view .LVU35
+ 158 001e 3223     		movs	r3, #50
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 6
+
+
+ 159 0020 0093     		str	r3, [sp]
+ 160 0022 3B46     		mov	r3, r7
+ 161 0024 02AA     		add	r2, sp, #8
+ 162 0026 03A9     		add	r1, sp, #12
+ 163 0028 0748     		ldr	r0, .L11
+ 164 002a FFF7FEFF 		bl	HAL_SPI_TransmitReceive
+ 165              	.LVL21:
+ 120:modules/ins.c ****     ins_cs(dev, 0);
+ 166              		.loc 1 120 5 view .LVU36
+ 167 002e 3146     		mov	r1, r6
+ 168 0030 2846     		mov	r0, r5
+ 169 0032 FFF7FEFF 		bl	ins_cs
+ 170              	.LVL22:
+ 121:modules/ins.c **** 
+ 122:modules/ins.c ****     return rx[1u + skip];
+ 171              		.loc 1 122 5 view .LVU37
+ 172              		.loc 1 122 14 is_stmt 0 view .LVU38
+ 173 0036 04F11103 		add	r3, r4, #17
+ 174 003a 0DEB0304 		add	r4, sp, r3
+ 175              	.LVL23:
+ 123:modules/ins.c **** }
+ 176              		.loc 1 123 1 view .LVU39
+ 177 003e 14F8080C 		ldrb	r0, [r4, #-8]	@ zero_extendqisi2
+ 178 0042 05B0     		add	sp, sp, #20
+ 179              	.LCFI3:
+ 180              		.cfi_def_cfa_offset 20
+ 181              		@ sp needed
+ 182 0044 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 183              	.LVL24:
+ 184              	.L12:
+ 185              		.loc 1 123 1 view .LVU40
+ 186 0046 00BF     		.align	2
+ 187              	.L11:
+ 188 0048 00000000 		.word	hspi2
+ 189              		.cfi_endproc
+ 190              	.LFE147:
+ 192              		.section	.text.ins_detect_skip,"ax",%progbits
+ 193              		.align	1
+ 194              		.syntax unified
+ 195              		.thumb
+ 196              		.thumb_func
+ 198              	ins_detect_skip:
+ 199              	.LFB151:
+ 124:modules/ins.c **** 
+ 125:modules/ins.c **** /**
+ 126:modules/ins.c ****   * @brief  读寄存器（自动处理 SPI 的「空字节」）
+ 127:modules/ins.c ****   * @note   哑字节个数取 s_skip_acc / s_skip_gyro（见上方说明）
+ 128:modules/ins.c ****   */
+ 129:modules/ins.c **** static uint8_t ins_read(uint8_t dev, uint8_t reg, uint8_t *buf, uint16_t len)
+ 130:modules/ins.c **** {
+ 131:modules/ins.c ****     uint8_t  tx[24];
+ 132:modules/ins.c ****     uint8_t  rx[24];
+ 133:modules/ins.c ****     uint16_t skip = (dev == DEV_ACC) ? s_skip_acc : s_skip_gyro;
+ 134:modules/ins.c ****     uint16_t n    = (uint16_t)(1u + skip + len);
+ 135:modules/ins.c ****     uint16_t i;
+ 136:modules/ins.c **** 
+ 137:modules/ins.c ****     if (n > sizeof(tx)) return 0u;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 7
+
+
+ 138:modules/ins.c **** 
+ 139:modules/ins.c ****     memset(tx, 0, sizeof(tx));
+ 140:modules/ins.c ****     memset(rx, 0, sizeof(rx));
+ 141:modules/ins.c ****     tx[0] = (uint8_t)(reg | 0x80u);          /* bit7=1 → 读 */
+ 142:modules/ins.c **** 
+ 143:modules/ins.c ****     ins_cs(dev, 1);
+ 144:modules/ins.c ****     HAL_StatusTypeDef st = HAL_SPI_TransmitReceive(&hspi2, tx, rx, n, 50);
+ 145:modules/ins.c ****     ins_cs(dev, 0);
+ 146:modules/ins.c **** 
+ 147:modules/ins.c ****     if (st != HAL_OK) return 0u;             /* SPI 失败：数据不可信 */
+ 148:modules/ins.c **** 
+ 149:modules/ins.c ****     for (i = 0; i < len; i++) {
+ 150:modules/ins.c ****         buf[i] = rx[1u + skip + i];
+ 151:modules/ins.c ****     }
+ 152:modules/ins.c ****     return 1u;
+ 153:modules/ins.c **** }
+ 154:modules/ins.c **** 
+ 155:modules/ins.c **** static void ins_write(uint8_t dev, uint8_t reg, uint8_t val)
+ 156:modules/ins.c **** {
+ 157:modules/ins.c ****     uint8_t tx[2];
+ 158:modules/ins.c ****     tx[0] = (uint8_t)(reg & 0x7Fu);          /* bit7=0 → 写 */
+ 159:modules/ins.c ****     tx[1] = val;
+ 160:modules/ins.c **** 
+ 161:modules/ins.c ****     ins_cs(dev, 1);
+ 162:modules/ins.c ****     HAL_SPI_Transmit(&hspi2, tx, 2, 20);
+ 163:modules/ins.c ****     ins_cs(dev, 0);
+ 164:modules/ins.c **** }
+ 165:modules/ins.c **** 
+ 166:modules/ins.c **** /* ======================= 初始化 ======================= */
+ 167:modules/ins.c **** 
+ 168:modules/ins.c **** /**
+ 169:modules/ins.c ****   * @brief  抓取两个芯片 0x00~0x0F 的寄存器快照（只在初始化后调用一次）
+ 170:modules/ins.c ****   */
+ 171:modules/ins.c **** static void ins_dump(void)
+ 172:modules/ins.c **** {
+ 173:modules/ins.c ****     uint8_t i;
+ 174:modules/ins.c **** 
+ 175:modules/ins.c ****     /* [0..2] 是偏移探测结果、[3] 是选中的哑字节数，这里只覆盖 [4..15] */
+ 176:modules/ins.c ****     for (i = 4u; i < 16u; i++) {
+ 177:modules/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
+ 178:modules/ins.c ****         ins_read(DEV_GYRO, i, (uint8_t *)&INS_GyroDump[i], 1u);
+ 179:modules/ins.c ****     }
+ 180:modules/ins.c **** }
+ 181:modules/ins.c **** 
+ 182:modules/ins.c **** /**
+ 183:modules/ins.c ****   * @brief  探测 SPI 读偏移（要丢几个哑字节）
+ 184:modules/ins.c ****   * @note   对每个芯片用 skip = 0/1/2 各读一次 CHIP_ID：
+ 185:modules/ins.c ****   *           INS_xxxDump[0..2] = 三次读到的值
+ 186:modules/ins.c ****   *           INS_xxxDump[3]    = 最终选中的 skip
+ 187:modules/ins.c ****   *         谁先读到正确 ID（acc 0x1E / gyro 0x0F）就用谁；
+ 188:modules/ins.c ****   *         一个都对不上就退回默认 acc=1 / gyro=0。
+ 189:modules/ins.c ****   */
+ 190:modules/ins.c **** static void ins_detect_skip(void)
+ 191:modules/ins.c **** {
+ 200              		.loc 1 191 1 is_stmt 1 view -0
+ 201              		.cfi_startproc
+ 202              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 8
+
+
+ 203              		@ frame_needed = 0, uses_anonymous_args = 0
+ 204 0000 10B5     		push	{r4, lr}
+ 205              	.LCFI4:
+ 206              		.cfi_def_cfa_offset 8
+ 207              		.cfi_offset 4, -8
+ 208              		.cfi_offset 14, -4
+ 192:modules/ins.c ****     uint8_t k;
+ 209              		.loc 1 192 5 view .LVU42
+ 193:modules/ins.c **** 
+ 194:modules/ins.c ****     /* 上电第一次读还在 I2C→SPI 切换过程中，先空跑一轮把两片切到 SPI */
+ 195:modules/ins.c ****     for (k = 0; k < 3u; k++) {
+ 210              		.loc 1 195 5 view .LVU43
+ 211              	.LVL25:
+ 212              		.loc 1 195 12 is_stmt 0 view .LVU44
+ 213 0002 0024     		movs	r4, #0
+ 214              		.loc 1 195 5 view .LVU45
+ 215 0004 0BE0     		b	.L14
+ 216              	.LVL26:
+ 217              	.L15:
+ 196:modules/ins.c ****         (void)ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
+ 218              		.loc 1 196 9 is_stmt 1 view .LVU46
+ 219              		.loc 1 196 15 is_stmt 0 view .LVU47
+ 220 0006 0022     		movs	r2, #0
+ 221 0008 2146     		mov	r1, r4
+ 222 000a 1046     		mov	r0, r2
+ 223 000c FFF7FEFF 		bl	ins_read_at
+ 224              	.LVL27:
+ 197:modules/ins.c ****         (void)ins_read_at(DEV_GYRO, k, GYRO_CHIP_ID);
+ 225              		.loc 1 197 9 is_stmt 1 view .LVU48
+ 226              		.loc 1 197 15 is_stmt 0 view .LVU49
+ 227 0010 0022     		movs	r2, #0
+ 228 0012 2146     		mov	r1, r4
+ 229 0014 0120     		movs	r0, #1
+ 230 0016 FFF7FEFF 		bl	ins_read_at
+ 231              	.LVL28:
+ 195:modules/ins.c ****         (void)ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
+ 232              		.loc 1 195 26 is_stmt 1 discriminator 3 view .LVU50
+ 233 001a 0134     		adds	r4, r4, #1
+ 234              	.LVL29:
+ 195:modules/ins.c ****         (void)ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
+ 235              		.loc 1 195 26 is_stmt 0 discriminator 3 view .LVU51
+ 236 001c E4B2     		uxtb	r4, r4
+ 237              	.LVL30:
+ 238              	.L14:
+ 195:modules/ins.c ****         (void)ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
+ 239              		.loc 1 195 19 is_stmt 1 discriminator 1 view .LVU52
+ 240 001e 022C     		cmp	r4, #2
+ 241 0020 F1D9     		bls	.L15
+ 198:modules/ins.c ****     }
+ 199:modules/ins.c **** 
+ 200:modules/ins.c ****     for (k = 0; k < 3u; k++) {
+ 242              		.loc 1 200 12 is_stmt 0 view .LVU53
+ 243 0022 0024     		movs	r4, #0
+ 244              	.LVL31:
+ 245              		.loc 1 200 12 view .LVU54
+ 246 0024 0FE0     		b	.L16
+ 247              	.LVL32:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 9
+
+
+ 248              	.L17:
+ 201:modules/ins.c ****         INS_AccDump[k]  = ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
+ 249              		.loc 1 201 9 is_stmt 1 view .LVU55
+ 250              		.loc 1 201 27 is_stmt 0 view .LVU56
+ 251 0026 0022     		movs	r2, #0
+ 252 0028 2146     		mov	r1, r4
+ 253 002a 1046     		mov	r0, r2
+ 254 002c FFF7FEFF 		bl	ins_read_at
+ 255              	.LVL33:
+ 256              		.loc 1 201 25 discriminator 1 view .LVU57
+ 257 0030 234B     		ldr	r3, .L29
+ 258 0032 1855     		strb	r0, [r3, r4]
+ 202:modules/ins.c ****         INS_GyroDump[k] = ins_read_at(DEV_GYRO, k, GYRO_CHIP_ID);
+ 259              		.loc 1 202 9 is_stmt 1 view .LVU58
+ 260              		.loc 1 202 27 is_stmt 0 view .LVU59
+ 261 0034 0022     		movs	r2, #0
+ 262 0036 2146     		mov	r1, r4
+ 263 0038 0120     		movs	r0, #1
+ 264 003a FFF7FEFF 		bl	ins_read_at
+ 265              	.LVL34:
+ 266              		.loc 1 202 25 discriminator 1 view .LVU60
+ 267 003e 214B     		ldr	r3, .L29+4
+ 268 0040 1855     		strb	r0, [r3, r4]
+ 200:modules/ins.c ****         INS_AccDump[k]  = ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
+ 269              		.loc 1 200 26 is_stmt 1 discriminator 3 view .LVU61
+ 270 0042 0134     		adds	r4, r4, #1
+ 271              	.LVL35:
+ 200:modules/ins.c ****         INS_AccDump[k]  = ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
+ 272              		.loc 1 200 26 is_stmt 0 discriminator 3 view .LVU62
+ 273 0044 E4B2     		uxtb	r4, r4
+ 274              	.LVL36:
+ 275              	.L16:
+ 200:modules/ins.c ****         INS_AccDump[k]  = ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
+ 276              		.loc 1 200 19 is_stmt 1 discriminator 1 view .LVU63
+ 277 0046 022C     		cmp	r4, #2
+ 278 0048 EDD9     		bls	.L17
+ 203:modules/ins.c ****     }
+ 204:modules/ins.c **** 
+ 205:modules/ins.c ****     s_skip_acc  = 0xFFu;
+ 279              		.loc 1 205 5 view .LVU64
+ 280              		.loc 1 205 17 is_stmt 0 view .LVU65
+ 281 004a FF23     		movs	r3, #255
+ 282 004c 1E4A     		ldr	r2, .L29+8
+ 283 004e 1370     		strb	r3, [r2]
+ 206:modules/ins.c ****     s_skip_gyro = 0xFFu;
+ 284              		.loc 1 206 5 is_stmt 1 view .LVU66
+ 285              		.loc 1 206 17 is_stmt 0 view .LVU67
+ 286 0050 1E4A     		ldr	r2, .L29+12
+ 287 0052 1370     		strb	r3, [r2]
+ 207:modules/ins.c **** 
+ 208:modules/ins.c ****     for (k = 0; k < 3u; k++) {
+ 288              		.loc 1 208 5 is_stmt 1 view .LVU68
+ 289              	.LVL37:
+ 290              		.loc 1 208 12 is_stmt 0 view .LVU69
+ 291 0054 0023     		movs	r3, #0
+ 292              		.loc 1 208 5 view .LVU70
+ 293 0056 08E0     		b	.L18
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 10
+
+
+ 294              	.LVL38:
+ 295              	.L26:
+ 209:modules/ins.c ****         if ((INS_AccDump[k]  == ACC_CHIP_ID_VAL)  && (s_skip_acc  == 0xFFu)) s_skip_acc  = k;
+ 296              		.loc 1 209 67 discriminator 1 view .LVU71
+ 297 0058 1B49     		ldr	r1, .L29+8
+ 298 005a 0978     		ldrb	r1, [r1]	@ zero_extendqisi2
+ 299              		.loc 1 209 51 discriminator 1 view .LVU72
+ 300 005c FF29     		cmp	r1, #255
+ 301 005e 0BD1     		bne	.L19
+ 302              		.loc 1 209 78 is_stmt 1 discriminator 2 view .LVU73
+ 303              		.loc 1 209 90 is_stmt 0 discriminator 2 view .LVU74
+ 304 0060 1949     		ldr	r1, .L29+8
+ 305 0062 0B70     		strb	r3, [r1]
+ 306 0064 08E0     		b	.L19
+ 307              	.L20:
+ 208:modules/ins.c ****         if ((INS_AccDump[k]  == ACC_CHIP_ID_VAL)  && (s_skip_acc  == 0xFFu)) s_skip_acc  = k;
+ 308              		.loc 1 208 26 is_stmt 1 discriminator 2 view .LVU75
+ 309 0066 0133     		adds	r3, r3, #1
+ 310              	.LVL39:
+ 208:modules/ins.c ****         if ((INS_AccDump[k]  == ACC_CHIP_ID_VAL)  && (s_skip_acc  == 0xFFu)) s_skip_acc  = k;
+ 311              		.loc 1 208 26 is_stmt 0 discriminator 2 view .LVU76
+ 312 0068 DBB2     		uxtb	r3, r3
+ 313              	.LVL40:
+ 314              	.L18:
+ 208:modules/ins.c ****         if ((INS_AccDump[k]  == ACC_CHIP_ID_VAL)  && (s_skip_acc  == 0xFFu)) s_skip_acc  = k;
+ 315              		.loc 1 208 19 is_stmt 1 discriminator 1 view .LVU77
+ 316 006a 022B     		cmp	r3, #2
+ 317 006c 0FD8     		bhi	.L25
+ 318              		.loc 1 209 9 view .LVU78
+ 319              		.loc 1 209 25 is_stmt 0 view .LVU79
+ 320 006e 1A46     		mov	r2, r3
+ 321 0070 1349     		ldr	r1, .L29
+ 322 0072 C95C     		ldrb	r1, [r1, r3]	@ zero_extendqisi2
+ 323              		.loc 1 209 12 view .LVU80
+ 324 0074 1E29     		cmp	r1, #30
+ 325 0076 EFD0     		beq	.L26
+ 326              	.L19:
+ 210:modules/ins.c ****         if ((INS_GyroDump[k] == GYRO_CHIP_ID_VAL) && (s_skip_gyro == 0xFFu)) s_skip_gyro = k;
+ 327              		.loc 1 210 9 is_stmt 1 view .LVU81
+ 328              		.loc 1 210 26 is_stmt 0 view .LVU82
+ 329 0078 1249     		ldr	r1, .L29+4
+ 330 007a 8A5C     		ldrb	r2, [r1, r2]	@ zero_extendqisi2
+ 331              		.loc 1 210 12 view .LVU83
+ 332 007c 0F2A     		cmp	r2, #15
+ 333 007e F2D1     		bne	.L20
+ 334              		.loc 1 210 67 discriminator 1 view .LVU84
+ 335 0080 124A     		ldr	r2, .L29+12
+ 336 0082 1278     		ldrb	r2, [r2]	@ zero_extendqisi2
+ 337              		.loc 1 210 51 discriminator 1 view .LVU85
+ 338 0084 FF2A     		cmp	r2, #255
+ 339 0086 EED1     		bne	.L20
+ 340              		.loc 1 210 78 is_stmt 1 discriminator 2 view .LVU86
+ 341              		.loc 1 210 90 is_stmt 0 discriminator 2 view .LVU87
+ 342 0088 104A     		ldr	r2, .L29+12
+ 343 008a 1370     		strb	r3, [r2]
+ 344 008c EBE7     		b	.L20
+ 345              	.L25:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 11
+
+
+ 211:modules/ins.c ****     }
+ 212:modules/ins.c **** 
+ 213:modules/ins.c ****     if (s_skip_acc  == 0xFFu) s_skip_acc  = 1u;
+ 346              		.loc 1 213 5 is_stmt 1 view .LVU88
+ 347              		.loc 1 213 21 is_stmt 0 view .LVU89
+ 348 008e 0E4B     		ldr	r3, .L29+8
+ 349              	.LVL41:
+ 350              		.loc 1 213 21 view .LVU90
+ 351 0090 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 352              		.loc 1 213 8 view .LVU91
+ 353 0092 FF2B     		cmp	r3, #255
+ 354 0094 0CD0     		beq	.L27
+ 355              	.L22:
+ 214:modules/ins.c ****     if (s_skip_gyro == 0xFFu) s_skip_gyro = 0u;
+ 356              		.loc 1 214 5 is_stmt 1 view .LVU92
+ 357              		.loc 1 214 21 is_stmt 0 view .LVU93
+ 358 0096 0D4B     		ldr	r3, .L29+12
+ 359 0098 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 360              		.loc 1 214 8 view .LVU94
+ 361 009a FF2B     		cmp	r3, #255
+ 362 009c 0CD0     		beq	.L28
+ 363              	.L23:
+ 215:modules/ins.c **** 
+ 216:modules/ins.c ****     INS_AccDump[3]  = s_skip_acc;
+ 364              		.loc 1 216 5 is_stmt 1 view .LVU95
+ 365              		.loc 1 216 21 is_stmt 0 view .LVU96
+ 366 009e 0A4B     		ldr	r3, .L29+8
+ 367 00a0 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 368 00a2 074B     		ldr	r3, .L29
+ 369 00a4 DA70     		strb	r2, [r3, #3]
+ 217:modules/ins.c ****     INS_GyroDump[3] = s_skip_gyro;
+ 370              		.loc 1 217 5 is_stmt 1 view .LVU97
+ 371              		.loc 1 217 21 is_stmt 0 view .LVU98
+ 372 00a6 094B     		ldr	r3, .L29+12
+ 373 00a8 1A78     		ldrb	r2, [r3]	@ zero_extendqisi2
+ 374 00aa 064B     		ldr	r3, .L29+4
+ 375 00ac DA70     		strb	r2, [r3, #3]
+ 218:modules/ins.c **** }
+ 376              		.loc 1 218 1 view .LVU99
+ 377 00ae 10BD     		pop	{r4, pc}
+ 378              	.L27:
+ 213:modules/ins.c ****     if (s_skip_gyro == 0xFFu) s_skip_gyro = 0u;
+ 379              		.loc 1 213 31 is_stmt 1 discriminator 1 view .LVU100
+ 213:modules/ins.c ****     if (s_skip_gyro == 0xFFu) s_skip_gyro = 0u;
+ 380              		.loc 1 213 43 is_stmt 0 discriminator 1 view .LVU101
+ 381 00b0 054B     		ldr	r3, .L29+8
+ 382 00b2 0122     		movs	r2, #1
+ 383 00b4 1A70     		strb	r2, [r3]
+ 384 00b6 EEE7     		b	.L22
+ 385              	.L28:
+ 214:modules/ins.c **** 
+ 386              		.loc 1 214 31 is_stmt 1 discriminator 1 view .LVU102
+ 214:modules/ins.c **** 
+ 387              		.loc 1 214 43 is_stmt 0 discriminator 1 view .LVU103
+ 388 00b8 044B     		ldr	r3, .L29+12
+ 389 00ba 0022     		movs	r2, #0
+ 390 00bc 1A70     		strb	r2, [r3]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 12
+
+
+ 391 00be EEE7     		b	.L23
+ 392              	.L30:
+ 393              		.align	2
+ 394              	.L29:
+ 395 00c0 00000000 		.word	INS_AccDump
+ 396 00c4 00000000 		.word	INS_GyroDump
+ 397 00c8 00000000 		.word	s_skip_acc
+ 398 00cc 00000000 		.word	s_skip_gyro
+ 399              		.cfi_endproc
+ 400              	.LFE151:
+ 402              		.section	.text.ins_read,"ax",%progbits
+ 403              		.align	1
+ 404              		.syntax unified
+ 405              		.thumb
+ 406              		.thumb_func
+ 408              	ins_read:
+ 409              	.LVL42:
+ 410              	.LFB148:
+ 130:modules/ins.c ****     uint8_t  tx[24];
+ 411              		.loc 1 130 1 is_stmt 1 view -0
+ 412              		.cfi_startproc
+ 413              		@ args = 0, pretend = 0, frame = 48
+ 414              		@ frame_needed = 0, uses_anonymous_args = 0
+ 130:modules/ins.c ****     uint8_t  tx[24];
+ 415              		.loc 1 130 1 is_stmt 0 view .LVU105
+ 416 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 417              	.LCFI5:
+ 418              		.cfi_def_cfa_offset 36
+ 419              		.cfi_offset 4, -36
+ 420              		.cfi_offset 5, -32
+ 421              		.cfi_offset 6, -28
+ 422              		.cfi_offset 7, -24
+ 423              		.cfi_offset 8, -20
+ 424              		.cfi_offset 9, -16
+ 425              		.cfi_offset 10, -12
+ 426              		.cfi_offset 11, -8
+ 427              		.cfi_offset 14, -4
+ 428 0004 8FB0     		sub	sp, sp, #60
+ 429              	.LCFI6:
+ 430              		.cfi_def_cfa_offset 96
+ 431 0006 1546     		mov	r5, r2
+ 432 0008 1C46     		mov	r4, r3
+ 131:modules/ins.c ****     uint8_t  rx[24];
+ 433              		.loc 1 131 5 is_stmt 1 view .LVU106
+ 132:modules/ins.c ****     uint16_t skip = (dev == DEV_ACC) ? s_skip_acc : s_skip_gyro;
+ 434              		.loc 1 132 5 view .LVU107
+ 133:modules/ins.c ****     uint16_t n    = (uint16_t)(1u + skip + len);
+ 435              		.loc 1 133 5 view .LVU108
+ 133:modules/ins.c ****     uint16_t n    = (uint16_t)(1u + skip + len);
+ 436              		.loc 1 133 14 is_stmt 0 view .LVU109
+ 437 000a 8146     		mov	r9, r0
+ 438 000c 58B9     		cbnz	r0, .L32
+ 133:modules/ins.c ****     uint16_t n    = (uint16_t)(1u + skip + len);
+ 439              		.loc 1 133 14 discriminator 1 view .LVU110
+ 440 000e 2A4B     		ldr	r3, .L41
+ 441              	.LVL43:
+ 133:modules/ins.c ****     uint16_t n    = (uint16_t)(1u + skip + len);
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 13
+
+
+ 442              		.loc 1 133 14 discriminator 1 view .LVU111
+ 443 0010 1E78     		ldrb	r6, [r3]	@ zero_extendqisi2
+ 444              	.L33:
+ 445              	.LVL44:
+ 134:modules/ins.c ****     uint16_t i;
+ 446              		.loc 1 134 5 is_stmt 1 view .LVU112
+ 134:modules/ins.c ****     uint16_t i;
+ 447              		.loc 1 134 42 is_stmt 0 view .LVU113
+ 448 0012 3719     		adds	r7, r6, r4
+ 449 0014 BFB2     		uxth	r7, r7
+ 134:modules/ins.c ****     uint16_t i;
+ 450              		.loc 1 134 14 view .LVU114
+ 451 0016 0137     		adds	r7, r7, #1
+ 452 0018 BFB2     		uxth	r7, r7
+ 453              	.LVL45:
+ 135:modules/ins.c **** 
+ 454              		.loc 1 135 5 is_stmt 1 view .LVU115
+ 137:modules/ins.c **** 
+ 455              		.loc 1 137 5 view .LVU116
+ 137:modules/ins.c **** 
+ 456              		.loc 1 137 8 is_stmt 0 view .LVU117
+ 457 001a 182F     		cmp	r7, #24
+ 458 001c 06D9     		bls	.L40
+ 137:modules/ins.c **** 
+ 459              		.loc 1 137 32 discriminator 1 view .LVU118
+ 460 001e 0020     		movs	r0, #0
+ 461              	.LVL46:
+ 462              	.L34:
+ 153:modules/ins.c **** 
+ 463              		.loc 1 153 1 view .LVU119
+ 464 0020 0FB0     		add	sp, sp, #60
+ 465              	.LCFI7:
+ 466              		.cfi_remember_state
+ 467              		.cfi_def_cfa_offset 36
+ 468              		@ sp needed
+ 469 0022 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 470              	.LVL47:
+ 471              	.L32:
+ 472              	.LCFI8:
+ 473              		.cfi_restore_state
+ 133:modules/ins.c ****     uint16_t n    = (uint16_t)(1u + skip + len);
+ 474              		.loc 1 133 14 discriminator 2 view .LVU120
+ 475 0026 254B     		ldr	r3, .L41+4
+ 476              	.LVL48:
+ 133:modules/ins.c ****     uint16_t n    = (uint16_t)(1u + skip + len);
+ 477              		.loc 1 133 14 discriminator 2 view .LVU121
+ 478 0028 1E78     		ldrb	r6, [r3]	@ zero_extendqisi2
+ 479 002a F2E7     		b	.L33
+ 480              	.LVL49:
+ 481              	.L40:
+ 139:modules/ins.c ****     memset(rx, 0, sizeof(rx));
+ 482              		.loc 1 139 5 is_stmt 1 view .LVU122
+ 483 002c 0DF1200A 		add	r10, sp, #32
+ 484 0030 4FF00008 		mov	r8, #0
+ 485 0034 CDF82080 		str	r8, [sp, #32]
+ 486 0038 CDF82480 		str	r8, [sp, #36]
+ 487 003c CDF82880 		str	r8, [sp, #40]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 14
+
+
+ 488 0040 CDF82C80 		str	r8, [sp, #44]
+ 489 0044 CDF83080 		str	r8, [sp, #48]
+ 490 0048 CDF83480 		str	r8, [sp, #52]
+ 140:modules/ins.c ****     tx[0] = (uint8_t)(reg | 0x80u);          /* bit7=1 → 读 */
+ 491              		.loc 1 140 5 view .LVU123
+ 492 004c 0DF1080B 		add	fp, sp, #8
+ 493 0050 CDF80880 		str	r8, [sp, #8]
+ 494 0054 CDF80C80 		str	r8, [sp, #12]
+ 495 0058 CDF81080 		str	r8, [sp, #16]
+ 496 005c CDF81480 		str	r8, [sp, #20]
+ 497 0060 CDF81880 		str	r8, [sp, #24]
+ 498 0064 CDF81C80 		str	r8, [sp, #28]
+ 141:modules/ins.c **** 
+ 499              		.loc 1 141 5 view .LVU124
+ 141:modules/ins.c **** 
+ 500              		.loc 1 141 13 is_stmt 0 view .LVU125
+ 501 0068 41F08001 		orr	r1, r1, #128
+ 502              	.LVL50:
+ 141:modules/ins.c **** 
+ 503              		.loc 1 141 11 view .LVU126
+ 504 006c 8DF82010 		strb	r1, [sp, #32]
+ 143:modules/ins.c ****     HAL_StatusTypeDef st = HAL_SPI_TransmitReceive(&hspi2, tx, rx, n, 50);
+ 505              		.loc 1 143 5 is_stmt 1 view .LVU127
+ 506 0070 0121     		movs	r1, #1
+ 507 0072 4846     		mov	r0, r9
+ 508              	.LVL51:
+ 143:modules/ins.c ****     HAL_StatusTypeDef st = HAL_SPI_TransmitReceive(&hspi2, tx, rx, n, 50);
+ 509              		.loc 1 143 5 is_stmt 0 view .LVU128
+ 510 0074 FFF7FEFF 		bl	ins_cs
+ 511              	.LVL52:
+ 144:modules/ins.c ****     ins_cs(dev, 0);
+ 512              		.loc 1 144 5 is_stmt 1 view .LVU129
+ 144:modules/ins.c ****     ins_cs(dev, 0);
+ 513              		.loc 1 144 28 is_stmt 0 view .LVU130
+ 514 0078 3223     		movs	r3, #50
+ 515 007a 0093     		str	r3, [sp]
+ 516 007c 3B46     		mov	r3, r7
+ 517 007e 5A46     		mov	r2, fp
+ 518 0080 5146     		mov	r1, r10
+ 519 0082 0F48     		ldr	r0, .L41+8
+ 520 0084 FFF7FEFF 		bl	HAL_SPI_TransmitReceive
+ 521              	.LVL53:
+ 522 0088 0746     		mov	r7, r0
+ 523              	.LVL54:
+ 145:modules/ins.c **** 
+ 524              		.loc 1 145 5 is_stmt 1 view .LVU131
+ 525 008a 4146     		mov	r1, r8
+ 526 008c 4846     		mov	r0, r9
+ 527 008e FFF7FEFF 		bl	ins_cs
+ 528              	.LVL55:
+ 147:modules/ins.c **** 
+ 529              		.loc 1 147 5 view .LVU132
+ 147:modules/ins.c **** 
+ 530              		.loc 1 147 8 is_stmt 0 view .LVU133
+ 531 0092 7FB9     		cbnz	r7, .L38
+ 149:modules/ins.c ****         buf[i] = rx[1u + skip + i];
+ 532              		.loc 1 149 12 view .LVU134
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 15
+
+
+ 533 0094 4146     		mov	r1, r8
+ 534 0096 09E0     		b	.L35
+ 535              	.LVL56:
+ 536              	.L36:
+ 150:modules/ins.c ****     }
+ 537              		.loc 1 150 9 is_stmt 1 view .LVU135
+ 150:modules/ins.c ****     }
+ 538              		.loc 1 150 31 is_stmt 0 view .LVU136
+ 539 0098 7018     		adds	r0, r6, r1
+ 150:modules/ins.c ****     }
+ 540              		.loc 1 150 20 view .LVU137
+ 541 009a 00F13903 		add	r3, r0, #57
+ 542 009e 0DEB0300 		add	r0, sp, r3
+ 543 00a2 10F8303C 		ldrb	r3, [r0, #-48]	@ zero_extendqisi2
+ 150:modules/ins.c ****     }
+ 544              		.loc 1 150 16 view .LVU138
+ 545 00a6 6B54     		strb	r3, [r5, r1]
+ 149:modules/ins.c ****         buf[i] = rx[1u + skip + i];
+ 546              		.loc 1 149 27 is_stmt 1 discriminator 3 view .LVU139
+ 547 00a8 0131     		adds	r1, r1, #1
+ 548              	.LVL57:
+ 149:modules/ins.c ****         buf[i] = rx[1u + skip + i];
+ 549              		.loc 1 149 27 is_stmt 0 discriminator 3 view .LVU140
+ 550 00aa 89B2     		uxth	r1, r1
+ 551              	.LVL58:
+ 552              	.L35:
+ 149:modules/ins.c ****         buf[i] = rx[1u + skip + i];
+ 553              		.loc 1 149 19 is_stmt 1 discriminator 1 view .LVU141
+ 554 00ac A142     		cmp	r1, r4
+ 555 00ae F3D3     		bcc	.L36
+ 152:modules/ins.c **** }
+ 556              		.loc 1 152 12 is_stmt 0 view .LVU142
+ 557 00b0 0120     		movs	r0, #1
+ 558 00b2 B5E7     		b	.L34
+ 559              	.LVL59:
+ 560              	.L38:
+ 147:modules/ins.c **** 
+ 561              		.loc 1 147 30 discriminator 1 view .LVU143
+ 562 00b4 0020     		movs	r0, #0
+ 563 00b6 B3E7     		b	.L34
+ 564              	.L42:
+ 565              		.align	2
+ 566              	.L41:
+ 567 00b8 00000000 		.word	s_skip_acc
+ 568 00bc 00000000 		.word	s_skip_gyro
+ 569 00c0 00000000 		.word	hspi2
+ 570              		.cfi_endproc
+ 571              	.LFE148:
+ 573              		.section	.text.ins_dump,"ax",%progbits
+ 574              		.align	1
+ 575              		.syntax unified
+ 576              		.thumb
+ 577              		.thumb_func
+ 579              	ins_dump:
+ 580              	.LFB150:
+ 172:modules/ins.c ****     uint8_t i;
+ 581              		.loc 1 172 1 is_stmt 1 view -0
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 16
+
+
+ 582              		.cfi_startproc
+ 583              		@ args = 0, pretend = 0, frame = 0
+ 584              		@ frame_needed = 0, uses_anonymous_args = 0
+ 585 0000 10B5     		push	{r4, lr}
+ 586              	.LCFI9:
+ 587              		.cfi_def_cfa_offset 8
+ 588              		.cfi_offset 4, -8
+ 589              		.cfi_offset 14, -4
+ 173:modules/ins.c **** 
+ 590              		.loc 1 173 5 view .LVU145
+ 176:modules/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
+ 591              		.loc 1 176 5 view .LVU146
+ 592              	.LVL60:
+ 176:modules/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
+ 593              		.loc 1 176 12 is_stmt 0 view .LVU147
+ 594 0002 0424     		movs	r4, #4
+ 176:modules/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
+ 595              		.loc 1 176 5 view .LVU148
+ 596 0004 0FE0     		b	.L44
+ 597              	.LVL61:
+ 598              	.L45:
+ 177:modules/ins.c ****         ins_read(DEV_GYRO, i, (uint8_t *)&INS_GyroDump[i], 1u);
+ 599              		.loc 1 177 9 is_stmt 1 view .LVU149
+ 600 0006 0123     		movs	r3, #1
+ 601 0008 084A     		ldr	r2, .L47
+ 602 000a 2244     		add	r2, r2, r4
+ 603 000c 2146     		mov	r1, r4
+ 604 000e 0020     		movs	r0, #0
+ 605 0010 FFF7FEFF 		bl	ins_read
+ 606              	.LVL62:
+ 178:modules/ins.c ****     }
+ 607              		.loc 1 178 9 view .LVU150
+ 608 0014 0123     		movs	r3, #1
+ 609 0016 064A     		ldr	r2, .L47+4
+ 610 0018 2244     		add	r2, r2, r4
+ 611 001a 2146     		mov	r1, r4
+ 612 001c 1846     		mov	r0, r3
+ 613 001e FFF7FEFF 		bl	ins_read
+ 614              	.LVL63:
+ 176:modules/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
+ 615              		.loc 1 176 28 discriminator 3 view .LVU151
+ 616 0022 0134     		adds	r4, r4, #1
+ 617              	.LVL64:
+ 176:modules/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
+ 618              		.loc 1 176 28 is_stmt 0 discriminator 3 view .LVU152
+ 619 0024 E4B2     		uxtb	r4, r4
+ 620              	.LVL65:
+ 621              	.L44:
+ 176:modules/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
+ 622              		.loc 1 176 20 is_stmt 1 discriminator 1 view .LVU153
+ 623 0026 0F2C     		cmp	r4, #15
+ 624 0028 EDD9     		bls	.L45
+ 180:modules/ins.c **** 
+ 625              		.loc 1 180 1 is_stmt 0 view .LVU154
+ 626 002a 10BD     		pop	{r4, pc}
+ 627              	.LVL66:
+ 628              	.L48:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 17
+
+
+ 180:modules/ins.c **** 
+ 629              		.loc 1 180 1 view .LVU155
+ 630              		.align	2
+ 631              	.L47:
+ 632 002c 00000000 		.word	INS_AccDump
+ 633 0030 00000000 		.word	INS_GyroDump
+ 634              		.cfi_endproc
+ 635              	.LFE150:
+ 637              		.section	.text.ins_write,"ax",%progbits
+ 638              		.align	1
+ 639              		.syntax unified
+ 640              		.thumb
+ 641              		.thumb_func
+ 643              	ins_write:
+ 644              	.LVL67:
+ 645              	.LFB149:
+ 156:modules/ins.c ****     uint8_t tx[2];
+ 646              		.loc 1 156 1 is_stmt 1 view -0
+ 647              		.cfi_startproc
+ 648              		@ args = 0, pretend = 0, frame = 8
+ 649              		@ frame_needed = 0, uses_anonymous_args = 0
+ 156:modules/ins.c ****     uint8_t tx[2];
+ 650              		.loc 1 156 1 is_stmt 0 view .LVU157
+ 651 0000 10B5     		push	{r4, lr}
+ 652              	.LCFI10:
+ 653              		.cfi_def_cfa_offset 8
+ 654              		.cfi_offset 4, -8
+ 655              		.cfi_offset 14, -4
+ 656 0002 82B0     		sub	sp, sp, #8
+ 657              	.LCFI11:
+ 658              		.cfi_def_cfa_offset 16
+ 659 0004 0446     		mov	r4, r0
+ 157:modules/ins.c ****     tx[0] = (uint8_t)(reg & 0x7Fu);          /* bit7=0 → 写 */
+ 660              		.loc 1 157 5 is_stmt 1 view .LVU158
+ 158:modules/ins.c ****     tx[1] = val;
+ 661              		.loc 1 158 5 view .LVU159
+ 158:modules/ins.c ****     tx[1] = val;
+ 662              		.loc 1 158 13 is_stmt 0 view .LVU160
+ 663 0006 01F07F01 		and	r1, r1, #127
+ 664              	.LVL68:
+ 158:modules/ins.c ****     tx[1] = val;
+ 665              		.loc 1 158 11 view .LVU161
+ 666 000a 8DF80410 		strb	r1, [sp, #4]
+ 159:modules/ins.c **** 
+ 667              		.loc 1 159 5 is_stmt 1 view .LVU162
+ 159:modules/ins.c **** 
+ 668              		.loc 1 159 11 is_stmt 0 view .LVU163
+ 669 000e 8DF80520 		strb	r2, [sp, #5]
+ 161:modules/ins.c ****     HAL_SPI_Transmit(&hspi2, tx, 2, 20);
+ 670              		.loc 1 161 5 is_stmt 1 view .LVU164
+ 671 0012 0121     		movs	r1, #1
+ 672 0014 FFF7FEFF 		bl	ins_cs
+ 673              	.LVL69:
+ 162:modules/ins.c ****     ins_cs(dev, 0);
+ 674              		.loc 1 162 5 view .LVU165
+ 675 0018 1423     		movs	r3, #20
+ 676 001a 0222     		movs	r2, #2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 18
+
+
+ 677 001c 01A9     		add	r1, sp, #4
+ 678 001e 0448     		ldr	r0, .L51
+ 679 0020 FFF7FEFF 		bl	HAL_SPI_Transmit
+ 680              	.LVL70:
+ 163:modules/ins.c **** }
+ 681              		.loc 1 163 5 view .LVU166
+ 682 0024 0021     		movs	r1, #0
+ 683 0026 2046     		mov	r0, r4
+ 684 0028 FFF7FEFF 		bl	ins_cs
+ 685              	.LVL71:
+ 164:modules/ins.c **** 
+ 686              		.loc 1 164 1 is_stmt 0 view .LVU167
+ 687 002c 02B0     		add	sp, sp, #8
+ 688              	.LCFI12:
+ 689              		.cfi_def_cfa_offset 8
+ 690              		@ sp needed
+ 691 002e 10BD     		pop	{r4, pc}
+ 692              	.LVL72:
+ 693              	.L52:
+ 164:modules/ins.c **** 
+ 694              		.loc 1 164 1 view .LVU168
+ 695              		.align	2
+ 696              	.L51:
+ 697 0030 00000000 		.word	hspi2
+ 698              		.cfi_endproc
+ 699              	.LFE149:
+ 701              		.section	.text.ins_acc_init,"ax",%progbits
+ 702              		.align	1
+ 703              		.syntax unified
+ 704              		.thumb
+ 705              		.thumb_func
+ 707              	ins_acc_init:
+ 708              	.LFB153:
+ 219:modules/ins.c **** 
+ 220:modules/ins.c **** /**
+ 221:modules/ins.c ****   * @brief  片选脚初始化 + H7 模拟开关
+ 222:modules/ins.c ****   * @note   PC0/PC3 在 CubeMX 里没配成输出（gpio.c 只管了 PD2），
+ 223:modules/ins.c ****   *         不在这里配的话片选是悬空的，芯片永远不会被选中 → 读回 0x00�
+ 224:modules/ins.c ****   */
+ 225:modules/ins.c **** static void ins_gpio_init(void)
+ 226:modules/ins.c **** {
+ 227:modules/ins.c ****     GPIO_InitTypeDef g = {0};
+ 228:modules/ins.c **** 
+ 229:modules/ins.c ****     __HAL_RCC_GPIOC_CLK_ENABLE();
+ 230:modules/ins.c ****     __HAL_RCC_SYSCFG_CLK_ENABLE();
+ 231:modules/ins.c **** 
+ 232:modules/ins.c ****     /* 先把电平置高（未选中），再切成输出，避免切换瞬间误选通 */
+ 233:modules/ins.c ****     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0 | GPIO_PIN_3, GPIO_PIN_SET);
+ 234:modules/ins.c **** 
+ 235:modules/ins.c ****     g.Pin   = GPIO_PIN_0 | GPIO_PIN_3;
+ 236:modules/ins.c ****     g.Mode  = GPIO_MODE_OUTPUT_PP;
+ 237:modules/ins.c ****     g.Pull  = GPIO_NOPULL;
+ 238:modules/ins.c ****     g.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+ 239:modules/ins.c ****     HAL_GPIO_Init(GPIOC, &g);
+ 240:modules/ins.c **** 
+ 241:modules/ins.c ****     /* H7 的 PC2_C/PC3_C 与 PC2/PC3 之间有模拟开关，不闭合则引脚不通 */
+ 242:modules/ins.c ****     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC2, SYSCFG_SWITCH_PC2_CLOSE);
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 19
+
+
+ 243:modules/ins.c ****     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC3, SYSCFG_SWITCH_PC3_CLOSE);
+ 244:modules/ins.c **** }
+ 245:modules/ins.c **** 
+ 246:modules/ins.c **** static void ins_acc_init(void)
+ 247:modules/ins.c **** {
+ 709              		.loc 1 247 1 is_stmt 1 view -0
+ 710              		.cfi_startproc
+ 711              		@ args = 0, pretend = 0, frame = 8
+ 712              		@ frame_needed = 0, uses_anonymous_args = 0
+ 713 0000 30B5     		push	{r4, r5, lr}
+ 714              	.LCFI13:
+ 715              		.cfi_def_cfa_offset 12
+ 716              		.cfi_offset 4, -12
+ 717              		.cfi_offset 5, -8
+ 718              		.cfi_offset 14, -4
+ 719 0002 83B0     		sub	sp, sp, #12
+ 720              	.LCFI14:
+ 721              		.cfi_def_cfa_offset 24
+ 248:modules/ins.c ****     uint8_t id = 0;
+ 722              		.loc 1 248 5 view .LVU170
+ 723              		.loc 1 248 13 is_stmt 0 view .LVU171
+ 724 0004 0024     		movs	r4, #0
+ 725 0006 8DF80740 		strb	r4, [sp, #7]
+ 249:modules/ins.c **** 
+ 250:modules/ins.c ****     /* 上电默认 I2C 模式：CS 拉高再拉低，产生上升沿后切到 SPI */
+ 251:modules/ins.c ****     INS_CS_ACC_HIGH();
+ 726              		.loc 1 251 5 is_stmt 1 view .LVU172
+ 727 000a 0122     		movs	r2, #1
+ 728 000c 1146     		mov	r1, r2
+ 729 000e 3248     		ldr	r0, .L59
+ 730 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 731              	.LVL73:
+ 252:modules/ins.c ****     HAL_Delay(2);
+ 732              		.loc 1 252 5 view .LVU173
+ 733 0014 0220     		movs	r0, #2
+ 734 0016 FFF7FEFF 		bl	HAL_Delay
+ 735              	.LVL74:
+ 253:modules/ins.c **** 
+ 254:modules/ins.c ****     /* 第一次读多半读到 0xFF/0x00（正在切模式），读两次更稳 */
+ 255:modules/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
+ 736              		.loc 1 255 5 view .LVU174
+ 737 001a 0DF10705 		add	r5, sp, #7
+ 738 001e 0123     		movs	r3, #1
+ 739 0020 2A46     		mov	r2, r5
+ 740 0022 2146     		mov	r1, r4
+ 741 0024 2046     		mov	r0, r4
+ 742 0026 FFF7FEFF 		bl	ins_read
+ 743              	.LVL75:
+ 256:modules/ins.c ****     HAL_Delay(1);
+ 744              		.loc 1 256 5 view .LVU175
+ 745 002a 0120     		movs	r0, #1
+ 746 002c FFF7FEFF 		bl	HAL_Delay
+ 747              	.LVL76:
+ 257:modules/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
+ 748              		.loc 1 257 5 view .LVU176
+ 749 0030 0123     		movs	r3, #1
+ 750 0032 2A46     		mov	r2, r5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 20
+
+
+ 751 0034 2146     		mov	r1, r4
+ 752 0036 2046     		mov	r0, r4
+ 753 0038 FFF7FEFF 		bl	ins_read
+ 754              	.LVL77:
+ 258:modules/ins.c ****     INS_AccId = id;
+ 755              		.loc 1 258 5 view .LVU177
+ 756              		.loc 1 258 15 is_stmt 0 view .LVU178
+ 757 003c 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 758 0040 264A     		ldr	r2, .L59+4
+ 759 0042 1370     		strb	r3, [r2]
+ 259:modules/ins.c **** 
+ 260:modules/ins.c ****     if (id != ACC_CHIP_ID_VAL) {
+ 760              		.loc 1 260 5 is_stmt 1 view .LVU179
+ 761              		.loc 1 260 8 is_stmt 0 view .LVU180
+ 762 0044 1E2B     		cmp	r3, #30
+ 763 0046 06D0     		beq	.L54
+ 261:modules/ins.c ****         INS_Err |= 0x01u;
+ 764              		.loc 1 261 9 is_stmt 1 view .LVU181
+ 765              		.loc 1 261 17 is_stmt 0 view .LVU182
+ 766 0048 254A     		ldr	r2, .L59+8
+ 767 004a 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 768 004c 43F00103 		orr	r3, r3, #1
+ 769 0050 1370     		strb	r3, [r2]
+ 262:modules/ins.c ****         return;
+ 770              		.loc 1 262 9 is_stmt 1 view .LVU183
+ 771              	.L53:
+ 263:modules/ins.c ****     }
+ 264:modules/ins.c **** 
+ 265:modules/ins.c ****     ins_write(DEV_ACC, ACC_SOFTRESET, BMI_SOFTRESET_VAL);
+ 266:modules/ins.c ****     HAL_Delay(50);
+ 267:modules/ins.c **** 
+ 268:modules/ins.c ****     /* 复位后要重新建立 SPI 通信 */
+ 269:modules/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
+ 270:modules/ins.c ****     HAL_Delay(1);
+ 271:modules/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
+ 272:modules/ins.c ****     INS_AccId = id;
+ 273:modules/ins.c **** 
+ 274:modules/ins.c ****     if (id != ACC_CHIP_ID_VAL) {
+ 275:modules/ins.c ****         INS_Err |= 0x01u;
+ 276:modules/ins.c ****         return;
+ 277:modules/ins.c ****     }
+ 278:modules/ins.c **** 
+ 279:modules/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CTRL, 0x04u);   /* 打开加速度计 */
+ 280:modules/ins.c ****     HAL_Delay(5);
+ 281:modules/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CONF, 0x00u);   /* active 模式 */
+ 282:modules/ins.c **** 
+ 283:modules/ins.c ****     ins_write(DEV_ACC, ACC_CONF,  0xACu);      /* 正常模式 / 1600Hz / 带宽 = ODR/2 */
+ 284:modules/ins.c ****     ins_write(DEV_ACC, ACC_RANGE, 0x01u);      /* ±6g */
+ 285:modules/ins.c ****     HAL_Delay(10);
+ 286:modules/ins.c **** }
+ 772              		.loc 1 286 1 is_stmt 0 view .LVU184
+ 773 0052 03B0     		add	sp, sp, #12
+ 774              	.LCFI15:
+ 775              		.cfi_remember_state
+ 776              		.cfi_def_cfa_offset 12
+ 777              		@ sp needed
+ 778 0054 30BD     		pop	{r4, r5, pc}
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 21
+
+
+ 779              	.L54:
+ 780              	.LCFI16:
+ 781              		.cfi_restore_state
+ 265:modules/ins.c ****     HAL_Delay(50);
+ 782              		.loc 1 265 5 is_stmt 1 view .LVU185
+ 783 0056 B622     		movs	r2, #182
+ 784 0058 7E21     		movs	r1, #126
+ 785 005a 0020     		movs	r0, #0
+ 786 005c FFF7FEFF 		bl	ins_write
+ 787              	.LVL78:
+ 266:modules/ins.c **** 
+ 788              		.loc 1 266 5 view .LVU186
+ 789 0060 3220     		movs	r0, #50
+ 790 0062 FFF7FEFF 		bl	HAL_Delay
+ 791              	.LVL79:
+ 269:modules/ins.c ****     HAL_Delay(1);
+ 792              		.loc 1 269 5 view .LVU187
+ 793 0066 0DF10704 		add	r4, sp, #7
+ 794 006a 0123     		movs	r3, #1
+ 795 006c 2246     		mov	r2, r4
+ 796 006e 0021     		movs	r1, #0
+ 797 0070 0846     		mov	r0, r1
+ 798 0072 FFF7FEFF 		bl	ins_read
+ 799              	.LVL80:
+ 270:modules/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
+ 800              		.loc 1 270 5 view .LVU188
+ 801 0076 0120     		movs	r0, #1
+ 802 0078 FFF7FEFF 		bl	HAL_Delay
+ 803              	.LVL81:
+ 271:modules/ins.c ****     INS_AccId = id;
+ 804              		.loc 1 271 5 view .LVU189
+ 805 007c 0123     		movs	r3, #1
+ 806 007e 2246     		mov	r2, r4
+ 807 0080 0021     		movs	r1, #0
+ 808 0082 0846     		mov	r0, r1
+ 809 0084 FFF7FEFF 		bl	ins_read
+ 810              	.LVL82:
+ 272:modules/ins.c **** 
+ 811              		.loc 1 272 5 view .LVU190
+ 272:modules/ins.c **** 
+ 812              		.loc 1 272 15 is_stmt 0 view .LVU191
+ 813 0088 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 814 008c 134A     		ldr	r2, .L59+4
+ 815 008e 1370     		strb	r3, [r2]
+ 274:modules/ins.c ****         INS_Err |= 0x01u;
+ 816              		.loc 1 274 5 is_stmt 1 view .LVU192
+ 274:modules/ins.c ****         INS_Err |= 0x01u;
+ 817              		.loc 1 274 8 is_stmt 0 view .LVU193
+ 818 0090 1E2B     		cmp	r3, #30
+ 819 0092 05D0     		beq	.L56
+ 275:modules/ins.c ****         return;
+ 820              		.loc 1 275 9 is_stmt 1 view .LVU194
+ 275:modules/ins.c ****         return;
+ 821              		.loc 1 275 17 is_stmt 0 view .LVU195
+ 822 0094 124A     		ldr	r2, .L59+8
+ 823 0096 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 824 0098 43F00103 		orr	r3, r3, #1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 22
+
+
+ 825 009c 1370     		strb	r3, [r2]
+ 276:modules/ins.c ****     }
+ 826              		.loc 1 276 9 is_stmt 1 view .LVU196
+ 827 009e D8E7     		b	.L53
+ 828              	.L56:
+ 279:modules/ins.c ****     HAL_Delay(5);
+ 829              		.loc 1 279 5 view .LVU197
+ 830 00a0 0422     		movs	r2, #4
+ 831 00a2 7D21     		movs	r1, #125
+ 832 00a4 0020     		movs	r0, #0
+ 833 00a6 FFF7FEFF 		bl	ins_write
+ 834              	.LVL83:
+ 280:modules/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CONF, 0x00u);   /* active 模式 */
+ 835              		.loc 1 280 5 view .LVU198
+ 836 00aa 0520     		movs	r0, #5
+ 837 00ac FFF7FEFF 		bl	HAL_Delay
+ 838              	.LVL84:
+ 281:modules/ins.c **** 
+ 839              		.loc 1 281 5 view .LVU199
+ 840 00b0 0022     		movs	r2, #0
+ 841 00b2 7C21     		movs	r1, #124
+ 842 00b4 1046     		mov	r0, r2
+ 843 00b6 FFF7FEFF 		bl	ins_write
+ 844              	.LVL85:
+ 283:modules/ins.c ****     ins_write(DEV_ACC, ACC_RANGE, 0x01u);      /* ±6g */
+ 845              		.loc 1 283 5 view .LVU200
+ 846 00ba AC22     		movs	r2, #172
+ 847 00bc 4021     		movs	r1, #64
+ 848 00be 0020     		movs	r0, #0
+ 849 00c0 FFF7FEFF 		bl	ins_write
+ 850              	.LVL86:
+ 284:modules/ins.c ****     HAL_Delay(10);
+ 851              		.loc 1 284 5 view .LVU201
+ 852 00c4 0122     		movs	r2, #1
+ 853 00c6 4121     		movs	r1, #65
+ 854 00c8 0020     		movs	r0, #0
+ 855 00ca FFF7FEFF 		bl	ins_write
+ 856              	.LVL87:
+ 285:modules/ins.c **** }
+ 857              		.loc 1 285 5 view .LVU202
+ 858 00ce 0A20     		movs	r0, #10
+ 859 00d0 FFF7FEFF 		bl	HAL_Delay
+ 860              	.LVL88:
+ 861 00d4 BDE7     		b	.L53
+ 862              	.L60:
+ 863 00d6 00BF     		.align	2
+ 864              	.L59:
+ 865 00d8 00080258 		.word	1476528128
+ 866 00dc 00000000 		.word	INS_AccId
+ 867 00e0 00000000 		.word	INS_Err
+ 868              		.cfi_endproc
+ 869              	.LFE153:
+ 871              		.section	.text.ins_gyro_init,"ax",%progbits
+ 872              		.align	1
+ 873              		.syntax unified
+ 874              		.thumb
+ 875              		.thumb_func
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 23
+
+
+ 877              	ins_gyro_init:
+ 878              	.LFB154:
+ 287:modules/ins.c **** 
+ 288:modules/ins.c **** static void ins_gyro_init(void)
+ 289:modules/ins.c **** {
+ 879              		.loc 1 289 1 view -0
+ 880              		.cfi_startproc
+ 881              		@ args = 0, pretend = 0, frame = 8
+ 882              		@ frame_needed = 0, uses_anonymous_args = 0
+ 883 0000 10B5     		push	{r4, lr}
+ 884              	.LCFI17:
+ 885              		.cfi_def_cfa_offset 8
+ 886              		.cfi_offset 4, -8
+ 887              		.cfi_offset 14, -4
+ 888 0002 82B0     		sub	sp, sp, #8
+ 889              	.LCFI18:
+ 890              		.cfi_def_cfa_offset 16
+ 290:modules/ins.c ****     uint8_t id = 0;
+ 891              		.loc 1 290 5 view .LVU204
+ 892              		.loc 1 290 13 is_stmt 0 view .LVU205
+ 893 0004 0024     		movs	r4, #0
+ 894 0006 8DF80740 		strb	r4, [sp, #7]
+ 291:modules/ins.c **** 
+ 292:modules/ins.c ****     INS_CS_GYRO_HIGH();
+ 895              		.loc 1 292 5 is_stmt 1 view .LVU206
+ 896 000a 0122     		movs	r2, #1
+ 897 000c 0821     		movs	r1, #8
+ 898 000e 2448     		ldr	r0, .L67
+ 899 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 900              	.LVL89:
+ 293:modules/ins.c ****     HAL_Delay(2);
+ 901              		.loc 1 293 5 view .LVU207
+ 902 0014 0220     		movs	r0, #2
+ 903 0016 FFF7FEFF 		bl	HAL_Delay
+ 904              	.LVL90:
+ 294:modules/ins.c **** 
+ 295:modules/ins.c ****     ins_read(DEV_GYRO, GYRO_CHIP_ID, &id, 1);
+ 905              		.loc 1 295 5 view .LVU208
+ 906 001a 0123     		movs	r3, #1
+ 907 001c 0DF10702 		add	r2, sp, #7
+ 908 0020 2146     		mov	r1, r4
+ 909 0022 1846     		mov	r0, r3
+ 910 0024 FFF7FEFF 		bl	ins_read
+ 911              	.LVL91:
+ 296:modules/ins.c ****     INS_GyroId = id;
+ 912              		.loc 1 296 5 view .LVU209
+ 913              		.loc 1 296 16 is_stmt 0 view .LVU210
+ 914 0028 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 915 002c 1D4A     		ldr	r2, .L67+4
+ 916 002e 1370     		strb	r3, [r2]
+ 297:modules/ins.c **** 
+ 298:modules/ins.c ****     if (id != GYRO_CHIP_ID_VAL) {
+ 917              		.loc 1 298 5 is_stmt 1 view .LVU211
+ 918              		.loc 1 298 8 is_stmt 0 view .LVU212
+ 919 0030 0F2B     		cmp	r3, #15
+ 920 0032 06D0     		beq	.L62
+ 299:modules/ins.c ****         INS_Err |= 0x01u;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 24
+
+
+ 921              		.loc 1 299 9 is_stmt 1 view .LVU213
+ 922              		.loc 1 299 17 is_stmt 0 view .LVU214
+ 923 0034 1C4A     		ldr	r2, .L67+8
+ 924 0036 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 925 0038 43F00103 		orr	r3, r3, #1
+ 926 003c 1370     		strb	r3, [r2]
+ 300:modules/ins.c ****         return;
+ 927              		.loc 1 300 9 is_stmt 1 view .LVU215
+ 928              	.L61:
+ 301:modules/ins.c ****     }
+ 302:modules/ins.c **** 
+ 303:modules/ins.c ****     ins_write(DEV_GYRO, GYRO_SOFTRESET, BMI_SOFTRESET_VAL);
+ 304:modules/ins.c ****     HAL_Delay(30);
+ 305:modules/ins.c **** 
+ 306:modules/ins.c ****     ins_read(DEV_GYRO, GYRO_CHIP_ID, &id, 1);
+ 307:modules/ins.c ****     INS_GyroId = id;
+ 308:modules/ins.c **** 
+ 309:modules/ins.c ****     if (id != GYRO_CHIP_ID_VAL) {
+ 310:modules/ins.c ****         INS_Err |= 0x01u;
+ 311:modules/ins.c ****         return;
+ 312:modules/ins.c ****     }
+ 313:modules/ins.c **** 
+ 314:modules/ins.c ****     ins_write(DEV_GYRO, GYRO_RANGE,     0x00u);  /* ±2000 dps */
+ 315:modules/ins.c ****     ins_write(DEV_GYRO, GYRO_BANDWIDTH, 0x02u);  /* 1000Hz ODR / 116Hz 滤波 */
+ 316:modules/ins.c ****     ins_write(DEV_GYRO, GYRO_LPM1,      0x00u);  /* 正常模式 */
+ 317:modules/ins.c ****     HAL_Delay(5);
+ 318:modules/ins.c **** }
+ 929              		.loc 1 318 1 is_stmt 0 view .LVU216
+ 930 003e 02B0     		add	sp, sp, #8
+ 931              	.LCFI19:
+ 932              		.cfi_remember_state
+ 933              		.cfi_def_cfa_offset 8
+ 934              		@ sp needed
+ 935 0040 10BD     		pop	{r4, pc}
+ 936              	.L62:
+ 937              	.LCFI20:
+ 938              		.cfi_restore_state
+ 303:modules/ins.c ****     HAL_Delay(30);
+ 939              		.loc 1 303 5 is_stmt 1 view .LVU217
+ 940 0042 B622     		movs	r2, #182
+ 941 0044 1421     		movs	r1, #20
+ 942 0046 0120     		movs	r0, #1
+ 943 0048 FFF7FEFF 		bl	ins_write
+ 944              	.LVL92:
+ 304:modules/ins.c **** 
+ 945              		.loc 1 304 5 view .LVU218
+ 946 004c 1E20     		movs	r0, #30
+ 947 004e FFF7FEFF 		bl	HAL_Delay
+ 948              	.LVL93:
+ 306:modules/ins.c ****     INS_GyroId = id;
+ 949              		.loc 1 306 5 view .LVU219
+ 950 0052 0123     		movs	r3, #1
+ 951 0054 0DF10702 		add	r2, sp, #7
+ 952 0058 0021     		movs	r1, #0
+ 953 005a 1846     		mov	r0, r3
+ 954 005c FFF7FEFF 		bl	ins_read
+ 955              	.LVL94:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 25
+
+
+ 307:modules/ins.c **** 
+ 956              		.loc 1 307 5 view .LVU220
+ 307:modules/ins.c **** 
+ 957              		.loc 1 307 16 is_stmt 0 view .LVU221
+ 958 0060 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ 959 0064 0F4A     		ldr	r2, .L67+4
+ 960 0066 1370     		strb	r3, [r2]
+ 309:modules/ins.c ****         INS_Err |= 0x01u;
+ 961              		.loc 1 309 5 is_stmt 1 view .LVU222
+ 309:modules/ins.c ****         INS_Err |= 0x01u;
+ 962              		.loc 1 309 8 is_stmt 0 view .LVU223
+ 963 0068 0F2B     		cmp	r3, #15
+ 964 006a 05D0     		beq	.L64
+ 310:modules/ins.c ****         return;
+ 965              		.loc 1 310 9 is_stmt 1 view .LVU224
+ 310:modules/ins.c ****         return;
+ 966              		.loc 1 310 17 is_stmt 0 view .LVU225
+ 967 006c 0E4A     		ldr	r2, .L67+8
+ 968 006e 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 969 0070 43F00103 		orr	r3, r3, #1
+ 970 0074 1370     		strb	r3, [r2]
+ 311:modules/ins.c ****     }
+ 971              		.loc 1 311 9 is_stmt 1 view .LVU226
+ 972 0076 E2E7     		b	.L61
+ 973              	.L64:
+ 314:modules/ins.c ****     ins_write(DEV_GYRO, GYRO_BANDWIDTH, 0x02u);  /* 1000Hz ODR / 116Hz 滤波 */
+ 974              		.loc 1 314 5 view .LVU227
+ 975 0078 0022     		movs	r2, #0
+ 976 007a 0F21     		movs	r1, #15
+ 977 007c 0120     		movs	r0, #1
+ 978 007e FFF7FEFF 		bl	ins_write
+ 979              	.LVL95:
+ 315:modules/ins.c ****     ins_write(DEV_GYRO, GYRO_LPM1,      0x00u);  /* 正常模式 */
+ 980              		.loc 1 315 5 view .LVU228
+ 981 0082 0222     		movs	r2, #2
+ 982 0084 1021     		movs	r1, #16
+ 983 0086 0120     		movs	r0, #1
+ 984 0088 FFF7FEFF 		bl	ins_write
+ 985              	.LVL96:
+ 316:modules/ins.c ****     HAL_Delay(5);
+ 986              		.loc 1 316 5 view .LVU229
+ 987 008c 0022     		movs	r2, #0
+ 988 008e 1121     		movs	r1, #17
+ 989 0090 0120     		movs	r0, #1
+ 990 0092 FFF7FEFF 		bl	ins_write
+ 991              	.LVL97:
+ 317:modules/ins.c **** }
+ 992              		.loc 1 317 5 view .LVU230
+ 993 0096 0520     		movs	r0, #5
+ 994 0098 FFF7FEFF 		bl	HAL_Delay
+ 995              	.LVL98:
+ 996 009c CFE7     		b	.L61
+ 997              	.L68:
+ 998 009e 00BF     		.align	2
+ 999              	.L67:
+ 1000 00a0 00080258 		.word	1476528128
+ 1001 00a4 00000000 		.word	INS_GyroId
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 26
+
+
+ 1002 00a8 00000000 		.word	INS_Err
+ 1003              		.cfi_endproc
+ 1004              	.LFE154:
+ 1006              		.section	.text.INS_Init,"ax",%progbits
+ 1007              		.align	1
+ 1008              		.global	INS_Init
+ 1009              		.syntax unified
+ 1010              		.thumb
+ 1011              		.thumb_func
+ 1013              	INS_Init:
+ 1014              	.LFB155:
+ 319:modules/ins.c **** 
+ 320:modules/ins.c **** void INS_Init(void)
+ 321:modules/ins.c **** {
+ 1015              		.loc 1 321 1 view -0
+ 1016              		.cfi_startproc
+ 1017              		@ args = 0, pretend = 0, frame = 0
+ 1018              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1019 0000 10B5     		push	{r4, lr}
+ 1020              	.LCFI21:
+ 1021              		.cfi_def_cfa_offset 8
+ 1022              		.cfi_offset 4, -8
+ 1023              		.cfi_offset 14, -4
+ 322:modules/ins.c ****     uint8_t i;
+ 1024              		.loc 1 322 5 view .LVU232
+ 323:modules/ins.c **** 
+ 324:modules/ins.c ****     INS_AccId   = 0;
+ 1025              		.loc 1 324 5 view .LVU233
+ 1026              		.loc 1 324 17 is_stmt 0 view .LVU234
+ 1027 0002 0023     		movs	r3, #0
+ 1028 0004 234A     		ldr	r2, .L74
+ 1029 0006 1370     		strb	r3, [r2]
+ 325:modules/ins.c ****     INS_GyroId  = 0;
+ 1030              		.loc 1 325 5 is_stmt 1 view .LVU235
+ 1031              		.loc 1 325 17 is_stmt 0 view .LVU236
+ 1032 0008 234A     		ldr	r2, .L74+4
+ 1033 000a 1370     		strb	r3, [r2]
+ 326:modules/ins.c ****     INS_Ready   = 0;
+ 1034              		.loc 1 326 5 is_stmt 1 view .LVU237
+ 1035              		.loc 1 326 17 is_stmt 0 view .LVU238
+ 1036 000c 234A     		ldr	r2, .L74+8
+ 1037 000e 1370     		strb	r3, [r2]
+ 327:modules/ins.c ****     INS_CalDone = 0;
+ 1038              		.loc 1 327 5 is_stmt 1 view .LVU239
+ 1039              		.loc 1 327 17 is_stmt 0 view .LVU240
+ 1040 0010 234A     		ldr	r2, .L74+12
+ 1041 0012 1370     		strb	r3, [r2]
+ 328:modules/ins.c ****     INS_CalCnt  = 0;
+ 1042              		.loc 1 328 5 is_stmt 1 view .LVU241
+ 1043              		.loc 1 328 17 is_stmt 0 view .LVU242
+ 1044 0014 234A     		ldr	r2, .L74+16
+ 1045 0016 1380     		strh	r3, [r2]	@ movhi
+ 329:modules/ins.c ****     INS_Sample  = 0;
+ 1046              		.loc 1 329 5 is_stmt 1 view .LVU243
+ 1047              		.loc 1 329 17 is_stmt 0 view .LVU244
+ 1048 0018 234A     		ldr	r2, .L74+20
+ 1049 001a 1360     		str	r3, [r2]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 27
+
+
+ 330:modules/ins.c ****     INS_Err     = 0;
+ 1050              		.loc 1 330 5 is_stmt 1 view .LVU245
+ 1051              		.loc 1 330 17 is_stmt 0 view .LVU246
+ 1052 001c 234A     		ldr	r2, .L74+24
+ 1053 001e 1370     		strb	r3, [r2]
+ 331:modules/ins.c ****     s_inited    = 0;
+ 1054              		.loc 1 331 5 is_stmt 1 view .LVU247
+ 1055              		.loc 1 331 17 is_stmt 0 view .LVU248
+ 1056 0020 234A     		ldr	r2, .L74+28
+ 1057 0022 1370     		strb	r3, [r2]
+ 332:modules/ins.c **** 
+ 333:modules/ins.c ****     for (i = 0; i < 3; i++) {
+ 1058              		.loc 1 333 5 is_stmt 1 view .LVU249
+ 1059              	.LVL99:
+ 1060              		.loc 1 333 5 is_stmt 0 view .LVU250
+ 1061 0024 12E0     		b	.L70
+ 1062              	.LVL100:
+ 1063              	.L71:
+ 334:modules/ins.c ****         INS_Bias[i]  = 0.0f;
+ 1064              		.loc 1 334 9 is_stmt 1 view .LVU251
+ 1065              		.loc 1 334 22 is_stmt 0 view .LVU252
+ 1066 0026 2349     		ldr	r1, .L74+32
+ 1067 0028 01EB8301 		add	r1, r1, r3, lsl #2
+ 1068 002c 0022     		movs	r2, #0
+ 1069 002e 0A60     		str	r2, [r1]	@ float
+ 335:modules/ins.c ****         INS_Gyro[i]  = 0.0f;
+ 1070              		.loc 1 335 9 is_stmt 1 view .LVU253
+ 1071              		.loc 1 335 22 is_stmt 0 view .LVU254
+ 1072 0030 2149     		ldr	r1, .L74+36
+ 1073 0032 01EB8301 		add	r1, r1, r3, lsl #2
+ 1074 0036 0A60     		str	r2, [r1]	@ float
+ 336:modules/ins.c ****         INS_Acc[i]   = 0.0f;
+ 1075              		.loc 1 336 9 is_stmt 1 view .LVU255
+ 1076              		.loc 1 336 22 is_stmt 0 view .LVU256
+ 1077 0038 2049     		ldr	r1, .L74+40
+ 1078 003a 01EB8301 		add	r1, r1, r3, lsl #2
+ 1079 003e 0A60     		str	r2, [r1]	@ float
+ 337:modules/ins.c ****         s_sum[i]     = 0.0f;
+ 1080              		.loc 1 337 9 is_stmt 1 view .LVU257
+ 1081              		.loc 1 337 22 is_stmt 0 view .LVU258
+ 1082 0040 1F49     		ldr	r1, .L74+44
+ 1083 0042 01EB8301 		add	r1, r1, r3, lsl #2
+ 1084 0046 0A60     		str	r2, [r1]	@ float
+ 333:modules/ins.c ****         INS_Bias[i]  = 0.0f;
+ 1085              		.loc 1 333 25 is_stmt 1 discriminator 3 view .LVU259
+ 1086 0048 0133     		adds	r3, r3, #1
+ 1087              	.LVL101:
+ 333:modules/ins.c ****         INS_Bias[i]  = 0.0f;
+ 1088              		.loc 1 333 25 is_stmt 0 discriminator 3 view .LVU260
+ 1089 004a DBB2     		uxtb	r3, r3
+ 1090              	.LVL102:
+ 1091              	.L70:
+ 333:modules/ins.c ****         INS_Bias[i]  = 0.0f;
+ 1092              		.loc 1 333 19 is_stmt 1 discriminator 1 view .LVU261
+ 1093 004c 022B     		cmp	r3, #2
+ 1094 004e EAD9     		bls	.L71
+ 338:modules/ins.c ****     }
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 28
+
+
+ 339:modules/ins.c **** 
+ 340:modules/ins.c ****     INS_CS_ACC_HIGH();
+ 1095              		.loc 1 340 5 view .LVU262
+ 1096 0050 1C4C     		ldr	r4, .L74+48
+ 1097 0052 0122     		movs	r2, #1
+ 1098 0054 1146     		mov	r1, r2
+ 1099 0056 2046     		mov	r0, r4
+ 1100 0058 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1101              	.LVL103:
+ 341:modules/ins.c ****     INS_CS_GYRO_HIGH();
+ 1102              		.loc 1 341 5 view .LVU263
+ 1103 005c 0122     		movs	r2, #1
+ 1104 005e 0821     		movs	r1, #8
+ 1105 0060 2046     		mov	r0, r4
+ 1106 0062 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1107              	.LVL104:
+ 342:modules/ins.c ****     /* ins_gpio_init();   临时停用：验证 PC0/PC3 是否与 CAN2 收发器共用引脚 */
+ 343:modules/ins.c ****     HAL_Delay(10);
+ 1108              		.loc 1 343 5 view .LVU264
+ 1109 0066 0A20     		movs	r0, #10
+ 1110 0068 FFF7FEFF 		bl	HAL_Delay
+ 1111              	.LVL105:
+ 344:modules/ins.c **** 
+ 345:modules/ins.c ****     ins_detect_skip();          /* 先量出 SPI 哑字节个数，再按它初始化 */
+ 1112              		.loc 1 345 5 view .LVU265
+ 1113 006c FFF7FEFF 		bl	ins_detect_skip
+ 1114              	.LVL106:
+ 346:modules/ins.c ****     ins_acc_init();
+ 1115              		.loc 1 346 5 view .LVU266
+ 1116 0070 FFF7FEFF 		bl	ins_acc_init
+ 1117              	.LVL107:
+ 347:modules/ins.c ****     ins_gyro_init();
+ 1118              		.loc 1 347 5 view .LVU267
+ 1119 0074 FFF7FEFF 		bl	ins_gyro_init
+ 1120              	.LVL108:
+ 348:modules/ins.c ****     ins_dump();
+ 1121              		.loc 1 348 5 view .LVU268
+ 1122 0078 FFF7FEFF 		bl	ins_dump
+ 1123              	.LVL109:
+ 349:modules/ins.c **** 
+ 350:modules/ins.c ****     /* 两个 ID 都对上才算就绪 */
+ 351:modules/ins.c ****     if ((INS_Err & 0x01u) == 0u) {
+ 1124              		.loc 1 351 5 view .LVU269
+ 1125              		.loc 1 351 18 is_stmt 0 view .LVU270
+ 1126 007c 0B4B     		ldr	r3, .L74+24
+ 1127 007e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1128              		.loc 1 351 8 view .LVU271
+ 1129 0080 13F0010F 		tst	r3, #1
+ 1130 0084 04D1     		bne	.L69
+ 352:modules/ins.c ****         INS_Ready = 1;
+ 1131              		.loc 1 352 9 is_stmt 1 view .LVU272
+ 1132              		.loc 1 352 19 is_stmt 0 view .LVU273
+ 1133 0086 0123     		movs	r3, #1
+ 1134 0088 044A     		ldr	r2, .L74+8
+ 1135 008a 1370     		strb	r3, [r2]
+ 353:modules/ins.c ****         s_inited  = 1;
+ 1136              		.loc 1 353 9 is_stmt 1 view .LVU274
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 29
+
+
+ 1137              		.loc 1 353 19 is_stmt 0 view .LVU275
+ 1138 008c 084A     		ldr	r2, .L74+28
+ 1139 008e 1370     		strb	r3, [r2]
+ 1140              	.L69:
+ 354:modules/ins.c ****     }
+ 355:modules/ins.c **** }
+ 1141              		.loc 1 355 1 view .LVU276
+ 1142 0090 10BD     		pop	{r4, pc}
+ 1143              	.L75:
+ 1144 0092 00BF     		.align	2
+ 1145              	.L74:
+ 1146 0094 00000000 		.word	INS_AccId
+ 1147 0098 00000000 		.word	INS_GyroId
+ 1148 009c 00000000 		.word	INS_Ready
+ 1149 00a0 00000000 		.word	INS_CalDone
+ 1150 00a4 00000000 		.word	INS_CalCnt
+ 1151 00a8 00000000 		.word	INS_Sample
+ 1152 00ac 00000000 		.word	INS_Err
+ 1153 00b0 00000000 		.word	s_inited
+ 1154 00b4 00000000 		.word	INS_Bias
+ 1155 00b8 00000000 		.word	INS_Gyro
+ 1156 00bc 00000000 		.word	INS_Acc
+ 1157 00c0 00000000 		.word	s_sum
+ 1158 00c4 00080258 		.word	1476528128
+ 1159              		.cfi_endproc
+ 1160              	.LFE155:
+ 1162              		.section	.text.INS_ResetBias,"ax",%progbits
+ 1163              		.align	1
+ 1164              		.global	INS_ResetBias
+ 1165              		.syntax unified
+ 1166              		.thumb
+ 1167              		.thumb_func
+ 1169              	INS_ResetBias:
+ 1170              	.LFB156:
+ 356:modules/ins.c **** 
+ 357:modules/ins.c **** void INS_ResetBias(void)
+ 358:modules/ins.c **** {
+ 1171              		.loc 1 358 1 is_stmt 1 view -0
+ 1172              		.cfi_startproc
+ 1173              		@ args = 0, pretend = 0, frame = 0
+ 1174              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1175              		@ link register save eliminated.
+ 359:modules/ins.c ****     uint8_t i;
+ 1176              		.loc 1 359 5 view .LVU278
+ 360:modules/ins.c ****     for (i = 0; i < 3; i++) {
+ 1177              		.loc 1 360 5 view .LVU279
+ 1178              	.LVL110:
+ 1179              		.loc 1 360 12 is_stmt 0 view .LVU280
+ 1180 0000 0023     		movs	r3, #0
+ 1181              		.loc 1 360 5 view .LVU281
+ 1182 0002 0EE0     		b	.L77
+ 1183              	.LVL111:
+ 1184              	.L78:
+ 361:modules/ins.c ****         s_sum[i]    = 0.0f;
+ 1185              		.loc 1 361 9 is_stmt 1 view .LVU282
+ 1186              		.loc 1 361 21 is_stmt 0 view .LVU283
+ 1187 0004 0B4A     		ldr	r2, .L79
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 30
+
+
+ 1188 0006 02EB8302 		add	r2, r2, r3, lsl #2
+ 1189 000a 0021     		movs	r1, #0
+ 1190 000c 1160     		str	r1, [r2]	@ float
+ 362:modules/ins.c ****         INS_Bias[i] = 0.0f;
+ 1191              		.loc 1 362 9 is_stmt 1 view .LVU284
+ 1192              		.loc 1 362 21 is_stmt 0 view .LVU285
+ 1193 000e 0A4A     		ldr	r2, .L79+4
+ 1194 0010 02EB8302 		add	r2, r2, r3, lsl #2
+ 1195 0014 1160     		str	r1, [r2]	@ float
+ 363:modules/ins.c ****         INS_Gyro[i] = 0.0f;
+ 1196              		.loc 1 363 9 is_stmt 1 view .LVU286
+ 1197              		.loc 1 363 21 is_stmt 0 view .LVU287
+ 1198 0016 094A     		ldr	r2, .L79+8
+ 1199 0018 02EB8302 		add	r2, r2, r3, lsl #2
+ 1200 001c 1160     		str	r1, [r2]	@ float
+ 360:modules/ins.c ****         s_sum[i]    = 0.0f;
+ 1201              		.loc 1 360 25 is_stmt 1 discriminator 3 view .LVU288
+ 1202 001e 0133     		adds	r3, r3, #1
+ 1203              	.LVL112:
+ 360:modules/ins.c ****         s_sum[i]    = 0.0f;
+ 1204              		.loc 1 360 25 is_stmt 0 discriminator 3 view .LVU289
+ 1205 0020 DBB2     		uxtb	r3, r3
+ 1206              	.LVL113:
+ 1207              	.L77:
+ 360:modules/ins.c ****         s_sum[i]    = 0.0f;
+ 1208              		.loc 1 360 19 is_stmt 1 discriminator 1 view .LVU290
+ 1209 0022 022B     		cmp	r3, #2
+ 1210 0024 EED9     		bls	.L78
+ 364:modules/ins.c ****     }
+ 365:modules/ins.c ****     INS_CalCnt  = 0;
+ 1211              		.loc 1 365 5 view .LVU291
+ 1212              		.loc 1 365 17 is_stmt 0 view .LVU292
+ 1213 0026 0023     		movs	r3, #0
+ 1214              	.LVL114:
+ 1215              		.loc 1 365 17 view .LVU293
+ 1216 0028 054A     		ldr	r2, .L79+12
+ 1217 002a 1380     		strh	r3, [r2]	@ movhi
+ 366:modules/ins.c ****     INS_CalDone = 0;
+ 1218              		.loc 1 366 5 is_stmt 1 view .LVU294
+ 1219              		.loc 1 366 17 is_stmt 0 view .LVU295
+ 1220 002c 054A     		ldr	r2, .L79+16
+ 1221 002e 1370     		strb	r3, [r2]
+ 367:modules/ins.c **** }
+ 1222              		.loc 1 367 1 view .LVU296
+ 1223 0030 7047     		bx	lr
+ 1224              	.L80:
+ 1225 0032 00BF     		.align	2
+ 1226              	.L79:
+ 1227 0034 00000000 		.word	s_sum
+ 1228 0038 00000000 		.word	INS_Bias
+ 1229 003c 00000000 		.word	INS_Gyro
+ 1230 0040 00000000 		.word	INS_CalCnt
+ 1231 0044 00000000 		.word	INS_CalDone
+ 1232              		.cfi_endproc
+ 1233              	.LFE156:
+ 1235              		.section	.text.INS_Task,"ax",%progbits
+ 1236              		.align	1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 31
+
+
+ 1237              		.global	INS_Task
+ 1238              		.syntax unified
+ 1239              		.thumb
+ 1240              		.thumb_func
+ 1242              	INS_Task:
+ 1243              	.LFB157:
+ 368:modules/ins.c **** 
+ 369:modules/ins.c **** /* ======================= 周期任务 ======================= */
+ 370:modules/ins.c **** 
+ 371:modules/ins.c **** void INS_Task(void)
+ 372:modules/ins.c **** {
+ 1244              		.loc 1 372 1 is_stmt 1 view -0
+ 1245              		.cfi_startproc
+ 1246              		@ args = 0, pretend = 0, frame = 24
+ 1247              		@ frame_needed = 0, uses_anonymous_args = 0
+ 373:modules/ins.c ****     uint8_t  b[6];
+ 1248              		.loc 1 373 5 view .LVU298
+ 374:modules/ins.c ****     uint8_t  i;
+ 1249              		.loc 1 374 5 view .LVU299
+ 375:modules/ins.c ****     float    g[3];
+ 1250              		.loc 1 375 5 view .LVU300
+ 376:modules/ins.c ****     float    max_dps = 0.0f;
+ 1251              		.loc 1 376 5 view .LVU301
+ 1252              	.LVL115:
+ 377:modules/ins.c **** 
+ 378:modules/ins.c ****     if (s_inited == 0u || INS_Ready == 0u) {
+ 1253              		.loc 1 378 5 view .LVU302
+ 1254              		.loc 1 378 18 is_stmt 0 view .LVU303
+ 1255 0000 8E4B     		ldr	r3, .L115
+ 1256 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1257              		.loc 1 378 8 view .LVU304
+ 1258 0004 13B1     		cbz	r3, .L108
+ 1259              		.loc 1 378 37 discriminator 1 view .LVU305
+ 1260 0006 8E4B     		ldr	r3, .L115+4
+ 1261 0008 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1262              		.loc 1 378 24 discriminator 1 view .LVU306
+ 1263 000a 03B9     		cbnz	r3, .L111
+ 1264              	.L108:
+ 1265 000c 7047     		bx	lr
+ 1266              	.L111:
+ 372:modules/ins.c ****     uint8_t  b[6];
+ 1267              		.loc 1 372 1 view .LVU307
+ 1268 000e 00B5     		push	{lr}
+ 1269              	.LCFI22:
+ 1270              		.cfi_def_cfa_offset 4
+ 1271              		.cfi_offset 14, -4
+ 1272 0010 87B0     		sub	sp, sp, #28
+ 1273              	.LCFI23:
+ 1274              		.cfi_def_cfa_offset 32
+ 379:modules/ins.c ****         return;
+ 380:modules/ins.c ****     }
+ 381:modules/ins.c **** 
+ 382:modules/ins.c ****     /* ---- 陀螺：0x02 ~ 0x07 ---- */
+ 383:modules/ins.c ****     if (ins_read(DEV_GYRO, GYRO_RATE_DATA, b, 6) == 0u) {
+ 1275              		.loc 1 383 5 is_stmt 1 view .LVU308
+ 1276              		.loc 1 383 9 is_stmt 0 view .LVU309
+ 1277 0012 0623     		movs	r3, #6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 32
+
+
+ 1278 0014 04AA     		add	r2, sp, #16
+ 1279 0016 0221     		movs	r1, #2
+ 1280 0018 0120     		movs	r0, #1
+ 1281 001a FFF7FEFF 		bl	ins_read
+ 1282              	.LVL116:
+ 1283              		.loc 1 383 8 discriminator 1 view .LVU310
+ 1284 001e E0B1     		cbz	r0, .L112
+ 384:modules/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本拍数据不可信，直接丢弃 */
+ 385:modules/ins.c ****         return;
+ 386:modules/ins.c ****     }
+ 387:modules/ins.c ****     INS_GyroRaw[0] = (int16_t)(((uint16_t)b[1] << 8) | b[0]);
+ 1285              		.loc 1 387 5 is_stmt 1 view .LVU311
+ 1286              		.loc 1 387 44 is_stmt 0 view .LVU312
+ 1287 0020 9DF81120 		ldrb	r2, [sp, #17]	@ zero_extendqisi2
+ 1288              		.loc 1 387 57 view .LVU313
+ 1289 0024 9DF81030 		ldrb	r3, [sp, #16]	@ zero_extendqisi2
+ 1290              		.loc 1 387 22 view .LVU314
+ 1291 0028 43EA0223 		orr	r3, r3, r2, lsl #8
+ 1292 002c 1BB2     		sxth	r3, r3
+ 1293              		.loc 1 387 20 view .LVU315
+ 1294 002e 854A     		ldr	r2, .L115+8
+ 1295 0030 1380     		strh	r3, [r2]	@ movhi
+ 388:modules/ins.c ****     INS_GyroRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
+ 1296              		.loc 1 388 5 is_stmt 1 view .LVU316
+ 1297              		.loc 1 388 44 is_stmt 0 view .LVU317
+ 1298 0032 9DF81310 		ldrb	r1, [sp, #19]	@ zero_extendqisi2
+ 1299              		.loc 1 388 57 view .LVU318
+ 1300 0036 9DF81230 		ldrb	r3, [sp, #18]	@ zero_extendqisi2
+ 1301              		.loc 1 388 22 view .LVU319
+ 1302 003a 43EA0123 		orr	r3, r3, r1, lsl #8
+ 1303 003e 1BB2     		sxth	r3, r3
+ 1304              		.loc 1 388 20 view .LVU320
+ 1305 0040 5380     		strh	r3, [r2, #2]	@ movhi
+ 389:modules/ins.c ****     INS_GyroRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+ 1306              		.loc 1 389 5 is_stmt 1 view .LVU321
+ 1307              		.loc 1 389 44 is_stmt 0 view .LVU322
+ 1308 0042 9DF81510 		ldrb	r1, [sp, #21]	@ zero_extendqisi2
+ 1309              		.loc 1 389 57 view .LVU323
+ 1310 0046 9DF81430 		ldrb	r3, [sp, #20]	@ zero_extendqisi2
+ 1311              		.loc 1 389 22 view .LVU324
+ 1312 004a 43EA0123 		orr	r3, r3, r1, lsl #8
+ 1313 004e 1BB2     		sxth	r3, r3
+ 1314              		.loc 1 389 20 view .LVU325
+ 1315 0050 9380     		strh	r3, [r2, #4]	@ movhi
+ 390:modules/ins.c **** 
+ 391:modules/ins.c ****     for (i = 0; i < 3; i++) {
+ 1316              		.loc 1 391 5 is_stmt 1 view .LVU326
+ 1317              	.LVL117:
+ 376:modules/ins.c **** 
+ 1318              		.loc 1 376 14 is_stmt 0 view .LVU327
+ 1319 0052 9FED7D7A 		vldr.32	s14, .L115+12
+ 1320              		.loc 1 391 12 view .LVU328
+ 1321 0056 0022     		movs	r2, #0
+ 1322              		.loc 1 391 5 view .LVU329
+ 1323 0058 0BE0     		b	.L84
+ 1324              	.LVL118:
+ 1325              	.L112:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 33
+
+
+ 384:modules/ins.c ****         return;
+ 1326              		.loc 1 384 9 is_stmt 1 view .LVU330
+ 384:modules/ins.c ****         return;
+ 1327              		.loc 1 384 17 is_stmt 0 view .LVU331
+ 1328 005a 7C4A     		ldr	r2, .L115+16
+ 1329 005c 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 1330 005e 43F00403 		orr	r3, r3, #4
+ 1331 0062 1370     		strb	r3, [r2]
+ 385:modules/ins.c ****     }
+ 1332              		.loc 1 385 9 is_stmt 1 view .LVU332
+ 1333              	.LVL119:
+ 1334              	.L81:
+ 392:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 393:modules/ins.c ****         if (g[i] > max_dps)  max_dps = g[i];
+ 394:modules/ins.c ****         if (-g[i] > max_dps) max_dps = -g[i];
+ 395:modules/ins.c ****     }
+ 396:modules/ins.c **** 
+ 397:modules/ins.c ****     INS_Sample++;
+ 398:modules/ins.c **** 
+ 399:modules/ins.c ****     /* ---- 零偏标定 ---- */
+ 400:modules/ins.c ****     if (INS_CalDone == 0u) {
+ 401:modules/ins.c ****         for (i = 0; i < 3; i++) {
+ 402:modules/ins.c ****             s_sum[i] += g[i];
+ 403:modules/ins.c ****             INS_Gyro[i] = 0.0f;
+ 404:modules/ins.c ****         }
+ 405:modules/ins.c ****         INS_CalCnt++;
+ 406:modules/ins.c **** 
+ 407:modules/ins.c ****         /* 标定过程中动过 → 作废重来，不能带着动过的样本收零偏 */
+ 408:modules/ins.c ****         if (max_dps > (INS_CAL_MAX_DPS * 0.0174532925f)) {
+ 409:modules/ins.c ****             INS_Err |= 0x02u;
+ 410:modules/ins.c ****             for (i = 0; i < 3; i++) {
+ 411:modules/ins.c ****                 s_sum[i] = 0.0f;
+ 412:modules/ins.c ****             }
+ 413:modules/ins.c ****             INS_CalCnt = 0;
+ 414:modules/ins.c ****             return;
+ 415:modules/ins.c ****         }
+ 416:modules/ins.c **** 
+ 417:modules/ins.c ****         if (INS_CalCnt >= INS_CAL_SAMPLES) {
+ 418:modules/ins.c ****             for (i = 0; i < 3; i++) {
+ 419:modules/ins.c ****                 INS_Bias[i] = s_sum[i] / (float)INS_CAL_SAMPLES;
+ 420:modules/ins.c ****             }
+ 421:modules/ins.c ****             INS_CalDone = 1;
+ 422:modules/ins.c ****         }
+ 423:modules/ins.c ****         return;
+ 424:modules/ins.c ****     }
+ 425:modules/ins.c **** 
+ 426:modules/ins.c ****     /* ---- 去零偏 + 一阶低通 ---- */
+ 427:modules/ins.c ****     for (i = 0; i < 3; i++) {
+ 428:modules/ins.c ****         float v = g[i] - INS_Bias[i];
+ 429:modules/ins.c ****         INS_Gyro[i] += (v - INS_Gyro[i]) * INS_GYRO_LPF;
+ 430:modules/ins.c ****     }
+ 431:modules/ins.c **** 
+ 432:modules/ins.c ****     /* ---- 加速度计：0x12 ~ 0x17 ---- */
+ 433:modules/ins.c ****     if (ins_read(DEV_ACC, ACC_DATA, b, 6) == 0u) {
+ 434:modules/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 435:modules/ins.c ****         return;
+ 436:modules/ins.c ****     }
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 34
+
+
+ 437:modules/ins.c ****     INS_AccRaw[0] = (int16_t)(((uint16_t)b[1] << 8) | b[0]);
+ 438:modules/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
+ 439:modules/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+ 440:modules/ins.c **** 
+ 441:modules/ins.c ****     for (i = 0; i < 3; i++) {
+ 442:modules/ins.c ****         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
+ 443:modules/ins.c ****     }
+ 444:modules/ins.c **** }
+ 1335              		.loc 1 444 1 is_stmt 0 view .LVU333
+ 1336 0064 07B0     		add	sp, sp, #28
+ 1337              	.LCFI24:
+ 1338              		.cfi_remember_state
+ 1339              		.cfi_def_cfa_offset 4
+ 1340              		@ sp needed
+ 1341 0066 00BD     		pop	{pc}
+ 1342              	.LVL120:
+ 1343              	.L103:
+ 1344              	.LCFI25:
+ 1345              		.cfi_restore_state
+ 393:modules/ins.c ****         if (-g[i] > max_dps) max_dps = -g[i];
+ 1346              		.loc 1 393 38 discriminator 1 view .LVU334
+ 1347 0068 F0EE676A 		vmov.f32	s13, s15
+ 1348 006c 1BE0     		b	.L85
+ 1349              	.LVL121:
+ 1350              	.L86:
+ 391:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 1351              		.loc 1 391 25 is_stmt 1 discriminator 2 view .LVU335
+ 1352 006e 0132     		adds	r2, r2, #1
+ 1353              	.LVL122:
+ 391:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 1354              		.loc 1 391 25 is_stmt 0 discriminator 2 view .LVU336
+ 1355 0070 D2B2     		uxtb	r2, r2
+ 1356              	.LVL123:
+ 1357              	.L84:
+ 391:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 1358              		.loc 1 391 19 is_stmt 1 discriminator 1 view .LVU337
+ 1359 0072 022A     		cmp	r2, #2
+ 1360 0074 21D8     		bhi	.L113
+ 392:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 1361              		.loc 1 392 9 view .LVU338
+ 392:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 1362              		.loc 1 392 34 is_stmt 0 view .LVU339
+ 1363 0076 734B     		ldr	r3, .L115+8
+ 1364 0078 33F81230 		ldrh	r3, [r3, r2, lsl #1]
+ 1365 007c 1BB2     		sxth	r3, r3
+ 1366 007e 07EE903A 		vmov	s15, r3	@ int
+ 392:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 1367              		.loc 1 392 16 view .LVU340
+ 1368 0082 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 392:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 1369              		.loc 1 392 38 view .LVU341
+ 1370 0086 DFED726A 		vldr.32	s13, .L115+20
+ 1371 008a 67EEA67A 		vmul.f32	s15, s15, s13
+ 392:modules/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
+ 1372              		.loc 1 392 14 view .LVU342
+ 1373 008e 06AB     		add	r3, sp, #24
+ 1374 0090 03EB8203 		add	r3, r3, r2, lsl #2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 35
+
+
+ 1375 0094 43ED057A 		vstr.32	s15, [r3, #-20]
+ 393:modules/ins.c ****         if (-g[i] > max_dps) max_dps = -g[i];
+ 1376              		.loc 1 393 9 is_stmt 1 view .LVU343
+ 393:modules/ins.c ****         if (-g[i] > max_dps) max_dps = -g[i];
+ 1377              		.loc 1 393 12 is_stmt 0 view .LVU344
+ 1378 0098 F4EEC77A 		vcmpe.f32	s15, s14
+ 1379 009c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1380 00a0 E2DC     		bgt	.L103
+ 1381 00a2 F0EE476A 		vmov.f32	s13, s14
+ 1382              	.L85:
+ 1383              	.LVL124:
+ 394:modules/ins.c ****     }
+ 1384              		.loc 1 394 9 is_stmt 1 view .LVU345
+ 394:modules/ins.c ****     }
+ 1385              		.loc 1 394 13 is_stmt 0 view .LVU346
+ 1386 00a6 B1EE677A 		vneg.f32	s14, s15
+ 394:modules/ins.c ****     }
+ 1387              		.loc 1 394 12 view .LVU347
+ 1388 00aa B4EEE67A 		vcmpe.f32	s14, s13
+ 1389 00ae F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1390 00b2 DCDC     		bgt	.L86
+ 1391 00b4 B0EE667A 		vmov.f32	s14, s13
+ 1392 00b8 D9E7     		b	.L86
+ 1393              	.LVL125:
+ 1394              	.L113:
+ 397:modules/ins.c **** 
+ 1395              		.loc 1 397 5 is_stmt 1 view .LVU348
+ 397:modules/ins.c **** 
+ 1396              		.loc 1 397 15 is_stmt 0 view .LVU349
+ 1397 00ba 664A     		ldr	r2, .L115+24
+ 1398              	.LVL126:
+ 397:modules/ins.c **** 
+ 1399              		.loc 1 397 15 view .LVU350
+ 1400 00bc 1368     		ldr	r3, [r2]
+ 1401 00be 0133     		adds	r3, r3, #1
+ 1402 00c0 1360     		str	r3, [r2]
+ 400:modules/ins.c ****         for (i = 0; i < 3; i++) {
+ 1403              		.loc 1 400 5 is_stmt 1 view .LVU351
+ 400:modules/ins.c ****         for (i = 0; i < 3; i++) {
+ 1404              		.loc 1 400 21 is_stmt 0 view .LVU352
+ 1405 00c2 654B     		ldr	r3, .L115+28
+ 1406 00c4 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 400:modules/ins.c ****         for (i = 0; i < 3; i++) {
+ 1407              		.loc 1 400 8 view .LVU353
+ 1408 00c6 03F0FF02 		and	r2, r3, #255
+ 1409 00ca 5BB3     		cbz	r3, .L104
+ 427:modules/ins.c ****         float v = g[i] - INS_Bias[i];
+ 1410              		.loc 1 427 12 view .LVU354
+ 1411 00cc 0023     		movs	r3, #0
+ 1412 00ce 74E0     		b	.L89
+ 1413              	.LVL127:
+ 1414              	.L90:
+ 402:modules/ins.c ****             INS_Gyro[i] = 0.0f;
+ 1415              		.loc 1 402 13 is_stmt 1 view .LVU355
+ 402:modules/ins.c ****             INS_Gyro[i] = 0.0f;
+ 1416              		.loc 1 402 18 is_stmt 0 view .LVU356
+ 1417 00d0 6249     		ldr	r1, .L115+32
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 36
+
+
+ 1418 00d2 01EB8301 		add	r1, r1, r3, lsl #2
+ 1419 00d6 D1ED007A 		vldr.32	s15, [r1]
+ 402:modules/ins.c ****             INS_Gyro[i] = 0.0f;
+ 1420              		.loc 1 402 26 view .LVU357
+ 1421 00da 06A8     		add	r0, sp, #24
+ 1422 00dc 00EB8300 		add	r0, r0, r3, lsl #2
+ 1423 00e0 50ED056A 		vldr.32	s13, [r0, #-20]
+ 402:modules/ins.c ****             INS_Gyro[i] = 0.0f;
+ 1424              		.loc 1 402 22 view .LVU358
+ 1425 00e4 77EEA67A 		vadd.f32	s15, s15, s13
+ 1426 00e8 C1ED007A 		vstr.32	s15, [r1]
+ 403:modules/ins.c ****         }
+ 1427              		.loc 1 403 13 is_stmt 1 view .LVU359
+ 403:modules/ins.c ****         }
+ 1428              		.loc 1 403 25 is_stmt 0 view .LVU360
+ 1429 00ec 5C49     		ldr	r1, .L115+36
+ 1430 00ee 01EB8301 		add	r1, r1, r3, lsl #2
+ 1431 00f2 0020     		movs	r0, #0
+ 1432 00f4 0860     		str	r0, [r1]	@ float
+ 401:modules/ins.c ****             s_sum[i] += g[i];
+ 1433              		.loc 1 401 29 is_stmt 1 discriminator 3 view .LVU361
+ 1434 00f6 0133     		adds	r3, r3, #1
+ 1435              	.LVL128:
+ 401:modules/ins.c ****             s_sum[i] += g[i];
+ 1436              		.loc 1 401 29 is_stmt 0 discriminator 3 view .LVU362
+ 1437 00f8 DBB2     		uxtb	r3, r3
+ 1438              	.LVL129:
+ 1439              	.L88:
+ 401:modules/ins.c ****             s_sum[i] += g[i];
+ 1440              		.loc 1 401 23 is_stmt 1 discriminator 1 view .LVU363
+ 1441 00fa 022B     		cmp	r3, #2
+ 1442 00fc E8D9     		bls	.L90
+ 405:modules/ins.c **** 
+ 1443              		.loc 1 405 9 view .LVU364
+ 405:modules/ins.c **** 
+ 1444              		.loc 1 405 19 is_stmt 0 view .LVU365
+ 1445 00fe 5949     		ldr	r1, .L115+40
+ 1446 0100 0B88     		ldrh	r3, [r1]
+ 1447              	.LVL130:
+ 405:modules/ins.c **** 
+ 1448              		.loc 1 405 19 view .LVU366
+ 1449 0102 9BB2     		uxth	r3, r3
+ 1450 0104 0133     		adds	r3, r3, #1
+ 1451 0106 9BB2     		uxth	r3, r3
+ 1452 0108 0B80     		strh	r3, [r1]	@ movhi
+ 408:modules/ins.c ****             INS_Err |= 0x02u;
+ 1453              		.loc 1 408 9 is_stmt 1 view .LVU367
+ 408:modules/ins.c ****             INS_Err |= 0x02u;
+ 1454              		.loc 1 408 12 is_stmt 0 view .LVU368
+ 1455 010a DFED577A 		vldr.32	s15, .L115+44
+ 1456 010e B4EEE77A 		vcmpe.f32	s14, s15
+ 1457 0112 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1458 0116 14DD     		ble	.L106
+ 409:modules/ins.c ****             for (i = 0; i < 3; i++) {
+ 1459              		.loc 1 409 13 is_stmt 1 view .LVU369
+ 409:modules/ins.c ****             for (i = 0; i < 3; i++) {
+ 1460              		.loc 1 409 21 is_stmt 0 view .LVU370
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 37
+
+
+ 1461 0118 4C49     		ldr	r1, .L115+16
+ 1462 011a 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
+ 1463 011c 43F00203 		orr	r3, r3, #2
+ 1464 0120 0B70     		strb	r3, [r1]
+ 410:modules/ins.c ****                 s_sum[i] = 0.0f;
+ 1465              		.loc 1 410 13 is_stmt 1 view .LVU371
+ 1466              	.LVL131:
+ 410:modules/ins.c ****                 s_sum[i] = 0.0f;
+ 1467              		.loc 1 410 13 is_stmt 0 view .LVU372
+ 1468 0122 08E0     		b	.L93
+ 1469              	.LVL132:
+ 1470              	.L104:
+ 401:modules/ins.c ****             s_sum[i] += g[i];
+ 1471              		.loc 1 401 16 view .LVU373
+ 1472 0124 1346     		mov	r3, r2
+ 1473 0126 E8E7     		b	.L88
+ 1474              	.LVL133:
+ 1475              	.L94:
+ 411:modules/ins.c ****             }
+ 1476              		.loc 1 411 17 is_stmt 1 view .LVU374
+ 411:modules/ins.c ****             }
+ 1477              		.loc 1 411 26 is_stmt 0 view .LVU375
+ 1478 0128 4C4B     		ldr	r3, .L115+32
+ 1479 012a 03EB8203 		add	r3, r3, r2, lsl #2
+ 1480 012e 0021     		movs	r1, #0
+ 1481 0130 1960     		str	r1, [r3]	@ float
+ 410:modules/ins.c ****                 s_sum[i] = 0.0f;
+ 1482              		.loc 1 410 33 is_stmt 1 discriminator 3 view .LVU376
+ 1483 0132 0132     		adds	r2, r2, #1
+ 1484              	.LVL134:
+ 410:modules/ins.c ****                 s_sum[i] = 0.0f;
+ 1485              		.loc 1 410 33 is_stmt 0 discriminator 3 view .LVU377
+ 1486 0134 D2B2     		uxtb	r2, r2
+ 1487              	.LVL135:
+ 1488              	.L93:
+ 410:modules/ins.c ****                 s_sum[i] = 0.0f;
+ 1489              		.loc 1 410 27 is_stmt 1 discriminator 1 view .LVU378
+ 1490 0136 022A     		cmp	r2, #2
+ 1491 0138 F6D9     		bls	.L94
+ 413:modules/ins.c ****             return;
+ 1492              		.loc 1 413 13 view .LVU379
+ 413:modules/ins.c ****             return;
+ 1493              		.loc 1 413 24 is_stmt 0 view .LVU380
+ 1494 013a 4A4B     		ldr	r3, .L115+40
+ 1495 013c 0022     		movs	r2, #0
+ 1496              	.LVL136:
+ 413:modules/ins.c ****             return;
+ 1497              		.loc 1 413 24 view .LVU381
+ 1498 013e 1A80     		strh	r2, [r3]	@ movhi
+ 414:modules/ins.c ****         }
+ 1499              		.loc 1 414 13 is_stmt 1 view .LVU382
+ 1500 0140 90E7     		b	.L81
+ 1501              	.L106:
+ 417:modules/ins.c ****             for (i = 0; i < 3; i++) {
+ 1502              		.loc 1 417 9 view .LVU383
+ 417:modules/ins.c ****             for (i = 0; i < 3; i++) {
+ 1503              		.loc 1 417 24 is_stmt 0 view .LVU384
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 38
+
+
+ 1504 0142 484B     		ldr	r3, .L115+40
+ 1505 0144 1B88     		ldrh	r3, [r3]
+ 1506 0146 9BB2     		uxth	r3, r3
+ 417:modules/ins.c ****             for (i = 0; i < 3; i++) {
+ 1507              		.loc 1 417 12 view .LVU385
+ 1508 0148 B3F5FA6F 		cmp	r3, #2000
+ 1509 014c 10D2     		bcs	.L95
+ 1510 014e 89E7     		b	.L81
+ 1511              	.LVL137:
+ 1512              	.L97:
+ 419:modules/ins.c ****             }
+ 1513              		.loc 1 419 17 is_stmt 1 view .LVU386
+ 419:modules/ins.c ****             }
+ 1514              		.loc 1 419 36 is_stmt 0 view .LVU387
+ 1515 0150 424B     		ldr	r3, .L115+32
+ 1516 0152 03EB8203 		add	r3, r3, r2, lsl #2
+ 1517 0156 D3ED006A 		vldr.32	s13, [r3]
+ 419:modules/ins.c ****             }
+ 1518              		.loc 1 419 40 view .LVU388
+ 1519 015a 9FED447A 		vldr.32	s14, .L115+48
+ 1520 015e C6EE877A 		vdiv.f32	s15, s13, s14
+ 419:modules/ins.c ****             }
+ 1521              		.loc 1 419 29 view .LVU389
+ 1522 0162 434B     		ldr	r3, .L115+52
+ 1523 0164 03EB8203 		add	r3, r3, r2, lsl #2
+ 1524 0168 C3ED007A 		vstr.32	s15, [r3]
+ 418:modules/ins.c ****                 INS_Bias[i] = s_sum[i] / (float)INS_CAL_SAMPLES;
+ 1525              		.loc 1 418 33 is_stmt 1 discriminator 3 view .LVU390
+ 1526 016c 0132     		adds	r2, r2, #1
+ 1527              	.LVL138:
+ 418:modules/ins.c ****                 INS_Bias[i] = s_sum[i] / (float)INS_CAL_SAMPLES;
+ 1528              		.loc 1 418 33 is_stmt 0 discriminator 3 view .LVU391
+ 1529 016e D2B2     		uxtb	r2, r2
+ 1530              	.LVL139:
+ 1531              	.L95:
+ 418:modules/ins.c ****                 INS_Bias[i] = s_sum[i] / (float)INS_CAL_SAMPLES;
+ 1532              		.loc 1 418 27 is_stmt 1 discriminator 1 view .LVU392
+ 1533 0170 022A     		cmp	r2, #2
+ 1534 0172 EDD9     		bls	.L97
+ 421:modules/ins.c ****         }
+ 1535              		.loc 1 421 13 view .LVU393
+ 421:modules/ins.c ****         }
+ 1536              		.loc 1 421 25 is_stmt 0 view .LVU394
+ 1537 0174 384B     		ldr	r3, .L115+28
+ 1538 0176 0122     		movs	r2, #1
+ 1539              	.LVL140:
+ 421:modules/ins.c ****         }
+ 1540              		.loc 1 421 25 view .LVU395
+ 1541 0178 1A70     		strb	r2, [r3]
+ 423:modules/ins.c ****     }
+ 1542              		.loc 1 423 9 is_stmt 1 view .LVU396
+ 1543 017a 73E7     		b	.L81
+ 1544              	.LVL141:
+ 1545              	.L98:
+ 1546              	.LBB2:
+ 428:modules/ins.c ****         INS_Gyro[i] += (v - INS_Gyro[i]) * INS_GYRO_LPF;
+ 1547              		.loc 1 428 9 view .LVU397
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 39
+
+
+ 428:modules/ins.c ****         INS_Gyro[i] += (v - INS_Gyro[i]) * INS_GYRO_LPF;
+ 1548              		.loc 1 428 20 is_stmt 0 view .LVU398
+ 1549 017c 06AA     		add	r2, sp, #24
+ 1550 017e 02EB8302 		add	r2, r2, r3, lsl #2
+ 1551 0182 52ED057A 		vldr.32	s15, [r2, #-20]
+ 428:modules/ins.c ****         INS_Gyro[i] += (v - INS_Gyro[i]) * INS_GYRO_LPF;
+ 1552              		.loc 1 428 34 view .LVU399
+ 1553 0186 3A4A     		ldr	r2, .L115+52
+ 1554 0188 02EB8302 		add	r2, r2, r3, lsl #2
+ 1555 018c 92ED007A 		vldr.32	s14, [r2]
+ 428:modules/ins.c ****         INS_Gyro[i] += (v - INS_Gyro[i]) * INS_GYRO_LPF;
+ 1556              		.loc 1 428 15 view .LVU400
+ 1557 0190 77EEC77A 		vsub.f32	s15, s15, s14
+ 1558              	.LVL142:
+ 429:modules/ins.c ****     }
+ 1559              		.loc 1 429 9 is_stmt 1 view .LVU401
+ 429:modules/ins.c ****     }
+ 1560              		.loc 1 429 37 is_stmt 0 view .LVU402
+ 1561 0194 324A     		ldr	r2, .L115+36
+ 1562 0196 02EB8302 		add	r2, r2, r3, lsl #2
+ 1563 019a 92ED007A 		vldr.32	s14, [r2]
+ 429:modules/ins.c ****     }
+ 1564              		.loc 1 429 27 view .LVU403
+ 1565 019e 77EEC77A 		vsub.f32	s15, s15, s14
+ 1566              	.LVL143:
+ 429:modules/ins.c ****     }
+ 1567              		.loc 1 429 42 view .LVU404
+ 1568 01a2 9FED347A 		vldr.32	s14, .L115+56
+ 1569 01a6 67EE877A 		vmul.f32	s15, s15, s14
+ 429:modules/ins.c ****     }
+ 1570              		.loc 1 429 17 view .LVU405
+ 1571 01aa 92ED007A 		vldr.32	s14, [r2]
+ 429:modules/ins.c ****     }
+ 1572              		.loc 1 429 21 view .LVU406
+ 1573 01ae 77EE277A 		vadd.f32	s15, s14, s15
+ 1574 01b2 C2ED007A 		vstr.32	s15, [r2]
+ 1575              	.LBE2:
+ 427:modules/ins.c ****         float v = g[i] - INS_Bias[i];
+ 1576              		.loc 1 427 25 is_stmt 1 discriminator 3 view .LVU407
+ 1577 01b6 0133     		adds	r3, r3, #1
+ 1578              	.LVL144:
+ 427:modules/ins.c ****         float v = g[i] - INS_Bias[i];
+ 1579              		.loc 1 427 25 is_stmt 0 discriminator 3 view .LVU408
+ 1580 01b8 DBB2     		uxtb	r3, r3
+ 1581              	.LVL145:
+ 1582              	.L89:
+ 427:modules/ins.c ****         float v = g[i] - INS_Bias[i];
+ 1583              		.loc 1 427 19 is_stmt 1 discriminator 1 view .LVU409
+ 1584 01ba 022B     		cmp	r3, #2
+ 1585 01bc DED9     		bls	.L98
+ 433:modules/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 1586              		.loc 1 433 5 view .LVU410
+ 433:modules/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 1587              		.loc 1 433 9 is_stmt 0 view .LVU411
+ 1588 01be 0623     		movs	r3, #6
+ 1589              	.LVL146:
+ 433:modules/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 40
+
+
+ 1590              		.loc 1 433 9 view .LVU412
+ 1591 01c0 04AA     		add	r2, sp, #16
+ 1592 01c2 1221     		movs	r1, #18
+ 1593 01c4 0020     		movs	r0, #0
+ 1594 01c6 FFF7FEFF 		bl	ins_read
+ 1595              	.LVL147:
+ 433:modules/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 1596              		.loc 1 433 8 discriminator 1 view .LVU413
+ 1597 01ca D0B1     		cbz	r0, .L114
+ 437:modules/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
+ 1598              		.loc 1 437 5 is_stmt 1 view .LVU414
+ 437:modules/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
+ 1599              		.loc 1 437 43 is_stmt 0 view .LVU415
+ 1600 01cc 9DF81120 		ldrb	r2, [sp, #17]	@ zero_extendqisi2
+ 437:modules/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
+ 1601              		.loc 1 437 56 view .LVU416
+ 1602 01d0 9DF81030 		ldrb	r3, [sp, #16]	@ zero_extendqisi2
+ 437:modules/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
+ 1603              		.loc 1 437 21 view .LVU417
+ 1604 01d4 43EA0223 		orr	r3, r3, r2, lsl #8
+ 1605 01d8 1BB2     		sxth	r3, r3
+ 437:modules/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
+ 1606              		.loc 1 437 19 view .LVU418
+ 1607 01da 274A     		ldr	r2, .L115+60
+ 1608 01dc 1380     		strh	r3, [r2]	@ movhi
+ 438:modules/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+ 1609              		.loc 1 438 5 is_stmt 1 view .LVU419
+ 438:modules/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+ 1610              		.loc 1 438 43 is_stmt 0 view .LVU420
+ 1611 01de 9DF81310 		ldrb	r1, [sp, #19]	@ zero_extendqisi2
+ 438:modules/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+ 1612              		.loc 1 438 56 view .LVU421
+ 1613 01e2 9DF81230 		ldrb	r3, [sp, #18]	@ zero_extendqisi2
+ 438:modules/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+ 1614              		.loc 1 438 21 view .LVU422
+ 1615 01e6 43EA0123 		orr	r3, r3, r1, lsl #8
+ 1616 01ea 1BB2     		sxth	r3, r3
+ 438:modules/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+ 1617              		.loc 1 438 19 view .LVU423
+ 1618 01ec 5380     		strh	r3, [r2, #2]	@ movhi
+ 439:modules/ins.c **** 
+ 1619              		.loc 1 439 5 is_stmt 1 view .LVU424
+ 439:modules/ins.c **** 
+ 1620              		.loc 1 439 43 is_stmt 0 view .LVU425
+ 1621 01ee 9DF81510 		ldrb	r1, [sp, #21]	@ zero_extendqisi2
+ 439:modules/ins.c **** 
+ 1622              		.loc 1 439 56 view .LVU426
+ 1623 01f2 9DF81430 		ldrb	r3, [sp, #20]	@ zero_extendqisi2
+ 439:modules/ins.c **** 
+ 1624              		.loc 1 439 21 view .LVU427
+ 1625 01f6 43EA0123 		orr	r3, r3, r1, lsl #8
+ 1626 01fa 1BB2     		sxth	r3, r3
+ 439:modules/ins.c **** 
+ 1627              		.loc 1 439 19 view .LVU428
+ 1628 01fc 9380     		strh	r3, [r2, #4]	@ movhi
+ 441:modules/ins.c ****         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
+ 1629              		.loc 1 441 5 is_stmt 1 view .LVU429
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 41
+
+
+ 1630              	.LVL148:
+ 441:modules/ins.c ****         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
+ 1631              		.loc 1 441 12 is_stmt 0 view .LVU430
+ 1632 01fe 0022     		movs	r2, #0
+ 441:modules/ins.c ****         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
+ 1633              		.loc 1 441 5 view .LVU431
+ 1634 0200 18E0     		b	.L100
+ 1635              	.LVL149:
+ 1636              	.L114:
+ 434:modules/ins.c ****         return;
+ 1637              		.loc 1 434 9 is_stmt 1 view .LVU432
+ 434:modules/ins.c ****         return;
+ 1638              		.loc 1 434 17 is_stmt 0 view .LVU433
+ 1639 0202 124A     		ldr	r2, .L115+16
+ 1640 0204 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
+ 1641 0206 43F00403 		orr	r3, r3, #4
+ 1642 020a 1370     		strb	r3, [r2]
+ 435:modules/ins.c ****     }
+ 1643              		.loc 1 435 9 is_stmt 1 view .LVU434
+ 1644 020c 2AE7     		b	.L81
+ 1645              	.LVL150:
+ 1646              	.L101:
+ 442:modules/ins.c ****     }
+ 1647              		.loc 1 442 9 view .LVU435
+ 442:modules/ins.c ****     }
+ 1648              		.loc 1 442 39 is_stmt 0 view .LVU436
+ 1649 020e 1A4B     		ldr	r3, .L115+60
+ 1650 0210 33F81230 		ldrh	r3, [r3, r2, lsl #1]
+ 1651 0214 1BB2     		sxth	r3, r3
+ 1652 0216 07EE903A 		vmov	s15, r3	@ int
+ 442:modules/ins.c ****     }
+ 1653              		.loc 1 442 22 view .LVU437
+ 1654 021a F8EEE77A 		vcvt.f32.s32	s15, s15
+ 442:modules/ins.c ****     }
+ 1655              		.loc 1 442 43 view .LVU438
+ 1656 021e 9FED177A 		vldr.32	s14, .L115+64
+ 1657 0222 67EE877A 		vmul.f32	s15, s15, s14
+ 442:modules/ins.c ****     }
+ 1658              		.loc 1 442 20 view .LVU439
+ 1659 0226 164B     		ldr	r3, .L115+68
+ 1660 0228 03EB8203 		add	r3, r3, r2, lsl #2
+ 1661 022c C3ED007A 		vstr.32	s15, [r3]
+ 441:modules/ins.c ****         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
+ 1662              		.loc 1 441 25 is_stmt 1 discriminator 3 view .LVU440
+ 1663 0230 0132     		adds	r2, r2, #1
+ 1664              	.LVL151:
+ 441:modules/ins.c ****         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
+ 1665              		.loc 1 441 25 is_stmt 0 discriminator 3 view .LVU441
+ 1666 0232 D2B2     		uxtb	r2, r2
+ 1667              	.LVL152:
+ 1668              	.L100:
+ 441:modules/ins.c ****         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
+ 1669              		.loc 1 441 19 is_stmt 1 discriminator 1 view .LVU442
+ 1670 0234 022A     		cmp	r2, #2
+ 1671 0236 EAD9     		bls	.L101
+ 1672 0238 14E7     		b	.L81
+ 1673              	.L116:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 42
+
+
+ 1674 023a 00BF     		.align	2
+ 1675              	.L115:
+ 1676 023c 00000000 		.word	s_inited
+ 1677 0240 00000000 		.word	INS_Ready
+ 1678 0244 00000000 		.word	INS_GyroRaw
+ 1679 0248 00000000 		.word	0
+ 1680 024c 00000000 		.word	INS_Err
+ 1681 0250 58A08B3A 		.word	982229080
+ 1682 0254 00000000 		.word	INS_Sample
+ 1683 0258 00000000 		.word	INS_CalDone
+ 1684 025c 00000000 		.word	s_sum
+ 1685 0260 00000000 		.word	INS_Gyro
+ 1686 0264 00000000 		.word	INS_CalCnt
+ 1687 0268 C2B8B23D 		.word	1035122882
+ 1688 026c 0000FA44 		.word	1157234688
+ 1689 0270 00000000 		.word	INS_Bias
+ 1690 0274 4CA6AA3E 		.word	1051371084
+ 1691 0278 00000000 		.word	INS_AccRaw
+ 1692 027c 0F5CEB3A 		.word	988503055
+ 1693 0280 00000000 		.word	INS_Acc
+ 1694              		.cfi_endproc
+ 1695              	.LFE157:
+ 1697              		.section	.bss.s_skip_gyro,"aw",%nobits
+ 1700              	s_skip_gyro:
+ 1701 0000 00       		.space	1
+ 1702              		.section	.data.s_skip_acc,"aw"
+ 1705              	s_skip_acc:
+ 1706 0000 01       		.byte	1
+ 1707              		.section	.bss.s_inited,"aw",%nobits
+ 1710              	s_inited:
+ 1711 0000 00       		.space	1
+ 1712              		.section	.bss.s_sum,"aw",%nobits
+ 1713              		.align	2
+ 1716              	s_sum:
+ 1717 0000 00000000 		.space	12
+ 1717      00000000 
+ 1717      00000000 
+ 1718              		.global	INS_GyroDump
+ 1719              		.section	.bss.INS_GyroDump,"aw",%nobits
+ 1720              		.align	2
+ 1723              	INS_GyroDump:
+ 1724 0000 00000000 		.space	16
+ 1724      00000000 
+ 1724      00000000 
+ 1724      00000000 
+ 1725              		.global	INS_AccDump
+ 1726              		.section	.bss.INS_AccDump,"aw",%nobits
+ 1727              		.align	2
+ 1730              	INS_AccDump:
+ 1731 0000 00000000 		.space	16
+ 1731      00000000 
+ 1731      00000000 
+ 1731      00000000 
+ 1732              		.global	INS_Bias
+ 1733              		.section	.bss.INS_Bias,"aw",%nobits
+ 1734              		.align	2
+ 1737              	INS_Bias:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 43
+
+
+ 1738 0000 00000000 		.space	12
+ 1738      00000000 
+ 1738      00000000 
+ 1739              		.global	INS_Gyro
+ 1740              		.section	.bss.INS_Gyro,"aw",%nobits
+ 1741              		.align	2
+ 1744              	INS_Gyro:
+ 1745 0000 00000000 		.space	12
+ 1745      00000000 
+ 1745      00000000 
+ 1746              		.global	INS_Acc
+ 1747              		.section	.bss.INS_Acc,"aw",%nobits
+ 1748              		.align	2
+ 1751              	INS_Acc:
+ 1752 0000 00000000 		.space	12
+ 1752      00000000 
+ 1752      00000000 
+ 1753              		.global	INS_GyroRaw
+ 1754              		.section	.bss.INS_GyroRaw,"aw",%nobits
+ 1755              		.align	2
+ 1758              	INS_GyroRaw:
+ 1759 0000 00000000 		.space	6
+ 1759      0000
+ 1760              		.global	INS_AccRaw
+ 1761              		.section	.bss.INS_AccRaw,"aw",%nobits
+ 1762              		.align	2
+ 1765              	INS_AccRaw:
+ 1766 0000 00000000 		.space	6
+ 1766      0000
+ 1767              		.global	INS_Err
+ 1768              		.section	.bss.INS_Err,"aw",%nobits
+ 1771              	INS_Err:
+ 1772 0000 00       		.space	1
+ 1773              		.global	INS_Sample
+ 1774              		.section	.bss.INS_Sample,"aw",%nobits
+ 1775              		.align	2
+ 1778              	INS_Sample:
+ 1779 0000 00000000 		.space	4
+ 1780              		.global	INS_CalCnt
+ 1781              		.section	.bss.INS_CalCnt,"aw",%nobits
+ 1782              		.align	1
+ 1785              	INS_CalCnt:
+ 1786 0000 0000     		.space	2
+ 1787              		.global	INS_CalDone
+ 1788              		.section	.bss.INS_CalDone,"aw",%nobits
+ 1791              	INS_CalDone:
+ 1792 0000 00       		.space	1
+ 1793              		.global	INS_Ready
+ 1794              		.section	.bss.INS_Ready,"aw",%nobits
+ 1797              	INS_Ready:
+ 1798 0000 00       		.space	1
+ 1799              		.global	INS_GyroId
+ 1800              		.section	.bss.INS_GyroId,"aw",%nobits
+ 1803              	INS_GyroId:
+ 1804 0000 00       		.space	1
+ 1805              		.global	INS_AccId
+ 1806              		.section	.bss.INS_AccId,"aw",%nobits
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 44
+
+
+ 1809              	INS_AccId:
+ 1810 0000 00       		.space	1
+ 1811              		.text
+ 1812              	.Letext0:
+ 1813              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 1814              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 1815              		.file 4 "modules/ins.h"
+ 1816              		.file 5 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 1817              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 1818              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_gpio.h"
+ 1819              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_dma.h"
+ 1820              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h"
+ 1821              		.file 10 "Core/Inc/spi.h"
+ 1822              		.file 11 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14
+ 1823              		.file 12 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 45
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 ins.c
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:20     .text.ins_cs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:25     .text.ins_cs:00000000 ins_cs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:103    .text.ins_cs:00000038 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:108    .text.ins_read_at:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:113    .text.ins_read_at:00000000 ins_read_at
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:188    .text.ins_read_at:00000048 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:193    .text.ins_detect_skip:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:198    .text.ins_detect_skip:00000000 ins_detect_skip
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:395    .text.ins_detect_skip:000000c0 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1730   .bss.INS_AccDump:00000000 INS_AccDump
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1723   .bss.INS_GyroDump:00000000 INS_GyroDump
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1705   .data.s_skip_acc:00000000 s_skip_acc
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1700   .bss.s_skip_gyro:00000000 s_skip_gyro
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:403    .text.ins_read:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:408    .text.ins_read:00000000 ins_read
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:567    .text.ins_read:000000b8 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:574    .text.ins_dump:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:579    .text.ins_dump:00000000 ins_dump
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:632    .text.ins_dump:0000002c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:638    .text.ins_write:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:643    .text.ins_write:00000000 ins_write
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:697    .text.ins_write:00000030 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:702    .text.ins_acc_init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:707    .text.ins_acc_init:00000000 ins_acc_init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:865    .text.ins_acc_init:000000d8 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1809   .bss.INS_AccId:00000000 INS_AccId
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1771   .bss.INS_Err:00000000 INS_Err
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:872    .text.ins_gyro_init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:877    .text.ins_gyro_init:00000000 ins_gyro_init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1000   .text.ins_gyro_init:000000a0 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1803   .bss.INS_GyroId:00000000 INS_GyroId
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1007   .text.INS_Init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1013   .text.INS_Init:00000000 INS_Init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1146   .text.INS_Init:00000094 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1797   .bss.INS_Ready:00000000 INS_Ready
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1791   .bss.INS_CalDone:00000000 INS_CalDone
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1785   .bss.INS_CalCnt:00000000 INS_CalCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1778   .bss.INS_Sample:00000000 INS_Sample
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1710   .bss.s_inited:00000000 s_inited
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1737   .bss.INS_Bias:00000000 INS_Bias
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1744   .bss.INS_Gyro:00000000 INS_Gyro
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1751   .bss.INS_Acc:00000000 INS_Acc
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1716   .bss.s_sum:00000000 s_sum
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1163   .text.INS_ResetBias:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1169   .text.INS_ResetBias:00000000 INS_ResetBias
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1227   .text.INS_ResetBias:00000034 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1236   .text.INS_Task:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1242   .text.INS_Task:00000000 INS_Task
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1676   .text.INS_Task:0000023c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1758   .bss.INS_GyroRaw:00000000 INS_GyroRaw
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1765   .bss.INS_AccRaw:00000000 INS_AccRaw
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1701   .bss.s_skip_gyro:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1711   .bss.s_inited:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1713   .bss.s_sum:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1720   .bss.INS_GyroDump:00000000 $d
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s 			page 46
+
+
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1727   .bss.INS_AccDump:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1734   .bss.INS_Bias:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1741   .bss.INS_Gyro:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1748   .bss.INS_Acc:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1755   .bss.INS_GyroRaw:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1762   .bss.INS_AccRaw:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1772   .bss.INS_Err:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1775   .bss.INS_Sample:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1782   .bss.INS_CalCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1792   .bss.INS_CalDone:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1798   .bss.INS_Ready:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1804   .bss.INS_GyroId:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKlfqTa.s:1810   .bss.INS_AccId:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_GPIO_WritePin
+HAL_SPI_TransmitReceive
+hspi2
+HAL_SPI_Transmit
+HAL_Delay

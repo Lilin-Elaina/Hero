@@ -20,6 +20,7 @@
 #include "main.h"
 #include "dma.h"
 #include "fdcan.h"
+#include "spi.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -28,6 +29,7 @@
 #include "DJ_Motor.h"
 #include "rc_dbus.h"
 #include "mecanum.h"
+#include "ins.h"
 #include "bsp.can.h"
 /* USER CODE END Includes */
 
@@ -98,12 +100,14 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_FDCAN2_Init();
-  MX_UART5_Init();
   MX_FDCAN1_Init();
+  MX_SPI2_Init();
+  MX_UART5_Init();
   /* USER CODE BEGIN 2 */
   FDCAN2_Start();        /* CAN2：底盘左/右 + 云台 yaw */
   FDCAN1_Start();        /* CAN1：摩擦轮 + 云台 pitch */
   RC_Init();             /* 启动 DBUS(UART5) 接收 */
+  INS_Init();            /* BMI088：验证 SPI2 通路 */
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -114,6 +118,7 @@ while (1) {
     uint32_t now = HAL_GetTick();
     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
         rc_last_tick = now;
+        INS_Task();            /* BMI088 采样，1 kHz */
         RC_Control_Task();
     }
    //DJ3508_Send_I_Can2(1000,1000,1000,1000);
@@ -192,7 +197,7 @@ void PeriphCommonClock_Config(void)
 
   /** Initializes the peripherals clock
   */
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI2|RCC_PERIPHCLK_FDCAN;
   PeriphClkInitStruct.PLL2.PLL2M = 3;
   PeriphClkInitStruct.PLL2.PLL2N = 40;
   PeriphClkInitStruct.PLL2.PLL2P = 2;
@@ -201,6 +206,7 @@ void PeriphCommonClock_Config(void)
   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+  PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL2;
   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
