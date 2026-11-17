@@ -650,6 +650,7 @@ float RC_Yaw_Control(uint8_t online, float stick)
 float RC_Yaw_Spin_Control(uint8_t online, float stick)
 {
     const float cur = (float)gim6020.angle;
+    const float alpha_deg = RC_GetOffsetAngle();   /* 枪口相对车头，度（关节角） */
     const uint8_t fresh = ((HAL_GetTick() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
     float aim, e, w_cmd, w_chassis, rpm_d, err_v, volt;
 
@@ -677,16 +678,10 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
     while (e >  180.0f) e -= 360.0f;
     while (e < -180.0f) e += 360.0f;
 
-    /* ③ 目标世界角速度 = 摇杆那份 + 把误差拉回 */
-    w_cmd = aim + SPIN_YAW_POS_KP * e;
-
-    if (w_cmd >  SPIN_YAW_RATE_MAX) w_cmd =  SPIN_YAW_RATE_MAX;
-    if (w_cmd < -SPIN_YAW_RATE_MAX) w_cmd = -SPIN_YAW_RATE_MAX;
-
-    /* ④ 实测底盘角速度 = 枪口世界角速度 − 关节角速度（1 rpm = 6 °/s） */
+    /* ③ 实测底盘角速度 = 枪口世界角速度 − 关节角速度（1 rpm = 6 °/s） */
     w_chassis = (float)INS_WorldYawRate - 6.0f * (float)gim6020.rpm;
 
-    /* ④.5 失控兜底：世界角速度长时间超 ±800 °/s，说明这条环在正反馈
+    /* ③.5 失控兜底：世界角速度长时间超 ±800 °/s，说明这条环在正反馈
      * （符号/方向接反），收油并把目标拉回当前航向，绝不让它一直疯转。
      * 正常工况下 ω_world 被钉在 0 附近，不可能触发。 */
     if ((INS_WorldYawRate > 800.0f) || (INS_WorldYawRate < -800.0f)) {
@@ -703,8 +698,28 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
         s_spin_bad = 0u;
     }
 
+#if (SPIN_YAW_USE_JOINT_POS)
+    /* ④ 世界目标 → 关节目标：ψ_c = ψ枪口 − α，α_ref = ψ_ref − ψ_c
+     * 外层直接作用在**关节角**上：手推枪口时位置环立刻出回复力矩（有刚度），
+     * 而不是速率环那种"先被推走、再按 POS_KP 慢慢追"的软响应。
+     * 底盘转速前馈 −ω_c/6 保证边转边跟得住。 */
+    {
+        float psi_c = (float)INS_WorldYaw - alpha_deg;   /* 车体世界航向 */
+        float a_err = (s_spin_ref - psi_c) - alpha_deg;  /* 关节角误差（deg） */
+
+        rpm_d = GM_YAW_ANG_KP * (a_err * 22.7556f) - w_chassis * (1.0f / 6.0f);
+        w_cmd = rpm_d * 6.0f;
+    }
+#else
+    /* ④ 目标世界角速度 = 摇杆那份 + 把误差拉回 */
+    w_cmd = aim + SPIN_YAW_POS_KP * e;
+
+    if (w_cmd >  SPIN_YAW_RATE_MAX) w_cmd =  SPIN_YAW_RATE_MAX;
+    if (w_cmd < -SPIN_YAW_RATE_MAX) w_cmd = -SPIN_YAW_RATE_MAX;
+
     /* ⑤ 关节该转多少：ω_joint = w_cmd − ω_chassis，换成 rpm */
     rpm_d = (w_cmd - w_chassis) * (1.0f / 6.0f);
+#endif
 
     if (rpm_d >  SPIN_YAW_RPM_MAX) rpm_d =  SPIN_YAW_RPM_MAX;
     if (rpm_d < -SPIN_YAW_RPM_MAX) rpm_d = -SPIN_YAW_RPM_MAX;
