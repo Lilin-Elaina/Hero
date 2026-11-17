@@ -48,6 +48,7 @@ extern const Mecanum_Dir_t MECANUM_DIR[MECANUM_WHEEL_NUM];
  * ================================================================== */
 
  /*返回值0（正常）， 1摇杆回中，（已清斜坡）， 2未使能*/
+void      Mecanum_SetSpinDeadbandBypass(uint8_t on);
 uint8_t   Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
                  float *out);
 

@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
   29:modules/mecanum.c **** /* 单轮斜坡：把 cur 朝 tgt 移动，每拍最多走 max_step                     */
   30:modules/mecanum.c **** /* ------------------------------------------------------------------ */
   31:modules/mecanum.c **** static float mec_slew(float cur, float tgt, float max_step)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 2
 
 
   32:modules/mecanum.c **** {
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
   41:modules/mecanum.c **** /* ------------------------------------------------------------------ */
   42:modules/mecanum.c **** void Mecanum_Reset(void)
   43:modules/mecanum.c **** {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 3
 
 
   44:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  116              	.LVL10:
   44:modules/mecanum.c ****     {
  117              		.loc 1 44 18 is_stmt 0 view .LVU21
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 4
 
 
  118 0000 0023     		movs	r3, #0
@@ -218,13 +218,13 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  145 0018 00000000 		.word	mec_prev
  146              		.cfi_endproc
  147              	.LFE147:
- 149              		.section	.text.Mecanum_Mix,"ax",%progbits
+ 149              		.section	.text.Mecanum_SetSpinDeadbandBypass,"ax",%progbits
  150              		.align	1
- 151              		.global	Mecanum_Mix
+ 151              		.global	Mecanum_SetSpinDeadbandBypass
  152              		.syntax unified
  153              		.thumb
  154              		.thumb_func
- 156              	Mecanum_Mix:
+ 156              	Mecanum_SetSpinDeadbandBypass:
  157              	.LVL14:
  158              	.LFB149:
   54:modules/mecanum.c **** 
@@ -236,629 +236,685 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
   60:modules/mecanum.c ****  * 根据摇杆值在xyz的值进行运算得到各轮速度归一化值，轮速由每1ms爬升
   61:modules/mecanum.c **** */
   62:modules/mecanum.c **** /* ------------------------------------------------------------------ */
-  63:modules/mecanum.c **** uint8_t Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
-  64:modules/mecanum.c ****                  float *out)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 5
+  63:modules/mecanum.c **** /* 自转通道死区旁路：跟随/小陀螺的自转指令是闭环算出来的，本来就很�
+  64:modules/mecanum.c ****  * 再被归一化死区（0.02）吃掉就等于"指令发了、车不动"。 */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 5
 
 
-  65:modules/mecanum.c **** { 
- 159              		.loc 1 65 1 is_stmt 1 view -0
+  65:modules/mecanum.c **** static uint8_t s_spin_db_bypass = 0u;
+  66:modules/mecanum.c **** 
+  67:modules/mecanum.c **** void Mecanum_SetSpinDeadbandBypass(uint8_t on)
+  68:modules/mecanum.c **** {
+ 159              		.loc 1 68 1 is_stmt 1 view -0
  160              		.cfi_startproc
- 161              		@ args = 0, pretend = 0, frame = 16
+ 161              		@ args = 0, pretend = 0, frame = 0
  162              		@ frame_needed = 0, uses_anonymous_args = 0
- 163              		.loc 1 65 1 is_stmt 0 view .LVU30
- 164 0000 F0B5     		push	{r4, r5, r6, r7, lr}
- 165              	.LCFI0:
- 166              		.cfi_def_cfa_offset 20
- 167              		.cfi_offset 4, -20
- 168              		.cfi_offset 5, -16
- 169              		.cfi_offset 6, -12
- 170              		.cfi_offset 7, -8
- 171              		.cfi_offset 14, -4
- 172 0002 2DED048B 		vpush.64	{d8, d9}
- 173              	.LCFI1:
- 174              		.cfi_def_cfa_offset 36
- 175              		.cfi_offset 80, -36
- 176              		.cfi_offset 81, -32
- 177              		.cfi_offset 82, -28
- 178              		.cfi_offset 83, -24
- 179 0006 85B0     		sub	sp, sp, #20
- 180              	.LCFI2:
- 181              		.cfi_def_cfa_offset 56
- 182 0008 0D46     		mov	r5, r1
-  66:modules/mecanum.c ****     uint8_t i;
- 183              		.loc 1 66 5 is_stmt 1 view .LVU31
-  67:modules/mecanum.c ****     float tgt[MECANUM_WHEEL_NUM];
- 184              		.loc 1 67 5 view .LVU32
-  68:modules/mecanum.c ****     float vx, vy, wz;
- 185              		.loc 1 68 5 view .LVU33
-  69:modules/mecanum.c ****     float step, stop_step, dmax, k ;
- 186              		.loc 1 69 5 view .LVU34
-  70:modules/mecanum.c ****     uint8_t accel_only;
- 187              		.loc 1 70 5 view .LVU35
+ 163              		@ link register save eliminated.
+  69:modules/mecanum.c ****     s_spin_db_bypass = (on != 0u) ? 1u : 0u;
+ 164              		.loc 1 69 5 view .LVU30
+ 165              		.loc 1 69 22 is_stmt 0 view .LVU31
+ 166 0000 0346     		mov	r3, r0
+ 167 0002 00B1     		cbz	r0, .L16
+ 168              		.loc 1 69 22 discriminator 1 view .LVU32
+ 169 0004 0123     		movs	r3, #1
+ 170              	.L16:
+ 171              		.loc 1 69 22 discriminator 4 view .LVU33
+ 172 0006 014A     		ldr	r2, .L17
+ 173 0008 1370     		strb	r3, [r2]
+  70:modules/mecanum.c **** }
+ 174              		.loc 1 70 1 view .LVU34
+ 175 000a 7047     		bx	lr
+ 176              	.L18:
+ 177              		.align	2
+ 178              	.L17:
+ 179 000c 00000000 		.word	s_spin_db_bypass
+ 180              		.cfi_endproc
+ 181              	.LFE149:
+ 183              		.section	.text.Mecanum_Mix,"ax",%progbits
+ 184              		.align	1
+ 185              		.global	Mecanum_Mix
+ 186              		.syntax unified
+ 187              		.thumb
+ 188              		.thumb_func
+ 190              	Mecanum_Mix:
+ 191              	.LVL15:
+ 192              	.LFB150:
   71:modules/mecanum.c **** 
-  72:modules/mecanum.c **** 
-  73:modules/mecanum.c ****     step    = MEC_ACCEL_NORM * 0.001f;      /* 每拍归一化变化量 */
- 188              		.loc 1 73 5 view .LVU36
- 189              	.LVL15:
-  74:modules/mecanum.c ****     stop_step = MEC_STOP_NORM * 0.001f;     /* 松杆
- 190              		.loc 1 74 5 view .LVU37
-  75:modules/mecanum.c **** 
-  76:modules/mecanum.c **** 
-  77:modules/mecanum.c ****      /*逆解算摇杆值得到各轮归一化的值*//*将摇杆值归一化后的值进行比例�
-  78:modules/mecanum.c ****     /* 1) 速度指令合成：摇杆比例缩放 + 归一化后残留死区清零 */
-  79:modules/mecanum.c ****  
-  80:modules/mecanum.c ****     if(!enabled)
- 191              		.loc 1 80 5 view .LVU38
- 192              		.loc 1 80 7 is_stmt 0 view .LVU39
- 193 000a 0028     		cmp	r0, #0
- 194 000c 4AD0     		beq	.L52
- 195 000e B0EE409A 		vmov.f32	s18, s0
- 196 0012 B0EE608A 		vmov.f32	s16, s1
- 197 0016 F0EE418A 		vmov.f32	s17, s2
-  81:modules/mecanum.c **** {
-  82:modules/mecanum.c ****     Mecanum_Reset();
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 6
+  72:modules/mecanum.c **** uint8_t Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
+  73:modules/mecanum.c ****                  float *out)
+  74:modules/mecanum.c **** { 
+ 193              		.loc 1 74 1 is_stmt 1 view -0
+ 194              		.cfi_startproc
+ 195              		@ args = 0, pretend = 0, frame = 16
+ 196              		@ frame_needed = 0, uses_anonymous_args = 0
+ 197              		.loc 1 74 1 is_stmt 0 view .LVU36
+ 198 0000 F0B5     		push	{r4, r5, r6, r7, lr}
+ 199              	.LCFI0:
+ 200              		.cfi_def_cfa_offset 20
+ 201              		.cfi_offset 4, -20
+ 202              		.cfi_offset 5, -16
+ 203              		.cfi_offset 6, -12
+ 204              		.cfi_offset 7, -8
+ 205              		.cfi_offset 14, -4
+ 206 0002 2DED048B 		vpush.64	{d8, d9}
+ 207              	.LCFI1:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 6
 
 
-  83:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
-  84:modules/mecanum.c ****     {
-  85:modules/mecanum.c ****         out[i] = 0.0f;
-  86:modules/mecanum.c ****     }
-  87:modules/mecanum.c ****     return 2u;
-  88:modules/mecanum.c **** }                
-  89:modules/mecanum.c **** 
-  90:modules/mecanum.c **** //进行速度归一化死区判断
-  91:modules/mecanum.c ****     if (mec_abs(fwd)    < MEC_DEADBAND_NORM) fwd    = 0.0f;
- 198              		.loc 1 91 5 is_stmt 1 view .LVU40
- 199              		.loc 1 91 9 is_stmt 0 view .LVU41
- 200 001a FFF7FEFF 		bl	mec_abs
- 201              	.LVL16:
- 202              		.loc 1 91 8 discriminator 1 view .LVU42
- 203 001e DFED817A 		vldr.32	s15, .L56
- 204 0022 F4EEC07A 		vcmpe.f32	s15, s0
- 205 0026 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 206 002a 01DD     		ble	.L20
- 207              		.loc 1 91 53 discriminator 1 view .LVU43
- 208 002c 9FED7E9A 		vldr.32	s18, .L56+4
- 209              	.LVL17:
- 210              	.L20:
-  92:modules/mecanum.c ****     if (mec_abs(strafe) < MEC_DEADBAND_NORM) strafe = 0.0f;
- 211              		.loc 1 92 5 is_stmt 1 view .LVU44
- 212              		.loc 1 92 9 is_stmt 0 view .LVU45
- 213 0030 B0EE480A 		vmov.f32	s0, s16
- 214 0034 FFF7FEFF 		bl	mec_abs
- 215              	.LVL18:
- 216              		.loc 1 92 8 discriminator 1 view .LVU46
- 217 0038 DFED7A7A 		vldr.32	s15, .L56
- 218 003c F4EEC07A 		vcmpe.f32	s15, s0
- 219 0040 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 220 0044 01DD     		ble	.L21
- 221              		.loc 1 92 53 discriminator 1 view .LVU47
- 222 0046 9FED788A 		vldr.32	s16, .L56+4
- 223              	.LVL19:
- 224              	.L21:
-  93:modules/mecanum.c ****     if (mec_abs(spin)   < MEC_DEADBAND_NORM) spin   = 0.0f;
- 225              		.loc 1 93 5 is_stmt 1 view .LVU48
- 226              		.loc 1 93 9 is_stmt 0 view .LVU49
- 227 004a B0EE680A 		vmov.f32	s0, s17
- 228 004e FFF7FEFF 		bl	mec_abs
- 229              	.LVL20:
- 230              		.loc 1 93 8 discriminator 1 view .LVU50
- 231 0052 DFED747A 		vldr.32	s15, .L56
- 232 0056 F4EEC07A 		vcmpe.f32	s15, s0
- 233 005a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 234 005e 01DD     		ble	.L22
- 235              		.loc 1 93 53 discriminator 1 view .LVU51
- 236 0060 DFED718A 		vldr.32	s17, .L56+4
- 237              	.LVL21:
- 238              	.L22:
-  94:modules/mecanum.c **** 
-  95:modules/mecanum.c ****     vx = fwd    * MEC_MAX_LINEAR;
- 239              		.loc 1 95 5 is_stmt 1 view .LVU52
-  96:modules/mecanum.c ****     vy = strafe * MEC_MAX_LINEAR * MEC_STRAFE_RATIO;
- 240              		.loc 1 96 5 view .LVU53
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 7
-
-
- 241              		.loc 1 96 8 is_stmt 0 view .LVU54
- 242 0064 DFED717A 		vldr.32	s15, .L56+8
- 243 0068 68EE270A 		vmul.f32	s1, s16, s15
- 244              	.LVL22:
-  97:modules/mecanum.c ****     wz = spin   * MEC_MAX_SPIN   * MEC_SPIN_RATIO;
- 245              		.loc 1 97 5 is_stmt 1 view .LVU55
- 246              		.loc 1 97 8 is_stmt 0 view .LVU56
- 247 006c DFED707A 		vldr.32	s15, .L56+12
- 248 0070 28EEA71A 		vmul.f32	s2, s17, s15
- 249              	.LVL23:
+ 208              		.cfi_def_cfa_offset 36
+ 209              		.cfi_offset 80, -36
+ 210              		.cfi_offset 81, -32
+ 211              		.cfi_offset 82, -28
+ 212              		.cfi_offset 83, -24
+ 213 0006 85B0     		sub	sp, sp, #20
+ 214              	.LCFI2:
+ 215              		.cfi_def_cfa_offset 56
+ 216 0008 0D46     		mov	r5, r1
+  75:modules/mecanum.c ****     uint8_t i;
+ 217              		.loc 1 75 5 is_stmt 1 view .LVU37
+  76:modules/mecanum.c ****     float tgt[MECANUM_WHEEL_NUM];
+ 218              		.loc 1 76 5 view .LVU38
+  77:modules/mecanum.c ****     float vx, vy, wz;
+ 219              		.loc 1 77 5 view .LVU39
+  78:modules/mecanum.c ****     float step, stop_step, dmax, k ;
+ 220              		.loc 1 78 5 view .LVU40
+  79:modules/mecanum.c ****     uint8_t accel_only;
+ 221              		.loc 1 79 5 view .LVU41
+  80:modules/mecanum.c **** 
+  81:modules/mecanum.c **** 
+  82:modules/mecanum.c ****     step    = MEC_ACCEL_NORM * 0.001f;      /* 每拍归一化变化量 */
+ 222              		.loc 1 82 5 view .LVU42
+ 223              	.LVL16:
+  83:modules/mecanum.c ****     stop_step = MEC_STOP_NORM * 0.001f;     /* 松杆
+ 224              		.loc 1 83 5 view .LVU43
+  84:modules/mecanum.c **** 
+  85:modules/mecanum.c **** 
+  86:modules/mecanum.c ****      /*逆解算摇杆值得到各轮归一化的值*//*将摇杆值归一化后的值进行比例�
+  87:modules/mecanum.c ****     /* 1) 速度指令合成：摇杆比例缩放 + 归一化后残留死区清零 */
+  88:modules/mecanum.c ****  
+  89:modules/mecanum.c ****     if(!enabled)
+ 225              		.loc 1 89 5 view .LVU44
+ 226              		.loc 1 89 7 is_stmt 0 view .LVU45
+ 227 000a 0028     		cmp	r0, #0
+ 228 000c 4DD0     		beq	.L56
+ 229 000e B0EE409A 		vmov.f32	s18, s0
+ 230 0012 B0EE608A 		vmov.f32	s16, s1
+ 231 0016 F0EE418A 		vmov.f32	s17, s2
+  90:modules/mecanum.c **** {
+  91:modules/mecanum.c ****     Mecanum_Reset();
+  92:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
+  93:modules/mecanum.c ****     {
+  94:modules/mecanum.c ****         out[i] = 0.0f;
+  95:modules/mecanum.c ****     }
+  96:modules/mecanum.c ****     return 2u;
+  97:modules/mecanum.c **** }                
   98:modules/mecanum.c **** 
-  99:modules/mecanum.c ****       if(vx == 0.0f && vy == 0.0f && wz == 0.0f)
- 250              		.loc 1 99 7 is_stmt 1 view .LVU57
- 251              		.loc 1 99 13 is_stmt 0 view .LVU58
- 252 0074 B5EE409A 		vcmp.f32	s18, #0
- 253 0078 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 254 007c 0CBF     		ite	eq
- 255 007e 0123     		moveq	r3, #1
- 256 0080 0023     		movne	r3, #0
- 257              		.loc 1 99 27 view .LVU59
- 258 0082 F5EE400A 		vcmp.f32	s1, #0
- 259 0086 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 260              		.loc 1 99 21 view .LVU60
- 261 008a 03F00103 		and	r3, r3, #1
- 262 008e 18BF     		it	ne
- 263 0090 0023     		movne	r3, #0
- 264              		.loc 1 99 9 view .LVU61
- 265 0092 002B     		cmp	r3, #0
- 266 0094 6AD0     		beq	.L43
- 267              		.loc 1 99 35 discriminator 1 view .LVU62
- 268 0096 B5EE401A 		vcmp.f32	s2, #0
- 269 009a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 270 009e 26D0     		beq	.L44
- 271 00a0 0023     		movs	r3, #0
- 272 00a2 28E0     		b	.L30
- 273              	.LVL24:
- 274              	.L52:
- 275              		.loc 1 99 35 discriminator 1 view .LVU63
- 276 00a4 0446     		mov	r4, r0
-  82:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
- 277              		.loc 1 82 5 is_stmt 1 view .LVU64
- 278 00a6 FFF7FEFF 		bl	Mecanum_Reset
- 279              	.LVL25:
-  83:modules/mecanum.c ****     {
- 280              		.loc 1 83 5 view .LVU65
-  83:modules/mecanum.c ****     {
- 281              		.loc 1 83 5 is_stmt 0 view .LVU66
- 282 00aa 05E0     		b	.L17
- 283              	.LVL26:
- 284              	.L18:
-  85:modules/mecanum.c ****     }
- 285              		.loc 1 85 9 is_stmt 1 view .LVU67
-  85:modules/mecanum.c ****     }
- 286              		.loc 1 85 12 is_stmt 0 view .LVU68
- 287 00ac 05EB8403 		add	r3, r5, r4, lsl #2
-  85:modules/mecanum.c ****     }
- 288              		.loc 1 85 16 view .LVU69
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 8
+  99:modules/mecanum.c **** //进行速度归一化死区判断
+ 100:modules/mecanum.c ****     if (mec_abs(fwd)    < MEC_DEADBAND_NORM) fwd    = 0.0f;
+ 232              		.loc 1 100 5 is_stmt 1 view .LVU46
+ 233              		.loc 1 100 9 is_stmt 0 view .LVU47
+ 234 001a FFF7FEFF 		bl	mec_abs
+ 235              	.LVL17:
+ 236              		.loc 1 100 8 discriminator 1 view .LVU48
+ 237 001e DFED827A 		vldr.32	s15, .L60
+ 238 0022 F4EEC07A 		vcmpe.f32	s15, s0
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 7
 
 
- 289 00b0 0022     		movs	r2, #0
- 290 00b2 1A60     		str	r2, [r3]	@ float
-  83:modules/mecanum.c ****     {
- 291              		.loc 1 83 40 is_stmt 1 discriminator 3 view .LVU70
- 292 00b4 0134     		adds	r4, r4, #1
- 293              	.LVL27:
-  83:modules/mecanum.c ****     {
- 294              		.loc 1 83 40 is_stmt 0 discriminator 3 view .LVU71
- 295 00b6 E4B2     		uxtb	r4, r4
- 296              	.LVL28:
- 297              	.L17:
-  83:modules/mecanum.c ****     {
- 298              		.loc 1 83 18 is_stmt 1 discriminator 1 view .LVU72
- 299 00b8 032C     		cmp	r4, #3
- 300 00ba F7D9     		bls	.L18
-  87:modules/mecanum.c **** }                
- 301              		.loc 1 87 12 is_stmt 0 view .LVU73
- 302 00bc 0220     		movs	r0, #2
- 303 00be ACE0     		b	.L19
- 304              	.LVL29:
- 305              	.L25:
- 100:modules/mecanum.c ****    {  
- 101:modules/mecanum.c ****         for(i = 0; i < MECANUM_WHEEL_NUM; i++)
- 102:modules/mecanum.c ****         {
- 103:modules/mecanum.c ****             mec_prev[i] = mec_slew(mec_prev[i], 0.0f, stop_step);
- 306              		.loc 1 103 13 is_stmt 1 view .LVU74
- 307              		.loc 1 103 27 is_stmt 0 view .LVU75
- 308 00c0 A700     		lsls	r7, r4, #2
- 309 00c2 5C4E     		ldr	r6, .L56+16
- 310 00c4 06EB8406 		add	r6, r6, r4, lsl #2
- 311 00c8 9FED5B1A 		vldr.32	s2, .L56+20
- 312 00cc DFED560A 		vldr.32	s1, .L56+4
- 313 00d0 96ED000A 		vldr.32	s0, [r6]
- 314 00d4 FFF7FEFF 		bl	mec_slew
- 315              	.LVL30:
- 316              		.loc 1 103 25 discriminator 1 view .LVU76
- 317 00d8 86ED000A 		vstr.32	s0, [r6]
- 104:modules/mecanum.c ****             out[i] = mec_prev[i];
- 318              		.loc 1 104 13 is_stmt 1 view .LVU77
- 319              		.loc 1 104 16 is_stmt 0 view .LVU78
- 320 00dc 2F44     		add	r7, r7, r5
- 321              		.loc 1 104 20 view .LVU79
- 322 00de 87ED000A 		vstr.32	s0, [r7]
- 101:modules/mecanum.c ****         {
- 323              		.loc 1 101 44 is_stmt 1 discriminator 3 view .LVU80
- 324 00e2 0134     		adds	r4, r4, #1
- 325              	.LVL31:
- 101:modules/mecanum.c ****         {
- 326              		.loc 1 101 44 is_stmt 0 discriminator 3 view .LVU81
- 327 00e4 E4B2     		uxtb	r4, r4
- 328              	.LVL32:
- 329              	.L24:
- 101:modules/mecanum.c ****         {
- 330              		.loc 1 101 22 is_stmt 1 discriminator 1 view .LVU82
- 331 00e6 032C     		cmp	r4, #3
- 332 00e8 EAD9     		bls	.L25
- 105:modules/mecanum.c ****         }
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 9
+ 239 0026 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 240 002a 01DD     		ble	.L24
+ 241              		.loc 1 100 53 discriminator 1 view .LVU49
+ 242 002c 9FED7F9A 		vldr.32	s18, .L60+4
+ 243              	.LVL18:
+ 244              	.L24:
+ 101:modules/mecanum.c ****     if (mec_abs(strafe) < MEC_DEADBAND_NORM) strafe = 0.0f;
+ 245              		.loc 1 101 5 is_stmt 1 view .LVU50
+ 246              		.loc 1 101 9 is_stmt 0 view .LVU51
+ 247 0030 B0EE480A 		vmov.f32	s0, s16
+ 248 0034 FFF7FEFF 		bl	mec_abs
+ 249              	.LVL19:
+ 250              		.loc 1 101 8 discriminator 1 view .LVU52
+ 251 0038 DFED7B7A 		vldr.32	s15, .L60
+ 252 003c F4EEC07A 		vcmpe.f32	s15, s0
+ 253 0040 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 254 0044 01DD     		ble	.L25
+ 255              		.loc 1 101 53 discriminator 1 view .LVU53
+ 256 0046 9FED798A 		vldr.32	s16, .L60+4
+ 257              	.LVL20:
+ 258              	.L25:
+ 102:modules/mecanum.c ****     /* 自转：跟随/小陀螺下旁路，否则 3.1° 内指令全被清零 → 起转门槛 + �
+ 103:modules/mecanum.c ****     if ((s_spin_db_bypass == 0u) && (mec_abs(spin) < MEC_DEADBAND_NORM)) spin = 0.0f;
+ 259              		.loc 1 103 5 is_stmt 1 view .LVU54
+ 260              		.loc 1 103 27 is_stmt 0 view .LVU55
+ 261 004a 794B     		ldr	r3, .L60+8
+ 262 004c 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 263              		.loc 1 103 8 view .LVU56
+ 264 004e 63B9     		cbnz	r3, .L26
+ 265              		.loc 1 103 38 discriminator 1 view .LVU57
+ 266 0050 B0EE680A 		vmov.f32	s0, s17
+ 267 0054 FFF7FEFF 		bl	mec_abs
+ 268              	.LVL21:
+ 269              		.loc 1 103 34 discriminator 1 view .LVU58
+ 270 0058 DFED737A 		vldr.32	s15, .L60
+ 271 005c F4EEC07A 		vcmpe.f32	s15, s0
+ 272 0060 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 273 0064 01DD     		ble	.L26
+ 274              		.loc 1 103 79 discriminator 2 view .LVU59
+ 275 0066 DFED718A 		vldr.32	s17, .L60+4
+ 276              	.LVL22:
+ 277              	.L26:
+ 104:modules/mecanum.c **** 
+ 105:modules/mecanum.c ****     vx = fwd    * MEC_MAX_LINEAR;
+ 278              		.loc 1 105 5 is_stmt 1 view .LVU60
+ 106:modules/mecanum.c ****     vy = strafe * MEC_MAX_LINEAR * MEC_STRAFE_RATIO;
+ 279              		.loc 1 106 5 view .LVU61
+ 280              		.loc 1 106 8 is_stmt 0 view .LVU62
+ 281 006a DFED727A 		vldr.32	s15, .L60+12
+ 282 006e 68EE270A 		vmul.f32	s1, s16, s15
+ 283              	.LVL23:
+ 107:modules/mecanum.c ****     wz = spin   * MEC_MAX_SPIN   * MEC_SPIN_RATIO;
+ 284              		.loc 1 107 5 is_stmt 1 view .LVU63
+ 285              		.loc 1 107 8 is_stmt 0 view .LVU64
+ 286 0072 DFED717A 		vldr.32	s15, .L60+16
+ 287 0076 28EEA71A 		vmul.f32	s2, s17, s15
+ 288              	.LVL24:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 8
 
 
- 106:modules/mecanum.c ****         return 1u;
- 333              		.loc 1 106 16 is_stmt 0 view .LVU83
- 334 00ea 0120     		movs	r0, #1
- 335 00ec 95E0     		b	.L19
- 336              	.LVL33:
- 337              	.L44:
- 101:modules/mecanum.c ****         {
- 338              		.loc 1 101 15 view .LVU84
- 339 00ee 0024     		movs	r4, #0
- 340 00f0 F9E7     		b	.L24
- 341              	.LVL34:
- 342              	.L28:
- 107:modules/mecanum.c ****     }
- 108:modules/mecanum.c ****     
- 109:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
- 343              		.loc 1 109 40 is_stmt 1 discriminator 2 view .LVU85
- 344 00f2 0133     		adds	r3, r3, #1
- 345              	.LVL35:
- 346              		.loc 1 109 40 is_stmt 0 discriminator 2 view .LVU86
- 347 00f4 DBB2     		uxtb	r3, r3
- 348              	.LVL36:
- 349              	.L30:
- 350              		.loc 1 109 18 is_stmt 1 discriminator 1 view .LVU87
- 351 00f6 032B     		cmp	r3, #3
- 352 00f8 3AD8     		bhi	.L53
- 353              	.LBB3:
- 110:modules/mecanum.c ****     {
- 111:modules/mecanum.c ****         const Mecanum_Dir_t *d = &MECANUM_DIR[i];
- 354              		.loc 1 111 9 view .LVU88
- 355              		.loc 1 111 46 is_stmt 0 view .LVU89
- 356 00fa 1846     		mov	r0, r3
- 357              	.LVL37:
- 112:modules/mecanum.c ****         tgt[i] = d->fwd * vx + d->strafe * vy + d->spin * wz;
- 358              		.loc 1 112 9 is_stmt 1 view .LVU90
- 359              		.loc 1 112 19 is_stmt 0 view .LVU91
- 360 00fc 03EB4301 		add	r1, r3, r3, lsl #1
- 361 0100 4E4A     		ldr	r2, .L56+24
- 362 0102 02EB8102 		add	r2, r2, r1, lsl #2
- 363 0106 D2ED007A 		vldr.32	s15, [r2]
- 364              		.loc 1 112 25 view .LVU92
- 365 010a 67EE897A 		vmul.f32	s15, s15, s18
- 366              		.loc 1 112 33 view .LVU93
- 367 010e 92ED017A 		vldr.32	s14, [r2, #4]
- 368              		.loc 1 112 42 view .LVU94
- 369 0112 27EE207A 		vmul.f32	s14, s14, s1
- 370              		.loc 1 112 30 view .LVU95
- 371 0116 77EE877A 		vadd.f32	s15, s15, s14
- 372              		.loc 1 112 50 view .LVU96
- 373 011a 92ED027A 		vldr.32	s14, [r2, #8]
- 374              		.loc 1 112 57 view .LVU97
- 375 011e 27EE017A 		vmul.f32	s14, s14, s2
- 376              		.loc 1 112 47 view .LVU98
- 377 0122 77EE877A 		vadd.f32	s15, s15, s14
- 378              		.loc 1 112 16 view .LVU99
- 379 0126 04AA     		add	r2, sp, #16
- 380 0128 02EB8302 		add	r2, r2, r3, lsl #2
- 381 012c 42ED047A 		vstr.32	s15, [r2, #-16]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 10
+ 108:modules/mecanum.c **** 
+ 109:modules/mecanum.c ****       if(vx == 0.0f && vy == 0.0f && wz == 0.0f)
+ 289              		.loc 1 109 7 is_stmt 1 view .LVU65
+ 290              		.loc 1 109 13 is_stmt 0 view .LVU66
+ 291 007a B5EE409A 		vcmp.f32	s18, #0
+ 292 007e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 293 0082 0CBF     		ite	eq
+ 294 0084 0123     		moveq	r3, #1
+ 295 0086 0023     		movne	r3, #0
+ 296              		.loc 1 109 27 view .LVU67
+ 297 0088 F5EE400A 		vcmp.f32	s1, #0
+ 298 008c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 299              		.loc 1 109 21 view .LVU68
+ 300 0090 03F00103 		and	r3, r3, #1
+ 301 0094 18BF     		it	ne
+ 302 0096 0023     		movne	r3, #0
+ 303              		.loc 1 109 9 view .LVU69
+ 304 0098 002B     		cmp	r3, #0
+ 305 009a 6AD0     		beq	.L47
+ 306              		.loc 1 109 35 discriminator 1 view .LVU70
+ 307 009c B5EE401A 		vcmp.f32	s2, #0
+ 308 00a0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 309 00a4 26D0     		beq	.L48
+ 310 00a6 0023     		movs	r3, #0
+ 311 00a8 28E0     		b	.L34
+ 312              	.LVL25:
+ 313              	.L56:
+ 314              		.loc 1 109 35 discriminator 1 view .LVU71
+ 315 00aa 0446     		mov	r4, r0
+  91:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 316              		.loc 1 91 5 is_stmt 1 view .LVU72
+ 317 00ac FFF7FEFF 		bl	Mecanum_Reset
+ 318              	.LVL26:
+  92:modules/mecanum.c ****     {
+ 319              		.loc 1 92 5 view .LVU73
+  92:modules/mecanum.c ****     {
+ 320              		.loc 1 92 5 is_stmt 0 view .LVU74
+ 321 00b0 05E0     		b	.L21
+ 322              	.LVL27:
+ 323              	.L22:
+  94:modules/mecanum.c ****     }
+ 324              		.loc 1 94 9 is_stmt 1 view .LVU75
+  94:modules/mecanum.c ****     }
+ 325              		.loc 1 94 12 is_stmt 0 view .LVU76
+ 326 00b2 05EB8403 		add	r3, r5, r4, lsl #2
+  94:modules/mecanum.c ****     }
+ 327              		.loc 1 94 16 view .LVU77
+ 328 00b6 0022     		movs	r2, #0
+ 329 00b8 1A60     		str	r2, [r3]	@ float
+  92:modules/mecanum.c ****     {
+ 330              		.loc 1 92 40 is_stmt 1 discriminator 3 view .LVU78
+ 331 00ba 0134     		adds	r4, r4, #1
+ 332              	.LVL28:
+  92:modules/mecanum.c ****     {
+ 333              		.loc 1 92 40 is_stmt 0 discriminator 3 view .LVU79
+ 334 00bc E4B2     		uxtb	r4, r4
+ 335              	.LVL29:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 9
 
 
- 113:modules/mecanum.c **** 
- 114:modules/mecanum.c ****          if (tgt[i] >  1.0f) tgt[i] =  1.0f;
- 382              		.loc 1 114 10 is_stmt 1 view .LVU100
- 383              		.loc 1 114 13 is_stmt 0 view .LVU101
- 384 0130 B7EE007A 		vmov.f32	s14, #1.0e+0
- 385 0134 F4EEC77A 		vcmpe.f32	s15, s14
- 386 0138 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 387 013c 04DD     		ble	.L26
- 388              		.loc 1 114 30 is_stmt 1 discriminator 1 view .LVU102
- 389              		.loc 1 114 37 is_stmt 0 discriminator 1 view .LVU103
- 390 013e 04AA     		add	r2, sp, #16
- 391 0140 02EB8302 		add	r2, r2, r3, lsl #2
- 392 0144 02ED047A 		vstr.32	s14, [r2, #-16]
- 393              	.L26:
- 115:modules/mecanum.c ****          if (tgt[i] < -1.0f) tgt[i] = -1.0f;
- 394              		.loc 1 115 10 is_stmt 1 view .LVU104
- 395              		.loc 1 115 17 is_stmt 0 view .LVU105
- 396 0148 04AA     		add	r2, sp, #16
- 397 014a 02EB8002 		add	r2, r2, r0, lsl #2
- 398 014e 12ED047A 		vldr.32	s14, [r2, #-16]
- 399              		.loc 1 115 13 view .LVU106
- 400 0152 FFEE007A 		vmov.f32	s15, #-1.0e+0
- 401 0156 B4EEE77A 		vcmpe.f32	s14, s15
- 402 015a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 403 015e C8D5     		bpl	.L28
- 404              		.loc 1 115 30 is_stmt 1 discriminator 1 view .LVU107
- 405              		.loc 1 115 37 is_stmt 0 discriminator 1 view .LVU108
- 406 0160 04AA     		add	r2, sp, #16
- 407 0162 02EB8000 		add	r0, r2, r0, lsl #2
- 408              	.LVL38:
- 409              		.loc 1 115 37 discriminator 1 view .LVU109
- 410 0166 40ED047A 		vstr.32	s15, [r0, #-16]
- 411 016a C2E7     		b	.L28
- 412              	.LVL39:
- 413              	.L43:
- 414              		.loc 1 115 37 discriminator 1 view .LVU110
- 415              	.LBE3:
- 416 016c 0023     		movs	r3, #0
- 417 016e C2E7     		b	.L30
- 418              	.LVL40:
- 419              	.L53:
- 420              	.LBB4:
- 116:modules/mecanum.c **** 
+ 336              	.L21:
+  92:modules/mecanum.c ****     {
+ 337              		.loc 1 92 18 is_stmt 1 discriminator 1 view .LVU80
+ 338 00be 032C     		cmp	r4, #3
+ 339 00c0 F7D9     		bls	.L22
+  96:modules/mecanum.c **** }                
+ 340              		.loc 1 96 12 is_stmt 0 view .LVU81
+ 341 00c2 0220     		movs	r0, #2
+ 342 00c4 ACE0     		b	.L23
+ 343              	.LVL30:
+ 344              	.L29:
+ 110:modules/mecanum.c ****    {  
+ 111:modules/mecanum.c ****         for(i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 112:modules/mecanum.c ****         {
+ 113:modules/mecanum.c ****             mec_prev[i] = mec_slew(mec_prev[i], 0.0f, stop_step);
+ 345              		.loc 1 113 13 is_stmt 1 view .LVU82
+ 346              		.loc 1 113 27 is_stmt 0 view .LVU83
+ 347 00c6 A700     		lsls	r7, r4, #2
+ 348 00c8 5C4E     		ldr	r6, .L60+20
+ 349 00ca 06EB8406 		add	r6, r6, r4, lsl #2
+ 350 00ce 9FED5C1A 		vldr.32	s2, .L60+24
+ 351 00d2 DFED560A 		vldr.32	s1, .L60+4
+ 352 00d6 96ED000A 		vldr.32	s0, [r6]
+ 353 00da FFF7FEFF 		bl	mec_slew
+ 354              	.LVL31:
+ 355              		.loc 1 113 25 discriminator 1 view .LVU84
+ 356 00de 86ED000A 		vstr.32	s0, [r6]
+ 114:modules/mecanum.c ****             out[i] = mec_prev[i];
+ 357              		.loc 1 114 13 is_stmt 1 view .LVU85
+ 358              		.loc 1 114 16 is_stmt 0 view .LVU86
+ 359 00e2 2F44     		add	r7, r7, r5
+ 360              		.loc 1 114 20 view .LVU87
+ 361 00e4 87ED000A 		vstr.32	s0, [r7]
+ 111:modules/mecanum.c ****         {
+ 362              		.loc 1 111 44 is_stmt 1 discriminator 3 view .LVU88
+ 363 00e8 0134     		adds	r4, r4, #1
+ 364              	.LVL32:
+ 111:modules/mecanum.c ****         {
+ 365              		.loc 1 111 44 is_stmt 0 discriminator 3 view .LVU89
+ 366 00ea E4B2     		uxtb	r4, r4
+ 367              	.LVL33:
+ 368              	.L28:
+ 111:modules/mecanum.c ****         {
+ 369              		.loc 1 111 22 is_stmt 1 discriminator 1 view .LVU90
+ 370 00ec 032C     		cmp	r4, #3
+ 371 00ee EAD9     		bls	.L29
+ 115:modules/mecanum.c ****         }
+ 116:modules/mecanum.c ****         return 1u;
+ 372              		.loc 1 116 16 is_stmt 0 view .LVU91
+ 373 00f0 0120     		movs	r0, #1
+ 374 00f2 95E0     		b	.L23
+ 375              	.LVL34:
+ 376              	.L48:
+ 111:modules/mecanum.c ****         {
+ 377              		.loc 1 111 15 view .LVU92
+ 378 00f4 0024     		movs	r4, #0
+ 379 00f6 F9E7     		b	.L28
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 10
+
+
+ 380              	.LVL35:
+ 381              	.L32:
  117:modules/mecanum.c ****     }
- 118:modules/mecanum.c **** 
- 119:modules/mecanum.c ****      dmax   = 0.0f;
- 120:modules/mecanum.c ****      accel_only = 1u;
- 121:modules/mecanum.c ****    
- 122:modules/mecanum.c **** 
- 123:modules/mecanum.c ****     /* 3) 逐轮解算 + 斜坡限速 */
- 124:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
- 421              		.loc 1 124 18 view .LVU111
- 422 0170 0024     		movs	r4, #0
- 423              	.LBE4:
- 120:modules/mecanum.c ****    
- 424              		.loc 1 120 17 view .LVU112
- 425 0172 0126     		movs	r6, #1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 11
+ 118:modules/mecanum.c ****     
+ 119:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 382              		.loc 1 119 40 is_stmt 1 discriminator 2 view .LVU93
+ 383 00f8 0133     		adds	r3, r3, #1
+ 384              	.LVL36:
+ 385              		.loc 1 119 40 is_stmt 0 discriminator 2 view .LVU94
+ 386 00fa DBB2     		uxtb	r3, r3
+ 387              	.LVL37:
+ 388              	.L34:
+ 389              		.loc 1 119 18 is_stmt 1 discriminator 1 view .LVU95
+ 390 00fc 032B     		cmp	r3, #3
+ 391 00fe 3AD8     		bhi	.L57
+ 392              	.LBB3:
+ 120:modules/mecanum.c ****     {
+ 121:modules/mecanum.c ****         const Mecanum_Dir_t *d = &MECANUM_DIR[i];
+ 393              		.loc 1 121 9 view .LVU96
+ 394              		.loc 1 121 46 is_stmt 0 view .LVU97
+ 395 0100 1846     		mov	r0, r3
+ 396              	.LVL38:
+ 122:modules/mecanum.c ****         tgt[i] = d->fwd * vx + d->strafe * vy + d->spin * wz;
+ 397              		.loc 1 122 9 is_stmt 1 view .LVU98
+ 398              		.loc 1 122 19 is_stmt 0 view .LVU99
+ 399 0102 03EB4301 		add	r1, r3, r3, lsl #1
+ 400 0106 4F4A     		ldr	r2, .L60+28
+ 401 0108 02EB8102 		add	r2, r2, r1, lsl #2
+ 402 010c D2ED007A 		vldr.32	s15, [r2]
+ 403              		.loc 1 122 25 view .LVU100
+ 404 0110 67EE897A 		vmul.f32	s15, s15, s18
+ 405              		.loc 1 122 33 view .LVU101
+ 406 0114 92ED017A 		vldr.32	s14, [r2, #4]
+ 407              		.loc 1 122 42 view .LVU102
+ 408 0118 27EE207A 		vmul.f32	s14, s14, s1
+ 409              		.loc 1 122 30 view .LVU103
+ 410 011c 77EE877A 		vadd.f32	s15, s15, s14
+ 411              		.loc 1 122 50 view .LVU104
+ 412 0120 92ED027A 		vldr.32	s14, [r2, #8]
+ 413              		.loc 1 122 57 view .LVU105
+ 414 0124 27EE017A 		vmul.f32	s14, s14, s2
+ 415              		.loc 1 122 47 view .LVU106
+ 416 0128 77EE877A 		vadd.f32	s15, s15, s14
+ 417              		.loc 1 122 16 view .LVU107
+ 418 012c 04AA     		add	r2, sp, #16
+ 419 012e 02EB8302 		add	r2, r2, r3, lsl #2
+ 420 0132 42ED047A 		vstr.32	s15, [r2, #-16]
+ 123:modules/mecanum.c **** 
+ 124:modules/mecanum.c ****          if (tgt[i] >  1.0f) tgt[i] =  1.0f;
+ 421              		.loc 1 124 10 is_stmt 1 view .LVU108
+ 422              		.loc 1 124 13 is_stmt 0 view .LVU109
+ 423 0136 B7EE007A 		vmov.f32	s14, #1.0e+0
+ 424 013a F4EEC77A 		vcmpe.f32	s15, s14
+ 425 013e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 426 0142 04DD     		ble	.L30
+ 427              		.loc 1 124 30 is_stmt 1 discriminator 1 view .LVU110
+ 428              		.loc 1 124 37 is_stmt 0 discriminator 1 view .LVU111
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 11
 
 
- 119:modules/mecanum.c ****      accel_only = 1u;
- 426              		.loc 1 119 13 view .LVU113
- 427 0174 9FED2C9A 		vldr.32	s18, .L56+4
- 428              	.LVL41:
- 119:modules/mecanum.c ****      accel_only = 1u;
- 429              		.loc 1 119 13 view .LVU114
- 430 0178 08E0     		b	.L32
- 431              	.LVL42:
- 432              	.L33:
- 433              	.LBB7:
- 434              	.LBB5:
- 125:modules/mecanum.c ****     {
- 126:modules/mecanum.c ****  
- 127:modules/mecanum.c ****         float d = mec_abs(tgt[i] - mec_prev[i]);
- 128:modules/mecanum.c ****         if (d > dmax) dmax = d;
- 129:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
- 435              		.loc 1 129 9 is_stmt 1 view .LVU115
- 436              		.loc 1 129 19 is_stmt 0 view .LVU116
- 437 017a 28EE288A 		vmul.f32	s16, s16, s17
- 438              		.loc 1 129 11 view .LVU117
- 439 017e B5EEC08A 		vcmpe.f32	s16, #0
- 440 0182 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 441 0186 19D4     		bmi	.L54
- 442              	.LVL43:
- 443              	.L34:
- 444              		.loc 1 129 11 view .LVU118
- 445              	.LBE5:
- 124:modules/mecanum.c ****     {
- 446              		.loc 1 124 49 is_stmt 1 discriminator 2 view .LVU119
- 447 0188 0134     		adds	r4, r4, #1
- 448              	.LVL44:
- 124:modules/mecanum.c ****     {
- 449              		.loc 1 124 49 is_stmt 0 discriminator 2 view .LVU120
- 450 018a E4B2     		uxtb	r4, r4
- 451              	.LVL45:
- 452              	.L32:
- 124:modules/mecanum.c ****     {
- 453              		.loc 1 124 27 is_stmt 1 discriminator 1 view .LVU121
- 454 018c 032C     		cmp	r4, #3
- 455 018e 17D8     		bhi	.L55
- 456              	.LBB6:
- 127:modules/mecanum.c ****         if (d > dmax) dmax = d;
- 457              		.loc 1 127 9 view .LVU122
- 127:modules/mecanum.c ****         if (d > dmax) dmax = d;
- 458              		.loc 1 127 30 is_stmt 0 view .LVU123
- 459 0190 04AB     		add	r3, sp, #16
- 460 0192 03EB8403 		add	r3, r3, r4, lsl #2
- 461 0196 13ED048A 		vldr.32	s16, [r3, #-16]
- 127:modules/mecanum.c ****         if (d > dmax) dmax = d;
- 462              		.loc 1 127 44 view .LVU124
- 463 019a 264B     		ldr	r3, .L56+16
- 464 019c 03EB8403 		add	r3, r3, r4, lsl #2
- 465 01a0 D3ED008A 		vldr.32	s17, [r3]
- 127:modules/mecanum.c ****         if (d > dmax) dmax = d;
- 466              		.loc 1 127 19 view .LVU125
- 467 01a4 38EE680A 		vsub.f32	s0, s16, s17
- 468 01a8 FFF7FEFF 		bl	mec_abs
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 12
-
-
- 469              	.LVL46:
- 128:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
- 470              		.loc 1 128 9 is_stmt 1 view .LVU126
- 128:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
- 471              		.loc 1 128 12 is_stmt 0 view .LVU127
- 472 01ac B4EEC09A 		vcmpe.f32	s18, s0
- 473 01b0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 474 01b4 E1D5     		bpl	.L33
- 128:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
- 475              		.loc 1 128 28 discriminator 1 view .LVU128
- 476 01b6 B0EE409A 		vmov.f32	s18, s0
- 477              	.LVL47:
- 128:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
- 478              		.loc 1 128 28 discriminator 1 view .LVU129
- 479 01ba DEE7     		b	.L33
- 480              	.LVL48:
- 481              	.L54:
- 482              		.loc 1 129 52 discriminator 1 view .LVU130
- 483 01bc 0026     		movs	r6, #0
- 484              	.LVL49:
- 485              		.loc 1 129 52 discriminator 1 view .LVU131
- 486 01be E3E7     		b	.L34
- 487              	.LVL50:
- 488              	.L55:
- 489              		.loc 1 129 52 discriminator 1 view .LVU132
- 490              	.LBE6:
- 491              	.LBE7:
- 130:modules/mecanum.c **** 
- 131:modules/mecanum.c ****     }
+ 429 0144 04AA     		add	r2, sp, #16
+ 430 0146 02EB8302 		add	r2, r2, r3, lsl #2
+ 431 014a 02ED047A 		vstr.32	s14, [r2, #-16]
+ 432              	.L30:
+ 125:modules/mecanum.c ****          if (tgt[i] < -1.0f) tgt[i] = -1.0f;
+ 433              		.loc 1 125 10 is_stmt 1 view .LVU112
+ 434              		.loc 1 125 17 is_stmt 0 view .LVU113
+ 435 014e 04AA     		add	r2, sp, #16
+ 436 0150 02EB8002 		add	r2, r2, r0, lsl #2
+ 437 0154 12ED047A 		vldr.32	s14, [r2, #-16]
+ 438              		.loc 1 125 13 view .LVU114
+ 439 0158 FFEE007A 		vmov.f32	s15, #-1.0e+0
+ 440 015c B4EEE77A 		vcmpe.f32	s14, s15
+ 441 0160 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 442 0164 C8D5     		bpl	.L32
+ 443              		.loc 1 125 30 is_stmt 1 discriminator 1 view .LVU115
+ 444              		.loc 1 125 37 is_stmt 0 discriminator 1 view .LVU116
+ 445 0166 04AA     		add	r2, sp, #16
+ 446 0168 02EB8000 		add	r0, r2, r0, lsl #2
+ 447              	.LVL39:
+ 448              		.loc 1 125 37 discriminator 1 view .LVU117
+ 449 016c 40ED047A 		vstr.32	s15, [r0, #-16]
+ 450 0170 C2E7     		b	.L32
+ 451              	.LVL40:
+ 452              	.L47:
+ 453              		.loc 1 125 37 discriminator 1 view .LVU118
+ 454              	.LBE3:
+ 455 0172 0023     		movs	r3, #0
+ 456 0174 C2E7     		b	.L34
+ 457              	.LVL41:
+ 458              	.L57:
+ 459              	.LBB4:
+ 126:modules/mecanum.c **** 
+ 127:modules/mecanum.c ****     }
+ 128:modules/mecanum.c **** 
+ 129:modules/mecanum.c ****      dmax   = 0.0f;
+ 130:modules/mecanum.c ****      accel_only = 1u;
+ 131:modules/mecanum.c ****    
  132:modules/mecanum.c **** 
- 133:modules/mecanum.c ****     step = (accel_only) ? step : stop_step;
- 492              		.loc 1 133 5 is_stmt 1 view .LVU133
- 493              		.loc 1 133 32 is_stmt 0 view .LVU134
- 494 01c0 56B1     		cbz	r6, .L47
- 495              		.loc 1 133 32 discriminator 1 view .LVU135
- 496 01c2 DFED1F7A 		vldr.32	s15, .L56+28
- 497              	.L36:
- 498              	.LVL51:
- 134:modules/mecanum.c ****     k    = (dmax <= step) ? 1.0f : (step / dmax);
- 499              		.loc 1 134 5 is_stmt 1 view .LVU136
- 500              		.loc 1 134 34 is_stmt 0 view .LVU137
- 501 01c6 B4EEE79A 		vcmpe.f32	s18, s15
- 502 01ca F1EE10FA 		vmrs	APSR_nzcv, FPSCR
- 503 01ce 06D9     		bls	.L48
- 504              		.loc 1 134 34 discriminator 2 view .LVU138
- 505 01d0 C7EE896A 		vdiv.f32	s13, s15, s18
- 506              	.L37:
- 507              	.LVL52:
- 135:modules/mecanum.c **** 
- 136:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
- 508              		.loc 1 136 5 is_stmt 1 view .LVU139
- 509              		.loc 1 136 11 is_stmt 0 view .LVU140
- 510 01d4 0023     		movs	r3, #0
- 511              		.loc 1 136 5 view .LVU141
- 512 01d6 1DE0     		b	.L38
- 513              	.LVL53:
- 514              	.L47:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 13
+ 133:modules/mecanum.c ****     /* 3) 逐轮解算 + 斜坡限速 */
+ 134:modules/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 460              		.loc 1 134 18 view .LVU119
+ 461 0176 0024     		movs	r4, #0
+ 462              	.LBE4:
+ 130:modules/mecanum.c ****    
+ 463              		.loc 1 130 17 view .LVU120
+ 464 0178 0126     		movs	r6, #1
+ 129:modules/mecanum.c ****      accel_only = 1u;
+ 465              		.loc 1 129 13 view .LVU121
+ 466 017a 9FED2C9A 		vldr.32	s18, .L60+4
+ 467              	.LVL42:
+ 129:modules/mecanum.c ****      accel_only = 1u;
+ 468              		.loc 1 129 13 view .LVU122
+ 469 017e 08E0     		b	.L36
+ 470              	.LVL43:
+ 471              	.L37:
+ 472              	.LBB7:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 12
 
 
- 133:modules/mecanum.c ****     k    = (dmax <= step) ? 1.0f : (step / dmax);
- 515              		.loc 1 133 32 discriminator 2 view .LVU142
- 516 01d8 DFED177A 		vldr.32	s15, .L56+20
- 517 01dc F3E7     		b	.L36
- 518              	.LVL54:
- 519              	.L48:
- 134:modules/mecanum.c ****     k    = (dmax <= step) ? 1.0f : (step / dmax);
- 520              		.loc 1 134 34 discriminator 1 view .LVU143
- 521 01de F7EE006A 		vmov.f32	s13, #1.0e+0
- 522 01e2 F7E7     		b	.L37
- 523              	.LVL55:
- 524              	.L39:
- 137:modules/mecanum.c ****     {
- 138:modules/mecanum.c ****         mec_prev[i] += (tgt[i] - mec_prev[i]) * k;
- 525              		.loc 1 138 9 is_stmt 1 view .LVU144
- 526              		.loc 1 138 17 is_stmt 0 view .LVU145
- 527 01e4 134A     		ldr	r2, .L56+16
- 528 01e6 02EB8302 		add	r2, r2, r3, lsl #2
- 529 01ea D2ED007A 		vldr.32	s15, [r2]
- 530              		.loc 1 138 28 view .LVU146
- 531 01ee 04A9     		add	r1, sp, #16
- 532 01f0 01EB8301 		add	r1, r1, r3, lsl #2
- 533 01f4 11ED047A 		vldr.32	s14, [r1, #-16]
- 534              		.loc 1 138 32 view .LVU147
- 535 01f8 37EE677A 		vsub.f32	s14, s14, s15
- 536              		.loc 1 138 47 view .LVU148
- 537 01fc 27EE267A 		vmul.f32	s14, s14, s13
- 538              		.loc 1 138 21 view .LVU149
- 539 0200 77EE877A 		vadd.f32	s15, s15, s14
- 540 0204 C2ED007A 		vstr.32	s15, [r2]
- 139:modules/mecanum.c ****         out[i] = mec_prev[i];
- 541              		.loc 1 139 9 is_stmt 1 view .LVU150
- 542              		.loc 1 139 12 is_stmt 0 view .LVU151
- 543 0208 05EB8302 		add	r2, r5, r3, lsl #2
- 544              		.loc 1 139 16 view .LVU152
- 545 020c C2ED007A 		vstr.32	s15, [r2]
- 136:modules/mecanum.c ****     {
- 546              		.loc 1 136 40 is_stmt 1 discriminator 3 view .LVU153
- 547 0210 0133     		adds	r3, r3, #1
- 548              	.LVL56:
- 136:modules/mecanum.c ****     {
- 549              		.loc 1 136 40 is_stmt 0 discriminator 3 view .LVU154
- 550 0212 DBB2     		uxtb	r3, r3
- 551              	.LVL57:
- 552              	.L38:
- 136:modules/mecanum.c ****     {
- 553              		.loc 1 136 18 is_stmt 1 discriminator 1 view .LVU155
- 554 0214 032B     		cmp	r3, #3
- 555 0216 E5D9     		bls	.L39
- 140:modules/mecanum.c ****     }
- 141:modules/mecanum.c **** 
- 142:modules/mecanum.c ****      return 0u;
- 556              		.loc 1 142 13 is_stmt 0 view .LVU156
- 557 0218 0020     		movs	r0, #0
- 558              	.LVL58:
- 559              	.L19:
- 143:modules/mecanum.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 14
+ 473              	.LBB5:
+ 135:modules/mecanum.c ****     {
+ 136:modules/mecanum.c ****  
+ 137:modules/mecanum.c ****         float d = mec_abs(tgt[i] - mec_prev[i]);
+ 138:modules/mecanum.c ****         if (d > dmax) dmax = d;
+ 139:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
+ 474              		.loc 1 139 9 is_stmt 1 view .LVU123
+ 475              		.loc 1 139 19 is_stmt 0 view .LVU124
+ 476 0180 28EE288A 		vmul.f32	s16, s16, s17
+ 477              		.loc 1 139 11 view .LVU125
+ 478 0184 B5EEC08A 		vcmpe.f32	s16, #0
+ 479 0188 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 480 018c 19D4     		bmi	.L58
+ 481              	.LVL44:
+ 482              	.L38:
+ 483              		.loc 1 139 11 view .LVU126
+ 484              	.LBE5:
+ 134:modules/mecanum.c ****     {
+ 485              		.loc 1 134 49 is_stmt 1 discriminator 2 view .LVU127
+ 486 018e 0134     		adds	r4, r4, #1
+ 487              	.LVL45:
+ 134:modules/mecanum.c ****     {
+ 488              		.loc 1 134 49 is_stmt 0 discriminator 2 view .LVU128
+ 489 0190 E4B2     		uxtb	r4, r4
+ 490              	.LVL46:
+ 491              	.L36:
+ 134:modules/mecanum.c ****     {
+ 492              		.loc 1 134 27 is_stmt 1 discriminator 1 view .LVU129
+ 493 0192 032C     		cmp	r4, #3
+ 494 0194 17D8     		bhi	.L59
+ 495              	.LBB6:
+ 137:modules/mecanum.c ****         if (d > dmax) dmax = d;
+ 496              		.loc 1 137 9 view .LVU130
+ 137:modules/mecanum.c ****         if (d > dmax) dmax = d;
+ 497              		.loc 1 137 30 is_stmt 0 view .LVU131
+ 498 0196 04AB     		add	r3, sp, #16
+ 499 0198 03EB8403 		add	r3, r3, r4, lsl #2
+ 500 019c 13ED048A 		vldr.32	s16, [r3, #-16]
+ 137:modules/mecanum.c ****         if (d > dmax) dmax = d;
+ 501              		.loc 1 137 44 view .LVU132
+ 502 01a0 264B     		ldr	r3, .L60+20
+ 503 01a2 03EB8403 		add	r3, r3, r4, lsl #2
+ 504 01a6 D3ED008A 		vldr.32	s17, [r3]
+ 137:modules/mecanum.c ****         if (d > dmax) dmax = d;
+ 505              		.loc 1 137 19 view .LVU133
+ 506 01aa 38EE680A 		vsub.f32	s0, s16, s17
+ 507 01ae FFF7FEFF 		bl	mec_abs
+ 508              	.LVL47:
+ 138:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
+ 509              		.loc 1 138 9 is_stmt 1 view .LVU134
+ 138:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
+ 510              		.loc 1 138 12 is_stmt 0 view .LVU135
+ 511 01b2 B4EEC09A 		vcmpe.f32	s18, s0
+ 512 01b6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 513 01ba E1D5     		bpl	.L37
+ 138:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
+ 514              		.loc 1 138 28 discriminator 1 view .LVU136
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 13
 
 
- 144:modules/mecanum.c **** }
- 560              		.loc 1 144 1 view .LVU157
- 561 021a 05B0     		add	sp, sp, #20
- 562              	.LCFI3:
- 563              		.cfi_def_cfa_offset 36
- 564              		@ sp needed
- 565 021c BDEC048B 		vldm	sp!, {d8-d9}
- 566              	.LCFI4:
- 567              		.cfi_restore 82
- 568              		.cfi_restore 83
- 569              		.cfi_restore 80
- 570              		.cfi_restore 81
- 571              		.cfi_def_cfa_offset 20
- 572 0220 F0BD     		pop	{r4, r5, r6, r7, pc}
- 573              	.LVL59:
- 574              	.L57:
- 575              		.loc 1 144 1 view .LVU158
- 576 0222 00BF     		.align	2
- 577              	.L56:
- 578 0224 0AD7A33C 		.word	1017370378
- 579 0228 00000000 		.word	0
- 580 022c 9A99593F 		.word	1062836634
- 581 0230 9A99193F 		.word	1058642330
- 582 0234 00000000 		.word	mec_prev
- 583 0238 6F12833B 		.word	998445679
- 584 023c 00000000 		.word	MECANUM_DIR
- 585 0240 A69BC43A 		.word	985963430
- 586              		.cfi_endproc
- 587              	.LFE149:
- 589              		.section	.bss.mec_prev,"aw",%nobits
- 590              		.align	2
- 593              	mec_prev:
- 594 0000 00000000 		.space	16
- 594      00000000 
- 594      00000000 
- 594      00000000 
- 595              		.global	MECANUM_DIR
- 596              		.section	.rodata.MECANUM_DIR,"a"
- 597              		.align	2
- 600              	MECANUM_DIR:
- 601 0000 0000803F 		.word	1065353216
- 602 0004 0000803F 		.word	1065353216
- 603 0008 000080BF 		.word	-1082130432
- 604 000c 0000803F 		.word	1065353216
- 605 0010 000080BF 		.word	-1082130432
- 606 0014 0000803F 		.word	1065353216
- 607 0018 0000803F 		.word	1065353216
- 608 001c 0000803F 		.word	1065353216
- 609 0020 0000803F 		.word	1065353216
- 610 0024 0000803F 		.word	1065353216
- 611 0028 000080BF 		.word	-1082130432
- 612 002c 000080BF 		.word	-1082130432
- 613              		.text
- 614              	.Letext0:
- 615              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
- 616              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
- 617              		.file 4 "modules/mecanum.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 15
+ 515 01bc B0EE409A 		vmov.f32	s18, s0
+ 516              	.LVL48:
+ 138:modules/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
+ 517              		.loc 1 138 28 discriminator 1 view .LVU137
+ 518 01c0 DEE7     		b	.L37
+ 519              	.LVL49:
+ 520              	.L58:
+ 521              		.loc 1 139 52 discriminator 1 view .LVU138
+ 522 01c2 0026     		movs	r6, #0
+ 523              	.LVL50:
+ 524              		.loc 1 139 52 discriminator 1 view .LVU139
+ 525 01c4 E3E7     		b	.L38
+ 526              	.LVL51:
+ 527              	.L59:
+ 528              		.loc 1 139 52 discriminator 1 view .LVU140
+ 529              	.LBE6:
+ 530              	.LBE7:
+ 140:modules/mecanum.c **** 
+ 141:modules/mecanum.c ****     }
+ 142:modules/mecanum.c **** 
+ 143:modules/mecanum.c ****     step = (accel_only) ? step : stop_step;
+ 531              		.loc 1 143 5 is_stmt 1 view .LVU141
+ 532              		.loc 1 143 32 is_stmt 0 view .LVU142
+ 533 01c6 56B1     		cbz	r6, .L51
+ 534              		.loc 1 143 32 discriminator 1 view .LVU143
+ 535 01c8 DFED1F7A 		vldr.32	s15, .L60+32
+ 536              	.L40:
+ 537              	.LVL52:
+ 144:modules/mecanum.c ****     k    = (dmax <= step) ? 1.0f : (step / dmax);
+ 538              		.loc 1 144 5 is_stmt 1 view .LVU144
+ 539              		.loc 1 144 34 is_stmt 0 view .LVU145
+ 540 01cc B4EEE79A 		vcmpe.f32	s18, s15
+ 541 01d0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 542 01d4 06D9     		bls	.L52
+ 543              		.loc 1 144 34 discriminator 2 view .LVU146
+ 544 01d6 C7EE896A 		vdiv.f32	s13, s15, s18
+ 545              	.L41:
+ 546              	.LVL53:
+ 145:modules/mecanum.c **** 
+ 146:modules/mecanum.c ****     for(i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 547              		.loc 1 146 5 is_stmt 1 view .LVU147
+ 548              		.loc 1 146 11 is_stmt 0 view .LVU148
+ 549 01da 0023     		movs	r3, #0
+ 550              		.loc 1 146 5 view .LVU149
+ 551 01dc 1DE0     		b	.L42
+ 552              	.LVL54:
+ 553              	.L51:
+ 143:modules/mecanum.c ****     k    = (dmax <= step) ? 1.0f : (step / dmax);
+ 554              		.loc 1 143 32 discriminator 2 view .LVU150
+ 555 01de DFED187A 		vldr.32	s15, .L60+24
+ 556 01e2 F3E7     		b	.L40
+ 557              	.LVL55:
+ 558              	.L52:
+ 144:modules/mecanum.c ****     k    = (dmax <= step) ? 1.0f : (step / dmax);
+ 559              		.loc 1 144 34 discriminator 1 view .LVU151
+ 560 01e4 F7EE006A 		vmov.f32	s13, #1.0e+0
+ 561 01e8 F7E7     		b	.L41
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 14
 
 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s 			page 16
+ 562              	.LVL56:
+ 563              	.L43:
+ 147:modules/mecanum.c ****     {
+ 148:modules/mecanum.c ****         mec_prev[i] += (tgt[i] - mec_prev[i]) * k;
+ 564              		.loc 1 148 9 is_stmt 1 view .LVU152
+ 565              		.loc 1 148 17 is_stmt 0 view .LVU153
+ 566 01ea 144A     		ldr	r2, .L60+20
+ 567 01ec 02EB8302 		add	r2, r2, r3, lsl #2
+ 568 01f0 D2ED007A 		vldr.32	s15, [r2]
+ 569              		.loc 1 148 28 view .LVU154
+ 570 01f4 04A9     		add	r1, sp, #16
+ 571 01f6 01EB8301 		add	r1, r1, r3, lsl #2
+ 572 01fa 11ED047A 		vldr.32	s14, [r1, #-16]
+ 573              		.loc 1 148 32 view .LVU155
+ 574 01fe 37EE677A 		vsub.f32	s14, s14, s15
+ 575              		.loc 1 148 47 view .LVU156
+ 576 0202 27EE267A 		vmul.f32	s14, s14, s13
+ 577              		.loc 1 148 21 view .LVU157
+ 578 0206 77EE877A 		vadd.f32	s15, s15, s14
+ 579 020a C2ED007A 		vstr.32	s15, [r2]
+ 149:modules/mecanum.c ****         out[i] = mec_prev[i];
+ 580              		.loc 1 149 9 is_stmt 1 view .LVU158
+ 581              		.loc 1 149 12 is_stmt 0 view .LVU159
+ 582 020e 05EB8302 		add	r2, r5, r3, lsl #2
+ 583              		.loc 1 149 16 view .LVU160
+ 584 0212 C2ED007A 		vstr.32	s15, [r2]
+ 146:modules/mecanum.c ****     {
+ 585              		.loc 1 146 40 is_stmt 1 discriminator 3 view .LVU161
+ 586 0216 0133     		adds	r3, r3, #1
+ 587              	.LVL57:
+ 146:modules/mecanum.c ****     {
+ 588              		.loc 1 146 40 is_stmt 0 discriminator 3 view .LVU162
+ 589 0218 DBB2     		uxtb	r3, r3
+ 590              	.LVL58:
+ 591              	.L42:
+ 146:modules/mecanum.c ****     {
+ 592              		.loc 1 146 18 is_stmt 1 discriminator 1 view .LVU163
+ 593 021a 032B     		cmp	r3, #3
+ 594 021c E5D9     		bls	.L43
+ 150:modules/mecanum.c ****     }
+ 151:modules/mecanum.c **** 
+ 152:modules/mecanum.c ****      return 0u;
+ 595              		.loc 1 152 13 is_stmt 0 view .LVU164
+ 596 021e 0020     		movs	r0, #0
+ 597              	.LVL59:
+ 598              	.L23:
+ 153:modules/mecanum.c **** 
+ 154:modules/mecanum.c **** }
+ 599              		.loc 1 154 1 view .LVU165
+ 600 0220 05B0     		add	sp, sp, #20
+ 601              	.LCFI3:
+ 602              		.cfi_def_cfa_offset 36
+ 603              		@ sp needed
+ 604 0222 BDEC048B 		vldm	sp!, {d8-d9}
+ 605              	.LCFI4:
+ 606              		.cfi_restore 82
+ 607              		.cfi_restore 83
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 15
+
+
+ 608              		.cfi_restore 80
+ 609              		.cfi_restore 81
+ 610              		.cfi_def_cfa_offset 20
+ 611 0226 F0BD     		pop	{r4, r5, r6, r7, pc}
+ 612              	.LVL60:
+ 613              	.L61:
+ 614              		.loc 1 154 1 view .LVU166
+ 615              		.align	2
+ 616              	.L60:
+ 617 0228 0AD7A33C 		.word	1017370378
+ 618 022c 00000000 		.word	0
+ 619 0230 00000000 		.word	s_spin_db_bypass
+ 620 0234 9A99593F 		.word	1062836634
+ 621 0238 9A99193F 		.word	1058642330
+ 622 023c 00000000 		.word	mec_prev
+ 623 0240 6F12833B 		.word	998445679
+ 624 0244 00000000 		.word	MECANUM_DIR
+ 625 0248 A69BC43A 		.word	985963430
+ 626              		.cfi_endproc
+ 627              	.LFE150:
+ 629              		.section	.bss.s_spin_db_bypass,"aw",%nobits
+ 632              	s_spin_db_bypass:
+ 633 0000 00       		.space	1
+ 634              		.section	.bss.mec_prev,"aw",%nobits
+ 635              		.align	2
+ 638              	mec_prev:
+ 639 0000 00000000 		.space	16
+ 639      00000000 
+ 639      00000000 
+ 639      00000000 
+ 640              		.global	MECANUM_DIR
+ 641              		.section	.rodata.MECANUM_DIR,"a"
+ 642              		.align	2
+ 645              	MECANUM_DIR:
+ 646 0000 0000803F 		.word	1065353216
+ 647 0004 0000803F 		.word	1065353216
+ 648 0008 000080BF 		.word	-1082130432
+ 649 000c 0000803F 		.word	1065353216
+ 650 0010 000080BF 		.word	-1082130432
+ 651 0014 0000803F 		.word	1065353216
+ 652 0018 0000803F 		.word	1065353216
+ 653 001c 0000803F 		.word	1065353216
+ 654 0020 0000803F 		.word	1065353216
+ 655 0024 0000803F 		.word	1065353216
+ 656 0028 000080BF 		.word	-1082130432
+ 657 002c 000080BF 		.word	-1082130432
+ 658              		.text
+ 659              	.Letext0:
+ 660              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 661              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 662              		.file 4 "modules/mecanum.h"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s 			page 16
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 mecanum.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:20     .text.mec_slew:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:25     .text.mec_slew:00000000 mec_slew
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:67     .text.mec_abs:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:72     .text.mec_abs:00000000 mec_abs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:100    .text.Mecanum_Reset:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:106    .text.Mecanum_Reset:00000000 Mecanum_Reset
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:145    .text.Mecanum_Reset:00000018 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:593    .bss.mec_prev:00000000 mec_prev
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:150    .text.Mecanum_Mix:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:156    .text.Mecanum_Mix:00000000 Mecanum_Mix
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:578    .text.Mecanum_Mix:00000224 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:600    .rodata.MECANUM_DIR:00000000 MECANUM_DIR
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:590    .bss.mec_prev:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXSPDl7.s:597    .rodata.MECANUM_DIR:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:20     .text.mec_slew:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:25     .text.mec_slew:00000000 mec_slew
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:67     .text.mec_abs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:72     .text.mec_abs:00000000 mec_abs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:100    .text.Mecanum_Reset:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:106    .text.Mecanum_Reset:00000000 Mecanum_Reset
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:145    .text.Mecanum_Reset:00000018 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:638    .bss.mec_prev:00000000 mec_prev
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:150    .text.Mecanum_SetSpinDeadbandBypass:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:156    .text.Mecanum_SetSpinDeadbandBypass:00000000 Mecanum_SetSpinDeadbandBypass
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:179    .text.Mecanum_SetSpinDeadbandBypass:0000000c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:632    .bss.s_spin_db_bypass:00000000 s_spin_db_bypass
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:184    .text.Mecanum_Mix:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:190    .text.Mecanum_Mix:00000000 Mecanum_Mix
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:617    .text.Mecanum_Mix:00000228 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:645    .rodata.MECANUM_DIR:00000000 MECANUM_DIR
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:633    .bss.s_spin_db_bypass:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:635    .bss.mec_prev:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccY4HAe4.s:642    .rodata.MECANUM_DIR:00000000 $d
 
 NO UNDEFINED SYMBOLS

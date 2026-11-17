@@ -485,10 +485,12 @@ static float   s_spin_ref   = 0.0f;  /* 世界航向目标 deg（多圈连续）
 static float   s_spin_i     = 0.0f;  /* 速度环积分（电压单位） */
 static uint8_t s_spin_ready = 0u;
 static uint16_t s_spin_bad  = 0u;   /* 失控计数（WorldYawRate 长时间超限） */
+static uint8_t  s_yaw_slew_kick = 0u;  /* 交接后把输出斜坡清零的标志 */
 
 volatile float RC_SpinYaw = 0.0f;
 volatile float RC_SpinWch = 0.0f;
 volatile float RC_SpinErr = 0.0f;
+volatile float RC_YawSpinOut = 0.0f;   /* 小陀螺环上一拍真正发出去的电压（斜坡+限幅之后），供积分回算 */
 
 static float yaw_wrap(float d)
 {
@@ -714,8 +716,14 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
     err_v = rpm_d - (float)gim6020.rpm;
     volt  = SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + s_spin_i;
 
-    if ((volt < GM_YAW_VOLT_MAX) && (volt > -GM_YAW_VOLT_MAX)) {
-        s_spin_i += SPIN_YAW_KI * err_v * 0.001f;
+    /* 抗饱和：按**上一拍实发**的电压回算，而不是"请求值没超限就积分"。
+     * 200/拍的斜坡要 90 ms 才拉到 18000，这期间请求值一直"没超限"，
+     * 积分就一路涨；等斜坡追上，积分的钱已经花出去了 → 过冲 → 反打。
+     * 回算项必须带 dt（KAW 单位 1/s），否则等于放大 1/dt 倍。 */
+    {
+        float v_raw = volt;
+        s_spin_i += (SPIN_YAW_KI * err_v
+                   + SPIN_YAW_KAW * (RC_YawSpinOut - v_raw)) * 0.001f;
         if (s_spin_i >  SPIN_YAW_I_MAX) s_spin_i =  SPIN_YAW_I_MAX;
         if (s_spin_i < -SPIN_YAW_I_MAX) s_spin_i = -SPIN_YAW_I_MAX;
     }
@@ -748,6 +756,10 @@ void RC_Yaw_Handover(void)
     s_spin_ref   = (float)INS_WorldYaw;
     s_spin_i     = 0.0f;
     s_spin_ready = 0u;
+
+    /* 输出斜坡也要清：上一模式可能正卡在一个大电压的斜坡上，直接交接等于把
+     * 那段扭矩原封不动递给新的环 —— 表现为切模式瞬间"拽一下"。 */
+    s_yaw_slew_kick = 1u;
 }
 
 /* ------------------------------------------------------------------ */
@@ -811,7 +823,7 @@ void RC_Control_Task(void)
 
     /* 小陀螺的世界航向完全依赖 IMU：姿态没收敛/零偏没标定完就撤掉自动自转，
      * 退化为手动（底盘不转、yaw 走手控），绝不偷偷退回旧环继续转 */
-    if ((INS_Ready == 0u) || (INS_CalDone == 0u) || (INS_AhrsReady == 0u)) spin_mode = 0u;
+    if ((INS_Ready == 0u) || (INS_CalDone == 0u)) spin_mode = 0u;
 #endif
 
     /* 模式切换 → 两个 yaw 控制器交接状态（避免拿旧目标把枪口拽一下） */
@@ -888,22 +900,24 @@ void RC_Control_Task(void)
      * 加一条小积分，死区外慢慢攒，到位立刻清，专门治"最后几度拖" */
     if (follow_on != 0u)
     {
-        float e = alpha_deg;
+        float e   = alpha_deg;
+        float ae  = (e > 0.0f) ? e : -e;
+        float dir = (e > 0.0f) ? 1.0f : -1.0f;
 
-        if      (e >  RC_FOLLOW_DEAD) e -= RC_FOLLOW_DEAD;
-        else if (e < -RC_FOLLOW_DEAD) e += RC_FOLLOW_DEAD;
-        else                          e  = 0.0f;
+        ae -= RC_FOLLOW_DEAD;               /* 死区外才纠，边界处输出恰为 0 */
 
-        if (e != 0.0f)
+        if (ae > 0.0f)
         {
-            /* 连续特性：死区边界处输出恰为 0，KICK 随 |e| 线性长到满值。
-             * 原来一过死区就整块加 KICK，是继电器特性；再叠上"回中分支清斜坡"，
-             * 必然形成极限环（踢 0.10 → 转过头 → 反向踢）。 */
-            float ae   = (e > 0.0f) ? e : -e;
             float ramp = (ae > RC_FOLLOW_DEAD) ? 1.0f : (ae / RC_FOLLOW_DEAD);
             float mag  = RC_FOLLOW_KP * ae + RC_FOLLOW_KICK * ramp;
 
-            spin = RC_FOLLOW_SIGN * ((e > 0.0f) ? 1.0f : -1.0f) * mag;
+            /* 阻尼：α̇ 直接用编码器转速 6·rpm（可测、无滤波、无相位代价）。
+             * α̇ 与 e 反号 = 正在回来 → 收油；同号 = 还在往外跑 → 加大。
+             * 原来的纯 P 没有这一项，冲过头再回来就是"摆"。 */
+            mag += RC_FOLLOW_KD * (dir * 6.0f * (float)gim6020.rpm);
+            if (mag < 0.0f) mag = 0.0f;
+
+            spin = RC_FOLLOW_SIGN * dir * mag;
         }
         else
         {
@@ -914,6 +928,10 @@ void RC_Control_Task(void)
         if (spin < -RC_FOLLOW_MAX) spin = -RC_FOLLOW_MAX;
     }
 #endif
+
+   /* 跟随/小陀螺的自转指令是闭环算出来的（常常 < 0.02），必须旁路混控的归一化死区，
+    * 否则 3.1° 以内指令全被清零：起转有门槛、到位后一顿一顿 */
+   Mecanum_SetSpinDeadbandBypass((uint8_t)((follow_on != 0u) || (spin_mode != 0u)));
 
    uint8_t mix_state = Mecanum_Mix(fwd, strafe, spin, enabled, RC_WheelOut);
 
@@ -964,7 +982,7 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
       }
 
     }
-    else if (mix_state == 1u)
+    else if ((mix_state == 1u) && (follow_on == 0u) && (spin_mode == 0u))
     {
       /* 整车回中：当拍四轮积分与目标归零，跳过普通 PI；
        * 用实测转速做纯 P 反刹（恒逆着运动方向），停稳后撤掉电流。
@@ -1054,6 +1072,10 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
      *    故障时不能走斜坡——否则上一拍 18000，这一拍只是 17800，
      *    要 90 ms 才掉到 0，等于故障期间还在给扭矩。直接把斜坡状态也清掉。 */
     static float volt_prev = 0.0f;
+    if (s_yaw_slew_kick != 0u) {
+        s_yaw_slew_kick = 0u;
+        volt_prev = 0.0f;       /* 交接后从 0 重新爬，不吃上一模式的旧斜坡 */
+    }
     if (yaw_kill != 0u) {
         volt      = 0.0f;
         volt_prev = 0.0f;       /* 恢复时从 0 重新往上爬 */
@@ -1061,6 +1083,7 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
         if (volt > volt_prev + GM_VOLT_SLEW) volt = volt_prev + GM_VOLT_SLEW;
         if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
     }
+    RC_YawSpinOut = volt;       /* 实发电压（斜坡之后），小陀螺环的积分回算用它 */
 
      /*pitch电机赋值*/
       float pit  = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;

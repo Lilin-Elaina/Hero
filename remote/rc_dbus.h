@@ -58,8 +58,10 @@
  * 用云台编码器算相对角，零漂、不依赖陀螺；速度环仍在下面闭环 */
 #define RC_FOLLOW_KP       0.012f   /*自转指令 / 度：α=10° 给 0.12
                                      *★外环，必须比 yaw 内环慢；提到 0.030 会让两环互相等 → 来回摆*/
-#define RC_FOLLOW_KICK     0.050f   /*起步量：死区外至少给这么多，否则小角度推不动车*/
+#define RC_FOLLOW_KICK     0.035f   /*起步量：边界处为 0，随 |e| 线性长到满值，否则小角度推不动车*/
 #define RC_FOLLOW_DEAD     2.5f     /*死区，度：±2.5° 内不纠，免得到位后左右蹭*/
+#define RC_FOLLOW_KD       0.0008f  /*阻尼：自转指令 per(deg/s)，α̇ 直接用 6·rpm（编码器微分，不过陀螺）。
+                                     *纯 P 时冲过头再回来就是"摆"，这一项负责提前收油*/
 #define RC_FOLLOW_MAX      0.80f    /*自转指令上限（占满量程比例）：45° 要转得动*/
 #define RC_FOLLOW_SIGN     1.0f     /*方向：实车若越追越偏就改成 -1.0f*/
 
@@ -96,13 +98,16 @@
 #define SPIN_YAW_KV         94.0f       /* 反电势前馈：电压单位/rpm（≈30000 单位 / 320 rpm）。
                                           * 转 200°/s = 33 rpm 要 3133 单位，全靠 P 顶就要
                                           * 60°/s 的稳态误差；有了它误差≈0 */
-#define SPIN_YAW_POS_KP     2.0f        /* 航向误差(deg) → 角速度(deg/s)，1/s。
+#define SPIN_YAW_POS_KP     1.2f        /* 航向误差(deg) → 角速度(deg/s)，1/s。
                                           * 低频来回晃就降到 1.0，跟得慢就升到 2.5 */
 #define SPIN_YAW_SPD_KP     300.0f      /* 世界角速度环 P：V per rpm（1800 V per deg/s）。
                                           * 与跟随共用口径但独立可调；高频抖就降到 200 */
 #define SPIN_YAW_KI         120.0f      /* 只补摩擦/负载偏差：有 KV 前馈后不需要大积分，
                                           * 大了反而在稳态附近来回蹭 */
 #define SPIN_YAW_I_MAX      4000.0f     /* 积分限幅（电压单位，≈42 rpm 的稳态电压） */
+#define SPIN_YAW_KAW        50.0f       /* 抗饱和回算 1/s：用"实发电压−请求电压"把积分拉回。
+                                          * 200/拍斜坡拉起 18000 要 90 ms，这期间只按"未超限"
+                                          * 判断就会一直积分，追上后必过冲。公式必须带 dt */
 #define SPIN_YAW_RPM_MAX    250.0f      /* 关节转速上限 rpm（同 GM_YAW_RPM_MAX） */
 #define SPIN_YAW_RATE_MAX   600.0f      /* 修正角速度上限 deg/s：防止 180° 折返错误把关节打满 */
 
