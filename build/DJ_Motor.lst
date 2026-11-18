@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 1
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
   47 0008 1546     		mov	r5, r2
   48 000a 9E46     		mov	lr, r3
   10:modules/DJ_Motor.c ****     const FDCAN_TxHeaderTypeDef TxHeader = {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 2
 
 
   49              		.loc 1 10 5 is_stmt 1 view .LVU2
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
   81              		.loc 1 32 13 is_stmt 1 view .LVU13
   82              		.loc 1 32 22 is_stmt 0 view .LVU14
   83 003e 0EAA     		add	r2, sp, #56
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 3
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 3
 
 
   84 0040 02EB4301 		add	r1, r2, r3, lsl #1
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  124              		.loc 1 38 10 view .LVU27
  125              	.LVL7:
  126              		.loc 1 38 6 is_stmt 0 view .LVU28
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 4
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 4
 
 
  127 007a 0FE0     		b	.L6
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  172 00ae 00BF     		.align	2
  173              	.L10:
  174 00b0 00000000 		.word	.LANCHOR0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 5
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 5
 
 
  175 00b4 00000000 		.word	hfdcan2
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
   58:modules/DJ_Motor.c ****         .FDFormat = DISABLE,
   59:modules/DJ_Motor.c ****         .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
   60:modules/DJ_Motor.c ****         .MessageMarker = 0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 6
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 6
 
 
   61:modules/DJ_Motor.c ****     };
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  253 0048 03DA     		bge	.L14
   79:modules/DJ_Motor.c ****     {
   80:modules/DJ_Motor.c ****         ID2_V = -25000;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 7
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 7
 
 
  254              		.loc 1 80 15 view .LVU60
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  298              	.L20:
  299 0078 24000000 		.word	.LANCHOR0+36
  300 007c 589EFFFF 		.word	-25000
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 8
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 8
 
 
  301 0080 00000000 		.word	hfdcan2
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  104:modules/DJ_Motor.c ****         .MessageMarker = 0
  105:modules/DJ_Motor.c ****     };
  106:modules/DJ_Motor.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 9
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 9
 
 
  107:modules/DJ_Motor.c ****      uint8_t  TxData[8] = {0};
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  386              		.loc 1 117 11 is_stmt 1 view .LVU97
  387              		.loc 1 117 19 is_stmt 0 view .LVU98
  388 0058 0CA9     		add	r1, sp, #48
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 10
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 10
 
 
  389 005a 01EB4201 		add	r1, r1, r2, lsl #1
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  431              		.loc 1 129 1 view .LVU116
  432 00a2 0DB0     		add	sp, sp, #52
  433              	.LCFI8:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 11
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 11
 
 
  434              		.cfi_def_cfa_offset 12
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  136:modules/DJ_Motor.c ****         .IdType = FDCAN_STANDARD_ID,
  137:modules/DJ_Motor.c ****         .TxFrameType = FDCAN_DATA_FRAME,
  138:modules/DJ_Motor.c ****         .DataLength = FDCAN_DLC_BYTES_8,
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 12
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 12
 
 
  139:modules/DJ_Motor.c ****         .ErrorStateIndicator = DISABLE,
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  517 0042 8DF80750 		strb	r5, [sp, #7]
  159:modules/DJ_Motor.c **** 
  160:modules/DJ_Motor.c ****         return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, TxData );
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 13
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 13
 
 
  518              		.loc 1 160 9 is_stmt 1 view .LVU137
@@ -764,23 +764,27 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  169:modules/DJ_Motor.c **** volatile uint32_t can_rx_205     = 0;   /* 其中 0x205 的帧数 */
  170:modules/DJ_Motor.c **** volatile uint32_t can_rx_last_id = 0;   /* 最近一帧的 CAN ID */
  171:modules/DJ_Motor.c **** volatile int16_t  can_rx_last_d0 = 0;   /* 最近一帧的 data[0] */
- 172:modules/DJ_Motor.c **** 
- 173:modules/DJ_Motor.c **** 
- 174:modules/DJ_Motor.c **** /* 处理6020反馈报文，解析电机状态*/
- 175:modules/DJ_Motor.c **** 
- 176:modules/DJ_Motor.c **** void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
- 177:modules/DJ_Motor.c **** {
- 552              		.loc 1 177 1 is_stmt 1 view -0
+ 172:modules/DJ_Motor.c **** volatile uint32_t can_rx_205_bad    = 0;  /* |rpm|>600 被判“非 6020 帧”丢弃的 0x205 帧�
+ 173:modules/DJ_Motor.c **** volatile int16_t  can_rx_205_bad_rpm = 0;  /* 最近一帧被丢弃时的 rpm 原始值 */
+ 174:modules/DJ_Motor.c **** volatile uint32_t can_rx_id_cnt[8]  = {0}; /* 按 ID 分别的收帧计数：[0..4]=0x201..0x205 */
+ 175:modules/DJ_Motor.c **** volatile uint32_t can_rx2_total    = 0;   /* 仅 CAN2 收到的帧数（CAN2 活性看门狗用，C
+ 176:modules/DJ_Motor.c **** 
+ 177:modules/DJ_Motor.c **** 
+ 178:modules/DJ_Motor.c **** /* 处理6020反馈报文，解析电机状态*/
+ 179:modules/DJ_Motor.c **** 
+ 180:modules/DJ_Motor.c **** void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
+ 181:modules/DJ_Motor.c **** {
+ 552              		.loc 1 181 1 is_stmt 1 view -0
  553              		.cfi_startproc
  554              		@ args = 0, pretend = 0, frame = 48
  555              		@ frame_needed = 0, uses_anonymous_args = 0
- 556              		.loc 1 177 1 is_stmt 0 view .LVU142
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 14
+
+
+ 556              		.loc 1 181 1 is_stmt 0 view .LVU142
  557 0000 30B5     		push	{r4, r5, lr}
  558              	.LCFI12:
  559              		.cfi_def_cfa_offset 12
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 14
-
-
  560              		.cfi_offset 4, -12
  561              		.cfi_offset 5, -8
  562              		.cfi_offset 14, -4
@@ -788,480 +792,624 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccx
  564              	.LCFI13:
  565              		.cfi_def_cfa_offset 64
  566 0004 0446     		mov	r4, r0
- 178:modules/DJ_Motor.c ****     FDCAN_RxHeaderTypeDef rx;
- 567              		.loc 1 178 5 is_stmt 1 view .LVU143
- 179:modules/DJ_Motor.c ****     uint8_t d[8];
- 568              		.loc 1 179 5 view .LVU144
- 180:modules/DJ_Motor.c **** 
- 181:modules/DJ_Motor.c ****     /* 循环读空：一次中断把所有待处理帧都消费掉 */
- 182:modules/DJ_Motor.c ****     while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx, d) == HAL_OK)
- 569              		.loc 1 182 5 view .LVU145
- 570              		.loc 1 182 11 is_stmt 0 view .LVU146
- 571 0006 1FE0     		b	.L39
+ 182:modules/DJ_Motor.c ****     FDCAN_RxHeaderTypeDef rx;
+ 567              		.loc 1 182 5 is_stmt 1 view .LVU143
+ 183:modules/DJ_Motor.c ****     uint8_t d[8];
+ 568              		.loc 1 183 5 view .LVU144
+ 184:modules/DJ_Motor.c **** 
+ 185:modules/DJ_Motor.c ****     /* 循环读空：一次中断把所有待处理帧都消费掉 */
+ 186:modules/DJ_Motor.c ****     while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx, d) == HAL_OK)
+ 569              		.loc 1 186 5 view .LVU145
+ 570              		.loc 1 186 11 is_stmt 0 view .LVU146
+ 571 0006 24E0     		b	.L39
  572              	.LVL40:
- 573              	.L48:
- 574              	.LBB5:
- 183:modules/DJ_Motor.c ****     {
- 184:modules/DJ_Motor.c ****         can_rx_total++;
- 185:modules/DJ_Motor.c ****         can_rx_last_id = rx.Identifier;
- 186:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
- 187:modules/DJ_Motor.c **** 
- 188:modules/DJ_Motor.c ****         if (rx.Identifier >= 0x201 && rx.Identifier <= 0x204)      /* 3508 ID1~ID4 */
- 189:modules/DJ_Motor.c ****         {
- 190:modules/DJ_Motor.c ****             uint8_t i = (uint8_t)(rx.Identifier - 0x201);
- 191:modules/DJ_Motor.c **** 
- 192:modules/DJ_Motor.c ****             /* ★ 两条总线上的 3508 反馈 ID 会撞车：CAN2 是底盘四轮 ID1~ID4，
- 193:modules/DJ_Motor.c ****              *   CAN1 是摩擦轮 ID2/ID3。必须按总线分流，否则两边互相覆盖，
- 194:modules/DJ_Motor.c ****              *   表现为“温度/转速乱跳”“摩擦轮温度误触发保护”。 */
- 195:modules/DJ_Motor.c ****              /*6020反馈帧结构体适用于3508*/
- 196:modules/DJ_Motor.c ****             volatile GM6020_State_t *st = (hfdcan->Instance == FDCAN2) ? &dj_wheel[i]
- 197:modules/DJ_Motor.c ****                                                                        : &dj_motor[i];
- 575              		.loc 1 197 72 discriminator 1 view .LVU147
- 576 0008 03EB4303 		add	r3, r3, r3, lsl #1
- 577              	.LVL41:
- 578              		.loc 1 197 72 discriminator 1 view .LVU148
- 579 000c 444D     		ldr	r5, .L50
- 580 000e 05EB8305 		add	r5, r5, r3, lsl #2
- 581              	.L42:
- 582              	.LVL42:
- 198:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 583              		.loc 1 198 13 is_stmt 1 view .LVU149
- 584              		.loc 1 198 65 is_stmt 0 view .LVU150
- 585 0012 9DF80130 		ldrb	r3, [sp, #1]	@ zero_extendqisi2
- 586              		.loc 1 198 29 view .LVU151
- 587 0016 43EA0223 		orr	r3, r3, r2, lsl #8
- 588              		.loc 1 198 27 view .LVU152
- 589 001a 2B80     		strh	r3, [r5]	@ movhi
- 590              	.LVL43:
- 199:modules/DJ_Motor.c ****             st->rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
- 591              		.loc 1 199 13 is_stmt 1 view .LVU153
- 592              		.loc 1 199 51 is_stmt 0 view .LVU154
- 593 001c 9DF80220 		ldrb	r2, [sp, #2]	@ zero_extendqisi2
- 594              		.loc 1 199 64 view .LVU155
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 15
+ 573              	.L51:
+ 187:modules/DJ_Motor.c ****     {
+ 188:modules/DJ_Motor.c ****         can_rx_total++;
+ 189:modules/DJ_Motor.c ****         can_rx_last_id = rx.Identifier;
+ 190:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
+ 191:modules/DJ_Motor.c ****         if (hfdcan->Instance == FDCAN2)
+ 192:modules/DJ_Motor.c ****         {
+ 193:modules/DJ_Motor.c ****             can_rx2_total++;                       /* CAN2 专属活性计数（看门狗用） */
+ 574              		.loc 1 193 13 is_stmt 1 view .LVU147
+ 575              		.loc 1 193 26 is_stmt 0 view .LVU148
+ 576 0008 5448     		ldr	r0, .L54
+ 577 000a 0268     		ldr	r2, [r0]
+ 578 000c 0132     		adds	r2, r2, #1
+ 579 000e 0260     		str	r2, [r0]
+ 580 0010 36E0     		b	.L40
+ 581              	.LVL41:
+ 582              	.L52:
+ 583              	.LBB5:
+ 194:modules/DJ_Motor.c ****         }
+ 195:modules/DJ_Motor.c ****         if ((rx.Identifier >= 0x201u) && (rx.Identifier <= 0x208u))
+ 196:modules/DJ_Motor.c ****         {
+ 197:modules/DJ_Motor.c ****             can_rx_id_cnt[rx.Identifier - 0x201u]++;   /* 按 ID 计数：0x201..0x208 → [0..7] *
+ 198:modules/DJ_Motor.c ****         }
+ 199:modules/DJ_Motor.c **** 
+ 200:modules/DJ_Motor.c ****         if (rx.Identifier >= 0x201 && rx.Identifier <= 0x204)      /* 3508 ID1~ID4 */
+ 201:modules/DJ_Motor.c ****         {
+ 202:modules/DJ_Motor.c ****             uint8_t i = (uint8_t)(rx.Identifier - 0x201);
+ 203:modules/DJ_Motor.c **** 
+ 204:modules/DJ_Motor.c ****             /* ★ 两条总线上的 3508 反馈 ID 会撞车：CAN2 是底盘四轮 ID1~ID4，
+ 205:modules/DJ_Motor.c ****              *   CAN1 是摩擦轮 ID2/ID3。必须按总线分流，否则两边互相覆盖，
+ 206:modules/DJ_Motor.c ****              *   表现为“温度/转速乱跳”“摩擦轮温度误触发保护”。 */
+ 207:modules/DJ_Motor.c ****              /*6020反馈帧结构体适用于3508*/
+ 208:modules/DJ_Motor.c ****             volatile GM6020_State_t *st = (hfdcan->Instance == FDCAN2) ? &dj_wheel[i]
+ 209:modules/DJ_Motor.c ****                                                                        : &dj_motor[i];
+ 584              		.loc 1 209 72 discriminator 1 view .LVU149
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 15
 
 
- 595 0020 9DF80330 		ldrb	r3, [sp, #3]	@ zero_extendqisi2
- 596              		.loc 1 199 29 view .LVU156
- 597 0024 43EA0223 		orr	r3, r3, r2, lsl #8
- 598 0028 1BB2     		sxth	r3, r3
- 599              		.loc 1 199 27 view .LVU157
- 600 002a 6B80     		strh	r3, [r5, #2]	@ movhi
- 200:modules/DJ_Motor.c ****             st->current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
- 601              		.loc 1 200 13 is_stmt 1 view .LVU158
- 602              		.loc 1 200 51 is_stmt 0 view .LVU159
- 603 002c 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
- 604              		.loc 1 200 64 view .LVU160
- 605 0030 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
- 606              		.loc 1 200 29 view .LVU161
- 607 0034 43EA0223 		orr	r3, r3, r2, lsl #8
- 608 0038 1BB2     		sxth	r3, r3
- 609              		.loc 1 200 27 view .LVU162
- 610 003a AB80     		strh	r3, [r5, #4]	@ movhi
- 201:modules/DJ_Motor.c ****             st->temp      = d[6];
- 611              		.loc 1 201 13 is_stmt 1 view .LVU163
- 612              		.loc 1 201 30 is_stmt 0 view .LVU164
- 613 003c 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
- 614              		.loc 1 201 27 view .LVU165
- 615 0040 AB71     		strb	r3, [r5, #6]
- 202:modules/DJ_Motor.c ****             st->last_tick = HAL_GetTick();
- 616              		.loc 1 202 13 is_stmt 1 view .LVU166
- 617              		.loc 1 202 29 is_stmt 0 view .LVU167
- 618 0042 FFF7FEFF 		bl	HAL_GetTick
- 619              	.LVL44:
- 620              		.loc 1 202 27 discriminator 1 view .LVU168
- 621 0046 A860     		str	r0, [r5, #8]
- 622              	.LVL45:
- 623              	.L39:
- 624              		.loc 1 202 27 discriminator 1 view .LVU169
- 625              	.LBE5:
- 182:modules/DJ_Motor.c ****     {
- 626              		.loc 1 182 67 is_stmt 1 view .LVU170
- 182:modules/DJ_Motor.c ****     {
- 627              		.loc 1 182 12 is_stmt 0 view .LVU171
- 628 0048 6B46     		mov	r3, sp
- 629 004a 02AA     		add	r2, sp, #8
- 630 004c 4021     		movs	r1, #64
- 631 004e 2046     		mov	r0, r4
- 632 0050 FFF7FEFF 		bl	HAL_FDCAN_GetRxMessage
- 633              	.LVL46:
- 182:modules/DJ_Motor.c ****     {
- 634              		.loc 1 182 67 discriminator 1 view .LVU172
- 635 0054 0028     		cmp	r0, #0
- 636 0056 61D1     		bne	.L47
- 184:modules/DJ_Motor.c ****         can_rx_last_id = rx.Identifier;
- 637              		.loc 1 184 9 is_stmt 1 view .LVU173
- 184:modules/DJ_Motor.c ****         can_rx_last_id = rx.Identifier;
- 638              		.loc 1 184 21 is_stmt 0 view .LVU174
- 639 0058 324A     		ldr	r2, .L50+4
- 640 005a 1368     		ldr	r3, [r2]
- 641 005c 0133     		adds	r3, r3, #1
- 642 005e 1360     		str	r3, [r2]
- 185:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 16
+ 585 0012 03EB4303 		add	r3, r3, r3, lsl #1
+ 586              	.LVL42:
+ 587              		.loc 1 209 72 discriminator 1 view .LVU150
+ 588 0016 524D     		ldr	r5, .L54+4
+ 589 0018 05EB8305 		add	r5, r5, r3, lsl #2
+ 590              	.L44:
+ 591              	.LVL43:
+ 210:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
+ 592              		.loc 1 210 13 is_stmt 1 view .LVU151
+ 593              		.loc 1 210 65 is_stmt 0 view .LVU152
+ 594 001c 9DF80130 		ldrb	r3, [sp, #1]	@ zero_extendqisi2
+ 595              		.loc 1 210 29 view .LVU153
+ 596 0020 43EA0123 		orr	r3, r3, r1, lsl #8
+ 597              		.loc 1 210 27 view .LVU154
+ 598 0024 2B80     		strh	r3, [r5]	@ movhi
+ 211:modules/DJ_Motor.c ****             st->rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
+ 599              		.loc 1 211 13 is_stmt 1 view .LVU155
+ 600              		.loc 1 211 51 is_stmt 0 view .LVU156
+ 601 0026 9DF80220 		ldrb	r2, [sp, #2]	@ zero_extendqisi2
+ 602              		.loc 1 211 64 view .LVU157
+ 603 002a 9DF80330 		ldrb	r3, [sp, #3]	@ zero_extendqisi2
+ 604              		.loc 1 211 29 view .LVU158
+ 605 002e 43EA0223 		orr	r3, r3, r2, lsl #8
+ 606 0032 1BB2     		sxth	r3, r3
+ 607              		.loc 1 211 27 view .LVU159
+ 608 0034 6B80     		strh	r3, [r5, #2]	@ movhi
+ 212:modules/DJ_Motor.c ****             st->current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
+ 609              		.loc 1 212 13 is_stmt 1 view .LVU160
+ 610              		.loc 1 212 51 is_stmt 0 view .LVU161
+ 611 0036 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
+ 612              		.loc 1 212 64 view .LVU162
+ 613 003a 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
+ 614              		.loc 1 212 29 view .LVU163
+ 615 003e 43EA0223 		orr	r3, r3, r2, lsl #8
+ 616 0042 1BB2     		sxth	r3, r3
+ 617              		.loc 1 212 27 view .LVU164
+ 618 0044 AB80     		strh	r3, [r5, #4]	@ movhi
+ 213:modules/DJ_Motor.c ****             st->temp      = d[6];
+ 619              		.loc 1 213 13 is_stmt 1 view .LVU165
+ 620              		.loc 1 213 30 is_stmt 0 view .LVU166
+ 621 0046 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
+ 622              		.loc 1 213 27 view .LVU167
+ 623 004a AB71     		strb	r3, [r5, #6]
+ 214:modules/DJ_Motor.c ****             st->last_tick = HAL_GetTick();
+ 624              		.loc 1 214 13 is_stmt 1 view .LVU168
+ 625              		.loc 1 214 29 is_stmt 0 view .LVU169
+ 626 004c FFF7FEFF 		bl	HAL_GetTick
+ 627              	.LVL44:
+ 628              		.loc 1 214 27 discriminator 1 view .LVU170
+ 629 0050 A860     		str	r0, [r5, #8]
+ 630              	.LVL45:
+ 631              	.L39:
+ 632              		.loc 1 214 27 discriminator 1 view .LVU171
+ 633              	.LBE5:
+ 186:modules/DJ_Motor.c ****     {
+ 634              		.loc 1 186 67 is_stmt 1 view .LVU172
+ 186:modules/DJ_Motor.c ****     {
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 16
 
 
- 643              		.loc 1 185 9 is_stmt 1 view .LVU175
- 185:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
- 644              		.loc 1 185 28 is_stmt 0 view .LVU176
- 645 0060 029B     		ldr	r3, [sp, #8]
- 185:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
- 646              		.loc 1 185 24 view .LVU177
- 647 0062 314A     		ldr	r2, .L50+8
- 648 0064 1360     		str	r3, [r2]
- 186:modules/DJ_Motor.c **** 
- 649              		.loc 1 186 9 is_stmt 1 view .LVU178
- 186:modules/DJ_Motor.c **** 
- 650              		.loc 1 186 27 is_stmt 0 view .LVU179
- 651 0066 9DF80020 		ldrb	r2, [sp]	@ zero_extendqisi2
- 186:modules/DJ_Motor.c **** 
- 652              		.loc 1 186 24 view .LVU180
- 653 006a 3049     		ldr	r1, .L50+12
- 654 006c 0A80     		strh	r2, [r1]	@ movhi
- 188:modules/DJ_Motor.c ****         {
- 655              		.loc 1 188 9 is_stmt 1 view .LVU181
- 188:modules/DJ_Motor.c ****         {
- 656              		.loc 1 188 36 is_stmt 0 view .LVU182
- 657 006e A3F20121 		subw	r1, r3, #513
- 188:modules/DJ_Motor.c ****         {
- 658              		.loc 1 188 12 view .LVU183
- 659 0072 0329     		cmp	r1, #3
- 660 0074 0CD8     		bhi	.L40
- 661              	.LBB6:
- 190:modules/DJ_Motor.c **** 
- 662              		.loc 1 190 13 is_stmt 1 view .LVU184
- 190:modules/DJ_Motor.c **** 
- 663              		.loc 1 190 25 is_stmt 0 view .LVU185
- 664 0076 DBB2     		uxtb	r3, r3
- 190:modules/DJ_Motor.c **** 
- 665              		.loc 1 190 21 view .LVU186
- 666 0078 013B     		subs	r3, r3, #1
- 667 007a DBB2     		uxtb	r3, r3
- 668              	.LVL47:
- 196:modules/DJ_Motor.c ****                                                                        : &dj_motor[i];
- 669              		.loc 1 196 13 is_stmt 1 view .LVU187
- 196:modules/DJ_Motor.c ****                                                                        : &dj_motor[i];
- 670              		.loc 1 196 50 is_stmt 0 view .LVU188
- 671 007c 2068     		ldr	r0, [r4]
- 197:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 672              		.loc 1 197 72 view .LVU189
- 673 007e 2C49     		ldr	r1, .L50+16
- 674 0080 8842     		cmp	r0, r1
- 675 0082 C1D0     		beq	.L48
- 197:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 676              		.loc 1 197 72 discriminator 2 view .LVU190
- 677 0084 03EB4303 		add	r3, r3, r3, lsl #1
- 678              	.LVL48:
- 197:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 679              		.loc 1 197 72 discriminator 2 view .LVU191
- 680 0088 2A4D     		ldr	r5, .L50+20
- 681 008a 05EB8305 		add	r5, r5, r3, lsl #2
- 682 008e C0E7     		b	.L42
- 683              	.LVL49:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 17
+ 635              		.loc 1 186 12 is_stmt 0 view .LVU173
+ 636 0052 6B46     		mov	r3, sp
+ 637 0054 02AA     		add	r2, sp, #8
+ 638 0056 4021     		movs	r1, #64
+ 639 0058 2046     		mov	r0, r4
+ 640 005a FFF7FEFF 		bl	HAL_FDCAN_GetRxMessage
+ 641              	.LVL46:
+ 186:modules/DJ_Motor.c ****     {
+ 642              		.loc 1 186 67 discriminator 1 view .LVU174
+ 643 005e 0028     		cmp	r0, #0
+ 644 0060 7AD1     		bne	.L50
+ 188:modules/DJ_Motor.c ****         can_rx_last_id = rx.Identifier;
+ 645              		.loc 1 188 9 is_stmt 1 view .LVU175
+ 188:modules/DJ_Motor.c ****         can_rx_last_id = rx.Identifier;
+ 646              		.loc 1 188 21 is_stmt 0 view .LVU176
+ 647 0062 404A     		ldr	r2, .L54+8
+ 648 0064 1368     		ldr	r3, [r2]
+ 649 0066 0133     		adds	r3, r3, #1
+ 650 0068 1360     		str	r3, [r2]
+ 189:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
+ 651              		.loc 1 189 9 is_stmt 1 view .LVU177
+ 189:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
+ 652              		.loc 1 189 28 is_stmt 0 view .LVU178
+ 653 006a 029B     		ldr	r3, [sp, #8]
+ 189:modules/DJ_Motor.c ****         can_rx_last_d0 = d[0];
+ 654              		.loc 1 189 24 view .LVU179
+ 655 006c 3E4A     		ldr	r2, .L54+12
+ 656 006e 1360     		str	r3, [r2]
+ 190:modules/DJ_Motor.c ****         if (hfdcan->Instance == FDCAN2)
+ 657              		.loc 1 190 9 is_stmt 1 view .LVU180
+ 190:modules/DJ_Motor.c ****         if (hfdcan->Instance == FDCAN2)
+ 658              		.loc 1 190 27 is_stmt 0 view .LVU181
+ 659 0070 9DF80010 		ldrb	r1, [sp]	@ zero_extendqisi2
+ 190:modules/DJ_Motor.c ****         if (hfdcan->Instance == FDCAN2)
+ 660              		.loc 1 190 24 view .LVU182
+ 661 0074 3D4A     		ldr	r2, .L54+16
+ 662 0076 1180     		strh	r1, [r2]	@ movhi
+ 191:modules/DJ_Motor.c ****         {
+ 663              		.loc 1 191 9 is_stmt 1 view .LVU183
+ 191:modules/DJ_Motor.c ****         {
+ 664              		.loc 1 191 19 is_stmt 0 view .LVU184
+ 665 0078 2068     		ldr	r0, [r4]
+ 191:modules/DJ_Motor.c ****         {
+ 666              		.loc 1 191 12 view .LVU185
+ 667 007a 3D4A     		ldr	r2, .L54+20
+ 668 007c 9042     		cmp	r0, r2
+ 669 007e C3D0     		beq	.L51
+ 670              	.L40:
+ 195:modules/DJ_Motor.c ****         {
+ 671              		.loc 1 195 9 is_stmt 1 view .LVU186
+ 195:modules/DJ_Motor.c ****         {
+ 672              		.loc 1 195 39 is_stmt 0 view .LVU187
+ 673 0080 A3F20122 		subw	r2, r3, #513
+ 195:modules/DJ_Motor.c ****         {
+ 674              		.loc 1 195 12 view .LVU188
+ 675 0084 072A     		cmp	r2, #7
+ 676 0086 05D8     		bhi	.L41
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 17
 
 
- 684              	.L40:
- 197:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 685              		.loc 1 197 72 discriminator 2 view .LVU192
- 686              	.LBE6:
- 203:modules/DJ_Motor.c ****         }
- 204:modules/DJ_Motor.c ****         else if (rx.Identifier == 0x205)                 /* GM6020 ID1 = yaw */
- 687              		.loc 1 204 14 is_stmt 1 view .LVU193
- 688              		.loc 1 204 17 is_stmt 0 view .LVU194
- 689 0090 40F20521 		movw	r1, #517
- 690 0094 8B42     		cmp	r3, r1
- 691 0096 20D0     		beq	.L49
- 205:modules/DJ_Motor.c ****         {
- 206:modules/DJ_Motor.c ****             can_rx_205++;
- 207:modules/DJ_Motor.c ****             gim6020.angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 208:modules/DJ_Motor.c ****             gim6020.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
- 209:modules/DJ_Motor.c ****             gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
- 210:modules/DJ_Motor.c ****             gim6020.temp      = d[6];
- 211:modules/DJ_Motor.c ****             gim6020.last_tick = HAL_GetTick();
- 212:modules/DJ_Motor.c ****         }
- 213:modules/DJ_Motor.c ****         else if (rx.Identifier == 0x206)                 /* GM6020 ID2 = pitch */
- 692              		.loc 1 213 14 is_stmt 1 view .LVU195
- 693              		.loc 1 213 17 is_stmt 0 view .LVU196
- 694 0098 40F20621 		movw	r1, #518
- 695 009c 8B42     		cmp	r3, r1
- 696 009e D3D1     		bne	.L39
- 214:modules/DJ_Motor.c ****         {
- 215:modules/DJ_Motor.c ****             gim_pitch.angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 697              		.loc 1 215 13 is_stmt 1 view .LVU197
- 698              		.loc 1 215 71 is_stmt 0 view .LVU198
- 699 00a0 9DF80130 		ldrb	r3, [sp, #1]	@ zero_extendqisi2
- 700              		.loc 1 215 35 view .LVU199
- 701 00a4 43EA0223 		orr	r3, r3, r2, lsl #8
- 702              		.loc 1 215 33 view .LVU200
- 703 00a8 234D     		ldr	r5, .L50+24
- 704 00aa 2B80     		strh	r3, [r5]	@ movhi
- 216:modules/DJ_Motor.c ****             gim_pitch.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
- 705              		.loc 1 216 13 is_stmt 1 view .LVU201
- 706              		.loc 1 216 57 is_stmt 0 view .LVU202
- 707 00ac 9DF80220 		ldrb	r2, [sp, #2]	@ zero_extendqisi2
- 708              		.loc 1 216 70 view .LVU203
- 709 00b0 9DF80330 		ldrb	r3, [sp, #3]	@ zero_extendqisi2
- 710              		.loc 1 216 35 view .LVU204
- 711 00b4 43EA0223 		orr	r3, r3, r2, lsl #8
- 712 00b8 1BB2     		sxth	r3, r3
- 713              		.loc 1 216 33 view .LVU205
- 714 00ba 6B80     		strh	r3, [r5, #2]	@ movhi
- 217:modules/DJ_Motor.c ****             gim_pitch.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
- 715              		.loc 1 217 13 is_stmt 1 view .LVU206
- 716              		.loc 1 217 57 is_stmt 0 view .LVU207
- 717 00bc 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
- 718              		.loc 1 217 70 view .LVU208
- 719 00c0 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
- 720              		.loc 1 217 35 view .LVU209
- 721 00c4 43EA0223 		orr	r3, r3, r2, lsl #8
- 722 00c8 1BB2     		sxth	r3, r3
- 723              		.loc 1 217 33 view .LVU210
- 724 00ca AB80     		strh	r3, [r5, #4]	@ movhi
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 18
+ 197:modules/DJ_Motor.c ****         }
+ 677              		.loc 1 197 13 is_stmt 1 view .LVU189
+ 197:modules/DJ_Motor.c ****         }
+ 678              		.loc 1 197 26 is_stmt 0 view .LVU190
+ 679 0088 3A4D     		ldr	r5, .L54+24
+ 680 008a 55F82200 		ldr	r0, [r5, r2, lsl #2]
+ 197:modules/DJ_Motor.c ****         }
+ 681              		.loc 1 197 50 view .LVU191
+ 682 008e 0130     		adds	r0, r0, #1
+ 683 0090 45F82200 		str	r0, [r5, r2, lsl #2]
+ 684              	.L41:
+ 200:modules/DJ_Motor.c ****         {
+ 685              		.loc 1 200 9 is_stmt 1 view .LVU192
+ 200:modules/DJ_Motor.c ****         {
+ 686              		.loc 1 200 12 is_stmt 0 view .LVU193
+ 687 0094 032A     		cmp	r2, #3
+ 688 0096 0CD8     		bhi	.L42
+ 689              	.LBB6:
+ 202:modules/DJ_Motor.c **** 
+ 690              		.loc 1 202 13 is_stmt 1 view .LVU194
+ 202:modules/DJ_Motor.c **** 
+ 691              		.loc 1 202 25 is_stmt 0 view .LVU195
+ 692 0098 DBB2     		uxtb	r3, r3
+ 202:modules/DJ_Motor.c **** 
+ 693              		.loc 1 202 21 view .LVU196
+ 694 009a 013B     		subs	r3, r3, #1
+ 695 009c DBB2     		uxtb	r3, r3
+ 696              	.LVL47:
+ 208:modules/DJ_Motor.c ****                                                                        : &dj_motor[i];
+ 697              		.loc 1 208 13 is_stmt 1 view .LVU197
+ 208:modules/DJ_Motor.c ****                                                                        : &dj_motor[i];
+ 698              		.loc 1 208 50 is_stmt 0 view .LVU198
+ 699 009e 2068     		ldr	r0, [r4]
+ 209:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
+ 700              		.loc 1 209 72 view .LVU199
+ 701 00a0 334A     		ldr	r2, .L54+20
+ 702 00a2 9042     		cmp	r0, r2
+ 703 00a4 B5D0     		beq	.L52
+ 209:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
+ 704              		.loc 1 209 72 discriminator 2 view .LVU200
+ 705 00a6 03EB4303 		add	r3, r3, r3, lsl #1
+ 706              	.LVL48:
+ 209:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
+ 707              		.loc 1 209 72 discriminator 2 view .LVU201
+ 708 00aa 334D     		ldr	r5, .L54+28
+ 709 00ac 05EB8305 		add	r5, r5, r3, lsl #2
+ 710 00b0 B4E7     		b	.L44
+ 711              	.LVL49:
+ 712              	.L42:
+ 209:modules/DJ_Motor.c ****             st->angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
+ 713              		.loc 1 209 72 discriminator 2 view .LVU202
+ 714              	.LBE6:
+ 215:modules/DJ_Motor.c ****         }
+ 216:modules/DJ_Motor.c ****         else if (rx.Identifier == 0x205)                 /* GM6020 ID1 = yaw */
+ 715              		.loc 1 216 14 is_stmt 1 view .LVU203
+ 716              		.loc 1 216 17 is_stmt 0 view .LVU204
+ 717 00b2 40F20522 		movw	r2, #517
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 18
 
 
- 218:modules/DJ_Motor.c ****             gim_pitch.temp      = d[6];
- 725              		.loc 1 218 13 is_stmt 1 view .LVU211
- 726              		.loc 1 218 36 is_stmt 0 view .LVU212
- 727 00cc 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
- 728              		.loc 1 218 33 view .LVU213
- 729 00d0 AB71     		strb	r3, [r5, #6]
- 219:modules/DJ_Motor.c ****             gim_pitch.last_tick = HAL_GetTick();
- 730              		.loc 1 219 13 is_stmt 1 view .LVU214
- 731              		.loc 1 219 35 is_stmt 0 view .LVU215
- 732 00d2 FFF7FEFF 		bl	HAL_GetTick
- 733              	.LVL50:
- 734              		.loc 1 219 33 discriminator 1 view .LVU216
- 735 00d6 A860     		str	r0, [r5, #8]
- 736 00d8 B6E7     		b	.L39
- 737              	.L49:
- 206:modules/DJ_Motor.c ****             gim6020.angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 738              		.loc 1 206 13 is_stmt 1 view .LVU217
- 206:modules/DJ_Motor.c ****             gim6020.angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
- 739              		.loc 1 206 23 is_stmt 0 view .LVU218
- 740 00da 1849     		ldr	r1, .L50+28
- 741 00dc 0B68     		ldr	r3, [r1]
- 742 00de 0133     		adds	r3, r3, #1
- 743 00e0 0B60     		str	r3, [r1]
- 207:modules/DJ_Motor.c ****             gim6020.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
- 744              		.loc 1 207 13 is_stmt 1 view .LVU219
- 207:modules/DJ_Motor.c ****             gim6020.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
- 745              		.loc 1 207 69 is_stmt 0 view .LVU220
- 746 00e2 9DF80130 		ldrb	r3, [sp, #1]	@ zero_extendqisi2
- 207:modules/DJ_Motor.c ****             gim6020.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
- 747              		.loc 1 207 33 view .LVU221
- 748 00e6 43EA0223 		orr	r3, r3, r2, lsl #8
- 207:modules/DJ_Motor.c ****             gim6020.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
- 749              		.loc 1 207 31 view .LVU222
- 750 00ea 154D     		ldr	r5, .L50+32
- 751 00ec 2B80     		strh	r3, [r5]	@ movhi
- 208:modules/DJ_Motor.c ****             gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
- 752              		.loc 1 208 13 is_stmt 1 view .LVU223
- 208:modules/DJ_Motor.c ****             gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
- 753              		.loc 1 208 55 is_stmt 0 view .LVU224
- 754 00ee 9DF80220 		ldrb	r2, [sp, #2]	@ zero_extendqisi2
- 208:modules/DJ_Motor.c ****             gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
- 755              		.loc 1 208 68 view .LVU225
- 756 00f2 9DF80330 		ldrb	r3, [sp, #3]	@ zero_extendqisi2
- 208:modules/DJ_Motor.c ****             gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
- 757              		.loc 1 208 33 view .LVU226
- 758 00f6 43EA0223 		orr	r3, r3, r2, lsl #8
- 759 00fa 1BB2     		sxth	r3, r3
- 208:modules/DJ_Motor.c ****             gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
- 760              		.loc 1 208 31 view .LVU227
- 761 00fc 6B80     		strh	r3, [r5, #2]	@ movhi
- 209:modules/DJ_Motor.c ****             gim6020.temp      = d[6];
- 762              		.loc 1 209 13 is_stmt 1 view .LVU228
- 209:modules/DJ_Motor.c ****             gim6020.temp      = d[6];
- 763              		.loc 1 209 55 is_stmt 0 view .LVU229
- 764 00fe 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
- 209:modules/DJ_Motor.c ****             gim6020.temp      = d[6];
- 765              		.loc 1 209 68 view .LVU230
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 19
+ 718 00b6 9342     		cmp	r3, r2
+ 719 00b8 20D0     		beq	.L53
+ 217:modules/DJ_Motor.c ****         {
+ 218:modules/DJ_Motor.c ****             int16_t rpm205 = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
+ 219:modules/DJ_Motor.c **** 
+ 220:modules/DJ_Motor.c ****             can_rx_205++;
+ 221:modules/DJ_Motor.c ****             /* ★ 合理性过滤：6020 物理极限 ~320rpm（空载），|rpm|>600 的 0x205
+ 222:modules/DJ_Motor.c ****              *   不可能是 6020 发的。CAN 帧自带 CRC15，总线误码的帧根本进不了
+ 223:modules/DJ_Motor.c ****              *   RX FIFO，所以这种帧只可能来自别的节点——典型是某个 C620 电
+ 224:modules/DJ_Motor.c ****              *   拨码拨到 ID5（其反馈帧也是 0x205，rpm 可到 ±8000，且它会把
+ 225:modules/DJ_Motor.c ****              *   0x1FF 字节0~1 当电流指令收，正好是我们发 yaw 电压的槽位）。
+ 226:modules/DJ_Motor.c ****              *   这种帧一个都不能进 gim6020：进去一帧，yaw 的超速兜底就把
+ 227:modules/DJ_Motor.c ****              *   电压掐成 0（表现为“枪口无阻力、yaw 遥控不动”）。
+ 228:modules/DJ_Motor.c ****              *   整帧丢弃（连 last_tick 都不更新），让 fresh 超时兜底按
+ 229:modules/DJ_Motor.c ****              *   “真掉线”处理，同时计数留证。 */
+ 230:modules/DJ_Motor.c ****             if ((rpm205 > 600) || (rpm205 < -600))
+ 231:modules/DJ_Motor.c ****             {
+ 232:modules/DJ_Motor.c ****                 can_rx_205_bad++;
+ 233:modules/DJ_Motor.c ****                 can_rx_205_bad_rpm = rpm205;
+ 234:modules/DJ_Motor.c ****             }
+ 235:modules/DJ_Motor.c ****             else
+ 236:modules/DJ_Motor.c ****             {
+ 237:modules/DJ_Motor.c ****                 gim6020.angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
+ 238:modules/DJ_Motor.c ****                 gim6020.rpm       = rpm205;
+ 239:modules/DJ_Motor.c ****                 gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
+ 240:modules/DJ_Motor.c ****                 gim6020.temp      = d[6];
+ 241:modules/DJ_Motor.c ****                 gim6020.last_tick = HAL_GetTick();
+ 242:modules/DJ_Motor.c ****             }
+ 243:modules/DJ_Motor.c ****         }
+ 244:modules/DJ_Motor.c ****         else if (rx.Identifier == 0x206)                 /* GM6020 ID2 = pitch */
+ 720              		.loc 1 244 14 is_stmt 1 view .LVU205
+ 721              		.loc 1 244 17 is_stmt 0 view .LVU206
+ 722 00ba 40F20622 		movw	r2, #518
+ 723 00be 9342     		cmp	r3, r2
+ 724 00c0 C7D1     		bne	.L39
+ 245:modules/DJ_Motor.c ****         {
+ 246:modules/DJ_Motor.c ****             gim_pitch.angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
+ 725              		.loc 1 246 13 is_stmt 1 view .LVU207
+ 726              		.loc 1 246 71 is_stmt 0 view .LVU208
+ 727 00c2 9DF80130 		ldrb	r3, [sp, #1]	@ zero_extendqisi2
+ 728              		.loc 1 246 35 view .LVU209
+ 729 00c6 43EA0123 		orr	r3, r3, r1, lsl #8
+ 730              		.loc 1 246 33 view .LVU210
+ 731 00ca 2C4D     		ldr	r5, .L54+32
+ 732 00cc 2B80     		strh	r3, [r5]	@ movhi
+ 247:modules/DJ_Motor.c ****             gim_pitch.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
+ 733              		.loc 1 247 13 is_stmt 1 view .LVU211
+ 734              		.loc 1 247 57 is_stmt 0 view .LVU212
+ 735 00ce 9DF80220 		ldrb	r2, [sp, #2]	@ zero_extendqisi2
+ 736              		.loc 1 247 70 view .LVU213
+ 737 00d2 9DF80330 		ldrb	r3, [sp, #3]	@ zero_extendqisi2
+ 738              		.loc 1 247 35 view .LVU214
+ 739 00d6 43EA0223 		orr	r3, r3, r2, lsl #8
+ 740 00da 1BB2     		sxth	r3, r3
+ 741              		.loc 1 247 33 view .LVU215
+ 742 00dc 6B80     		strh	r3, [r5, #2]	@ movhi
+ 248:modules/DJ_Motor.c ****             gim_pitch.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 19
 
 
- 766 0102 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
- 209:modules/DJ_Motor.c ****             gim6020.temp      = d[6];
- 767              		.loc 1 209 33 view .LVU231
- 768 0106 43EA0223 		orr	r3, r3, r2, lsl #8
- 769 010a 1BB2     		sxth	r3, r3
- 209:modules/DJ_Motor.c ****             gim6020.temp      = d[6];
- 770              		.loc 1 209 31 view .LVU232
- 771 010c AB80     		strh	r3, [r5, #4]	@ movhi
- 210:modules/DJ_Motor.c ****             gim6020.last_tick = HAL_GetTick();
- 772              		.loc 1 210 13 is_stmt 1 view .LVU233
- 210:modules/DJ_Motor.c ****             gim6020.last_tick = HAL_GetTick();
- 773              		.loc 1 210 34 is_stmt 0 view .LVU234
- 774 010e 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
- 210:modules/DJ_Motor.c ****             gim6020.last_tick = HAL_GetTick();
- 775              		.loc 1 210 31 view .LVU235
- 776 0112 AB71     		strb	r3, [r5, #6]
- 211:modules/DJ_Motor.c ****         }
- 777              		.loc 1 211 13 is_stmt 1 view .LVU236
- 211:modules/DJ_Motor.c ****         }
- 778              		.loc 1 211 33 is_stmt 0 view .LVU237
- 779 0114 FFF7FEFF 		bl	HAL_GetTick
- 780              	.LVL51:
- 211:modules/DJ_Motor.c ****         }
- 781              		.loc 1 211 31 discriminator 1 view .LVU238
- 782 0118 A860     		str	r0, [r5, #8]
- 783 011a 95E7     		b	.L39
- 784              	.L47:
- 220:modules/DJ_Motor.c ****         }
- 221:modules/DJ_Motor.c ****     }
- 222:modules/DJ_Motor.c **** }
- 785              		.loc 1 222 1 view .LVU239
- 786 011c 0DB0     		add	sp, sp, #52
- 787              	.LCFI14:
- 788              		.cfi_def_cfa_offset 12
- 789              		@ sp needed
- 790 011e 30BD     		pop	{r4, r5, pc}
- 791              	.LVL52:
- 792              	.L51:
- 793              		.loc 1 222 1 view .LVU240
- 794              		.align	2
- 795              	.L50:
- 796 0120 00000000 		.word	dj_wheel
- 797 0124 00000000 		.word	can_rx_total
- 798 0128 00000000 		.word	can_rx_last_id
- 799 012c 00000000 		.word	can_rx_last_d0
- 800 0130 00A40040 		.word	1073783808
- 801 0134 00000000 		.word	dj_motor
- 802 0138 00000000 		.word	gim_pitch
- 803 013c 00000000 		.word	can_rx_205
- 804 0140 00000000 		.word	gim6020
- 805              		.cfi_endproc
- 806              	.LFE150:
- 808              		.global	can_rx_last_d0
- 809              		.section	.bss.can_rx_last_d0,"aw",%nobits
- 810              		.align	1
- 813              	can_rx_last_d0:
- 814 0000 0000     		.space	2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 20
+ 743              		.loc 1 248 13 is_stmt 1 view .LVU216
+ 744              		.loc 1 248 57 is_stmt 0 view .LVU217
+ 745 00de 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
+ 746              		.loc 1 248 70 view .LVU218
+ 747 00e2 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
+ 748              		.loc 1 248 35 view .LVU219
+ 749 00e6 43EA0223 		orr	r3, r3, r2, lsl #8
+ 750 00ea 1BB2     		sxth	r3, r3
+ 751              		.loc 1 248 33 view .LVU220
+ 752 00ec AB80     		strh	r3, [r5, #4]	@ movhi
+ 249:modules/DJ_Motor.c ****             gim_pitch.temp      = d[6];
+ 753              		.loc 1 249 13 is_stmt 1 view .LVU221
+ 754              		.loc 1 249 36 is_stmt 0 view .LVU222
+ 755 00ee 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
+ 756              		.loc 1 249 33 view .LVU223
+ 757 00f2 AB71     		strb	r3, [r5, #6]
+ 250:modules/DJ_Motor.c ****             gim_pitch.last_tick = HAL_GetTick();
+ 758              		.loc 1 250 13 is_stmt 1 view .LVU224
+ 759              		.loc 1 250 35 is_stmt 0 view .LVU225
+ 760 00f4 FFF7FEFF 		bl	HAL_GetTick
+ 761              	.LVL50:
+ 762              		.loc 1 250 33 discriminator 1 view .LVU226
+ 763 00f8 A860     		str	r0, [r5, #8]
+ 764 00fa AAE7     		b	.L39
+ 765              	.L53:
+ 766              	.LBB7:
+ 218:modules/DJ_Motor.c **** 
+ 767              		.loc 1 218 13 is_stmt 1 view .LVU227
+ 218:modules/DJ_Motor.c **** 
+ 768              		.loc 1 218 52 is_stmt 0 view .LVU228
+ 769 00fc 9DF80230 		ldrb	r3, [sp, #2]	@ zero_extendqisi2
+ 218:modules/DJ_Motor.c **** 
+ 770              		.loc 1 218 30 view .LVU229
+ 771 0100 1B02     		lsls	r3, r3, #8
+ 772 0102 1BB2     		sxth	r3, r3
+ 218:modules/DJ_Motor.c **** 
+ 773              		.loc 1 218 65 view .LVU230
+ 774 0104 9DF80320 		ldrb	r2, [sp, #3]	@ zero_extendqisi2
+ 218:modules/DJ_Motor.c **** 
+ 775              		.loc 1 218 21 view .LVU231
+ 776 0108 1343     		orrs	r3, r3, r2
+ 777              	.LVL51:
+ 220:modules/DJ_Motor.c ****             /* ★ 合理性过滤：6020 物理极限 ~320rpm（空载），|rpm|>600 的 0x205
+ 778              		.loc 1 220 13 is_stmt 1 view .LVU232
+ 220:modules/DJ_Motor.c ****             /* ★ 合理性过滤：6020 物理极限 ~320rpm（空载），|rpm|>600 的 0x205
+ 779              		.loc 1 220 23 is_stmt 0 view .LVU233
+ 780 010a 1D48     		ldr	r0, .L54+36
+ 781 010c 0268     		ldr	r2, [r0]
+ 782 010e 0132     		adds	r2, r2, #1
+ 783 0110 0260     		str	r2, [r0]
+ 230:modules/DJ_Motor.c ****             {
+ 784              		.loc 1 230 13 is_stmt 1 view .LVU234
+ 230:modules/DJ_Motor.c ****             {
+ 785              		.loc 1 230 32 is_stmt 0 view .LVU235
+ 786 0112 03F51672 		add	r2, r3, #600
+ 787 0116 92B2     		uxth	r2, r2
+ 230:modules/DJ_Motor.c ****             {
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 20
 
 
- 815              		.global	can_rx_last_id
- 816              		.section	.bss.can_rx_last_id,"aw",%nobits
- 817              		.align	2
- 820              	can_rx_last_id:
- 821 0000 00000000 		.space	4
- 822              		.global	can_rx_205
- 823              		.section	.bss.can_rx_205,"aw",%nobits
- 824              		.align	2
- 827              	can_rx_205:
- 828 0000 00000000 		.space	4
- 829              		.global	can_rx_total
- 830              		.section	.bss.can_rx_total,"aw",%nobits
- 831              		.align	2
- 834              	can_rx_total:
- 835 0000 00000000 		.space	4
- 836              		.global	dj_wheel
- 837              		.section	.bss.dj_wheel,"aw",%nobits
- 838              		.align	2
- 841              	dj_wheel:
- 842 0000 00000000 		.space	48
- 842      00000000 
- 842      00000000 
- 842      00000000 
- 842      00000000 
- 843              		.global	dj_motor
- 844              		.section	.bss.dj_motor,"aw",%nobits
- 845              		.align	2
- 848              	dj_motor:
- 849 0000 00000000 		.space	48
- 849      00000000 
- 849      00000000 
- 849      00000000 
- 849      00000000 
- 850              		.global	gim_pitch
- 851              		.section	.bss.gim_pitch,"aw",%nobits
- 852              		.align	2
- 855              	gim_pitch:
- 856 0000 00000000 		.space	12
- 856      00000000 
- 856      00000000 
- 857              		.global	gim6020
- 858              		.section	.bss.gim6020,"aw",%nobits
- 859              		.align	2
- 862              	gim6020:
- 863 0000 00000000 		.space	12
- 863      00000000 
- 863      00000000 
- 864              		.section	.rodata
- 865              		.align	2
- 866              		.set	.LANCHOR0,. + 0
- 867              	.LC0:
- 868 0000 00020000 		.word	512
- 869 0004 00000000 		.word	0
- 870 0008 00000000 		.word	0
- 871 000c 08000000 		.word	8
- 872 0010 00000000 		.word	0
- 873 0014 00000000 		.word	0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 21
+ 788              		.loc 1 230 16 view .LVU236
+ 789 0118 B2F5966F 		cmp	r2, #1200
+ 790 011c 06D9     		bls	.L47
+ 232:modules/DJ_Motor.c ****                 can_rx_205_bad_rpm = rpm205;
+ 791              		.loc 1 232 17 is_stmt 1 view .LVU237
+ 232:modules/DJ_Motor.c ****                 can_rx_205_bad_rpm = rpm205;
+ 792              		.loc 1 232 31 is_stmt 0 view .LVU238
+ 793 011e 1949     		ldr	r1, .L54+40
+ 794 0120 0A68     		ldr	r2, [r1]
+ 795 0122 0132     		adds	r2, r2, #1
+ 796 0124 0A60     		str	r2, [r1]
+ 233:modules/DJ_Motor.c ****             }
+ 797              		.loc 1 233 17 is_stmt 1 view .LVU239
+ 233:modules/DJ_Motor.c ****             }
+ 798              		.loc 1 233 36 is_stmt 0 view .LVU240
+ 799 0126 184A     		ldr	r2, .L54+44
+ 800 0128 1380     		strh	r3, [r2]	@ movhi
+ 801 012a 92E7     		b	.L39
+ 802              	.L47:
+ 237:modules/DJ_Motor.c ****                 gim6020.rpm       = rpm205;
+ 803              		.loc 1 237 17 is_stmt 1 view .LVU241
+ 237:modules/DJ_Motor.c ****                 gim6020.rpm       = rpm205;
+ 804              		.loc 1 237 73 is_stmt 0 view .LVU242
+ 805 012c 9DF80120 		ldrb	r2, [sp, #1]	@ zero_extendqisi2
+ 237:modules/DJ_Motor.c ****                 gim6020.rpm       = rpm205;
+ 806              		.loc 1 237 37 view .LVU243
+ 807 0130 42EA0122 		orr	r2, r2, r1, lsl #8
+ 237:modules/DJ_Motor.c ****                 gim6020.rpm       = rpm205;
+ 808              		.loc 1 237 35 view .LVU244
+ 809 0134 154D     		ldr	r5, .L54+48
+ 810 0136 2A80     		strh	r2, [r5]	@ movhi
+ 238:modules/DJ_Motor.c ****                 gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
+ 811              		.loc 1 238 17 is_stmt 1 view .LVU245
+ 238:modules/DJ_Motor.c ****                 gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
+ 812              		.loc 1 238 35 is_stmt 0 view .LVU246
+ 813 0138 6B80     		strh	r3, [r5, #2]	@ movhi
+ 239:modules/DJ_Motor.c ****                 gim6020.temp      = d[6];
+ 814              		.loc 1 239 17 is_stmt 1 view .LVU247
+ 239:modules/DJ_Motor.c ****                 gim6020.temp      = d[6];
+ 815              		.loc 1 239 59 is_stmt 0 view .LVU248
+ 816 013a 9DF80420 		ldrb	r2, [sp, #4]	@ zero_extendqisi2
+ 239:modules/DJ_Motor.c ****                 gim6020.temp      = d[6];
+ 817              		.loc 1 239 72 view .LVU249
+ 818 013e 9DF80530 		ldrb	r3, [sp, #5]	@ zero_extendqisi2
+ 819              	.LVL52:
+ 239:modules/DJ_Motor.c ****                 gim6020.temp      = d[6];
+ 820              		.loc 1 239 37 view .LVU250
+ 821 0142 43EA0223 		orr	r3, r3, r2, lsl #8
+ 822 0146 1BB2     		sxth	r3, r3
+ 239:modules/DJ_Motor.c ****                 gim6020.temp      = d[6];
+ 823              		.loc 1 239 35 view .LVU251
+ 824 0148 AB80     		strh	r3, [r5, #4]	@ movhi
+ 825              	.LVL53:
+ 240:modules/DJ_Motor.c ****                 gim6020.last_tick = HAL_GetTick();
+ 826              		.loc 1 240 17 is_stmt 1 view .LVU252
+ 240:modules/DJ_Motor.c ****                 gim6020.last_tick = HAL_GetTick();
+ 827              		.loc 1 240 38 is_stmt 0 view .LVU253
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 21
 
 
- 874 0018 00000000 		.word	0
- 875 001c 00000000 		.word	0
- 876 0020 00000000 		.word	0
- 877              	.LC1:
- 878 0024 FF010000 		.word	511
- 879 0028 00000000 		.word	0
- 880 002c 00000000 		.word	0
- 881 0030 08000000 		.word	8
- 882 0034 00000000 		.word	0
- 883 0038 00000000 		.word	0
- 884 003c 00000000 		.word	0
- 885 0040 00000000 		.word	0
- 886 0044 00000000 		.word	0
- 887              		.text
- 888              	.Letext0:
- 889              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
- 890              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
- 891              		.file 4 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
- 892              		.file 5 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h"
- 893              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
- 894              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_fdcan.h"
- 895              		.file 8 "modules/DJ_Motor.h"
- 896              		.file 9 "Core/Inc/fdcan.h"
- 897              		.file 10 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s 			page 22
+ 828 014a 9DF80630 		ldrb	r3, [sp, #6]	@ zero_extendqisi2
+ 240:modules/DJ_Motor.c ****                 gim6020.last_tick = HAL_GetTick();
+ 829              		.loc 1 240 35 view .LVU254
+ 830 014e AB71     		strb	r3, [r5, #6]
+ 241:modules/DJ_Motor.c ****             }
+ 831              		.loc 1 241 17 is_stmt 1 view .LVU255
+ 241:modules/DJ_Motor.c ****             }
+ 832              		.loc 1 241 37 is_stmt 0 view .LVU256
+ 833 0150 FFF7FEFF 		bl	HAL_GetTick
+ 834              	.LVL54:
+ 241:modules/DJ_Motor.c ****             }
+ 835              		.loc 1 241 35 discriminator 1 view .LVU257
+ 836 0154 A860     		str	r0, [r5, #8]
+ 837 0156 7CE7     		b	.L39
+ 838              	.LVL55:
+ 839              	.L50:
+ 241:modules/DJ_Motor.c ****             }
+ 840              		.loc 1 241 35 discriminator 1 view .LVU258
+ 841              	.LBE7:
+ 251:modules/DJ_Motor.c ****         }
+ 252:modules/DJ_Motor.c ****     }
+ 253:modules/DJ_Motor.c **** }
+ 842              		.loc 1 253 1 view .LVU259
+ 843 0158 0DB0     		add	sp, sp, #52
+ 844              	.LCFI14:
+ 845              		.cfi_def_cfa_offset 12
+ 846              		@ sp needed
+ 847 015a 30BD     		pop	{r4, r5, pc}
+ 848              	.LVL56:
+ 849              	.L55:
+ 850              		.loc 1 253 1 view .LVU260
+ 851              		.align	2
+ 852              	.L54:
+ 853 015c 00000000 		.word	can_rx2_total
+ 854 0160 00000000 		.word	dj_wheel
+ 855 0164 00000000 		.word	can_rx_total
+ 856 0168 00000000 		.word	can_rx_last_id
+ 857 016c 00000000 		.word	can_rx_last_d0
+ 858 0170 00A40040 		.word	1073783808
+ 859 0174 00000000 		.word	can_rx_id_cnt
+ 860 0178 00000000 		.word	dj_motor
+ 861 017c 00000000 		.word	gim_pitch
+ 862 0180 00000000 		.word	can_rx_205
+ 863 0184 00000000 		.word	can_rx_205_bad
+ 864 0188 00000000 		.word	can_rx_205_bad_rpm
+ 865 018c 00000000 		.word	gim6020
+ 866              		.cfi_endproc
+ 867              	.LFE150:
+ 869              		.global	can_rx2_total
+ 870              		.section	.bss.can_rx2_total,"aw",%nobits
+ 871              		.align	2
+ 874              	can_rx2_total:
+ 875 0000 00000000 		.space	4
+ 876              		.global	can_rx_id_cnt
+ 877              		.section	.bss.can_rx_id_cnt,"aw",%nobits
+ 878              		.align	2
+ 881              	can_rx_id_cnt:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 22
+
+
+ 882 0000 00000000 		.space	32
+ 882      00000000 
+ 882      00000000 
+ 882      00000000 
+ 882      00000000 
+ 883              		.global	can_rx_205_bad_rpm
+ 884              		.section	.bss.can_rx_205_bad_rpm,"aw",%nobits
+ 885              		.align	1
+ 888              	can_rx_205_bad_rpm:
+ 889 0000 0000     		.space	2
+ 890              		.global	can_rx_205_bad
+ 891              		.section	.bss.can_rx_205_bad,"aw",%nobits
+ 892              		.align	2
+ 895              	can_rx_205_bad:
+ 896 0000 00000000 		.space	4
+ 897              		.global	can_rx_last_d0
+ 898              		.section	.bss.can_rx_last_d0,"aw",%nobits
+ 899              		.align	1
+ 902              	can_rx_last_d0:
+ 903 0000 0000     		.space	2
+ 904              		.global	can_rx_last_id
+ 905              		.section	.bss.can_rx_last_id,"aw",%nobits
+ 906              		.align	2
+ 909              	can_rx_last_id:
+ 910 0000 00000000 		.space	4
+ 911              		.global	can_rx_205
+ 912              		.section	.bss.can_rx_205,"aw",%nobits
+ 913              		.align	2
+ 916              	can_rx_205:
+ 917 0000 00000000 		.space	4
+ 918              		.global	can_rx_total
+ 919              		.section	.bss.can_rx_total,"aw",%nobits
+ 920              		.align	2
+ 923              	can_rx_total:
+ 924 0000 00000000 		.space	4
+ 925              		.global	dj_wheel
+ 926              		.section	.bss.dj_wheel,"aw",%nobits
+ 927              		.align	2
+ 930              	dj_wheel:
+ 931 0000 00000000 		.space	48
+ 931      00000000 
+ 931      00000000 
+ 931      00000000 
+ 931      00000000 
+ 932              		.global	dj_motor
+ 933              		.section	.bss.dj_motor,"aw",%nobits
+ 934              		.align	2
+ 937              	dj_motor:
+ 938 0000 00000000 		.space	48
+ 938      00000000 
+ 938      00000000 
+ 938      00000000 
+ 938      00000000 
+ 939              		.global	gim_pitch
+ 940              		.section	.bss.gim_pitch,"aw",%nobits
+ 941              		.align	2
+ 944              	gim_pitch:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 23
+
+
+ 945 0000 00000000 		.space	12
+ 945      00000000 
+ 945      00000000 
+ 946              		.global	gim6020
+ 947              		.section	.bss.gim6020,"aw",%nobits
+ 948              		.align	2
+ 951              	gim6020:
+ 952 0000 00000000 		.space	12
+ 952      00000000 
+ 952      00000000 
+ 953              		.section	.rodata
+ 954              		.align	2
+ 955              		.set	.LANCHOR0,. + 0
+ 956              	.LC0:
+ 957 0000 00020000 		.word	512
+ 958 0004 00000000 		.word	0
+ 959 0008 00000000 		.word	0
+ 960 000c 08000000 		.word	8
+ 961 0010 00000000 		.word	0
+ 962 0014 00000000 		.word	0
+ 963 0018 00000000 		.word	0
+ 964 001c 00000000 		.word	0
+ 965 0020 00000000 		.word	0
+ 966              	.LC1:
+ 967 0024 FF010000 		.word	511
+ 968 0028 00000000 		.word	0
+ 969 002c 00000000 		.word	0
+ 970 0030 08000000 		.word	8
+ 971 0034 00000000 		.word	0
+ 972 0038 00000000 		.word	0
+ 973 003c 00000000 		.word	0
+ 974 0040 00000000 		.word	0
+ 975 0044 00000000 		.word	0
+ 976              		.text
+ 977              	.Letext0:
+ 978              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin\\../lib/gcc/arm-none-eabi/14
+ 979              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin\\../lib/gcc/arm-none-eabi/14
+ 980              		.file 4 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 981              		.file 5 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h"
+ 982              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 983              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_fdcan.h"
+ 984              		.file 8 "modules/DJ_Motor.h"
+ 985              		.file 9 "Core/Inc/fdcan.h"
+ 986              		.file 10 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s 			page 24
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 DJ_Motor.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:20     .text.DJ3508_Send_I_Can2:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:26     .text.DJ3508_Send_I_Can2:00000000 DJ3508_Send_I_Can2
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:174    .text.DJ3508_Send_I_Can2:000000b0 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:180    .text.DJ6020_Send_V_Can2:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:186    .text.DJ6020_Send_V_Can2:00000000 DJ6020_Send_V_Can2
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:299    .text.DJ6020_Send_V_Can2:00000078 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:306    .text.DJ3508_Send_Can1:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:312    .text.DJ3508_Send_Can1:00000000 DJ3508_Send_Can1
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:442    .text.DJ3508_Send_Can1:000000a8 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:448    .text.DJ6020_Send_Can1:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:454    .text.DJ6020_Send_Can1:00000000 DJ6020_Send_Can1
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:536    .text.DJ6020_Send_Can1:00000054 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:543    .text.HAL_FDCAN_RxFifo0Callback:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:549    .text.HAL_FDCAN_RxFifo0Callback:00000000 HAL_FDCAN_RxFifo0Callback
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:796    .text.HAL_FDCAN_RxFifo0Callback:00000120 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:841    .bss.dj_wheel:00000000 dj_wheel
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:834    .bss.can_rx_total:00000000 can_rx_total
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:820    .bss.can_rx_last_id:00000000 can_rx_last_id
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:813    .bss.can_rx_last_d0:00000000 can_rx_last_d0
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:848    .bss.dj_motor:00000000 dj_motor
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:855    .bss.gim_pitch:00000000 gim_pitch
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:827    .bss.can_rx_205:00000000 can_rx_205
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:862    .bss.gim6020:00000000 gim6020
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:810    .bss.can_rx_last_d0:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:817    .bss.can_rx_last_id:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:824    .bss.can_rx_205:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:831    .bss.can_rx_total:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:838    .bss.dj_wheel:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:845    .bss.dj_motor:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:852    .bss.gim_pitch:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:859    .bss.gim6020:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccxFEHO5.s:865    .rodata:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:20     .text.DJ3508_Send_I_Can2:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:26     .text.DJ3508_Send_I_Can2:00000000 DJ3508_Send_I_Can2
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:174    .text.DJ3508_Send_I_Can2:000000b0 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:180    .text.DJ6020_Send_V_Can2:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:186    .text.DJ6020_Send_V_Can2:00000000 DJ6020_Send_V_Can2
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:299    .text.DJ6020_Send_V_Can2:00000078 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:306    .text.DJ3508_Send_Can1:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:312    .text.DJ3508_Send_Can1:00000000 DJ3508_Send_Can1
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:442    .text.DJ3508_Send_Can1:000000a8 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:448    .text.DJ6020_Send_Can1:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:454    .text.DJ6020_Send_Can1:00000000 DJ6020_Send_Can1
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:536    .text.DJ6020_Send_Can1:00000054 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:543    .text.HAL_FDCAN_RxFifo0Callback:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:549    .text.HAL_FDCAN_RxFifo0Callback:00000000 HAL_FDCAN_RxFifo0Callback
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:853    .text.HAL_FDCAN_RxFifo0Callback:0000015c $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:874    .bss.can_rx2_total:00000000 can_rx2_total
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:930    .bss.dj_wheel:00000000 dj_wheel
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:923    .bss.can_rx_total:00000000 can_rx_total
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:909    .bss.can_rx_last_id:00000000 can_rx_last_id
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:902    .bss.can_rx_last_d0:00000000 can_rx_last_d0
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:881    .bss.can_rx_id_cnt:00000000 can_rx_id_cnt
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:937    .bss.dj_motor:00000000 dj_motor
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:944    .bss.gim_pitch:00000000 gim_pitch
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:916    .bss.can_rx_205:00000000 can_rx_205
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:895    .bss.can_rx_205_bad:00000000 can_rx_205_bad
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:888    .bss.can_rx_205_bad_rpm:00000000 can_rx_205_bad_rpm
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:951    .bss.gim6020:00000000 gim6020
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:871    .bss.can_rx2_total:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:878    .bss.can_rx_id_cnt:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:885    .bss.can_rx_205_bad_rpm:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:892    .bss.can_rx_205_bad:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:899    .bss.can_rx_last_d0:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:906    .bss.can_rx_last_id:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:913    .bss.can_rx_205:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:920    .bss.can_rx_total:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:927    .bss.dj_wheel:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:934    .bss.dj_motor:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:941    .bss.gim_pitch:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:948    .bss.gim6020:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\cc4kk5rL.s:954    .rodata:00000000 $d
 
 UNDEFINED SYMBOLS
 HAL_FDCAN_AddMessageToTxFifoQ

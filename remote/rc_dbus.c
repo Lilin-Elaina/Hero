@@ -9,6 +9,8 @@
 #include "DJ_Motor.h"
 #include "mecanum.h"
 #include "ins.h"
+#include "fdcan.h"
+#include "bsp.can.h"
 #include <string.h>
 #include <math.h>
 
@@ -190,7 +192,18 @@ void RC_Decode(uint8_t *b)
      * 合法帧恒等、异常帧不会把脏位当有效值 ---- */
     RC_Data.wheel = (uint16_t)((b[16] | ((uint16_t)b[17] << 8)) & 0x07FF);
 
-    RC_Data.last_tick = HAL_GetTick();
+    {
+        uint32_t now = HAL_GetTick();
+
+        /* 两帧间隔统计：RC_GapMaxMs > 100 就是一次实打实的“准失联”，
+         * 这比 online 标志可信——online 只看最后一帧距今，间隔大不大它不会记。 */
+        if ((RC_Data.last_tick != 0u) && ((now - RC_Data.last_tick) > RC_GapMaxMs))
+        {
+            RC_GapMaxMs = now - RC_Data.last_tick;
+        }
+        RC_FrameCnt++;
+        RC_Data.last_tick = now;
+    }
     RC_Data.online = 1;
 }
 
@@ -430,6 +443,36 @@ volatile float RC_YawVoltOut= 0.0f;   /* 斜坡之后、真正发出去的电压
 volatile float RC_YawI      = 0.0f;   /* 速度环积分 */
 volatile float RC_HoldWz    = 0.0f;   /* 稳向看到的枪口世界角速度 deg/s */
 volatile float RC_HoldRate  = 0.0f;   /* 稳向折算出的补偿角速度 deg/s */
+
+/* ---- 掉线 / yaw 断电取证镜像（定义见 rc_dbus.h 注释）---- */
+volatile uint32_t RC_FrameCnt    = 0;
+volatile uint32_t RC_GapMaxMs    = 0;
+volatile uint32_t RC_ErrCnt      = 0;
+volatile uint32_t RC_YawFbAgeMax = 0;
+volatile float    RC_YawSpdMax   = 0.0f;
+volatile uint8_t  RC_YawKill     = 0u;
+volatile uint32_t RC_YawKillCnt  = 0;
+volatile uint32_t RC_Can2TEC     = 0;
+volatile uint32_t RC_Can2REC     = 0;
+volatile uint32_t RC_Can2TECMax  = 0;
+volatile uint32_t RC_Can2RECMax  = 0;
+volatile uint32_t RC_YawOutageCnt = 0;
+/* ---- CAN2 控制器状态镜像（比 TEC/REC 更能区分“线断了”和“有人应答失败”）----
+ * PSR.LEC 最后错误码：0=无错 1=填充错 2=格式错 3=ACK错 4=位1错 5=位0错 6=CRC错
+ *   → 3(ACK)  = 我们发出去了但没有任何节点应答（线断/对端全掉电）
+ *   → 4/5(位错)= 线上电平与预期不符（短路/终端电阻/收发器坏）
+ *   → 1/2/6    = 干扰/反射（终端电阻、屏蔽、线长）
+ * CCCR.INIT=1 → 控制器停在初始化态（Stop 后未重启，或 Bus-Off 恢复失败）*/
+volatile uint32_t RC_Can2PSR     = 0;
+volatile uint32_t RC_Can2CCCR    = 0;
+volatile uint32_t RC_Can2BusOffCnt = 0;   /* Bus-Off 中断次数（bsp.can.c 里 +1） */
+volatile uint32_t RC_Can2RestartCnt = 0;  /* RX 活性看门狗触发的 Stop+Start 次数 */
+
+/* ★固件版本指纹（Watch 自检用）：
+ * Ozone 里读 RC_BuildTag，必须等于下面这个值；读出来是 0/乱数 = 挂的 ELF 与芯片
+ * 固件不是同一版（地址全错位，Watch 里所有变量读数都不可信）。
+ * 每次改了全局变量布局/新增变量就把后 4 位改一下，方便确认。 */
+volatile uint32_t RC_BuildTag = 0x11172358u;
 
 static float wheel_abs(float x )
 {
@@ -787,6 +830,27 @@ void RC_Control_Task(void)
 
     uint8_t online = RC_IsOnline(now);
 
+    /* ---- CAN2 总线健康快照（每拍一次，读 ECR 寄存器无副作用）----
+     * TEC/REC 是 FDCAN 的错误计数器：>127 = 错误被动（收发开始拖延迟重试，
+     * 表现就是整车“游戏延迟”）；255 = 接近/已 bus-off。
+     * 之前这只能拿 J-Link 手动读寄存器，现在出问题当场在 Ozone 里定罪。 */
+    {
+        uint32_t ecr = hfdcan2.Instance->ECR;
+        uint32_t tec = ecr & 0xFFu;
+        uint32_t rec = (ecr >> 8) & 0x7Fu;
+
+        RC_Can2TEC = tec;
+        RC_Can2REC = rec;
+        if (tec > RC_Can2TECMax) RC_Can2TECMax = tec;
+        if (rec > RC_Can2RECMax) RC_Can2RECMax = rec;
+        RC_Can2PSR  = hfdcan2.Instance->PSR;
+        RC_Can2CCCR = hfdcan2.Instance->CCCR;
+
+        /* 版本指纹：每拍写入常量（同时保证该变量不被 --gc-sections 回收）。
+         * Watch 读到的值 ≠ 0x11172358 → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
+        RC_BuildTag = 0x11172358u;
+    }
+
 #if (RC_ENABLE_SW_POS != 0)
   #if (RC_ENABLE_USE_LEFT)
     #define RC_ARM_SW   (RC_Data.s_left)
@@ -869,6 +933,40 @@ void RC_Control_Task(void)
     else
     {
         rc_enable_since = 0;
+    }
+
+    /* ---- CAN2 RX 活性看门狗（2026-11-18）----
+     * 底盘四轮 + yaw 全在 CAN2，五个节点每个 1kHz 反馈，总线正常时
+     * can_rx2_total 不可能 20ms 不动。实测出现整条 CAN2 静默 337 秒不恢复：
+     * 唯一能解释"死透且无人再试"的软件路径 = Bus-Off 回调里 Stop+Start 万一
+     * 没救回来（ISR 内重启 HAL 状态机有竞态），控制器就永远卡在 CCCR.INIT，
+     * 而全工程没有任何代码会再试第二次。看门狗补上这一课：
+     *   - 连续 20ms 无 CAN2 帧 → Stop + FDCAN2_Start 重启一次
+     *   - 没救回来每 100ms 再试一次
+     *   - RC_Can2RestartCnt 计数留证：重启后立刻恢复 = 卡死确系软件；
+     *     重启多少次都没用 = 总线物理上真的死了（回头查硬件）
+     *   - 只在"上电以来见过总线活着(>1000 帧)"且已使能时启用，
+     *     避免台架上不带电调时空转重启 */
+    {
+        static uint32_t s_can2_last   = 0u;
+        static uint32_t s_can2_frozen = 0u;
+
+        if (can_rx2_total != s_can2_last)
+        {
+            s_can2_last   = can_rx2_total;
+            s_can2_frozen = 0u;
+        }
+        else if ((can_rx2_total > 1000u) && (enabled != 0u))
+        {
+            if (s_can2_frozen < 1000000u) s_can2_frozen++;
+
+            if ((s_can2_frozen >= 20u) && (((s_can2_frozen - 20u) % 100u) == 0u))
+            {
+                RC_Can2RestartCnt++;
+                HAL_FDCAN_Stop(&hfdcan2);
+                FDCAN2_Start();
+            }
+        }
     }
 
     /* 2) 摇杆归一化：死区内为 0，范围 -1.0 ~ +1.0 */
@@ -1072,16 +1170,53 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
     float volt = (spin_mode != 0u) ? RC_Yaw_Spin_Control(online, gim)
                                    : RC_Yaw_Control(online, gim);
 
-    /* ① 反馈超时 / 遥控离线 → 断电（没有反馈就等于没有限位） */
-    uint8_t yaw_kill = 0u;
-    if (online == 0u)
-        yaw_kill = 1u;
-    if ((HAL_GetTick() - gim6020.last_tick) > GM_FEEDBACK_TIMEOUT_MS)
-        yaw_kill = 1u;
+    /* ① 反馈超时 / 遥控离线 → 断电（没有反馈就等于没有限位）
+     *    ★每次断电都留下“为什么”：原因码 + 历史最大反馈年龄 + 历史最大转速，
+     *      不再靠 Watch 猜（Watch 在故障瞬间的读数不可信，教训见 2026-11-17 排查记录） */
+    uint8_t yaw_kill     = 0u;
+    uint8_t kill_reason  = 0u;
 
-    /* ② 超速兜底：不管角度算得对不对，转太快就断 */
-    if (gim6020.rpm > GM_RPM_LIMIT || gim6020.rpm < -GM_RPM_LIMIT)
-        yaw_kill = 1u;
+    {
+        uint32_t fb_age  = now - gim6020.last_tick;
+        float    rpm_abs = (float)gim6020.rpm;
+
+        if (rpm_abs < 0.0f) rpm_abs = -rpm_abs;
+        if (fb_age  > RC_YawFbAgeMax) RC_YawFbAgeMax = fb_age;
+        if (rpm_abs > RC_YawSpdMax)  RC_YawSpdMax  = rpm_abs;
+
+        if (online == 0u)                        { yaw_kill = 1u; kill_reason = 1u; }
+        if (fb_age > GM_FEEDBACK_TIMEOUT_MS)      { yaw_kill = 1u; kill_reason = 2u; }
+
+        /* 断流集数：故障是间歇性的，Ozone 不一定守得住现场；
+         * 事后读 RC_YawOutageCnt 就知道断过几次（配合 RC_YawFbAgeMax 看最长一次多久） */
+        {
+            static uint16_t s_out_ms = 0u;
+
+            if (fb_age > GM_FEEDBACK_TIMEOUT_MS) {
+                if (s_out_ms == 0u) RC_YawOutageCnt++;
+                if (s_out_ms < 60000u) s_out_ms++;
+            } else {
+                s_out_ms = 0u;
+            }
+        }
+
+        /* ② 超速兜底（带去抖）：
+         *    旧版单帧就断：0x205 里混进一帧别的节点的帧（|rpm| 几千）→ 每拍断电 →
+         *    电压钉 0（“枪口无阻力”）+ volt_prev 清零 → 斜坡从零重爬 → 整车抽搐。
+         *    现在：假帧在 DJ_Motor.c 已整帧丢弃（|rpm|>600）；这里再要求连续
+         *    GM_RPM_KICK_MS(10ms) 都超限才认“真超速”，安全性不降。 */
+        static uint16_t s_rpm_over = 0u;
+
+        if (rpm_abs > GM_RPM_LIMIT) {
+            if (s_rpm_over < 60000u) s_rpm_over++;
+        } else {
+            s_rpm_over = 0u;
+        }
+        if (s_rpm_over >= GM_RPM_KICK_MS)        { yaw_kill = 1u; kill_reason = 3u; }
+    }
+
+    RC_YawKill = (yaw_kill != 0u) ? kill_reason : 0u;
+    if (yaw_kill != 0u) RC_YawKillCnt++;
 
     /* ④ 斜坡：每拍最多变 GM_VOLT_SLEW，避免扭矩冲击
      *    故障时不能走斜坡——否则上一拍 18000，这一拍只是 17800，
@@ -1223,6 +1358,8 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == UART5)
     {
+        RC_ErrCnt++;                      /* 每次错误回调 +1：ORE/FE/NE/PE 的直接证据 */
+
         __HAL_UART_CLEAR_OREFLAG(huart);
         __HAL_UART_CLEAR_FEFLAG(huart);
         __HAL_UART_CLEAR_NEFLAG(huart);

@@ -169,6 +169,10 @@ volatile uint32_t can_rx_total   = 0;   /* 收到的总帧数 */
 volatile uint32_t can_rx_205     = 0;   /* 其中 0x205 的帧数 */
 volatile uint32_t can_rx_last_id = 0;   /* 最近一帧的 CAN ID */
 volatile int16_t  can_rx_last_d0 = 0;   /* 最近一帧的 data[0] */
+volatile uint32_t can_rx_205_bad    = 0;  /* |rpm|>600 被判“非 6020 帧”丢弃的 0x205 帧数 */
+volatile int16_t  can_rx_205_bad_rpm = 0;  /* 最近一帧被丢弃时的 rpm 原始值 */
+volatile uint32_t can_rx_id_cnt[8]  = {0}; /* 按 ID 分别的收帧计数：[0..4]=0x201..0x205 */
+volatile uint32_t can_rx2_total    = 0;   /* 仅 CAN2 收到的帧数（CAN2 活性看门狗用，CAN1 不计） */
 
 
 /* 处理6020反馈报文，解析电机状态*/
@@ -184,6 +188,14 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         can_rx_total++;
         can_rx_last_id = rx.Identifier;
         can_rx_last_d0 = d[0];
+        if (hfdcan->Instance == FDCAN2)
+        {
+            can_rx2_total++;                       /* CAN2 专属活性计数（看门狗用） */
+        }
+        if ((rx.Identifier >= 0x201u) && (rx.Identifier <= 0x208u))
+        {
+            can_rx_id_cnt[rx.Identifier - 0x201u]++;   /* 按 ID 计数：0x201..0x208 → [0..7] */
+        }
 
         if (rx.Identifier >= 0x201 && rx.Identifier <= 0x204)      /* 3508 ID1~ID4 */
         {
@@ -203,12 +215,31 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
         }
         else if (rx.Identifier == 0x205)                 /* GM6020 ID1 = yaw */
         {
+            int16_t rpm205 = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
+
             can_rx_205++;
-            gim6020.angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
-            gim6020.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
-            gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
-            gim6020.temp      = d[6];
-            gim6020.last_tick = HAL_GetTick();
+            /* ★ 合理性过滤：6020 物理极限 ~320rpm（空载），|rpm|>600 的 0x205
+             *   不可能是 6020 发的。CAN 帧自带 CRC15，总线误码的帧根本进不了
+             *   RX FIFO，所以这种帧只可能来自别的节点——典型是某个 C620 电调
+             *   拨码拨到 ID5（其反馈帧也是 0x205，rpm 可到 ±8000，且它会把
+             *   0x1FF 字节0~1 当电流指令收，正好是我们发 yaw 电压的槽位）。
+             *   这种帧一个都不能进 gim6020：进去一帧，yaw 的超速兜底就把
+             *   电压掐成 0（表现为“枪口无阻力、yaw 遥控不动”）。
+             *   整帧丢弃（连 last_tick 都不更新），让 fresh 超时兜底按
+             *   “真掉线”处理，同时计数留证。 */
+            if ((rpm205 > 600) || (rpm205 < -600))
+            {
+                can_rx_205_bad++;
+                can_rx_205_bad_rpm = rpm205;
+            }
+            else
+            {
+                gim6020.angle     = (uint16_t)(((uint16_t)d[0] << 8) | d[1]);
+                gim6020.rpm       = rpm205;
+                gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
+                gim6020.temp      = d[6];
+                gim6020.last_tick = HAL_GetTick();
+            }
         }
         else if (rx.Identifier == 0x206)                 /* GM6020 ID2 = pitch */
         {

@@ -1,6 +1,9 @@
 #include "main.h"
 #include "bsp.can.h"
 #include "fdcan.h"
+
+/* CAN2 故障取证镜像（定义在 rc_dbus.c，这里只 +1，避免互相 include） */
+extern volatile uint32_t RC_Can2BusOffCnt;
 /*
  * @ brief: 开启fdcan2，并启动fdcan2的总线关闭中断与fifo0接收中断（控制底盘电机与云台yaw）
  * @ note:过滤器的配置必须在启动fdcan2之前。 
@@ -60,6 +63,7 @@ void HAL_FDCAN_ErrorStatusCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t ErrorSt
 
     if (hfdcan->Instance == FDCAN2)
     {
+        RC_Can2BusOffCnt++;          /* ★计数留证：反复 Bus-Off = 物理层在出错，不是软件 */
         HAL_FDCAN_Stop(hfdcan);
         FDCAN2_Start();
     }

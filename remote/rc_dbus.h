@@ -1,4 +1,4 @@
-#ifndef __RC_DBUS_H
+﻿#ifndef __RC_DBUS_H
 #define __RC_DBUS_H     
 /*控制各电机，解码，的宏定义以及函数声明*/
 #include "main.h"
@@ -56,13 +56,15 @@
 
 /* ---- 底盘跟随（右拨杆中位）：把车头追向枪口，α→0 ----
  * 用云台编码器算相对角，零漂、不依赖陀螺；速度环仍在下面闭环 */
-#define RC_FOLLOW_KP       0.012f   /*自转指令 / 度：α=10° 给 0.12
-                                     *★外环，必须比 yaw 内环慢；提到 0.030 会让两环互相等 → 来回摆*/
+#define RC_FOLLOW_KP       0.015f   /*自转指令 / 度：α=10° 给 0.20
+                                     *尾段慢（最后几度拖 2 s）就加这个：0.020→0.026。
+                                     *别一次跳太大，0.030 以上在旧版律下摆过*/
 #define RC_FOLLOW_KICK     0.035f   /*起步量：边界处为 0，随 |e| 线性长到满值，否则小角度推不动车*/
 #define RC_FOLLOW_DEAD     2.5f     /*死区，度：±2.5° 内不纠，免得到位后左右蹭*/
 #define RC_FOLLOW_KD       0.0008f  /*阻尼：自转指令 per(deg/s)，α̇ 直接用 6·rpm（编码器微分，不过陀螺）。
                                      *纯 P 时冲过头再回来就是"摆"，这一项负责提前收油*/
-#define RC_FOLLOW_MAX      0.80f    /*自转指令上限（占满量程比例）：45° 要转得动*/
+#define RC_FOLLOW_MAX      0.70f    /*自转指令上限（占满量程比例）：这是"劲儿/速度"总闸，
+                                     *嫌追得太冲就 0.70→0.65；尾段利不利索由 KP 管，别混*/
 #define RC_FOLLOW_SIGN     1.0f     /*方向：实车若越追越偏就改成 -1.0f*/
 
 /* ---- 小陀螺（右拨杆上位）：底盘基础自转 ---- */
@@ -136,6 +138,32 @@ extern volatile float RC_SpinWch;     /* 底盘角速度实测 deg/s */
 extern volatile float RC_SpinErr;     /* 航向误差 deg（±180 内） */
 void RC_Yaw_Handover(void);           /* 模式切换时交接两个 yaw 控制器的状态 */
 
+/* ---- 掉线 / yaw 断电取证镜像（2026-11-17 排查“yaw 无阻力”加）----
+ * Ozone 直接看；“Max/Age/MaxMs”类历史最大值，调试器里写 0 即可复位重新统计。
+ * 断电原因一次读清楚，不再靠猜：
+ *   RC_YawKill=1 遥控离线        → 查 RC_FrameCnt/RC_GapMaxMs
+ *   RC_YawKill=2 yaw 反馈超时    → 查 RC_YawFbAgeMax（>100 即发生过）
+ *   RC_YawKill=3 超速(去抖后)    → 查 RC_YawSpdMax、can_rx_205_bad、RC_Can2TEC/REC
+ */
+extern volatile uint32_t RC_FrameCnt;     /* DBUS 解析出的帧数（正常约 71 帧/s） */
+extern volatile uint32_t RC_GapMaxMs;     /* DBUS 相邻两帧最大间隔 ms（正常 14~15） */
+extern volatile uint32_t RC_ErrCnt;       /* UART5 错误回调次数（ORE/FE/NE/PE 每条 +1） */
+extern volatile uint32_t RC_YawFbAgeMax;  /* yaw 反馈最大年龄 ms（>100 → fresh 兜底断电） */
+extern volatile float    RC_YawSpdMax;    /* yaw 接受过的帧里最大 |rpm|（6020 物理极限 ~320） */
+extern volatile uint8_t  RC_YawKill;      /* 本拍断电原因：0=正常 1=离线 2=反馈超时 3=超速 */
+extern volatile uint32_t RC_YawKillCnt;   /* 断电累计拍数（1kHz 调用，2000 = 累计断过 2 秒） */
+extern volatile uint32_t RC_Can2TEC;      /* CAN2 发送错误计数 TEC（>127 = 错误被动） */
+extern volatile uint32_t RC_Can2REC;      /* CAN2 接收错误计数 REC（>127 = 错误被动） */
+extern volatile uint32_t RC_Can2TECMax;  /* TEC 历史最大值 */
+extern volatile uint32_t RC_Can2RECMax;   /* REC 历史最大值 */
+extern volatile uint32_t RC_YawOutageCnt; /* yaw 反馈断流次数（每断一次 +1，写 0 复位） */
+extern volatile uint32_t RC_Can2PSR;      /* CAN2 PSR 寄存器：bits[2:0]=LEC 最后错误码，bit7=BO，bit9=ACT */
+extern volatile uint32_t RC_Can2CCCR;     /* CAN2 CCCR 寄存器：bit0=INIT（1=控制器停着） */
+extern volatile uint32_t RC_Can2BusOffCnt;/* CAN2 Bus-Off 中断次数（累计，写 0 复位） */
+extern volatile uint32_t RC_Can2RestartCnt;/* CAN2 RX 看门狗重启次数（连续 20ms 无帧触发，写 0 复位） */
+extern volatile uint32_t RC_BuildTag;     /* 固件版本指纹：应为 0x11172358，不符 = Ozone 挂了旧 ELF */
+/* 0x205 假帧证据在 DJ_Motor.h：can_rx_205_bad / can_rx_205_bad_rpm */
+
 /*
 + * CAN2 底盘电机指令方向补偿。
 + * 乘在整轮输出上，同时作用于前进、横移和自转。
@@ -158,7 +186,12 @@ void RC_Yaw_Handover(void);           /* 模式切换时交接两个 yaw 控制�
 
 /*云台yaw */
 #define GM_FEEDBACK_TIMEOUT_MS  100      /* 超过 100ms 没反馈 → 输出 0 */
-#define GM_RPM_LIMIT     400.0f          /* 超速兜底：|rpm| 超过这个值就断电压 */
+#define GM_RPM_LIMIT     500.0f          /* 超速兜底：|rpm| 连续超此值才断电压。
+                                          * 6020 物理极限 ~320rpm（空载），400 以内正常可达不了；
+                                          * 真超速（控制律跑飞）持续 GM_RPM_KICK_MS 拍必被掐死。
+                                          * 单帧毛刺（别的节点顶 0x205 名）由 DJ_Motor.c 的
+                                          * |rpm|>600 整帧过滤 + 这里的去抖共同挡住，不再每拍断电 */
+#define GM_RPM_KICK_MS   10u             /* 超速去抖：连续这么多个 1ms 拍都超才真正断电 */
 #define GM_VOLT_SLEW     200.0f          /* 斜坡：每 1ms 电压最多变化这么多 */
 
 /* ---- 云台 yaw 角度闭环（2026-11-13 实测标定后启用）----
