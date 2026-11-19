@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   29:Core/Src/main.c **** #include "DJ_Motor.h"
   30:Core/Src/main.c **** #include "rc_dbus.h"
   31:Core/Src/main.c **** #include "mecanum.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 2
 
 
   32:Core/Src/main.c **** #include "ins.h"
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   86:Core/Src/main.c **** 
   87:Core/Src/main.c ****   /* USER CODE END Init */
   88:Core/Src/main.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 3
 
 
   89:Core/Src/main.c ****   /* Configure the system clock */
@@ -139,142 +139,143 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  104:Core/Src/main.c ****   MX_SPI2_Init();
  105:Core/Src/main.c ****   MX_UART5_Init();
  106:Core/Src/main.c ****   /* USER CODE BEGIN 2 */
- 107:Core/Src/main.c ****   FDCAN2_Start();        /* CAN2：底盘左/右 + 云台 yaw */
- 108:Core/Src/main.c ****   FDCAN1_Start();        /* CAN1：摩擦轮 + 云台 pitch */
- 109:Core/Src/main.c ****   RC_Init();             /* 启动 DBUS(UART5) 接收 */
- 110:Core/Src/main.c ****   INS_Init();            /* BMI088：验证 SPI2 通路 */
- 111:Core/Src/main.c ****   /* USER CODE END 2 */
- 112:Core/Src/main.c **** 
- 113:Core/Src/main.c ****   /* Infinite loop */
- 114:Core/Src/main.c ****   /* USER CODE BEGIN WHILE */
- 115:Core/Src/main.c **** uint32_t rc_last_tick = 0;
- 116:Core/Src/main.c **** while (1) {
- 117:Core/Src/main.c ****   /*约1ms调用一次*/
- 118:Core/Src/main.c ****     uint32_t now = HAL_GetTick();
- 119:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
- 120:Core/Src/main.c ****         rc_last_tick = now;
- 121:Core/Src/main.c ****         INS_Task();            /* BMI088 采样，1 kHz */
- 122:Core/Src/main.c ****         RC_Control_Task();
- 123:Core/Src/main.c ****     }
- 124:Core/Src/main.c ****    //DJ3508_Send_I_Can2(1000,1000,1000,1000);
- 125:Core/Src/main.c ****     /* USER CODE END WHILE */
- 126:Core/Src/main.c **** 
- 127:Core/Src/main.c ****     /* USER CODE BEGIN 3 */
- 128:Core/Src/main.c **** }
- 129:Core/Src/main.c ****   /* USER CODE END 3 */
- 130:Core/Src/main.c **** }
- 131:Core/Src/main.c **** 
- 132:Core/Src/main.c **** /**
- 133:Core/Src/main.c ****   * @brief System Clock Configuration
- 134:Core/Src/main.c ****   * @retval None
- 135:Core/Src/main.c ****   */
- 136:Core/Src/main.c **** void SystemClock_Config(void)
- 137:Core/Src/main.c **** {
- 138:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
- 139:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
- 140:Core/Src/main.c **** 
- 141:Core/Src/main.c ****   /** Supply configuration update enable
- 142:Core/Src/main.c ****   */
- 143:Core/Src/main.c ****   HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
- 144:Core/Src/main.c **** 
- 145:Core/Src/main.c ****   /** Configure the main internal regulator output voltage
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 4
+ 107:Core/Src/main.c ****   DJ_Motor_Init();       /* 先注册 CAN 接收解析，再开总线（bsp 只负责收帧） */
+ 108:Core/Src/main.c ****   FDCAN2_Start();        /* CAN2：底盘左/右 + 云台 yaw */
+ 109:Core/Src/main.c ****   FDCAN1_Start();        /* CAN1：摩擦轮 + 云台 pitch */
+ 110:Core/Src/main.c ****   RC_Init();             /* 启动 DBUS(UART5) 接收 */
+ 111:Core/Src/main.c ****   INS_Init();            /* BMI088：验证 SPI2 通路 */
+ 112:Core/Src/main.c ****   /* USER CODE END 2 */
+ 113:Core/Src/main.c **** 
+ 114:Core/Src/main.c ****   /* Infinite loop */
+ 115:Core/Src/main.c ****   /* USER CODE BEGIN WHILE */
+ 116:Core/Src/main.c **** uint32_t rc_last_tick = 0;
+ 117:Core/Src/main.c **** while (1) {
+ 118:Core/Src/main.c ****   /*约1ms调用一次*/
+ 119:Core/Src/main.c ****     uint32_t now = HAL_GetTick();
+ 120:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
+ 121:Core/Src/main.c ****         rc_last_tick = now;
+ 122:Core/Src/main.c ****         INS_Task();            /* BMI088 采样，1 kHz */
+ 123:Core/Src/main.c ****         RC_Control_Task();
+ 124:Core/Src/main.c ****     }
+ 125:Core/Src/main.c ****    //DJ3508_Send_I_Can2(1000,1000,1000,1000);
+ 126:Core/Src/main.c ****     /* USER CODE END WHILE */
+ 127:Core/Src/main.c **** 
+ 128:Core/Src/main.c ****     /* USER CODE BEGIN 3 */
+ 129:Core/Src/main.c **** }
+ 130:Core/Src/main.c ****   /* USER CODE END 3 */
+ 131:Core/Src/main.c **** }
+ 132:Core/Src/main.c **** 
+ 133:Core/Src/main.c **** /**
+ 134:Core/Src/main.c ****   * @brief System Clock Configuration
+ 135:Core/Src/main.c ****   * @retval None
+ 136:Core/Src/main.c ****   */
+ 137:Core/Src/main.c **** void SystemClock_Config(void)
+ 138:Core/Src/main.c **** {
+ 139:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+ 140:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+ 141:Core/Src/main.c **** 
+ 142:Core/Src/main.c ****   /** Supply configuration update enable
+ 143:Core/Src/main.c ****   */
+ 144:Core/Src/main.c ****   HAL_PWREx_ConfigSupply(PWR_LDO_SUPPLY);
+ 145:Core/Src/main.c **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 4
 
 
- 146:Core/Src/main.c ****   */
- 147:Core/Src/main.c ****   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
- 148:Core/Src/main.c **** 
- 149:Core/Src/main.c ****   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
- 150:Core/Src/main.c **** 
- 151:Core/Src/main.c ****   /** Initializes the RCC Oscillators according to the specified parameters
- 152:Core/Src/main.c ****   * in the RCC_OscInitTypeDef structure.
- 153:Core/Src/main.c ****   */
- 154:Core/Src/main.c ****   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
- 155:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
- 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
- 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
- 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
- 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
- 160:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
- 161:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
- 162:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
- 163:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
- 164:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
- 165:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
- 166:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
- 167:Core/Src/main.c ****   {
- 168:Core/Src/main.c ****     Error_Handler();
- 169:Core/Src/main.c ****   }
- 170:Core/Src/main.c **** 
- 171:Core/Src/main.c ****   /** Initializes the CPU, AHB and APB buses clocks
- 172:Core/Src/main.c ****   */
- 173:Core/Src/main.c ****   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
- 174:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
- 175:Core/Src/main.c ****                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
- 176:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
- 177:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
- 178:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
- 179:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
- 180:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
- 181:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
- 182:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
- 183:Core/Src/main.c **** 
- 184:Core/Src/main.c ****   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
- 185:Core/Src/main.c ****   {
- 186:Core/Src/main.c ****     Error_Handler();
- 187:Core/Src/main.c ****   }
- 188:Core/Src/main.c **** }
- 189:Core/Src/main.c **** 
- 190:Core/Src/main.c **** /**
- 191:Core/Src/main.c ****   * @brief Peripherals Common Clock Configuration
- 192:Core/Src/main.c ****   * @retval None
- 193:Core/Src/main.c ****   */
- 194:Core/Src/main.c **** void PeriphCommonClock_Config(void)
- 195:Core/Src/main.c **** {
- 196:Core/Src/main.c ****   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
- 197:Core/Src/main.c **** 
- 198:Core/Src/main.c ****   /** Initializes the peripherals clock
- 199:Core/Src/main.c ****   */
- 200:Core/Src/main.c ****   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI2|RCC_PERIPHCLK_FDCAN;
- 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
- 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 5
+ 146:Core/Src/main.c ****   /** Configure the main internal regulator output voltage
+ 147:Core/Src/main.c ****   */
+ 148:Core/Src/main.c ****   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+ 149:Core/Src/main.c **** 
+ 150:Core/Src/main.c ****   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+ 151:Core/Src/main.c **** 
+ 152:Core/Src/main.c ****   /** Initializes the RCC Oscillators according to the specified parameters
+ 153:Core/Src/main.c ****   * in the RCC_OscInitTypeDef structure.
+ 154:Core/Src/main.c ****   */
+ 155:Core/Src/main.c ****   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+ 156:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+ 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+ 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+ 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
+ 160:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
+ 161:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
+ 162:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
+ 163:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
+ 164:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+ 165:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+ 166:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
+ 167:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+ 168:Core/Src/main.c ****   {
+ 169:Core/Src/main.c ****     Error_Handler();
+ 170:Core/Src/main.c ****   }
+ 171:Core/Src/main.c **** 
+ 172:Core/Src/main.c ****   /** Initializes the CPU, AHB and APB buses clocks
+ 173:Core/Src/main.c ****   */
+ 174:Core/Src/main.c ****   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+ 175:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+ 176:Core/Src/main.c ****                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
+ 177:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+ 178:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+ 179:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+ 180:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+ 181:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+ 182:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+ 183:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+ 184:Core/Src/main.c **** 
+ 185:Core/Src/main.c ****   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3) != HAL_OK)
+ 186:Core/Src/main.c ****   {
+ 187:Core/Src/main.c ****     Error_Handler();
+ 188:Core/Src/main.c ****   }
+ 189:Core/Src/main.c **** }
+ 190:Core/Src/main.c **** 
+ 191:Core/Src/main.c **** /**
+ 192:Core/Src/main.c ****   * @brief Peripherals Common Clock Configuration
+ 193:Core/Src/main.c ****   * @retval None
+ 194:Core/Src/main.c ****   */
+ 195:Core/Src/main.c **** void PeriphCommonClock_Config(void)
+ 196:Core/Src/main.c **** {
+ 197:Core/Src/main.c ****   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+ 198:Core/Src/main.c **** 
+ 199:Core/Src/main.c ****   /** Initializes the peripherals clock
+ 200:Core/Src/main.c ****   */
+ 201:Core/Src/main.c ****   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_SPI2|RCC_PERIPHCLK_FDCAN;
+ 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 5
 
 
- 203:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
- 204:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
- 205:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
- 206:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
- 207:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
- 208:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
- 209:Core/Src/main.c ****   PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL2;
- 210:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
- 211:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
- 212:Core/Src/main.c ****   {
- 213:Core/Src/main.c ****     Error_Handler();
- 214:Core/Src/main.c ****   }
- 215:Core/Src/main.c **** }
- 216:Core/Src/main.c **** 
- 217:Core/Src/main.c **** /* USER CODE BEGIN 4 */
- 218:Core/Src/main.c **** 
- 219:Core/Src/main.c **** /* USER CODE END 4 */
- 220:Core/Src/main.c **** 
- 221:Core/Src/main.c **** /**
- 222:Core/Src/main.c ****   * @brief  This function is executed in case of error occurrence.
- 223:Core/Src/main.c ****   * @retval None
- 224:Core/Src/main.c ****   */
- 225:Core/Src/main.c **** void Error_Handler(void)
- 226:Core/Src/main.c **** {
-  28              		.loc 1 226 1 view -0
+ 203:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
+ 204:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
+ 205:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
+ 206:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
+ 207:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+ 208:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+ 209:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+ 210:Core/Src/main.c ****   PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL2;
+ 211:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+ 212:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+ 213:Core/Src/main.c ****   {
+ 214:Core/Src/main.c ****     Error_Handler();
+ 215:Core/Src/main.c ****   }
+ 216:Core/Src/main.c **** }
+ 217:Core/Src/main.c **** 
+ 218:Core/Src/main.c **** /* USER CODE BEGIN 4 */
+ 219:Core/Src/main.c **** 
+ 220:Core/Src/main.c **** /* USER CODE END 4 */
+ 221:Core/Src/main.c **** 
+ 222:Core/Src/main.c **** /**
+ 223:Core/Src/main.c ****   * @brief  This function is executed in case of error occurrence.
+ 224:Core/Src/main.c ****   * @retval None
+ 225:Core/Src/main.c ****   */
+ 226:Core/Src/main.c **** void Error_Handler(void)
+ 227:Core/Src/main.c **** {
+  28              		.loc 1 227 1 view -0
   29              		.cfi_startproc
   30              		@ Volatile: function does not return.
   31              		@ args = 0, pretend = 0, frame = 0
   32              		@ frame_needed = 0, uses_anonymous_args = 0
   33              		@ link register save eliminated.
- 227:Core/Src/main.c ****   /* USER CODE BEGIN Error_Handler_Debug */
- 228:Core/Src/main.c ****   /* User can add his own implementation to report the HAL error return state */
- 229:Core/Src/main.c ****   __disable_irq();
-  34              		.loc 1 229 3 view .LVU1
+ 228:Core/Src/main.c ****   /* USER CODE BEGIN Error_Handler_Debug */
+ 229:Core/Src/main.c ****   /* User can add his own implementation to report the HAL error return state */
+ 230:Core/Src/main.c ****   __disable_irq();
+  34              		.loc 1 230 3 view .LVU1
   35              	.LBB4:
   36              	.LBI4:
   37              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
@@ -297,10 +298,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   17:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
   18:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Unless required by applicable law or agreed to in writing, software
   19:Drivers/CMSIS/Include/cmsis_gcc.h ****  * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 6
+
+
   20:Drivers/CMSIS/Include/cmsis_gcc.h ****  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 6
-
-
   21:Drivers/CMSIS/Include/cmsis_gcc.h ****  * See the License for the specific language governing permissions and
   22:Drivers/CMSIS/Include/cmsis_gcc.h ****  * limitations under the License.
   23:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
@@ -357,10 +358,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   74:Drivers/CMSIS/Include/cmsis_gcc.h ****   struct __attribute__((packed)) T_UINT32 { uint32_t v; };
   75:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
   76:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32(x)                  (((struct T_UINT32 *)(x))->v)
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 7
+
+
   77:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 7
-
-
   78:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_WRITE
   79:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
   80:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
@@ -417,10 +418,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  131:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE __NO_RETURN void __cmsis_start(void)
  132:Drivers/CMSIS/Include/cmsis_gcc.h **** {
  133:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern void _start(void) __NO_RETURN;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 8
+
+
  134:Drivers/CMSIS/Include/cmsis_gcc.h **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 8
-
-
  135:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
  136:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t const* src;
  137:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
@@ -477,10 +478,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  188:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
  189:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  190:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __TZ_STACK_SEAL_SIZE
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 9
+
+
  191:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __TZ_STACK_SEAL_SIZE      8U
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 9
-
-
  192:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
  193:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  194:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __TZ_STACK_SEAL_VALUE
@@ -537,10 +538,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  245:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
  246:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Send Event
  247:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Send Event is a hint instruction. It causes an event to be signaled to the CPU.
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 10
+
+
  248:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 10
-
-
  249:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __SEV()                             __ASM volatile ("sev")
  250:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  251:Drivers/CMSIS/Include/cmsis_gcc.h **** 
@@ -597,10 +598,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  302:Drivers/CMSIS/Include/cmsis_gcc.h **** }
  303:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  304:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 11
+
+
  305:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 11
-
-
  306:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Reverse byte order (16 bit)
  307:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Reverses the byte order within each halfword of a word. For example, 0x12345678 becomes 
  308:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    value  Value to reverse
@@ -657,10 +658,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  359:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Causes the processor to enter Debug state.
  360:Drivers/CMSIS/Include/cmsis_gcc.h ****            Debug tools can use this to investigate system state when the instruction at a particula
  361:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    value  is ignored by the processor.
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 12
+
+
  362:Drivers/CMSIS/Include/cmsis_gcc.h ****                  If required, a debugger can use it to store additional information about the break
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 12
-
-
  363:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  364:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __BKPT(value)                       __ASM volatile ("bkpt "#value)
  365:Drivers/CMSIS/Include/cmsis_gcc.h **** 
@@ -717,10 +718,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  416:Drivers/CMSIS/Include/cmsis_gcc.h ****     return 32U;
  417:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
  418:Drivers/CMSIS/Include/cmsis_gcc.h ****   return __builtin_clz(value);
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 13
+
+
  419:Drivers/CMSIS/Include/cmsis_gcc.h **** }
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 13
-
-
  420:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  421:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  422:Drivers/CMSIS/Include/cmsis_gcc.h **** #if ((defined (__ARM_ARCH_7M__      ) && (__ARM_ARCH_7M__      == 1)) || \
@@ -777,10 +778,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  473:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    ptr  Pointer to data
  474:Drivers/CMSIS/Include/cmsis_gcc.h ****   \return        value of type uint32_t at (*ptr)
  475:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 14
+
+
  476:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE uint32_t __LDREXW(volatile uint32_t *addr)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 14
-
-
  477:Drivers/CMSIS/Include/cmsis_gcc.h **** {
  478:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t result;
  479:Drivers/CMSIS/Include/cmsis_gcc.h **** 
@@ -837,10 +838,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  530:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  531:Drivers/CMSIS/Include/cmsis_gcc.h ****    __ASM volatile ("strex %0, %2, %1" : "=&r" (result), "=Q" (*addr) : "r" (value) );
  532:Drivers/CMSIS/Include/cmsis_gcc.h ****    return(result);
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 15
+
+
  533:Drivers/CMSIS/Include/cmsis_gcc.h **** }
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 15
-
-
  534:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  535:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  536:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
@@ -897,10 +898,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  587:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Rotate Right with Extend (32 bit)
  588:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Moves each bit of a bitstring right by one bit.
  589:Drivers/CMSIS/Include/cmsis_gcc.h ****            The carry input is shifted in at the left end of the bitstring.
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 16
+
+
  590:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    value  Value to rotate
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 16
-
-
  591:Drivers/CMSIS/Include/cmsis_gcc.h ****   \return               Rotated value
  592:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  593:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE uint32_t __RRX(uint32_t value)
@@ -957,10 +958,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  644:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  645:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  646:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 17
+
+
  647:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   LDRT Unprivileged (32 bit)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 17
-
-
  648:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Executes a Unprivileged LDRT instruction for 32 bit values.
  649:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    ptr  Pointer to data
  650:Drivers/CMSIS/Include/cmsis_gcc.h ****   \return        value of type uint32_t at (*ptr)
@@ -1017,10 +1018,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  701:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Signed Saturate
  702:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Saturates a signed value.
  703:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]  value  Value to be saturated
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 18
+
+
  704:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    sat  Bit position to saturate to (1..32)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 18
-
-
  705:Drivers/CMSIS/Include/cmsis_gcc.h ****   \return             Saturated value
  706:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  707:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE int32_t __SSAT(int32_t val, uint32_t sat)
@@ -1077,10 +1078,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  758:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Executes a LDAB instruction for 8 bit value.
  759:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    ptr  Pointer to data
  760:Drivers/CMSIS/Include/cmsis_gcc.h ****   \return             value of type uint8_t at (*ptr)
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 19
+
+
  761:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 19
-
-
  762:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE uint8_t __LDAB(volatile uint8_t *ptr)
  763:Drivers/CMSIS/Include/cmsis_gcc.h **** {
  764:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t result;
@@ -1137,10 +1138,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  815:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Executes a STLH instruction for 16 bit values.
  816:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]  value  Value to store
  817:Drivers/CMSIS/Include/cmsis_gcc.h ****   \param [in]    ptr  Pointer to location
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 20
+
+
  818:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 20
-
-
  819:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __STLH(uint16_t value, volatile uint16_t *ptr)
  820:Drivers/CMSIS/Include/cmsis_gcc.h **** {
  821:Drivers/CMSIS/Include/cmsis_gcc.h ****    __ASM volatile ("stlh %1, %0" : "=Q" (*ptr) : "r" ((uint32_t)value) : "memory" );
@@ -1197,10 +1198,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  872:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
  873:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE uint32_t __LDAEX(volatile uint32_t *ptr)
  874:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 21
+
+
  875:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t result;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 21
-
-
  876:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  877:Drivers/CMSIS/Include/cmsis_gcc.h ****    __ASM volatile ("ldaex %0, %1" : "=r" (result) : "Q" (*ptr) : "memory" );
  878:Drivers/CMSIS/Include/cmsis_gcc.h ****    return(result);
@@ -1257,10 +1258,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  929:Drivers/CMSIS/Include/cmsis_gcc.h ****    return(result);
  930:Drivers/CMSIS/Include/cmsis_gcc.h **** }
  931:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 22
+
+
  932:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif /* ((defined (__ARM_ARCH_8M_MAIN__ ) && (__ARM_ARCH_8M_MAIN__ == 1)) || \
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 22
-
-
  933:Drivers/CMSIS/Include/cmsis_gcc.h ****            (defined (__ARM_ARCH_8M_BASE__ ) && (__ARM_ARCH_8M_BASE__ == 1))    ) */
  934:Drivers/CMSIS/Include/cmsis_gcc.h **** 
  935:Drivers/CMSIS/Include/cmsis_gcc.h **** /*@}*/ /* end of group CMSIS_Core_InstructionInterface */
@@ -1303,13 +1304,13 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   47              	.L2:
   48              	.LBE5:
   49              	.LBE4:
- 230:Core/Src/main.c ****   while (1)
-  50              		.loc 1 230 3 view .LVU4
- 231:Core/Src/main.c ****   {
- 232:Core/Src/main.c ****   }
-  51              		.loc 1 232 3 view .LVU5
- 230:Core/Src/main.c ****   while (1)
-  52              		.loc 1 230 9 view .LVU6
+ 231:Core/Src/main.c ****   while (1)
+  50              		.loc 1 231 3 view .LVU4
+ 232:Core/Src/main.c ****   {
+ 233:Core/Src/main.c ****   }
+  51              		.loc 1 233 3 view .LVU5
+ 231:Core/Src/main.c ****   while (1)
+  52              		.loc 1 231 9 view .LVU6
   53 0002 FEE7     		b	.L2
   54              		.cfi_endproc
   55              	.LFE149:
@@ -1317,15 +1318,15 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   58              		.align	1
   59              		.global	SystemClock_Config
   60              		.syntax unified
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 23
+
+
   61              		.thumb
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 23
-
-
   62              		.thumb_func
   64              	SystemClock_Config:
   65              	.LFB147:
- 137:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  66              		.loc 1 137 1 view -0
+ 138:Core/Src/main.c ****   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  66              		.loc 1 138 1 view -0
   67              		.cfi_startproc
   68              		@ args = 0, pretend = 0, frame = 112
   69              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -1336,212 +1337,212 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   74 0002 9DB0     		sub	sp, sp, #116
   75              	.LCFI1:
   76              		.cfi_def_cfa_offset 120
- 138:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  77              		.loc 1 138 3 view .LVU8
- 138:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  78              		.loc 1 138 22 is_stmt 0 view .LVU9
+ 139:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  77              		.loc 1 139 3 view .LVU8
+ 139:Core/Src/main.c ****   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  78              		.loc 1 139 22 is_stmt 0 view .LVU9
   79 0004 4C22     		movs	r2, #76
   80 0006 0021     		movs	r1, #0
   81 0008 09A8     		add	r0, sp, #36
   82 000a FFF7FEFF 		bl	memset
   83              	.LVL0:
- 139:Core/Src/main.c **** 
-  84              		.loc 1 139 3 is_stmt 1 view .LVU10
- 139:Core/Src/main.c **** 
-  85              		.loc 1 139 22 is_stmt 0 view .LVU11
+ 140:Core/Src/main.c **** 
+  84              		.loc 1 140 3 is_stmt 1 view .LVU10
+ 140:Core/Src/main.c **** 
+  85              		.loc 1 140 22 is_stmt 0 view .LVU11
   86 000e 2022     		movs	r2, #32
   87 0010 0021     		movs	r1, #0
   88 0012 01A8     		add	r0, sp, #4
   89 0014 FFF7FEFF 		bl	memset
   90              	.LVL1:
- 143:Core/Src/main.c **** 
-  91              		.loc 1 143 3 is_stmt 1 view .LVU12
+ 144:Core/Src/main.c **** 
+  91              		.loc 1 144 3 is_stmt 1 view .LVU12
   92 0018 0220     		movs	r0, #2
   93 001a FFF7FEFF 		bl	HAL_PWREx_ConfigSupply
   94              	.LVL2:
- 147:Core/Src/main.c **** 
-  95              		.loc 1 147 3 view .LVU13
+ 148:Core/Src/main.c **** 
+  95              		.loc 1 148 3 view .LVU13
   96              	.LBB6:
- 147:Core/Src/main.c **** 
-  97              		.loc 1 147 3 view .LVU14
+ 148:Core/Src/main.c **** 
+  97              		.loc 1 148 3 view .LVU14
   98 001e 0023     		movs	r3, #0
   99 0020 0093     		str	r3, [sp]
- 147:Core/Src/main.c **** 
- 100              		.loc 1 147 3 view .LVU15
+ 148:Core/Src/main.c **** 
+ 100              		.loc 1 148 3 view .LVU15
  101 0022 204B     		ldr	r3, .L10
  102 0024 9A69     		ldr	r2, [r3, #24]
  103 0026 22F44042 		bic	r2, r2, #49152
  104 002a 9A61     		str	r2, [r3, #24]
- 147:Core/Src/main.c **** 
- 105              		.loc 1 147 3 view .LVU16
+ 148:Core/Src/main.c **** 
+ 105              		.loc 1 148 3 view .LVU16
  106 002c 9B69     		ldr	r3, [r3, #24]
  107 002e 03F44043 		and	r3, r3, #49152
  108 0032 0093     		str	r3, [sp]
- 147:Core/Src/main.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 24
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 24
 
 
- 109              		.loc 1 147 3 view .LVU17
+ 148:Core/Src/main.c **** 
+ 109              		.loc 1 148 3 view .LVU17
  110 0034 009B     		ldr	r3, [sp]
  111              	.LBE6:
- 147:Core/Src/main.c **** 
- 112              		.loc 1 147 3 view .LVU18
- 149:Core/Src/main.c **** 
- 113              		.loc 1 149 3 view .LVU19
+ 148:Core/Src/main.c **** 
+ 112              		.loc 1 148 3 view .LVU18
+ 150:Core/Src/main.c **** 
+ 113              		.loc 1 150 3 view .LVU19
  114              	.L4:
- 149:Core/Src/main.c **** 
- 115              		.loc 1 149 48 discriminator 1 view .LVU20
- 149:Core/Src/main.c **** 
- 116              		.loc 1 149 9 discriminator 1 view .LVU21
- 149:Core/Src/main.c **** 
- 117              		.loc 1 149 10 is_stmt 0 discriminator 1 view .LVU22
+ 150:Core/Src/main.c **** 
+ 115              		.loc 1 150 48 discriminator 1 view .LVU20
+ 150:Core/Src/main.c **** 
+ 116              		.loc 1 150 9 discriminator 1 view .LVU21
+ 150:Core/Src/main.c **** 
+ 117              		.loc 1 150 10 is_stmt 0 discriminator 1 view .LVU22
  118 0036 1B4B     		ldr	r3, .L10
  119 0038 9B69     		ldr	r3, [r3, #24]
- 149:Core/Src/main.c **** 
- 120              		.loc 1 149 9 discriminator 1 view .LVU23
+ 150:Core/Src/main.c **** 
+ 120              		.loc 1 150 9 discriminator 1 view .LVU23
  121 003a 13F4005F 		tst	r3, #8192
  122 003e FAD0     		beq	.L4
- 154:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
- 123              		.loc 1 154 3 is_stmt 1 view .LVU24
- 154:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
- 124              		.loc 1 154 36 is_stmt 0 view .LVU25
+ 155:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+ 123              		.loc 1 155 3 is_stmt 1 view .LVU24
+ 155:Core/Src/main.c ****   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+ 124              		.loc 1 155 36 is_stmt 0 view .LVU25
  125 0040 0122     		movs	r2, #1
  126 0042 0992     		str	r2, [sp, #36]
- 155:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
- 127              		.loc 1 155 3 is_stmt 1 view .LVU26
- 155:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
- 128              		.loc 1 155 30 is_stmt 0 view .LVU27
+ 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+ 127              		.loc 1 156 3 is_stmt 1 view .LVU26
+ 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+ 128              		.loc 1 156 30 is_stmt 0 view .LVU27
  129 0044 4FF48033 		mov	r3, #65536
  130 0048 0A93     		str	r3, [sp, #40]
- 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
- 131              		.loc 1 156 3 is_stmt 1 view .LVU28
- 156:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
- 132              		.loc 1 156 34 is_stmt 0 view .LVU29
+ 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+ 131              		.loc 1 157 3 is_stmt 1 view .LVU28
+ 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+ 132              		.loc 1 157 34 is_stmt 0 view .LVU29
  133 004a 0223     		movs	r3, #2
  134 004c 1293     		str	r3, [sp, #72]
- 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
- 135              		.loc 1 157 3 is_stmt 1 view .LVU30
- 157:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
- 136              		.loc 1 157 35 is_stmt 0 view .LVU31
+ 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
+ 135              		.loc 1 158 3 is_stmt 1 view .LVU30
+ 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLM = 5;
+ 136              		.loc 1 158 35 is_stmt 0 view .LVU31
  137 004e 1393     		str	r3, [sp, #76]
- 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
- 138              		.loc 1 158 3 is_stmt 1 view .LVU32
- 158:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
- 139              		.loc 1 158 30 is_stmt 0 view .LVU33
+ 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
+ 138              		.loc 1 159 3 is_stmt 1 view .LVU32
+ 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLN = 110;
+ 139              		.loc 1 159 30 is_stmt 0 view .LVU33
  140 0050 0521     		movs	r1, #5
  141 0052 1491     		str	r1, [sp, #80]
- 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
- 142              		.loc 1 159 3 is_stmt 1 view .LVU34
- 159:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
- 143              		.loc 1 159 30 is_stmt 0 view .LVU35
+ 160:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
+ 142              		.loc 1 160 3 is_stmt 1 view .LVU34
+ 160:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLP = 1;
+ 143              		.loc 1 160 30 is_stmt 0 view .LVU35
  144 0054 6E21     		movs	r1, #110
  145 0056 1591     		str	r1, [sp, #84]
- 160:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
- 146              		.loc 1 160 3 is_stmt 1 view .LVU36
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 25
+ 161:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 25
 
 
- 160:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
- 147              		.loc 1 160 30 is_stmt 0 view .LVU37
+ 146              		.loc 1 161 3 is_stmt 1 view .LVU36
+ 161:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLQ = 2;
+ 147              		.loc 1 161 30 is_stmt 0 view .LVU37
  148 0058 1692     		str	r2, [sp, #88]
- 161:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
- 149              		.loc 1 161 3 is_stmt 1 view .LVU38
- 161:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
- 150              		.loc 1 161 30 is_stmt 0 view .LVU39
+ 162:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
+ 149              		.loc 1 162 3 is_stmt 1 view .LVU38
+ 162:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLR = 2;
+ 150              		.loc 1 162 30 is_stmt 0 view .LVU39
  151 005a 1793     		str	r3, [sp, #92]
- 162:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
- 152              		.loc 1 162 3 is_stmt 1 view .LVU40
- 162:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
- 153              		.loc 1 162 30 is_stmt 0 view .LVU41
+ 163:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+ 152              		.loc 1 163 3 is_stmt 1 view .LVU40
+ 163:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
+ 153              		.loc 1 163 30 is_stmt 0 view .LVU41
  154 005c 1893     		str	r3, [sp, #96]
- 163:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
- 155              		.loc 1 163 3 is_stmt 1 view .LVU42
- 163:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
- 156              		.loc 1 163 32 is_stmt 0 view .LVU43
+ 164:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+ 155              		.loc 1 164 3 is_stmt 1 view .LVU42
+ 164:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+ 156              		.loc 1 164 32 is_stmt 0 view .LVU43
  157 005e 0823     		movs	r3, #8
  158 0060 1993     		str	r3, [sp, #100]
- 164:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
- 159              		.loc 1 164 3 is_stmt 1 view .LVU44
- 164:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
- 160              		.loc 1 164 35 is_stmt 0 view .LVU45
+ 165:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
+ 159              		.loc 1 165 3 is_stmt 1 view .LVU44
+ 165:Core/Src/main.c ****   RCC_OscInitStruct.PLL.PLLFRACN = 0;
+ 160              		.loc 1 165 35 is_stmt 0 view .LVU45
  161 0062 0023     		movs	r3, #0
  162 0064 1A93     		str	r3, [sp, #104]
- 165:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
- 163              		.loc 1 165 3 is_stmt 1 view .LVU46
- 165:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
- 164              		.loc 1 165 34 is_stmt 0 view .LVU47
+ 166:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+ 163              		.loc 1 166 3 is_stmt 1 view .LVU46
+ 166:Core/Src/main.c ****   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+ 164              		.loc 1 166 34 is_stmt 0 view .LVU47
  165 0066 1B93     		str	r3, [sp, #108]
- 166:Core/Src/main.c ****   {
- 166              		.loc 1 166 3 is_stmt 1 view .LVU48
- 166:Core/Src/main.c ****   {
- 167              		.loc 1 166 7 is_stmt 0 view .LVU49
+ 167:Core/Src/main.c ****   {
+ 166              		.loc 1 167 3 is_stmt 1 view .LVU48
+ 167:Core/Src/main.c ****   {
+ 167              		.loc 1 167 7 is_stmt 0 view .LVU49
  168 0068 09A8     		add	r0, sp, #36
  169 006a FFF7FEFF 		bl	HAL_RCC_OscConfig
  170              	.LVL3:
- 166:Core/Src/main.c ****   {
- 171              		.loc 1 166 6 discriminator 1 view .LVU50
+ 167:Core/Src/main.c ****   {
+ 171              		.loc 1 167 6 discriminator 1 view .LVU50
  172 006e A0B9     		cbnz	r0, .L8
- 173:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
- 173              		.loc 1 173 3 is_stmt 1 view .LVU51
- 173:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
- 174              		.loc 1 173 31 is_stmt 0 view .LVU52
+ 174:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+ 173              		.loc 1 174 3 is_stmt 1 view .LVU51
+ 174:Core/Src/main.c ****                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
+ 174              		.loc 1 174 31 is_stmt 0 view .LVU52
  175 0070 3F23     		movs	r3, #63
  176 0072 0193     		str	r3, [sp, #4]
- 176:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
- 177              		.loc 1 176 3 is_stmt 1 view .LVU53
- 176:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
- 178              		.loc 1 176 34 is_stmt 0 view .LVU54
+ 177:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+ 177              		.loc 1 177 3 is_stmt 1 view .LVU53
+ 177:Core/Src/main.c ****   RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+ 178              		.loc 1 177 34 is_stmt 0 view .LVU54
  179 0074 0321     		movs	r1, #3
  180 0076 0291     		str	r1, [sp, #8]
- 177:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
- 181              		.loc 1 177 3 is_stmt 1 view .LVU55
- 177:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
- 182              		.loc 1 177 35 is_stmt 0 view .LVU56
+ 178:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+ 181              		.loc 1 178 3 is_stmt 1 view .LVU55
+ 178:Core/Src/main.c ****   RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+ 182              		.loc 1 178 35 is_stmt 0 view .LVU56
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 26
+
+
  183 0078 0023     		movs	r3, #0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 26
-
-
  184 007a 0393     		str	r3, [sp, #12]
- 178:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
- 185              		.loc 1 178 3 is_stmt 1 view .LVU57
- 178:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
- 186              		.loc 1 178 35 is_stmt 0 view .LVU58
+ 179:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+ 185              		.loc 1 179 3 is_stmt 1 view .LVU57
+ 179:Core/Src/main.c ****   RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+ 186              		.loc 1 179 35 is_stmt 0 view .LVU58
  187 007c 0823     		movs	r3, #8
  188 007e 0493     		str	r3, [sp, #16]
- 179:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
- 189              		.loc 1 179 3 is_stmt 1 view .LVU59
- 179:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
- 190              		.loc 1 179 36 is_stmt 0 view .LVU60
+ 180:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+ 189              		.loc 1 180 3 is_stmt 1 view .LVU59
+ 180:Core/Src/main.c ****   RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+ 190              		.loc 1 180 36 is_stmt 0 view .LVU60
  191 0080 4023     		movs	r3, #64
  192 0082 0593     		str	r3, [sp, #20]
- 180:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
- 193              		.loc 1 180 3 is_stmt 1 view .LVU61
- 180:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
- 194              		.loc 1 180 36 is_stmt 0 view .LVU62
+ 181:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+ 193              		.loc 1 181 3 is_stmt 1 view .LVU61
+ 181:Core/Src/main.c ****   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+ 194              		.loc 1 181 36 is_stmt 0 view .LVU62
  195 0084 0693     		str	r3, [sp, #24]
- 181:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
- 196              		.loc 1 181 3 is_stmt 1 view .LVU63
- 181:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
- 197              		.loc 1 181 36 is_stmt 0 view .LVU64
+ 182:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+ 196              		.loc 1 182 3 is_stmt 1 view .LVU63
+ 182:Core/Src/main.c ****   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+ 197              		.loc 1 182 36 is_stmt 0 view .LVU64
  198 0086 4FF48062 		mov	r2, #1024
  199 008a 0792     		str	r2, [sp, #28]
- 182:Core/Src/main.c **** 
- 200              		.loc 1 182 3 is_stmt 1 view .LVU65
- 182:Core/Src/main.c **** 
- 201              		.loc 1 182 36 is_stmt 0 view .LVU66
+ 183:Core/Src/main.c **** 
+ 200              		.loc 1 183 3 is_stmt 1 view .LVU65
+ 183:Core/Src/main.c **** 
+ 201              		.loc 1 183 36 is_stmt 0 view .LVU66
  202 008c 0893     		str	r3, [sp, #32]
- 184:Core/Src/main.c ****   {
- 203              		.loc 1 184 3 is_stmt 1 view .LVU67
- 184:Core/Src/main.c ****   {
- 204              		.loc 1 184 7 is_stmt 0 view .LVU68
+ 185:Core/Src/main.c ****   {
+ 203              		.loc 1 185 3 is_stmt 1 view .LVU67
+ 185:Core/Src/main.c ****   {
+ 204              		.loc 1 185 7 is_stmt 0 view .LVU68
  205 008e 01A8     		add	r0, sp, #4
  206 0090 FFF7FEFF 		bl	HAL_RCC_ClockConfig
  207              	.LVL4:
- 184:Core/Src/main.c ****   {
- 208              		.loc 1 184 6 discriminator 1 view .LVU69
+ 185:Core/Src/main.c ****   {
+ 208              		.loc 1 185 6 discriminator 1 view .LVU69
  209 0094 18B9     		cbnz	r0, .L9
- 188:Core/Src/main.c **** 
- 210              		.loc 1 188 1 view .LVU70
+ 189:Core/Src/main.c **** 
+ 210              		.loc 1 189 1 view .LVU70
  211 0096 1DB0     		add	sp, sp, #116
  212              	.LCFI2:
  213              		.cfi_remember_state
@@ -1551,16 +1552,16 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  217              	.L8:
  218              	.LCFI3:
  219              		.cfi_restore_state
- 168:Core/Src/main.c ****   }
- 220              		.loc 1 168 5 is_stmt 1 view .LVU71
+ 169:Core/Src/main.c ****   }
+ 220              		.loc 1 169 5 is_stmt 1 view .LVU71
  221 009a FFF7FEFF 		bl	Error_Handler
  222              	.LVL5:
  223              	.L9:
- 186:Core/Src/main.c ****   }
- 224              		.loc 1 186 5 view .LVU72
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 27
+ 187:Core/Src/main.c ****   }
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 27
 
 
+ 224              		.loc 1 187 5 view .LVU72
  225 009e FFF7FEFF 		bl	Error_Handler
  226              	.LVL6:
  227              	.L11:
@@ -1577,8 +1578,8 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  239              		.thumb_func
  241              	PeriphCommonClock_Config:
  242              	.LFB148:
- 195:Core/Src/main.c ****   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
- 243              		.loc 1 195 1 view -0
+ 196:Core/Src/main.c ****   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+ 243              		.loc 1 196 1 view -0
  244              		.cfi_startproc
  245              		@ args = 0, pretend = 0, frame = 184
  246              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -1590,102 +1591,102 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  252 0002 AEB0     		sub	sp, sp, #184
  253              	.LCFI5:
  254              		.cfi_def_cfa_offset 192
- 196:Core/Src/main.c **** 
- 255              		.loc 1 196 3 view .LVU74
- 196:Core/Src/main.c **** 
- 256              		.loc 1 196 28 is_stmt 0 view .LVU75
+ 197:Core/Src/main.c **** 
+ 255              		.loc 1 197 3 view .LVU74
+ 197:Core/Src/main.c **** 
+ 256              		.loc 1 197 28 is_stmt 0 view .LVU75
  257 0004 B822     		movs	r2, #184
  258 0006 0021     		movs	r1, #0
  259 0008 6846     		mov	r0, sp
  260 000a FFF7FEFF 		bl	memset
  261              	.LVL7:
- 200:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
- 262              		.loc 1 200 3 is_stmt 1 view .LVU76
- 200:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
- 263              		.loc 1 200 44 is_stmt 0 view .LVU77
+ 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
+ 262              		.loc 1 201 3 is_stmt 1 view .LVU76
+ 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2M = 3;
+ 263              		.loc 1 201 44 is_stmt 0 view .LVU77
  264 000e 4FF41042 		mov	r2, #36864
  265 0012 0023     		movs	r3, #0
  266 0014 CDE90023 		strd	r2, [sp]
- 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
- 267              		.loc 1 201 3 is_stmt 1 view .LVU78
- 201:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
- 268              		.loc 1 201 34 is_stmt 0 view .LVU79
+ 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
+ 267              		.loc 1 202 3 is_stmt 1 view .LVU78
+ 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2N = 40;
+ 268              		.loc 1 202 34 is_stmt 0 view .LVU79
  269 0018 0323     		movs	r3, #3
  270 001a 0293     		str	r3, [sp, #8]
- 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
- 271              		.loc 1 202 3 is_stmt 1 view .LVU80
- 202:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
- 272              		.loc 1 202 34 is_stmt 0 view .LVU81
+ 203:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
+ 271              		.loc 1 203 3 is_stmt 1 view .LVU80
+ 203:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2P = 2;
+ 272              		.loc 1 203 34 is_stmt 0 view .LVU81
  273 001c 2823     		movs	r3, #40
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 28
+
+
  274 001e 0393     		str	r3, [sp, #12]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 28
-
-
- 203:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
- 275              		.loc 1 203 3 is_stmt 1 view .LVU82
- 203:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
- 276              		.loc 1 203 34 is_stmt 0 view .LVU83
+ 204:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
+ 275              		.loc 1 204 3 is_stmt 1 view .LVU82
+ 204:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2Q = 4;
+ 276              		.loc 1 204 34 is_stmt 0 view .LVU83
  277 0020 0223     		movs	r3, #2
  278 0022 0493     		str	r3, [sp, #16]
- 204:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
- 279              		.loc 1 204 3 is_stmt 1 view .LVU84
- 204:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
- 280              		.loc 1 204 34 is_stmt 0 view .LVU85
+ 205:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
+ 279              		.loc 1 205 3 is_stmt 1 view .LVU84
+ 205:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2R = 2;
+ 280              		.loc 1 205 34 is_stmt 0 view .LVU85
  281 0024 0422     		movs	r2, #4
  282 0026 0592     		str	r2, [sp, #20]
- 205:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
- 283              		.loc 1 205 3 is_stmt 1 view .LVU86
- 205:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
- 284              		.loc 1 205 34 is_stmt 0 view .LVU87
+ 206:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+ 283              		.loc 1 206 3 is_stmt 1 view .LVU86
+ 206:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_3;
+ 284              		.loc 1 206 34 is_stmt 0 view .LVU87
  285 0028 0693     		str	r3, [sp, #24]
- 206:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
- 286              		.loc 1 206 3 is_stmt 1 view .LVU88
- 206:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
- 287              		.loc 1 206 36 is_stmt 0 view .LVU89
+ 207:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+ 286              		.loc 1 207 3 is_stmt 1 view .LVU88
+ 207:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
+ 287              		.loc 1 207 36 is_stmt 0 view .LVU89
  288 002a C023     		movs	r3, #192
  289 002c 0793     		str	r3, [sp, #28]
- 207:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
- 290              		.loc 1 207 3 is_stmt 1 view .LVU90
- 208:Core/Src/main.c ****   PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL2;
- 291              		.loc 1 208 3 view .LVU91
- 209:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
- 292              		.loc 1 209 3 view .LVU92
- 209:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
- 293              		.loc 1 209 44 is_stmt 0 view .LVU93
+ 208:Core/Src/main.c ****   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
+ 290              		.loc 1 208 3 is_stmt 1 view .LVU90
+ 209:Core/Src/main.c ****   PeriphClkInitStruct.Spi123ClockSelection = RCC_SPI123CLKSOURCE_PLL2;
+ 291              		.loc 1 209 3 view .LVU91
+ 210:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+ 292              		.loc 1 210 3 view .LVU92
+ 210:Core/Src/main.c ****   PeriphClkInitStruct.FdcanClockSelection = RCC_FDCANCLKSOURCE_PLL2;
+ 293              		.loc 1 210 44 is_stmt 0 view .LVU93
  294 002e 4FF48053 		mov	r3, #4096
  295 0032 1793     		str	r3, [sp, #92]
- 210:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
- 296              		.loc 1 210 3 is_stmt 1 view .LVU94
- 210:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
- 297              		.loc 1 210 43 is_stmt 0 view .LVU95
+ 211:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+ 296              		.loc 1 211 3 is_stmt 1 view .LVU94
+ 211:Core/Src/main.c ****   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+ 297              		.loc 1 211 43 is_stmt 0 view .LVU95
  298 0034 4FF00053 		mov	r3, #536870912
  299 0038 1B93     		str	r3, [sp, #108]
- 211:Core/Src/main.c ****   {
- 300              		.loc 1 211 3 is_stmt 1 view .LVU96
- 211:Core/Src/main.c ****   {
- 301              		.loc 1 211 7 is_stmt 0 view .LVU97
+ 212:Core/Src/main.c ****   {
+ 300              		.loc 1 212 3 is_stmt 1 view .LVU96
+ 212:Core/Src/main.c ****   {
+ 301              		.loc 1 212 7 is_stmt 0 view .LVU97
  302 003a 6846     		mov	r0, sp
  303 003c FFF7FEFF 		bl	HAL_RCCEx_PeriphCLKConfig
  304              	.LVL8:
- 211:Core/Src/main.c ****   {
- 305              		.loc 1 211 6 discriminator 1 view .LVU98
+ 212:Core/Src/main.c ****   {
+ 305              		.loc 1 212 6 discriminator 1 view .LVU98
  306 0040 08B9     		cbnz	r0, .L15
- 215:Core/Src/main.c **** 
- 307              		.loc 1 215 1 view .LVU99
+ 216:Core/Src/main.c **** 
+ 307              		.loc 1 216 1 view .LVU99
  308 0042 2EB0     		add	sp, sp, #184
  309              	.LCFI6:
  310              		.cfi_remember_state
  311              		.cfi_def_cfa_offset 8
  312              		@ sp needed
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 29
+
+
  313 0044 10BD     		pop	{r4, pc}
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 29
-
-
  314              	.L15:
  315              	.LCFI7:
  316              		.cfi_restore_state
- 213:Core/Src/main.c ****   }
- 317              		.loc 1 213 5 is_stmt 1 view .LVU100
+ 214:Core/Src/main.c ****   }
+ 317              		.loc 1 214 5 is_stmt 1 view .LVU100
  318 0046 FFF7FEFF 		bl	Error_Handler
  319              	.LVL9:
  320              		.cfi_endproc
@@ -1737,10 +1738,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  103:Core/Src/main.c ****   MX_SPI2_Init();
  361              		.loc 1 103 3 view .LVU108
  362 001a FFF7FEFF 		bl	MX_FDCAN1_Init
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 30
+
+
  363              	.LVL16:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 30
-
-
  104:Core/Src/main.c ****   MX_UART5_Init();
  364              		.loc 1 104 3 view .LVU109
  365 001e FFF7FEFF 		bl	MX_SPI2_Init
@@ -1749,105 +1750,111 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  367              		.loc 1 105 3 view .LVU110
  368 0022 FFF7FEFF 		bl	MX_UART5_Init
  369              	.LVL18:
- 107:Core/Src/main.c ****   FDCAN1_Start();        /* CAN1：摩擦轮 + 云台 pitch */
+ 107:Core/Src/main.c ****   FDCAN2_Start();        /* CAN2：底盘左/右 + 云台 yaw */
  370              		.loc 1 107 3 view .LVU111
- 371 0026 FFF7FEFF 		bl	FDCAN2_Start
+ 371 0026 FFF7FEFF 		bl	DJ_Motor_Init
  372              	.LVL19:
- 108:Core/Src/main.c ****   RC_Init();             /* 启动 DBUS(UART5) 接收 */
+ 108:Core/Src/main.c ****   FDCAN1_Start();        /* CAN1：摩擦轮 + 云台 pitch */
  373              		.loc 1 108 3 view .LVU112
- 374 002a FFF7FEFF 		bl	FDCAN1_Start
+ 374 002a FFF7FEFF 		bl	FDCAN2_Start
  375              	.LVL20:
- 109:Core/Src/main.c ****   INS_Init();            /* BMI088：验证 SPI2 通路 */
+ 109:Core/Src/main.c ****   RC_Init();             /* 启动 DBUS(UART5) 接收 */
  376              		.loc 1 109 3 view .LVU113
- 377 002e FFF7FEFF 		bl	RC_Init
+ 377 002e FFF7FEFF 		bl	FDCAN1_Start
  378              	.LVL21:
- 110:Core/Src/main.c ****   /* USER CODE END 2 */
+ 110:Core/Src/main.c ****   INS_Init();            /* BMI088：验证 SPI2 通路 */
  379              		.loc 1 110 3 view .LVU114
- 380 0032 FFF7FEFF 		bl	INS_Init
+ 380 0032 FFF7FEFF 		bl	RC_Init
  381              	.LVL22:
- 115:Core/Src/main.c **** while (1) {
- 382              		.loc 1 115 1 view .LVU115
- 115:Core/Src/main.c **** while (1) {
- 383              		.loc 1 115 10 is_stmt 0 view .LVU116
- 384 0036 0024     		movs	r4, #0
- 385              	.LVL23:
- 386              	.L18:
- 115:Core/Src/main.c **** while (1) {
- 387              		.loc 1 115 10 view .LVU117
- 388 0038 2546     		mov	r5, r4
- 389              	.L17:
- 390              	.LVL24:
- 116:Core/Src/main.c ****   /*约1ms调用一次*/
- 391              		.loc 1 116 1 is_stmt 1 view .LVU118
- 392              	.LBB7:
- 118:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
- 393              		.loc 1 118 5 view .LVU119
- 118:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
- 394              		.loc 1 118 20 is_stmt 0 view .LVU120
- 395 003a FFF7FEFF 		bl	HAL_GetTick
- 396              	.LVL25:
- 397 003e 0446     		mov	r4, r0
- 398              	.LVL26:
- 119:Core/Src/main.c ****         rc_last_tick = now;
- 399              		.loc 1 119 5 is_stmt 1 view .LVU121
- 119:Core/Src/main.c ****         rc_last_tick = now;
- 400              		.loc 1 119 23 is_stmt 0 view .LVU122
- 401 0040 431B     		subs	r3, r0, r5
- 119:Core/Src/main.c ****         rc_last_tick = now;
- 402              		.loc 1 119 8 view .LVU123
- 403 0042 002B     		cmp	r3, #0
- 404 0044 F9DD     		ble	.L17
- 120:Core/Src/main.c ****         INS_Task();            /* BMI088 采样，1 kHz */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 31
+ 111:Core/Src/main.c ****   /* USER CODE END 2 */
+ 382              		.loc 1 111 3 view .LVU115
+ 383 0036 FFF7FEFF 		bl	INS_Init
+ 384              	.LVL23:
+ 116:Core/Src/main.c **** while (1) {
+ 385              		.loc 1 116 1 view .LVU116
+ 116:Core/Src/main.c **** while (1) {
+ 386              		.loc 1 116 10 is_stmt 0 view .LVU117
+ 387 003a 0024     		movs	r4, #0
+ 388              	.LVL24:
+ 389              	.L18:
+ 116:Core/Src/main.c **** while (1) {
+ 390              		.loc 1 116 10 view .LVU118
+ 391 003c 2546     		mov	r5, r4
+ 392              	.L17:
+ 393              	.LVL25:
+ 117:Core/Src/main.c ****   /*约1ms调用一次*/
+ 394              		.loc 1 117 1 is_stmt 1 view .LVU119
+ 395              	.LBB7:
+ 119:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
+ 396              		.loc 1 119 5 view .LVU120
+ 119:Core/Src/main.c ****     if ((int32_t)(now - rc_last_tick) >= 1) {   /* ~1ms, 匹配 mecanum 1kHz 斜坡 */
+ 397              		.loc 1 119 20 is_stmt 0 view .LVU121
+ 398 003e FFF7FEFF 		bl	HAL_GetTick
+ 399              	.LVL26:
+ 400 0042 0446     		mov	r4, r0
+ 401              	.LVL27:
+ 120:Core/Src/main.c ****         rc_last_tick = now;
+ 402              		.loc 1 120 5 is_stmt 1 view .LVU122
+ 120:Core/Src/main.c ****         rc_last_tick = now;
+ 403              		.loc 1 120 23 is_stmt 0 view .LVU123
+ 404 0044 431B     		subs	r3, r0, r5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 31
 
 
- 405              		.loc 1 120 9 is_stmt 1 view .LVU124
- 406              	.LVL27:
- 121:Core/Src/main.c ****         RC_Control_Task();
- 407              		.loc 1 121 9 view .LVU125
- 408 0046 FFF7FEFF 		bl	INS_Task
+ 120:Core/Src/main.c ****         rc_last_tick = now;
+ 405              		.loc 1 120 8 view .LVU124
+ 406 0046 002B     		cmp	r3, #0
+ 407 0048 F9DD     		ble	.L17
+ 121:Core/Src/main.c ****         INS_Task();            /* BMI088 采样，1 kHz */
+ 408              		.loc 1 121 9 is_stmt 1 view .LVU125
  409              	.LVL28:
- 122:Core/Src/main.c ****     }
+ 122:Core/Src/main.c ****         RC_Control_Task();
  410              		.loc 1 122 9 view .LVU126
- 411 004a FFF7FEFF 		bl	RC_Control_Task
+ 411 004a FFF7FEFF 		bl	INS_Task
  412              	.LVL29:
- 413 004e F3E7     		b	.L18
- 414              	.LBE7:
- 415              		.cfi_endproc
- 416              	.LFE146:
- 418              		.text
- 419              	.Letext0:
- 420              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
- 421              		.file 4 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
- 422              		.file 5 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
- 423              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
- 424              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc.h"
- 425              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc_ex.h"
- 426              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pwr_ex.h"
- 427              		.file 10 "application/rc_dbus.h"
- 428              		.file 11 "modules/imu/ins.h"
- 429              		.file 12 "bsp/bsp_can.h"
- 430              		.file 13 "Core/Inc/usart.h"
- 431              		.file 14 "Core/Inc/spi.h"
- 432              		.file 15 "Core/Inc/fdcan.h"
- 433              		.file 16 "Core/Inc/dma.h"
- 434              		.file 17 "Core/Inc/gpio.h"
- 435              		.file 18 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
- 436              		.file 19 "<built-in>"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s 			page 32
+ 123:Core/Src/main.c ****     }
+ 413              		.loc 1 123 9 view .LVU127
+ 414 004e FFF7FEFF 		bl	RC_Control_Task
+ 415              	.LVL30:
+ 416 0052 F3E7     		b	.L18
+ 417              	.LBE7:
+ 418              		.cfi_endproc
+ 419              	.LFE146:
+ 421              		.text
+ 422              	.Letext0:
+ 423              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 424              		.file 4 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 425              		.file 5 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 426              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 427              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc.h"
+ 428              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc_ex.h"
+ 429              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_pwr_ex.h"
+ 430              		.file 10 "application/rc_dbus.h"
+ 431              		.file 11 "modules/imu/ins.h"
+ 432              		.file 12 "modules/remote/dbus.h"
+ 433              		.file 13 "bsp/bsp_can.h"
+ 434              		.file 14 "modules/motor/DJ_Motor.h"
+ 435              		.file 15 "Core/Inc/usart.h"
+ 436              		.file 16 "Core/Inc/spi.h"
+ 437              		.file 17 "Core/Inc/fdcan.h"
+ 438              		.file 18 "Core/Inc/dma.h"
+ 439              		.file 19 "Core/Inc/gpio.h"
+ 440              		.file 20 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ 441              		.file 21 "<built-in>"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s 			page 32
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 main.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:20     .text.Error_Handler:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:26     .text.Error_Handler:00000000 Error_Handler
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:58     .text.SystemClock_Config:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:64     .text.SystemClock_Config:00000000 SystemClock_Config
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:230    .text.SystemClock_Config:000000a4 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:235    .text.PeriphCommonClock_Config:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:241    .text.PeriphCommonClock_Config:00000000 PeriphCommonClock_Config
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:324    .text.main:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBRbbQ0.s:330    .text.main:00000000 main
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:20     .text.Error_Handler:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:26     .text.Error_Handler:00000000 Error_Handler
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:58     .text.SystemClock_Config:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:64     .text.SystemClock_Config:00000000 SystemClock_Config
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:230    .text.SystemClock_Config:000000a4 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:235    .text.PeriphCommonClock_Config:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:241    .text.PeriphCommonClock_Config:00000000 PeriphCommonClock_Config
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:324    .text.main:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccNBRekr.s:330    .text.main:00000000 main
 
 UNDEFINED SYMBOLS
 memset
@@ -1862,6 +1869,7 @@ MX_FDCAN2_Init
 MX_FDCAN1_Init
 MX_SPI2_Init
 MX_UART5_Init
+DJ_Motor_Init
 FDCAN2_Start
 FDCAN1_Start
 RC_Init

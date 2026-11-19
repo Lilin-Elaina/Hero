@@ -1,0 +1,404 @@
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"bsp_spi.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "bsp/bsp_spi.c"
+  19              		.section	.text.BSP_IMU_Init,"ax",%progbits
+  20              		.align	1
+  21              		.global	BSP_IMU_Init
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	BSP_IMU_Init:
+  27              	.LFB146:
+   1:bsp/bsp_spi.c **** /**
+   2:bsp/bsp_spi.c ****  * @file    bsp_spi.c
+   3:bsp/bsp_spi.c ****  * @brief   SPI2 + BMI088 片选（片上外设细节）
+   4:bsp/bsp_spi.c ****  * @note    2026-11-19 P2d：从 modules/imu/ins.c 原样搬迁，时序未改。
+   5:bsp/bsp_spi.c ****  *          模块层只调 BSP_IMU_Cs / BSP_IMU_Transfer / BSP_IMU_Send，
+   6:bsp/bsp_spi.c ****  *          不再直接碰 HAL_GPIO / HAL_SPI。
+   7:bsp/bsp_spi.c ****  */
+   8:bsp/bsp_spi.c **** #include "main.h"
+   9:bsp/bsp_spi.c **** #include "spi.h"
+  10:bsp/bsp_spi.c **** #include "gpio.h"
+  11:bsp/bsp_spi.c **** #include "bsp_spi.h"
+  12:bsp/bsp_spi.c **** 
+  13:bsp/bsp_spi.c **** /* 片选脚：PC0 = 加速度计，PC3 = 陀螺 */
+  14:bsp/bsp_spi.c **** #define BSP_IMU_CS_PORT   GPIOC
+  15:bsp/bsp_spi.c **** #define BSP_IMU_CS_ACC    GPIO_PIN_0
+  16:bsp/bsp_spi.c **** #define BSP_IMU_CS_GYRO   GPIO_PIN_3
+  17:bsp/bsp_spi.c **** 
+  18:bsp/bsp_spi.c **** void BSP_IMU_Init(void)
+  19:bsp/bsp_spi.c **** {
+  28              		.loc 1 19 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 32
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 70B5     		push	{r4, r5, r6, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 16
+  35              		.cfi_offset 4, -16
+  36              		.cfi_offset 5, -12
+  37              		.cfi_offset 6, -8
+  38              		.cfi_offset 14, -4
+  39 0002 88B0     		sub	sp, sp, #32
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s 			page 2
+
+
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 48
+  20:bsp/bsp_spi.c ****     GPIO_InitTypeDef g = {0};
+  42              		.loc 1 20 5 view .LVU1
+  43              		.loc 1 20 22 is_stmt 0 view .LVU2
+  44 0004 03AD     		add	r5, sp, #12
+  45 0006 0024     		movs	r4, #0
+  46 0008 0394     		str	r4, [sp, #12]
+  47 000a 0494     		str	r4, [sp, #16]
+  48 000c 0594     		str	r4, [sp, #20]
+  49 000e 0694     		str	r4, [sp, #24]
+  50 0010 0794     		str	r4, [sp, #28]
+  21:bsp/bsp_spi.c **** 
+  22:bsp/bsp_spi.c ****     __HAL_RCC_GPIOC_CLK_ENABLE();
+  51              		.loc 1 22 5 is_stmt 1 view .LVU3
+  52              	.LBB2:
+  53              		.loc 1 22 5 view .LVU4
+  54              		.loc 1 22 5 view .LVU5
+  55 0012 1B4B     		ldr	r3, .L3
+  56 0014 D3F8E020 		ldr	r2, [r3, #224]
+  57 0018 42F00402 		orr	r2, r2, #4
+  58 001c C3F8E020 		str	r2, [r3, #224]
+  59              		.loc 1 22 5 view .LVU6
+  60 0020 D3F8E020 		ldr	r2, [r3, #224]
+  61 0024 02F00402 		and	r2, r2, #4
+  62 0028 0192     		str	r2, [sp, #4]
+  63              		.loc 1 22 5 view .LVU7
+  64 002a 019A     		ldr	r2, [sp, #4]
+  65              	.LBE2:
+  66              		.loc 1 22 5 view .LVU8
+  23:bsp/bsp_spi.c ****     __HAL_RCC_SYSCFG_CLK_ENABLE();
+  67              		.loc 1 23 5 view .LVU9
+  68              	.LBB3:
+  69              		.loc 1 23 5 view .LVU10
+  70              		.loc 1 23 5 view .LVU11
+  71 002c D3F8F420 		ldr	r2, [r3, #244]
+  72 0030 42F00202 		orr	r2, r2, #2
+  73 0034 C3F8F420 		str	r2, [r3, #244]
+  74              		.loc 1 23 5 view .LVU12
+  75 0038 D3F8F430 		ldr	r3, [r3, #244]
+  76 003c 03F00203 		and	r3, r3, #2
+  77 0040 0293     		str	r3, [sp, #8]
+  78              		.loc 1 23 5 view .LVU13
+  79 0042 029B     		ldr	r3, [sp, #8]
+  80              	.LBE3:
+  81              		.loc 1 23 5 view .LVU14
+  24:bsp/bsp_spi.c **** 
+  25:bsp/bsp_spi.c ****     /* 先把电平置高（未选中），再切成输出，避免切换瞬间误选通 */
+  26:bsp/bsp_spi.c ****     HAL_GPIO_WritePin(BSP_IMU_CS_PORT, BSP_IMU_CS_ACC | BSP_IMU_CS_GYRO, GPIO_PIN_SET);
+  82              		.loc 1 26 5 view .LVU15
+  83 0044 0F4E     		ldr	r6, .L3+4
+  84 0046 0122     		movs	r2, #1
+  85 0048 0921     		movs	r1, #9
+  86 004a 3046     		mov	r0, r6
+  87 004c FFF7FEFF 		bl	HAL_GPIO_WritePin
+  88              	.LVL0:
+  27:bsp/bsp_spi.c **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s 			page 3
+
+
+  28:bsp/bsp_spi.c ****     g.Pin   = BSP_IMU_CS_ACC | BSP_IMU_CS_GYRO;
+  89              		.loc 1 28 5 view .LVU16
+  90              		.loc 1 28 13 is_stmt 0 view .LVU17
+  91 0050 0923     		movs	r3, #9
+  92 0052 0393     		str	r3, [sp, #12]
+  29:bsp/bsp_spi.c ****     g.Mode  = GPIO_MODE_OUTPUT_PP;
+  93              		.loc 1 29 5 is_stmt 1 view .LVU18
+  94              		.loc 1 29 13 is_stmt 0 view .LVU19
+  95 0054 0123     		movs	r3, #1
+  96 0056 0493     		str	r3, [sp, #16]
+  30:bsp/bsp_spi.c ****     g.Pull  = GPIO_NOPULL;
+  97              		.loc 1 30 5 is_stmt 1 view .LVU20
+  98              		.loc 1 30 13 is_stmt 0 view .LVU21
+  99 0058 0594     		str	r4, [sp, #20]
+  31:bsp/bsp_spi.c ****     g.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+ 100              		.loc 1 31 5 is_stmt 1 view .LVU22
+ 101              		.loc 1 31 13 is_stmt 0 view .LVU23
+ 102 005a 0323     		movs	r3, #3
+ 103 005c 0693     		str	r3, [sp, #24]
+  32:bsp/bsp_spi.c ****     HAL_GPIO_Init(BSP_IMU_CS_PORT, &g);
+ 104              		.loc 1 32 5 is_stmt 1 view .LVU24
+ 105 005e 2946     		mov	r1, r5
+ 106 0060 3046     		mov	r0, r6
+ 107 0062 FFF7FEFF 		bl	HAL_GPIO_Init
+ 108              	.LVL1:
+  33:bsp/bsp_spi.c **** 
+  34:bsp/bsp_spi.c ****     /* H7 的 PC2_C/PC3_C 与 PC2/PC3 之间有模拟开关，不闭合则引脚不通 */
+  35:bsp/bsp_spi.c ****     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC2, SYSCFG_SWITCH_PC2_CLOSE);
+ 109              		.loc 1 35 5 view .LVU25
+ 110 0066 2146     		mov	r1, r4
+ 111 0068 4FF08060 		mov	r0, #67108864
+ 112 006c FFF7FEFF 		bl	HAL_SYSCFG_AnalogSwitchConfig
+ 113              	.LVL2:
+  36:bsp/bsp_spi.c ****     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC3, SYSCFG_SWITCH_PC3_CLOSE);
+ 114              		.loc 1 36 5 view .LVU26
+ 115 0070 2146     		mov	r1, r4
+ 116 0072 4FF00060 		mov	r0, #134217728
+ 117 0076 FFF7FEFF 		bl	HAL_SYSCFG_AnalogSwitchConfig
+ 118              	.LVL3:
+  37:bsp/bsp_spi.c **** }
+ 119              		.loc 1 37 1 is_stmt 0 view .LVU27
+ 120 007a 08B0     		add	sp, sp, #32
+ 121              	.LCFI2:
+ 122              		.cfi_def_cfa_offset 16
+ 123              		@ sp needed
+ 124 007c 70BD     		pop	{r4, r5, r6, pc}
+ 125              	.L4:
+ 126 007e 00BF     		.align	2
+ 127              	.L3:
+ 128 0080 00440258 		.word	1476543488
+ 129 0084 00080258 		.word	1476528128
+ 130              		.cfi_endproc
+ 131              	.LFE146:
+ 133              		.section	.text.BSP_IMU_Cs,"ax",%progbits
+ 134              		.align	1
+ 135              		.global	BSP_IMU_Cs
+ 136              		.syntax unified
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s 			page 4
+
+
+ 137              		.thumb
+ 138              		.thumb_func
+ 140              	BSP_IMU_Cs:
+ 141              	.LVL4:
+ 142              	.LFB147:
+  38:bsp/bsp_spi.c **** 
+  39:bsp/bsp_spi.c **** void BSP_IMU_Cs(uint8_t dev, uint8_t low)
+  40:bsp/bsp_spi.c **** {
+ 143              		.loc 1 40 1 is_stmt 1 view -0
+ 144              		.cfi_startproc
+ 145              		@ args = 0, pretend = 0, frame = 0
+ 146              		@ frame_needed = 0, uses_anonymous_args = 0
+ 147              		.loc 1 40 1 is_stmt 0 view .LVU29
+ 148 0000 08B5     		push	{r3, lr}
+ 149              	.LCFI3:
+ 150              		.cfi_def_cfa_offset 8
+ 151              		.cfi_offset 3, -8
+ 152              		.cfi_offset 14, -4
+ 153 0002 0A46     		mov	r2, r1
+  41:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
+ 154              		.loc 1 41 5 is_stmt 1 view .LVU30
+ 155              		.loc 1 41 20 is_stmt 0 view .LVU31
+ 156 0004 38B9     		cbnz	r0, .L7
+ 157              		.loc 1 41 20 discriminator 1 view .LVU32
+ 158 0006 0121     		movs	r1, #1
+ 159              	.LVL5:
+ 160              	.L6:
+  42:bsp/bsp_spi.c **** 
+  43:bsp/bsp_spi.c ****     HAL_GPIO_WritePin(BSP_IMU_CS_PORT, pin, low ? GPIO_PIN_RESET : GPIO_PIN_SET);
+ 161              		.loc 1 43 5 is_stmt 1 view .LVU33
+ 162 0008 B2FA82F2 		clz	r2, r2
+ 163              	.LVL6:
+ 164              		.loc 1 43 5 is_stmt 0 view .LVU34
+ 165 000c 5209     		lsrs	r2, r2, #5
+ 166 000e 0348     		ldr	r0, .L9
+ 167              	.LVL7:
+ 168              		.loc 1 43 5 view .LVU35
+ 169 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 170              	.LVL8:
+  44:bsp/bsp_spi.c **** }
+ 171              		.loc 1 44 1 view .LVU36
+ 172 0014 08BD     		pop	{r3, pc}
+ 173              	.LVL9:
+ 174              	.L7:
+  41:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
+ 175              		.loc 1 41 20 discriminator 2 view .LVU37
+ 176 0016 0821     		movs	r1, #8
+ 177              	.LVL10:
+  41:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
+ 178              		.loc 1 41 20 discriminator 2 view .LVU38
+ 179 0018 F6E7     		b	.L6
+ 180              	.L10:
+ 181 001a 00BF     		.align	2
+ 182              	.L9:
+ 183 001c 00080258 		.word	1476528128
+ 184              		.cfi_endproc
+ 185              	.LFE147:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s 			page 5
+
+
+ 187              		.section	.text.BSP_IMU_Transfer,"ax",%progbits
+ 188              		.align	1
+ 189              		.global	BSP_IMU_Transfer
+ 190              		.syntax unified
+ 191              		.thumb
+ 192              		.thumb_func
+ 194              	BSP_IMU_Transfer:
+ 195              	.LVL11:
+ 196              	.LFB148:
+  45:bsp/bsp_spi.c **** 
+  46:bsp/bsp_spi.c **** uint8_t BSP_IMU_Transfer(const uint8_t *tx, uint8_t *rx, uint16_t n)
+  47:bsp/bsp_spi.c **** {
+ 197              		.loc 1 47 1 is_stmt 1 view -0
+ 198              		.cfi_startproc
+ 199              		@ args = 0, pretend = 0, frame = 0
+ 200              		@ frame_needed = 0, uses_anonymous_args = 0
+ 201              		.loc 1 47 1 is_stmt 0 view .LVU40
+ 202 0000 00B5     		push	{lr}
+ 203              	.LCFI4:
+ 204              		.cfi_def_cfa_offset 4
+ 205              		.cfi_offset 14, -4
+ 206 0002 83B0     		sub	sp, sp, #12
+ 207              	.LCFI5:
+ 208              		.cfi_def_cfa_offset 16
+ 209 0004 1346     		mov	r3, r2
+  48:bsp/bsp_spi.c ****     return (HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)tx, rx, n, 50) == HAL_OK) ? 1u : 0u;
+ 210              		.loc 1 48 5 is_stmt 1 view .LVU41
+ 211              		.loc 1 48 13 is_stmt 0 view .LVU42
+ 212 0006 3222     		movs	r2, #50
+ 213              	.LVL12:
+ 214              		.loc 1 48 13 view .LVU43
+ 215 0008 0092     		str	r2, [sp]
+ 216 000a 0A46     		mov	r2, r1
+ 217 000c 0146     		mov	r1, r0
+ 218              	.LVL13:
+ 219              		.loc 1 48 13 view .LVU44
+ 220 000e 0448     		ldr	r0, .L15
+ 221              	.LVL14:
+ 222              		.loc 1 48 13 view .LVU45
+ 223 0010 FFF7FEFF 		bl	HAL_SPI_TransmitReceive
+ 224              	.LVL15:
+ 225              		.loc 1 48 87 discriminator 1 view .LVU46
+ 226 0014 10B9     		cbnz	r0, .L13
+ 227 0016 0120     		movs	r0, #1
+ 228              	.L12:
+  49:bsp/bsp_spi.c **** }
+ 229              		.loc 1 49 1 view .LVU47
+ 230 0018 03B0     		add	sp, sp, #12
+ 231              	.LCFI6:
+ 232              		.cfi_remember_state
+ 233              		.cfi_def_cfa_offset 4
+ 234              		@ sp needed
+ 235 001a 00BD     		pop	{pc}
+ 236              	.L13:
+ 237              	.LCFI7:
+ 238              		.cfi_restore_state
+  48:bsp/bsp_spi.c ****     return (HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)tx, rx, n, 50) == HAL_OK) ? 1u : 0u;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s 			page 6
+
+
+ 239              		.loc 1 48 87 discriminator 2 view .LVU48
+ 240 001c 0020     		movs	r0, #0
+ 241 001e FBE7     		b	.L12
+ 242              	.L16:
+ 243              		.align	2
+ 244              	.L15:
+ 245 0020 00000000 		.word	hspi2
+ 246              		.cfi_endproc
+ 247              	.LFE148:
+ 249              		.section	.text.BSP_IMU_Send,"ax",%progbits
+ 250              		.align	1
+ 251              		.global	BSP_IMU_Send
+ 252              		.syntax unified
+ 253              		.thumb
+ 254              		.thumb_func
+ 256              	BSP_IMU_Send:
+ 257              	.LVL16:
+ 258              	.LFB149:
+  50:bsp/bsp_spi.c **** 
+  51:bsp/bsp_spi.c **** uint8_t BSP_IMU_Send(const uint8_t *tx, uint16_t n)
+  52:bsp/bsp_spi.c **** {
+ 259              		.loc 1 52 1 is_stmt 1 view -0
+ 260              		.cfi_startproc
+ 261              		@ args = 0, pretend = 0, frame = 0
+ 262              		@ frame_needed = 0, uses_anonymous_args = 0
+ 263              		.loc 1 52 1 is_stmt 0 view .LVU50
+ 264 0000 08B5     		push	{r3, lr}
+ 265              	.LCFI8:
+ 266              		.cfi_def_cfa_offset 8
+ 267              		.cfi_offset 3, -8
+ 268              		.cfi_offset 14, -4
+ 269 0002 0A46     		mov	r2, r1
+  53:bsp/bsp_spi.c ****     return (HAL_SPI_Transmit(&hspi2, (uint8_t *)tx, n, 20) == HAL_OK) ? 1u : 0u;
+ 270              		.loc 1 53 5 is_stmt 1 view .LVU51
+ 271              		.loc 1 53 13 is_stmt 0 view .LVU52
+ 272 0004 1423     		movs	r3, #20
+ 273 0006 0146     		mov	r1, r0
+ 274              	.LVL17:
+ 275              		.loc 1 53 13 view .LVU53
+ 276 0008 0348     		ldr	r0, .L21
+ 277              	.LVL18:
+ 278              		.loc 1 53 13 view .LVU54
+ 279 000a FFF7FEFF 		bl	HAL_SPI_Transmit
+ 280              	.LVL19:
+ 281              		.loc 1 53 76 discriminator 1 view .LVU55
+ 282 000e 08B9     		cbnz	r0, .L19
+ 283 0010 0120     		movs	r0, #1
+ 284              	.L18:
+  54:bsp/bsp_spi.c **** }
+ 285              		.loc 1 54 1 view .LVU56
+ 286 0012 08BD     		pop	{r3, pc}
+ 287              	.L19:
+  53:bsp/bsp_spi.c ****     return (HAL_SPI_Transmit(&hspi2, (uint8_t *)tx, n, 20) == HAL_OK) ? 1u : 0u;
+ 288              		.loc 1 53 76 discriminator 2 view .LVU57
+ 289 0014 0020     		movs	r0, #0
+ 290 0016 FCE7     		b	.L18
+ 291              	.L22:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s 			page 7
+
+
+ 292              		.align	2
+ 293              	.L21:
+ 294 0018 00000000 		.word	hspi2
+ 295              		.cfi_endproc
+ 296              	.LFE149:
+ 298              		.text
+ 299              	.Letext0:
+ 300              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 301              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 302              		.file 4 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 303              		.file 5 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 304              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_gpio.h"
+ 305              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_dma.h"
+ 306              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h"
+ 307              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ 308              		.file 10 "Core/Inc/spi.h"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s 			page 8
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 bsp_spi.c
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:20     .text.BSP_IMU_Init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:26     .text.BSP_IMU_Init:00000000 BSP_IMU_Init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:128    .text.BSP_IMU_Init:00000080 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:134    .text.BSP_IMU_Cs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:140    .text.BSP_IMU_Cs:00000000 BSP_IMU_Cs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:183    .text.BSP_IMU_Cs:0000001c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:188    .text.BSP_IMU_Transfer:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:194    .text.BSP_IMU_Transfer:00000000 BSP_IMU_Transfer
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:245    .text.BSP_IMU_Transfer:00000020 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:250    .text.BSP_IMU_Send:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:256    .text.BSP_IMU_Send:00000000 BSP_IMU_Send
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccvixiA5.s:294    .text.BSP_IMU_Send:00000018 $d
+
+UNDEFINED SYMBOLS
+HAL_GPIO_WritePin
+HAL_GPIO_Init
+HAL_SYSCFG_AnalogSwitchConfig
+HAL_SPI_TransmitReceive
+hspi2
+HAL_SPI_Transmit

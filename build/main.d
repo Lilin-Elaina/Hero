@@ -32,7 +32,8 @@ build/main.o: Core/Src/main.c Core/Inc/main.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h Core/Inc/dma.h \
  Core/Inc/main.h Core/Inc/fdcan.h Core/Inc/spi.h Core/Inc/usart.h \
  Core/Inc/gpio.h modules/motor/DJ_Motor.h application/rc_dbus.h \
- modules/chassis/mecanum.h modules/imu/ins.h bsp/bsp_can.h
+ modules/remote/dbus.h modules/chassis/mecanum.h modules/imu/ins.h \
+ bsp/bsp_can.h
 Core/Inc/main.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
 Core/Inc/stm32h7xx_hal_conf.h:
@@ -76,6 +77,7 @@ Core/Inc/usart.h:
 Core/Inc/gpio.h:
 modules/motor/DJ_Motor.h:
 application/rc_dbus.h:
+modules/remote/dbus.h:
 modules/chassis/mecanum.h:
 modules/imu/ins.h:
 bsp/bsp_can.h:

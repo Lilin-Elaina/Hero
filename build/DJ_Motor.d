@@ -29,8 +29,8 @@ build/DJ_Motor.o: modules/motor/DJ_Motor.c modules/motor/DJ_Motor.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi_ex.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h \
- Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h bsp/bsp_can.h \
- Core/Inc/fdcan.h Core/Inc/main.h
+ Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h bsp/bsp_time.h \
+ bsp/bsp_can.h Core/Inc/fdcan.h Core/Inc/main.h
 modules/motor/DJ_Motor.h:
 Core/Inc/main.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
@@ -67,6 +67,7 @@ Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi_ex.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h:
+bsp/bsp_time.h:
 bsp/bsp_can.h:
 Core/Inc/fdcan.h:
 Core/Inc/main.h:

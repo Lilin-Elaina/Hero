@@ -1,0 +1,1335 @@
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"bsp_uart.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "bsp/bsp_uart.c"
+  19              		.section	.text.BSP_UART_DBusRegisterRx,"ax",%progbits
+  20              		.align	1
+  21              		.global	BSP_UART_DBusRegisterRx
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	BSP_UART_DBusRegisterRx:
+  27              	.LVL0:
+  28              	.LFB146:
+   1:bsp/bsp_uart.c **** /**
+   2:bsp/bsp_uart.c ****  * @file    bsp_uart.c
+   3:bsp/bsp_uart.c ****  * @brief   UART5 + DMA + IDLE 接收（DBUS 遥控器）
+   4:bsp/bsp_uart.c ****  * @note    分层：HAL 串口/DMA 细节收在 bsp，模块层只通过
+   5:bsp/bsp_uart.c ****  *          BSP_UART_DBusRegisterRx() 拿到“一帧 18 字节”。
+   6:bsp/bsp_uart.c ****  *          2026-11-19 从 modules/remote/dbus.c 原样搬迁，接收时序未改。
+   7:bsp/bsp_uart.c ****  */
+   8:bsp/bsp_uart.c **** #include "main.h"
+   9:bsp/bsp_uart.c **** #include "usart.h"
+  10:bsp/bsp_uart.c **** #include "bsp_uart.h"
+  11:bsp/bsp_uart.c **** 
+  12:bsp/bsp_uart.c **** /* DMA 接收缓冲：2 帧容量
+  13:bsp/bsp_uart.c ****  *
+  14:bsp/bsp_uart.c ****  * ★ 必须放在 DMA 可访问的内存里：STM32H7 的 DTCM(0x20000000) 只有 Cortex-M7
+  15:bsp/bsp_uart.c ****  *   的 D-bus 能访问，DMA1/DMA2 往 DTCM 写会在第一个字节就报传输错误。
+  16:bsp/bsp_uart.c ****  *   本工程 .data/.bss 都在 DTCMRAM，所以这里显式指定 .dma_buffer 段，
+  17:bsp/bsp_uart.c ****  *   该段在 STM32H723xG_flash.ld 里被链接到 RAM_D1(0x24000000)。
+  18:bsp/bsp_uart.c ****  *   32 字节对齐是为了将来若打开 D-Cache 仍能安全做 cache 维护。 */
+  19:bsp/bsp_uart.c **** #if defined(__GNUC__)
+  20:bsp/bsp_uart.c **** static uint8_t dbus_buf[BSP_UART_DBUS_FRAME_LEN * 2]
+  21:bsp/bsp_uart.c ****     __attribute__((section(".dma_buffer"), aligned(32)));
+  22:bsp/bsp_uart.c **** #else
+  23:bsp/bsp_uart.c **** static uint8_t dbus_buf[BSP_UART_DBUS_FRAME_LEN * 2];
+  24:bsp/bsp_uart.c **** #endif
+  25:bsp/bsp_uart.c **** 
+  26:bsp/bsp_uart.c **** static BSP_UART_RxHandler s_dbus_rx   = 0;   /* 模块层注册的解析函数 */
+  27:bsp/bsp_uart.c **** static void (*s_dbus_err)(void)       = 0;   /* 模块层注册的错误计数钩子 */
+  28:bsp/bsp_uart.c **** 
+  29:bsp/bsp_uart.c **** void BSP_UART_DBusRegisterRx(BSP_UART_RxHandler handler)
+  30:bsp/bsp_uart.c **** {
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 2
+
+
+  29              		.loc 1 30 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		@ link register save eliminated.
+  31:bsp/bsp_uart.c ****     s_dbus_rx = handler;
+  34              		.loc 1 31 5 view .LVU1
+  35              		.loc 1 31 15 is_stmt 0 view .LVU2
+  36 0000 014B     		ldr	r3, .L2
+  37 0002 1860     		str	r0, [r3]
+  32:bsp/bsp_uart.c **** }
+  38              		.loc 1 32 1 view .LVU3
+  39 0004 7047     		bx	lr
+  40              	.L3:
+  41 0006 00BF     		.align	2
+  42              	.L2:
+  43 0008 00000000 		.word	s_dbus_rx
+  44              		.cfi_endproc
+  45              	.LFE146:
+  47              		.section	.text.BSP_UART_DBusRegisterError,"ax",%progbits
+  48              		.align	1
+  49              		.global	BSP_UART_DBusRegisterError
+  50              		.syntax unified
+  51              		.thumb
+  52              		.thumb_func
+  54              	BSP_UART_DBusRegisterError:
+  55              	.LVL1:
+  56              	.LFB147:
+  33:bsp/bsp_uart.c **** 
+  34:bsp/bsp_uart.c **** void BSP_UART_DBusRegisterError(void (*cb)(void))
+  35:bsp/bsp_uart.c **** {
+  57              		.loc 1 35 1 is_stmt 1 view -0
+  58              		.cfi_startproc
+  59              		@ args = 0, pretend = 0, frame = 0
+  60              		@ frame_needed = 0, uses_anonymous_args = 0
+  61              		@ link register save eliminated.
+  36:bsp/bsp_uart.c ****     s_dbus_err = cb;
+  62              		.loc 1 36 5 view .LVU5
+  63              		.loc 1 36 16 is_stmt 0 view .LVU6
+  64 0000 014B     		ldr	r3, .L5
+  65 0002 1860     		str	r0, [r3]
+  37:bsp/bsp_uart.c **** }
+  66              		.loc 1 37 1 view .LVU7
+  67 0004 7047     		bx	lr
+  68              	.L6:
+  69 0006 00BF     		.align	2
+  70              	.L5:
+  71 0008 00000000 		.word	s_dbus_err
+  72              		.cfi_endproc
+  73              	.LFE147:
+  75              		.section	.text.BSP_UART_DBusStart,"ax",%progbits
+  76              		.align	1
+  77              		.global	BSP_UART_DBusStart
+  78              		.syntax unified
+  79              		.thumb
+  80              		.thumb_func
+  82              	BSP_UART_DBusStart:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 3
+
+
+  83              	.LFB148:
+  38:bsp/bsp_uart.c **** 
+  39:bsp/bsp_uart.c **** void BSP_UART_DBusStart(void)
+  40:bsp/bsp_uart.c **** {
+  84              		.loc 1 40 1 is_stmt 1 view -0
+  85              		.cfi_startproc
+  86              		@ args = 0, pretend = 0, frame = 0
+  87              		@ frame_needed = 0, uses_anonymous_args = 0
+  88 0000 10B5     		push	{r4, lr}
+  89              	.LCFI0:
+  90              		.cfi_def_cfa_offset 8
+  91              		.cfi_offset 4, -8
+  92              		.cfi_offset 14, -4
+  41:bsp/bsp_uart.c ****     /* 上一帧若因溢出/噪声卡在 ORE，不清掉就再也收不到新数据 */
+  42:bsp/bsp_uart.c ****     __HAL_UART_CLEAR_OREFLAG(&huart5);
+  93              		.loc 1 42 5 view .LVU9
+  94 0002 2A48     		ldr	r0, .L14
+  95 0004 0368     		ldr	r3, [r0]
+  96 0006 0822     		movs	r2, #8
+  97 0008 1A62     		str	r2, [r3, #32]
+  43:bsp/bsp_uart.c **** 
+  44:bsp/bsp_uart.c ****     /* DMA 普通模式，靠串口总线空闲（IDLE）判定一帧结束 */
+  45:bsp/bsp_uart.c ****     if (HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf)) != HAL_OK)
+  98              		.loc 1 45 5 view .LVU10
+  99              		.loc 1 45 9 is_stmt 0 view .LVU11
+ 100 000a 2422     		movs	r2, #36
+ 101 000c 2849     		ldr	r1, .L14+4
+ 102 000e FFF7FEFF 		bl	HAL_UARTEx_ReceiveToIdle_DMA
+ 103              	.LVL2:
+ 104              		.loc 1 45 8 discriminator 1 view .LVU12
+ 105 0012 0028     		cmp	r0, #0
+ 106 0014 3BD1     		bne	.L13
+ 107              	.L8:
+  46:bsp/bsp_uart.c ****     {
+  47:bsp/bsp_uart.c ****         /* 启动失败（上一次接收还没拆干净）：强制中止后重试一次，
+  48:bsp/bsp_uart.c ****          * 否则接收链会永久静默，表现为“遥控器完全没反应” */
+  49:bsp/bsp_uart.c ****         HAL_UART_AbortReceive(&huart5);
+  50:bsp/bsp_uart.c ****         (void)HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf));
+  51:bsp/bsp_uart.c ****     }
+  52:bsp/bsp_uart.c **** 
+  53:bsp/bsp_uart.c ****     /* 关掉半传输中断，避免回调被提前触发一次 */
+  54:bsp/bsp_uart.c ****     if (huart5.hdmarx != NULL)
+ 108              		.loc 1 54 5 is_stmt 1 view .LVU13
+ 109              		.loc 1 54 15 is_stmt 0 view .LVU14
+ 110 0016 254B     		ldr	r3, .L14
+ 111 0018 D3F88030 		ldr	r3, [r3, #128]
+ 112              		.loc 1 54 8 view .LVU15
+ 113 001c 002B     		cmp	r3, #0
+ 114 001e 44D0     		beq	.L7
+  55:bsp/bsp_uart.c ****     {
+  56:bsp/bsp_uart.c ****         __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
+ 115              		.loc 1 56 9 is_stmt 1 view .LVU16
+ 116 0020 1B68     		ldr	r3, [r3]
+ 117 0022 2449     		ldr	r1, .L14+8
+ 118 0024 244A     		ldr	r2, .L14+12
+ 119 0026 9342     		cmp	r3, r2
+ 120 0028 18BF     		it	ne
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 4
+
+
+ 121 002a 8B42     		cmpne	r3, r1
+ 122 002c 39D0     		beq	.L10
+ 123              		.loc 1 56 9 is_stmt 0 discriminator 2 view .LVU17
+ 124 002e 1832     		adds	r2, r2, #24
+ 125 0030 9342     		cmp	r3, r2
+ 126 0032 36D0     		beq	.L10
+ 127              		.loc 1 56 9 discriminator 4 view .LVU18
+ 128 0034 1832     		adds	r2, r2, #24
+ 129 0036 9342     		cmp	r3, r2
+ 130 0038 33D0     		beq	.L10
+ 131              		.loc 1 56 9 discriminator 6 view .LVU19
+ 132 003a 1832     		adds	r2, r2, #24
+ 133 003c 9342     		cmp	r3, r2
+ 134 003e 30D0     		beq	.L10
+ 135              		.loc 1 56 9 discriminator 8 view .LVU20
+ 136 0040 1832     		adds	r2, r2, #24
+ 137 0042 9342     		cmp	r3, r2
+ 138 0044 2DD0     		beq	.L10
+ 139              		.loc 1 56 9 discriminator 10 view .LVU21
+ 140 0046 1832     		adds	r2, r2, #24
+ 141 0048 9342     		cmp	r3, r2
+ 142 004a 2AD0     		beq	.L10
+ 143              		.loc 1 56 9 discriminator 12 view .LVU22
+ 144 004c 1832     		adds	r2, r2, #24
+ 145 004e 9342     		cmp	r3, r2
+ 146 0050 27D0     		beq	.L10
+ 147              		.loc 1 56 9 discriminator 14 view .LVU23
+ 148 0052 02F55672 		add	r2, r2, #856
+ 149 0056 9342     		cmp	r3, r2
+ 150 0058 23D0     		beq	.L10
+ 151              		.loc 1 56 9 discriminator 16 view .LVU24
+ 152 005a 1832     		adds	r2, r2, #24
+ 153 005c 9342     		cmp	r3, r2
+ 154 005e 20D0     		beq	.L10
+ 155              		.loc 1 56 9 discriminator 18 view .LVU25
+ 156 0060 1832     		adds	r2, r2, #24
+ 157 0062 9342     		cmp	r3, r2
+ 158 0064 1DD0     		beq	.L10
+ 159              		.loc 1 56 9 discriminator 20 view .LVU26
+ 160 0066 1832     		adds	r2, r2, #24
+ 161 0068 9342     		cmp	r3, r2
+ 162 006a 1AD0     		beq	.L10
+ 163              		.loc 1 56 9 discriminator 22 view .LVU27
+ 164 006c 1832     		adds	r2, r2, #24
+ 165 006e 9342     		cmp	r3, r2
+ 166 0070 17D0     		beq	.L10
+ 167              		.loc 1 56 9 discriminator 24 view .LVU28
+ 168 0072 1832     		adds	r2, r2, #24
+ 169 0074 9342     		cmp	r3, r2
+ 170 0076 14D0     		beq	.L10
+ 171              		.loc 1 56 9 discriminator 26 view .LVU29
+ 172 0078 1832     		adds	r2, r2, #24
+ 173 007a 9342     		cmp	r3, r2
+ 174 007c 11D0     		beq	.L10
+ 175              		.loc 1 56 9 discriminator 28 view .LVU30
+ 176 007e 1832     		adds	r2, r2, #24
+ 177 0080 9342     		cmp	r3, r2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 5
+
+
+ 178 0082 0ED0     		beq	.L10
+ 179              		.loc 1 56 9 discriminator 30 view .LVU31
+ 180 0084 1A68     		ldr	r2, [r3]
+ 181 0086 22F00402 		bic	r2, r2, #4
+ 182 008a 1A60     		str	r2, [r3]
+  57:bsp/bsp_uart.c ****     }
+  58:bsp/bsp_uart.c **** }
+ 183              		.loc 1 58 1 view .LVU32
+ 184 008c 0DE0     		b	.L7
+ 185              	.L13:
+  49:bsp/bsp_uart.c ****         (void)HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf));
+ 186              		.loc 1 49 9 is_stmt 1 view .LVU33
+ 187 008e 074C     		ldr	r4, .L14
+ 188 0090 2046     		mov	r0, r4
+ 189 0092 FFF7FEFF 		bl	HAL_UART_AbortReceive
+ 190              	.LVL3:
+  50:bsp/bsp_uart.c ****     }
+ 191              		.loc 1 50 9 view .LVU34
+  50:bsp/bsp_uart.c ****     }
+ 192              		.loc 1 50 15 is_stmt 0 view .LVU35
+ 193 0096 2422     		movs	r2, #36
+ 194 0098 0549     		ldr	r1, .L14+4
+ 195 009a 2046     		mov	r0, r4
+ 196 009c FFF7FEFF 		bl	HAL_UARTEx_ReceiveToIdle_DMA
+ 197              	.LVL4:
+ 198 00a0 B9E7     		b	.L8
+ 199              	.L10:
+  56:bsp/bsp_uart.c ****     }
+ 200              		.loc 1 56 9 discriminator 29 view .LVU36
+ 201 00a2 1A68     		ldr	r2, [r3]
+ 202 00a4 22F00802 		bic	r2, r2, #8
+ 203 00a8 1A60     		str	r2, [r3]
+ 204              	.L7:
+ 205              		.loc 1 58 1 view .LVU37
+ 206 00aa 10BD     		pop	{r4, pc}
+ 207              	.L15:
+ 208              		.align	2
+ 209              	.L14:
+ 210 00ac 00000000 		.word	huart5
+ 211 00b0 00000000 		.word	dbus_buf
+ 212 00b4 10000240 		.word	1073872912
+ 213 00b8 28000240 		.word	1073872936
+ 214              		.cfi_endproc
+ 215              	.LFE148:
+ 217              		.section	.text.HAL_UARTEx_RxEventCallback,"ax",%progbits
+ 218              		.align	1
+ 219              		.global	HAL_UARTEx_RxEventCallback
+ 220              		.syntax unified
+ 221              		.thumb
+ 222              		.thumb_func
+ 224              	HAL_UARTEx_RxEventCallback:
+ 225              	.LVL5:
+ 226              	.LFB149:
+  59:bsp/bsp_uart.c **** 
+  60:bsp/bsp_uart.c **** /* ------------------------------------------------------------------ */
+  61:bsp/bsp_uart.c **** /* UART 空闲中断回调：一帧收完由 HAL 调用                                */
+  62:bsp/bsp_uart.c **** /* ------------------------------------------------------------------ */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 6
+
+
+  63:bsp/bsp_uart.c **** void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+  64:bsp/bsp_uart.c **** {
+ 227              		.loc 1 64 1 is_stmt 1 view -0
+ 228              		.cfi_startproc
+ 229              		@ args = 0, pretend = 0, frame = 0
+ 230              		@ frame_needed = 0, uses_anonymous_args = 0
+ 231              		.loc 1 64 1 is_stmt 0 view .LVU39
+ 232 0000 08B5     		push	{r3, lr}
+ 233              	.LCFI1:
+ 234              		.cfi_def_cfa_offset 8
+ 235              		.cfi_offset 3, -8
+ 236              		.cfi_offset 14, -4
+  65:bsp/bsp_uart.c ****     if (huart->Instance == UART5)
+ 237              		.loc 1 65 5 is_stmt 1 view .LVU40
+ 238              		.loc 1 65 14 is_stmt 0 view .LVU41
+ 239 0002 0268     		ldr	r2, [r0]
+ 240              		.loc 1 65 8 view .LVU42
+ 241 0004 124B     		ldr	r3, .L23
+ 242 0006 9A42     		cmp	r2, r3
+ 243 0008 00D0     		beq	.L22
+ 244              	.LVL6:
+ 245              	.L16:
+  66:bsp/bsp_uart.c ****     {
+  67:bsp/bsp_uart.c ****         /* 只有真正打开了 D-Cache 才需要做 cache 维护。
+  68:bsp/bsp_uart.c ****          * 本工程 D-Cache 关闭（SCB->CCR.DC=0），实测此处若无条件调用
+  69:bsp/bsp_uart.c ****          * SCB_InvalidateDCache_by_Addr() 会在第一帧到达时触发
+  70:bsp/bsp_uart.c ****          * HardFault（CFSR.IMPRECISERR），导致摇杆永远没反应。 */
+  71:bsp/bsp_uart.c ****         if ((SCB->CCR & SCB_CCR_DC_Msk) != 0U)
+  72:bsp/bsp_uart.c ****         {
+  73:bsp/bsp_uart.c ****             SCB_InvalidateDCache_by_Addr((uint32_t *)dbus_buf, sizeof(dbus_buf));
+  74:bsp/bsp_uart.c ****         }
+  75:bsp/bsp_uart.c **** 
+  76:bsp/bsp_uart.c ****         if ((Size >= BSP_UART_DBUS_FRAME_LEN) && (s_dbus_rx != 0))
+  77:bsp/bsp_uart.c ****         {
+  78:bsp/bsp_uart.c ****             /* 收到多帧时取最后一帧完整数据 */
+  79:bsp/bsp_uart.c ****             s_dbus_rx(&dbus_buf[Size - BSP_UART_DBUS_FRAME_LEN], BSP_UART_DBUS_FRAME_LEN);
+  80:bsp/bsp_uart.c ****         }
+  81:bsp/bsp_uart.c **** 
+  82:bsp/bsp_uart.c ****         BSP_UART_DBusStart();   /* 普通模式，需要重新启动 */
+  83:bsp/bsp_uart.c ****     }
+  84:bsp/bsp_uart.c **** }
+ 246              		.loc 1 84 1 view .LVU43
+ 247 000a 08BD     		pop	{r3, pc}
+ 248              	.LVL7:
+ 249              	.L22:
+  71:bsp/bsp_uart.c ****         {
+ 250              		.loc 1 71 9 is_stmt 1 view .LVU44
+  71:bsp/bsp_uart.c ****         {
+ 251              		.loc 1 71 17 is_stmt 0 view .LVU45
+ 252 000c 114B     		ldr	r3, .L23+4
+ 253 000e 5B69     		ldr	r3, [r3, #20]
+  71:bsp/bsp_uart.c ****         {
+ 254              		.loc 1 71 12 view .LVU46
+ 255 0010 13F4803F 		tst	r3, #65536
+ 256 0014 0ED0     		beq	.L18
+  73:bsp/bsp_uart.c ****         }
+ 257              		.loc 1 73 13 is_stmt 1 view .LVU47
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 7
+
+
+ 258              	.LVL8:
+ 259              	.LBB18:
+ 260              	.LBI18:
+ 261              		.file 2 "Drivers/CMSIS/Include/cachel1_armv7.h"
+   1:Drivers/CMSIS/Include/cachel1_armv7.h **** /******************************************************************************
+   2:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @file     cachel1_armv7.h
+   3:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @brief    CMSIS Level 1 Cache API for Armv7-M and later
+   4:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @version  V1.0.3
+   5:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @date     17. March 2023
+   6:Drivers/CMSIS/Include/cachel1_armv7.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cachel1_armv7.h **** /*
+   8:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Copyright (c) 2020-2021 Arm Limited. All rights reserved.
+   9:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  10:Drivers/CMSIS/Include/cachel1_armv7.h ****  * SPDX-License-Identifier: Apache-2.0
+  11:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  12:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Licensed under the Apache License, Version 2.0 (the License); you may
+  13:Drivers/CMSIS/Include/cachel1_armv7.h ****  * not use this file except in compliance with the License.
+  14:Drivers/CMSIS/Include/cachel1_armv7.h ****  * You may obtain a copy of the License at
+  15:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  16:Drivers/CMSIS/Include/cachel1_armv7.h ****  * www.apache.org/licenses/LICENSE-2.0
+  17:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  18:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Unless required by applicable law or agreed to in writing, software
+  19:Drivers/CMSIS/Include/cachel1_armv7.h ****  * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+  20:Drivers/CMSIS/Include/cachel1_armv7.h ****  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  21:Drivers/CMSIS/Include/cachel1_armv7.h ****  * See the License for the specific language governing permissions and
+  22:Drivers/CMSIS/Include/cachel1_armv7.h ****  * limitations under the License.
+  23:Drivers/CMSIS/Include/cachel1_armv7.h ****  */
+  24:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  25:Drivers/CMSIS/Include/cachel1_armv7.h **** #if   defined ( __ICCARM__ )
+  26:Drivers/CMSIS/Include/cachel1_armv7.h ****   #pragma system_include         /* treat file as system include file for MISRA check */
+  27:Drivers/CMSIS/Include/cachel1_armv7.h **** #elif defined (__clang__)
+  28:Drivers/CMSIS/Include/cachel1_armv7.h ****   #pragma clang system_header    /* treat file as system include file */
+  29:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  30:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  31:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef ARM_CACHEL1_ARMV7_H
+  32:Drivers/CMSIS/Include/cachel1_armv7.h **** #define ARM_CACHEL1_ARMV7_H
+  33:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  34:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  35:Drivers/CMSIS/Include/cachel1_armv7.h ****   \ingroup  CMSIS_Core_FunctionInterface
+  36:Drivers/CMSIS/Include/cachel1_armv7.h ****   \defgroup CMSIS_Core_CacheFunctions Cache Functions
+  37:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief    Functions that configure Instruction and Data cache.
+  38:Drivers/CMSIS/Include/cachel1_armv7.h ****   @{
+  39:Drivers/CMSIS/Include/cachel1_armv7.h ****  */
+  40:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  41:Drivers/CMSIS/Include/cachel1_armv7.h **** /* Cache Size ID Register Macros */
+  42:Drivers/CMSIS/Include/cachel1_armv7.h **** #define CCSIDR_WAYS(x)         (((x) & SCB_CCSIDR_ASSOCIATIVITY_Msk) >> SCB_CCSIDR_ASSOCIATIVITY_Po
+  43:Drivers/CMSIS/Include/cachel1_armv7.h **** #define CCSIDR_SETS(x)         (((x) & SCB_CCSIDR_NUMSETS_Msk      ) >> SCB_CCSIDR_NUMSETS_Pos     
+  44:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  45:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef __SCB_DCACHE_LINE_SIZE
+  46:Drivers/CMSIS/Include/cachel1_armv7.h **** #define __SCB_DCACHE_LINE_SIZE  32U /*!< Cortex-M7 cache line size is fixed to 32 bytes (8 words). 
+  47:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  48:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  49:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef __SCB_ICACHE_LINE_SIZE
+  50:Drivers/CMSIS/Include/cachel1_armv7.h **** #define __SCB_ICACHE_LINE_SIZE  32U /*!< Cortex-M7 cache line size is fixed to 32 bytes (8 words). 
+  51:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  52:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  53:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 8
+
+
+  54:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Enable I-Cache
+  55:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns on I-Cache
+  56:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  57:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_EnableICache (void)
+  58:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  59:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  60:Drivers/CMSIS/Include/cachel1_armv7.h ****     if (SCB->CCR & SCB_CCR_IC_Msk) return;  /* return if ICache is already enabled */
+  61:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  62:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  63:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  64:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;                     /* invalidate I-Cache */
+  65:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  66:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  67:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR |=  (uint32_t)SCB_CCR_IC_Msk;  /* enable I-Cache */
+  68:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  69:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  70:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+  71:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+  72:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  73:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  74:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  75:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Disable I-Cache
+  76:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns off I-Cache
+  77:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  78:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_DisableICache (void)
+  79:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  80:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  81:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  82:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  83:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR &= ~(uint32_t)SCB_CCR_IC_Msk;  /* disable I-Cache */
+  84:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;                     /* invalidate I-Cache */
+  85:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  86:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  87:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+  88:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+  89:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  90:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  91:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  92:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Invalidate I-Cache
+  93:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates I-Cache
+  94:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  95:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateICache (void)
+  96:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  97:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  98:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  99:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 100:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;
+ 101:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 102:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 103:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 104:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 105:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 106:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 107:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 108:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   I-Cache Invalidate by address
+ 109:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates I-Cache for the given address.
+ 110:Drivers/CMSIS/Include/cachel1_armv7.h ****            I-Cache is invalidated starting from a 32 byte aligned address in 32 byte granularity.
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 9
+
+
+ 111:Drivers/CMSIS/Include/cachel1_armv7.h ****            I-Cache memory blocks which are part of given address + given size are invalidated.
+ 112:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   addr    address
+ 113:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   isize   size of memory block (in number of bytes)
+ 114:Drivers/CMSIS/Include/cachel1_armv7.h **** */
+ 115:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateICache_by_Addr (volatile void *addr, int32_t isize)
+ 116:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 117:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+ 118:Drivers/CMSIS/Include/cachel1_armv7.h ****     if ( isize > 0 ) {
+ 119:Drivers/CMSIS/Include/cachel1_armv7.h ****        int32_t op_size = isize + (((uint32_t)addr) & (__SCB_ICACHE_LINE_SIZE - 1U));
+ 120:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_ICACHE_LINE_SIZE - 1U) */;
+ 121:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 122:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 123:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 124:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 125:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->ICIMVAU = op_addr;             /* register accepts only 32byte aligned values, only bi
+ 126:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_addr += __SCB_ICACHE_LINE_SIZE;
+ 127:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_size -= __SCB_ICACHE_LINE_SIZE;
+ 128:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while ( op_size > 0 );
+ 129:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 130:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 131:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 132:Drivers/CMSIS/Include/cachel1_armv7.h ****     }
+ 133:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 134:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 135:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 136:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 137:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 138:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Enable D-Cache
+ 139:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns on D-Cache
+ 140:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 141:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_EnableDCache (void)
+ 142:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 143:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 144:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 145:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 146:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 147:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 148:Drivers/CMSIS/Include/cachel1_armv7.h ****     if (SCB->CCR & SCB_CCR_DC_Msk) return;  /* return if DCache is already enabled */
+ 149:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 150:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 151:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 152:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 153:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 154:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 155:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* invalidate D-Cache */
+ 156:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 157:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 158:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 159:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 160:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCISW = (((sets << SCB_DCISW_SET_Pos) & SCB_DCISW_SET_Msk) |
+ 161:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCISW_WAY_Pos) & SCB_DCISW_WAY_Msk)  );
+ 162:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 163:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 164:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 165:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 166:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 167:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 10
+
+
+ 168:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 169:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR |=  (uint32_t)SCB_CCR_DC_Msk;  /* enable D-Cache */
+ 170:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 171:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 172:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 173:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 174:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 175:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 176:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 177:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 178:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Disable D-Cache
+ 179:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns off D-Cache
+ 180:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 181:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_DisableDCache (void)
+ 182:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 183:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 184:Drivers/CMSIS/Include/cachel1_armv7.h ****     struct {
+ 185:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 186:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 187:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 188:Drivers/CMSIS/Include/cachel1_armv7.h ****     } locals
+ 189:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if ((defined(__GNUC__) || defined(__clang__)) && !defined(__OPTIMIZE__))
+ 190:Drivers/CMSIS/Include/cachel1_armv7.h ****        __ALIGNED(__SCB_DCACHE_LINE_SIZE)
+ 191:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 192:Drivers/CMSIS/Include/cachel1_armv7.h ****     ;
+ 193:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 194:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 195:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 196:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 197:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR &= ~(uint32_t)SCB_CCR_DC_Msk;  /* disable D-Cache */
+ 198:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 199:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 200:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if !defined(__OPTIMIZE__)
+ 201:Drivers/CMSIS/Include/cachel1_armv7.h ****       /*
+ 202:Drivers/CMSIS/Include/cachel1_armv7.h ****        * For the endless loop issue with no optimization builds.
+ 203:Drivers/CMSIS/Include/cachel1_armv7.h ****        * More details, see https://github.com/ARM-software/CMSIS_5/issues/620
+ 204:Drivers/CMSIS/Include/cachel1_armv7.h ****        *
+ 205:Drivers/CMSIS/Include/cachel1_armv7.h ****        * The issue only happens when local variables are in stack. If
+ 206:Drivers/CMSIS/Include/cachel1_armv7.h ****        * local variables are saved in general purpose register, then the function
+ 207:Drivers/CMSIS/Include/cachel1_armv7.h ****        * is OK.
+ 208:Drivers/CMSIS/Include/cachel1_armv7.h ****        *
+ 209:Drivers/CMSIS/Include/cachel1_armv7.h ****        * When local variables are in stack, after disabling the cache, flush the
+ 210:Drivers/CMSIS/Include/cachel1_armv7.h ****        * local variables cache line for data consistency.
+ 211:Drivers/CMSIS/Include/cachel1_armv7.h ****        */
+ 212:Drivers/CMSIS/Include/cachel1_armv7.h ****       /* Clean and invalidate the local variable cache. */
+ 213:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if defined(__ICCARM__)
+ 214:Drivers/CMSIS/Include/cachel1_armv7.h ****     /* As we can't align the stack to the cache line size, invalidate each of the variables */
+ 215:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.sets;
+ 216:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.ways;
+ 217:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.ccsidr;
+ 218:Drivers/CMSIS/Include/cachel1_armv7.h ****     #else
+ 219:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals;
+ 220:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 221:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 222:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 223:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 224:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 11
+
+
+ 225:Drivers/CMSIS/Include/cachel1_armv7.h ****     locals.ccsidr = SCB->CCSIDR;
+ 226:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean & invalidate D-Cache */
+ 227:Drivers/CMSIS/Include/cachel1_armv7.h ****     locals.sets = (uint32_t)(CCSIDR_SETS(locals.ccsidr));
+ 228:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 229:Drivers/CMSIS/Include/cachel1_armv7.h ****       locals.ways = (uint32_t)(CCSIDR_WAYS(locals.ccsidr));
+ 230:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 231:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCISW = (((locals.sets << SCB_DCCISW_SET_Pos) & SCB_DCCISW_SET_Msk) |
+ 232:Drivers/CMSIS/Include/cachel1_armv7.h ****                        ((locals.ways << SCB_DCCISW_WAY_Pos) & SCB_DCCISW_WAY_Msk)  );
+ 233:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 234:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 235:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 236:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (locals.ways-- != 0U);
+ 237:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(locals.sets-- != 0U);
+ 238:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 239:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 240:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 241:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 242:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 243:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 244:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 245:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 246:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Invalidate D-Cache
+ 247:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates D-Cache
+ 248:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 249:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateDCache (void)
+ 250:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 251:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 252:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 253:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 254:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 255:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 256:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 257:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 258:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 259:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 260:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 261:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* invalidate D-Cache */
+ 262:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 263:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 264:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 265:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 266:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCISW = (((sets << SCB_DCISW_SET_Pos) & SCB_DCISW_SET_Msk) |
+ 267:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCISW_WAY_Pos) & SCB_DCISW_WAY_Msk)  );
+ 268:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 269:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 270:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 271:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 272:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 273:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 274:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 275:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 276:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 277:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 278:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 279:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 280:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 281:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Clean D-Cache
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 12
+
+
+ 282:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Cleans D-Cache
+ 283:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 284:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_CleanDCache (void)
+ 285:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 286:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 287:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 288:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 289:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 290:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 291:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 292:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 293:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 294:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 295:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 296:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean D-Cache */
+ 297:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 298:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 299:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 300:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 301:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCSW = (((sets << SCB_DCCSW_SET_Pos) & SCB_DCCSW_SET_Msk) |
+ 302:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCCSW_WAY_Pos) & SCB_DCCSW_WAY_Msk)  );
+ 303:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 304:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 305:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 306:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 307:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 308:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 309:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 310:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 311:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 312:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 313:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 314:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 315:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 316:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Clean & Invalidate D-Cache
+ 317:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Cleans and Invalidates D-Cache
+ 318:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 319:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_CleanInvalidateDCache (void)
+ 320:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 321:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 322:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 323:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 324:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 325:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 326:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 327:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 328:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 329:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 330:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 331:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean & invalidate D-Cache */
+ 332:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 333:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 334:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 335:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 336:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCISW = (((sets << SCB_DCCISW_SET_Pos) & SCB_DCCISW_SET_Msk) |
+ 337:Drivers/CMSIS/Include/cachel1_armv7.h ****                        ((ways << SCB_DCCISW_WAY_Pos) & SCB_DCCISW_WAY_Msk)  );
+ 338:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 13
+
+
+ 339:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 340:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 341:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 342:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 343:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 344:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 345:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 346:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 347:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 348:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 349:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 350:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 351:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   D-Cache Invalidate by address
+ 352:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates D-Cache for the given address.
+ 353:Drivers/CMSIS/Include/cachel1_armv7.h ****            D-Cache is invalidated starting from a 32 byte aligned address in 32 byte granularity.
+ 354:Drivers/CMSIS/Include/cachel1_armv7.h ****            D-Cache memory blocks which are part of given address + given size are invalidated.
+ 355:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   addr    address
+ 356:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   dsize   size of memory block (in number of bytes)
+ 357:Drivers/CMSIS/Include/cachel1_armv7.h **** */
+ 358:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateDCache_by_Addr (volatile void *addr, int32_t dsize)
+ 262              		.loc 2 358 27 view .LVU48
+ 263              	.LBB19:
+ 359:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 360:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 361:Drivers/CMSIS/Include/cachel1_armv7.h ****     if ( dsize > 0 ) {
+ 264              		.loc 2 361 5 view .LVU49
+ 265              	.LBB20:
+ 362:Drivers/CMSIS/Include/cachel1_armv7.h ****        int32_t op_size = dsize + (((uint32_t)addr) & (__SCB_DCACHE_LINE_SIZE - 1U));
+ 266              		.loc 2 362 8 view .LVU50
+ 267              		.loc 2 362 36 is_stmt 0 view .LVU51
+ 268 0016 104A     		ldr	r2, .L23+8
+ 269              	.LVL9:
+ 363:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_DCACHE_LINE_SIZE - 1U) */;
+ 270              		.loc 2 363 7 is_stmt 1 view .LVU52
+ 364:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 365:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 271              		.loc 2 365 7 view .LVU53
+ 272              	.LBB21:
+ 273              	.LBI21:
+ 274              		.file 3 "Drivers/CMSIS/Include/cmsis_gcc.h"
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS compiler GCC header file
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V5.4.1
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     27. May 2021
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /*
+   8:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Copyright (c) 2009-2021 Arm Limited. All rights reserved.
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****  * SPDX-License-Identifier: Apache-2.0
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Licensed under the Apache License, Version 2.0 (the License); you may
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****  * not use this file except in compliance with the License.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****  * You may obtain a copy of the License at
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****  * www.apache.org/licenses/LICENSE-2.0
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 14
+
+
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Unless required by applicable law or agreed to in writing, software
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****  * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****  * See the License for the specific language governing permissions and
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****  * limitations under the License.
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  24:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  25:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  26:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  27:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  28:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  29:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  30:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  31:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  32:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Fallback for __has_builtin */
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __has_builtin
+  36:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __has_builtin(x) (0)
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** /* CMSIS compiler specific defines */
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __ASM
+  41:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __ASM                                  __asm
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __INLINE
+  44:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __INLINE                               inline
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __STATIC_INLINE
+  47:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __STATIC_INLINE                        static inline
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  49:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __STATIC_FORCEINLINE
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __STATIC_FORCEINLINE                   __attribute__((always_inline)) static inline
+  51:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __NO_RETURN
+  53:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __NO_RETURN                            __attribute__((__noreturn__))
+  54:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  55:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __USED
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __USED                                 __attribute__((used))
+  57:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __WEAK
+  59:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __WEAK                                 __attribute__((weak))
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED
+  62:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED                               __attribute__((packed, aligned(1)))
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_STRUCT
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_STRUCT                        struct __attribute__((packed, aligned(1)))
+  66:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  67:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_UNION
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_UNION                         union __attribute__((packed, aligned(1)))
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32        /* deprecated */
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  72:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  73:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  74:Drivers/CMSIS/Include/cmsis_gcc.h ****   struct __attribute__((packed)) T_UINT32 { uint32_t v; };
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 15
+
+
+  75:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  76:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32(x)                  (((struct T_UINT32 *)(x))->v)
+  77:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  78:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_WRITE
+  79:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  80:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  81:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  82:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_WRITE { uint16_t v; };
+  83:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  84:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_WRITE(addr, val)    (void)((((struct T_UINT16_WRITE *)(void *)(addr))-
+  85:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  86:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_READ
+  87:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  88:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  89:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  90:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_READ { uint16_t v; };
+  91:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  92:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_READ(addr)          (((const struct T_UINT16_READ *)(const void *)(add
+  93:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  94:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32_WRITE
+  95:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  96:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  97:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  98:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT32_WRITE { uint32_t v; };
+  99:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+ 100:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32_WRITE(addr, val)    (void)((((struct T_UINT32_WRITE *)(void *)(addr))-
+ 101:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 102:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32_READ
+ 103:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+ 104:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+ 105:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+ 106:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT32_READ { uint32_t v; };
+ 107:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+ 108:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32_READ(addr)          (((const struct T_UINT32_READ *)(const void *)(add
+ 109:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 110:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __ALIGNED
+ 111:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __ALIGNED(x)                           __attribute__((aligned(x)))
+ 112:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 113:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __RESTRICT
+ 114:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __RESTRICT                             __restrict
+ 115:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 116:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __COMPILER_BARRIER
+ 117:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __COMPILER_BARRIER()                   __ASM volatile("":::"memory")
+ 118:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 119:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 120:Drivers/CMSIS/Include/cmsis_gcc.h **** /* #########################  Startup and Lowlevel Init  ######################## */
+ 121:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 122:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __PROGRAM_START
+ 123:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 124:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 125:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Initializes data and bss sections
+ 126:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details This default implementations initialized all data and additional bss
+ 127:Drivers/CMSIS/Include/cmsis_gcc.h ****            sections relying on .copy.table and .zero.table specified properly
+ 128:Drivers/CMSIS/Include/cmsis_gcc.h ****            in the used linker script.
+ 129:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 130:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 131:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE __NO_RETURN void __cmsis_start(void)
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 16
+
+
+ 132:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 133:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern void _start(void) __NO_RETURN;
+ 134:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 135:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ 136:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t const* src;
+ 137:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
+ 138:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
+ 139:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __copy_table_t;
+ 140:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 141:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ 142:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
+ 143:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
+ 144:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __zero_table_t;
+ 145:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 146:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __copy_table_t __copy_table_start__;
+ 147:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __copy_table_t __copy_table_end__;
+ 148:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __zero_table_t __zero_table_start__;
+ 149:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __zero_table_t __zero_table_end__;
+ 150:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 151:Drivers/CMSIS/Include/cmsis_gcc.h ****   for (__copy_table_t const* pTable = &__copy_table_start__; pTable < &__copy_table_end__; ++pTable
+ 152:Drivers/CMSIS/Include/cmsis_gcc.h ****     for(uint32_t i=0u; i<pTable->wlen; ++i) {
+ 153:Drivers/CMSIS/Include/cmsis_gcc.h ****       pTable->dest[i] = pTable->src[i];
+ 154:Drivers/CMSIS/Include/cmsis_gcc.h ****     }
+ 155:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
+ 156:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 157:Drivers/CMSIS/Include/cmsis_gcc.h ****   for (__zero_table_t const* pTable = &__zero_table_start__; pTable < &__zero_table_end__; ++pTable
+ 158:Drivers/CMSIS/Include/cmsis_gcc.h ****     for(uint32_t i=0u; i<pTable->wlen; ++i) {
+ 159:Drivers/CMSIS/Include/cmsis_gcc.h ****       pTable->dest[i] = 0u;
+ 160:Drivers/CMSIS/Include/cmsis_gcc.h ****     }
+ 161:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
+ 162:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 163:Drivers/CMSIS/Include/cmsis_gcc.h ****   _start();
+ 164:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 165:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 166:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __PROGRAM_START           __cmsis_start
+ 167:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 168:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 169:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __INITIAL_SP
+ 170:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __INITIAL_SP              __StackTop
+ 171:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 172:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 173:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __STACK_LIMIT
+ 174:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __STACK_LIMIT             __StackLimit
+ 175:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 176:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 177:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __VECTOR_TABLE
+ 178:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __VECTOR_TABLE            __Vectors
+ 179:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 180:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 181:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __VECTOR_TABLE_ATTRIBUTE
+ 182:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __VECTOR_TABLE_ATTRIBUTE  __attribute__((used, section(".vectors")))
+ 183:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 184:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 185:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+ 186:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __STACK_SEAL
+ 187:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __STACK_SEAL              __StackSeal
+ 188:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 17
+
+
+ 189:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 190:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __TZ_STACK_SEAL_SIZE
+ 191:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __TZ_STACK_SEAL_SIZE      8U
+ 192:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 193:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 194:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __TZ_STACK_SEAL_VALUE
+ 195:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __TZ_STACK_SEAL_VALUE     0xFEF5EDA5FEF5EDA5ULL
+ 196:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 197:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 198:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 199:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __TZ_set_STACKSEAL_S (uint32_t* stackTop) {
+ 200:Drivers/CMSIS/Include/cmsis_gcc.h ****   *((uint64_t *)stackTop) = __TZ_STACK_SEAL_VALUE;
+ 201:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 202:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 203:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 204:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 205:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ##########################  Core Instruction Access  ######################### */
+ 206:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \defgroup CMSIS_Core_InstructionInterface CMSIS Core Instruction Interface
+ 207:Drivers/CMSIS/Include/cmsis_gcc.h ****   Access to dedicated instructions
+ 208:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+ 209:Drivers/CMSIS/Include/cmsis_gcc.h **** */
+ 210:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 211:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Define macros for porting to both thumb1 and thumb2.
+ 212:Drivers/CMSIS/Include/cmsis_gcc.h ****  * For thumb1, use low register (r0-r7), specified by constraint "l"
+ 213:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Otherwise, use general registers, specified by constraint "r" */
+ 214:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined (__thumb__) && !defined (__thumb2__)
+ 215:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_OUT_REG(r) "=l" (r)
+ 216:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_RW_REG(r) "+l" (r)
+ 217:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_USE_REG(r) "l" (r)
+ 218:Drivers/CMSIS/Include/cmsis_gcc.h **** #else
+ 219:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_OUT_REG(r) "=r" (r)
+ 220:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_RW_REG(r) "+r" (r)
+ 221:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_USE_REG(r) "r" (r)
+ 222:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 223:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 224:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 225:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   No Operation
+ 226:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details No Operation does nothing. This instruction can be used for code alignment purposes.
+ 227:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 228:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __NOP()                             __ASM volatile ("nop")
+ 229:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 230:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 231:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Wait For Interrupt
+ 232:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Wait For Interrupt is a hint instruction that suspends execution until one of a number o
+ 233:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 234:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __WFI()                             __ASM volatile ("wfi":::"memory")
+ 235:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 236:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 237:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 238:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Wait For Event
+ 239:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Wait For Event is a hint instruction that permits the processor to enter
+ 240:Drivers/CMSIS/Include/cmsis_gcc.h ****            a low-power state until one of a number of events occurs.
+ 241:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 242:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __WFE()                             __ASM volatile ("wfe":::"memory")
+ 243:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 244:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 245:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 18
+
+
+ 246:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Send Event
+ 247:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Send Event is a hint instruction. It causes an event to be signaled to the CPU.
+ 248:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 249:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __SEV()                             __ASM volatile ("sev")
+ 250:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 251:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 252:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 253:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Instruction Synchronization Barrier
+ 254:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Instruction Synchronization Barrier flushes the pipeline in the processor,
+ 255:Drivers/CMSIS/Include/cmsis_gcc.h ****            so that all instructions following the ISB are fetched from cache or memory,
+ 256:Drivers/CMSIS/Include/cmsis_gcc.h ****            after the instruction has been completed.
+ 257:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 258:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __ISB(void)
+ 259:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("isb 0xF":::"memory");
+ 261:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 262:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 263:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 264:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 265:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Data Synchronization Barrier
+ 266:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Acts as a special kind of Data Memory Barrier.
+ 267:Drivers/CMSIS/Include/cmsis_gcc.h ****            It completes when all explicit memory accesses before this instruction complete.
+ 268:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 269:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __DSB(void)
+ 275              		.loc 3 269 27 view .LVU54
+ 276              	.LBB22:
+ 270:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 271:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("dsb 0xF":::"memory");
+ 277              		.loc 3 271 3 view .LVU55
+ 278              		.syntax unified
+ 279              	@ 271 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 280 0018 BFF34F8F 		dsb 0xF
+ 281              	@ 0 "" 2
+ 282              		.thumb
+ 283              		.syntax unified
+ 284              	.LBE22:
+ 285              	.LBE21:
+ 362:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_DCACHE_LINE_SIZE - 1U) */;
+ 286              		.loc 2 362 16 is_stmt 0 view .LVU56
+ 287 001c 2423     		movs	r3, #36
+ 288              	.LVL10:
+ 289              	.L19:
+ 366:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 367:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 290              		.loc 2 367 7 is_stmt 1 view .LVU57
+ 368:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCIMVAC = op_addr;             /* register accepts only 32byte aligned values, only bi
+ 291              		.loc 2 368 9 view .LVU58
+ 292              		.loc 2 368 22 is_stmt 0 view .LVU59
+ 293 001e 0D48     		ldr	r0, .L23+4
+ 294 0020 C0F85C22 		str	r2, [r0, #604]
+ 369:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_addr += __SCB_DCACHE_LINE_SIZE;
+ 295              		.loc 2 369 9 is_stmt 1 view .LVU60
+ 296              		.loc 2 369 17 is_stmt 0 view .LVU61
+ 297 0024 2032     		adds	r2, r2, #32
+ 298              	.LVL11:
+ 370:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_size -= __SCB_DCACHE_LINE_SIZE;
+ 299              		.loc 2 370 9 is_stmt 1 view .LVU62
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 19
+
+
+ 300              		.loc 2 370 17 is_stmt 0 view .LVU63
+ 301 0026 203B     		subs	r3, r3, #32
+ 302              	.LVL12:
+ 371:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while ( op_size > 0 );
+ 303              		.loc 2 371 25 is_stmt 1 discriminator 1 view .LVU64
+ 304 0028 002B     		cmp	r3, #0
+ 305 002a F8DC     		bgt	.L19
+ 372:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 373:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 306              		.loc 2 373 7 view .LVU65
+ 307              	.LBB23:
+ 308              	.LBI23:
+ 269:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 309              		.loc 3 269 27 view .LVU66
+ 310              	.LBB24:
+ 311              		.loc 3 271 3 view .LVU67
+ 312              		.syntax unified
+ 313              	@ 271 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 314 002c BFF34F8F 		dsb 0xF
+ 315              	@ 0 "" 2
+ 316              		.thumb
+ 317              		.syntax unified
+ 318              	.LBE24:
+ 319              	.LBE23:
+ 374:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 320              		.loc 2 374 7 view .LVU68
+ 321              	.LBB25:
+ 322              	.LBI25:
+ 258:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 323              		.loc 3 258 27 view .LVU69
+ 324              	.LBB26:
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 325              		.loc 3 260 3 view .LVU70
+ 326              		.syntax unified
+ 327              	@ 260 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 328 0030 BFF36F8F 		isb 0xF
+ 329              	@ 0 "" 2
+ 330              	.LVL13:
+ 331              		.thumb
+ 332              		.syntax unified
+ 333              	.L18:
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 334              		.loc 3 260 3 is_stmt 0 view .LVU71
+ 335              	.LBE26:
+ 336              	.LBE25:
+ 337              	.LBE20:
+ 338              	.LBE19:
+ 339              	.LBE18:
+  76:bsp/bsp_uart.c ****         {
+ 340              		.loc 1 76 9 is_stmt 1 view .LVU72
+  76:bsp/bsp_uart.c ****         {
+ 341              		.loc 1 76 12 is_stmt 0 view .LVU73
+ 342 0034 1129     		cmp	r1, #17
+ 343 0036 08D9     		bls	.L20
+  76:bsp/bsp_uart.c ****         {
+ 344              		.loc 1 76 61 discriminator 1 view .LVU74
+ 345 0038 084B     		ldr	r3, .L23+12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 20
+
+
+ 346 003a 1B68     		ldr	r3, [r3]
+  76:bsp/bsp_uart.c ****         {
+ 347              		.loc 1 76 47 discriminator 1 view .LVU75
+ 348 003c 2BB1     		cbz	r3, .L20
+  79:bsp/bsp_uart.c ****         }
+ 349              		.loc 1 79 13 is_stmt 1 view .LVU76
+  79:bsp/bsp_uart.c ****         }
+ 350              		.loc 1 79 38 is_stmt 0 view .LVU77
+ 351 003e A1F11200 		sub	r0, r1, #18
+  79:bsp/bsp_uart.c ****         }
+ 352              		.loc 1 79 13 view .LVU78
+ 353 0042 1221     		movs	r1, #18
+ 354              	.LVL14:
+  79:bsp/bsp_uart.c ****         }
+ 355              		.loc 1 79 13 view .LVU79
+ 356 0044 044A     		ldr	r2, .L23+8
+ 357 0046 1044     		add	r0, r0, r2
+ 358 0048 9847     		blx	r3
+ 359              	.LVL15:
+ 360              	.L20:
+  82:bsp/bsp_uart.c ****     }
+ 361              		.loc 1 82 9 is_stmt 1 view .LVU80
+ 362 004a FFF7FEFF 		bl	BSP_UART_DBusStart
+ 363              	.LVL16:
+ 364              		.loc 1 84 1 is_stmt 0 view .LVU81
+ 365 004e DCE7     		b	.L16
+ 366              	.L24:
+ 367              		.align	2
+ 368              	.L23:
+ 369 0050 00500040 		.word	1073762304
+ 370 0054 00ED00E0 		.word	-536810240
+ 371 0058 00000000 		.word	dbus_buf
+ 372 005c 00000000 		.word	s_dbus_rx
+ 373              		.cfi_endproc
+ 374              	.LFE149:
+ 376              		.section	.text.HAL_UART_ErrorCallback,"ax",%progbits
+ 377              		.align	1
+ 378              		.global	HAL_UART_ErrorCallback
+ 379              		.syntax unified
+ 380              		.thumb
+ 381              		.thumb_func
+ 383              	HAL_UART_ErrorCallback:
+ 384              	.LVL17:
+ 385              	.LFB150:
+  85:bsp/bsp_uart.c **** 
+  86:bsp/bsp_uart.c **** /* ------------------------------------------------------------------ */
+  87:bsp/bsp_uart.c **** /* UART 错误回调（ORE/FE/NE/PE）                                        */
+  88:bsp/bsp_uart.c **** /*   HAL 一旦报错就会把接收整个拆掉（关 IDLE/DMA），如果这里不重开，      
+  89:bsp/bsp_uart.c **** /*   接收链会永久静默 —— 这正是“摇杆怎么推都没反应”的典型死法之�
+  90:bsp/bsp_uart.c **** /* ------------------------------------------------------------------ */
+  91:bsp/bsp_uart.c **** void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+  92:bsp/bsp_uart.c **** {
+ 386              		.loc 1 92 1 is_stmt 1 view -0
+ 387              		.cfi_startproc
+ 388              		@ args = 0, pretend = 0, frame = 0
+ 389              		@ frame_needed = 0, uses_anonymous_args = 0
+  93:bsp/bsp_uart.c ****     if (huart->Instance == UART5)
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 21
+
+
+ 390              		.loc 1 93 5 view .LVU83
+ 391              		.loc 1 93 14 is_stmt 0 view .LVU84
+ 392 0000 0268     		ldr	r2, [r0]
+ 393              		.loc 1 93 8 view .LVU85
+ 394 0002 0C4B     		ldr	r3, .L33
+ 395 0004 9A42     		cmp	r2, r3
+ 396 0006 00D0     		beq	.L32
+ 397 0008 7047     		bx	lr
+ 398              	.L32:
+  92:bsp/bsp_uart.c ****     if (huart->Instance == UART5)
+ 399              		.loc 1 92 1 view .LVU86
+ 400 000a 10B5     		push	{r4, lr}
+ 401              	.LCFI2:
+ 402              		.cfi_def_cfa_offset 8
+ 403              		.cfi_offset 4, -8
+ 404              		.cfi_offset 14, -4
+ 405 000c 0446     		mov	r4, r0
+  94:bsp/bsp_uart.c ****     {
+  95:bsp/bsp_uart.c ****         if (s_dbus_err != 0)
+ 406              		.loc 1 95 9 is_stmt 1 view .LVU87
+ 407              		.loc 1 95 24 is_stmt 0 view .LVU88
+ 408 000e 0A4B     		ldr	r3, .L33+4
+ 409 0010 1B68     		ldr	r3, [r3]
+ 410              		.loc 1 95 12 view .LVU89
+ 411 0012 03B1     		cbz	r3, .L27
+  96:bsp/bsp_uart.c ****         {
+  97:bsp/bsp_uart.c ****             s_dbus_err();                 /* 模块层自己记数（RC_ErrCnt） */
+ 412              		.loc 1 97 13 is_stmt 1 view .LVU90
+ 413 0014 9847     		blx	r3
+ 414              	.LVL18:
+ 415              	.L27:
+  98:bsp/bsp_uart.c ****         }
+  99:bsp/bsp_uart.c **** 
+ 100:bsp/bsp_uart.c ****         __HAL_UART_CLEAR_OREFLAG(huart);
+ 416              		.loc 1 100 9 view .LVU91
+ 417 0016 2368     		ldr	r3, [r4]
+ 418 0018 0822     		movs	r2, #8
+ 419 001a 1A62     		str	r2, [r3, #32]
+ 101:bsp/bsp_uart.c ****         __HAL_UART_CLEAR_FEFLAG(huart);
+ 420              		.loc 1 101 9 view .LVU92
+ 421 001c 2368     		ldr	r3, [r4]
+ 422 001e 0222     		movs	r2, #2
+ 423 0020 1A62     		str	r2, [r3, #32]
+ 102:bsp/bsp_uart.c ****         __HAL_UART_CLEAR_NEFLAG(huart);
+ 424              		.loc 1 102 9 view .LVU93
+ 425 0022 2368     		ldr	r3, [r4]
+ 426 0024 0422     		movs	r2, #4
+ 427 0026 1A62     		str	r2, [r3, #32]
+ 103:bsp/bsp_uart.c ****         __HAL_UART_CLEAR_PEFLAG(huart);
+ 428              		.loc 1 103 9 view .LVU94
+ 429 0028 2368     		ldr	r3, [r4]
+ 430 002a 0122     		movs	r2, #1
+ 431 002c 1A62     		str	r2, [r3, #32]
+ 104:bsp/bsp_uart.c ****         BSP_UART_DBusStart();
+ 432              		.loc 1 104 9 view .LVU95
+ 433 002e FFF7FEFF 		bl	BSP_UART_DBusStart
+ 434              	.LVL19:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 22
+
+
+ 105:bsp/bsp_uart.c ****     }
+ 106:bsp/bsp_uart.c **** }
+ 435              		.loc 1 106 1 is_stmt 0 view .LVU96
+ 436 0032 10BD     		pop	{r4, pc}
+ 437              	.LVL20:
+ 438              	.L34:
+ 439              		.loc 1 106 1 view .LVU97
+ 440              		.align	2
+ 441              	.L33:
+ 442 0034 00500040 		.word	1073762304
+ 443 0038 00000000 		.word	s_dbus_err
+ 444              		.cfi_endproc
+ 445              	.LFE150:
+ 447              		.section	.bss.s_dbus_err,"aw",%nobits
+ 448              		.align	2
+ 451              	s_dbus_err:
+ 452 0000 00000000 		.space	4
+ 453              		.section	.bss.s_dbus_rx,"aw",%nobits
+ 454              		.align	2
+ 457              	s_dbus_rx:
+ 458 0000 00000000 		.space	4
+ 459              		.section	.dma_buffer,"aw"
+ 460              		.align	5
+ 463              	dbus_buf:
+ 464 0000 00000000 		.space	36
+ 464      00000000 
+ 464      00000000 
+ 464      00000000 
+ 464      00000000 
+ 465              		.text
+ 466              	.Letext0:
+ 467              		.file 4 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 468              		.file 5 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 469              		.file 6 "Drivers/CMSIS/Include/core_cm7.h"
+ 470              		.file 7 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 471              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 472              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_dma.h"
+ 473              		.file 10 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h"
+ 474              		.file 11 "bsp/bsp_uart.h"
+ 475              		.file 12 "Core/Inc/usart.h"
+ 476              		.file 13 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s 			page 23
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 bsp_uart.c
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:20     .text.BSP_UART_DBusRegisterRx:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:26     .text.BSP_UART_DBusRegisterRx:00000000 BSP_UART_DBusRegisterRx
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:43     .text.BSP_UART_DBusRegisterRx:00000008 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:457    .bss.s_dbus_rx:00000000 s_dbus_rx
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:48     .text.BSP_UART_DBusRegisterError:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:54     .text.BSP_UART_DBusRegisterError:00000000 BSP_UART_DBusRegisterError
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:71     .text.BSP_UART_DBusRegisterError:00000008 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:451    .bss.s_dbus_err:00000000 s_dbus_err
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:76     .text.BSP_UART_DBusStart:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:82     .text.BSP_UART_DBusStart:00000000 BSP_UART_DBusStart
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:210    .text.BSP_UART_DBusStart:000000ac $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:463    .dma_buffer:00000000 dbus_buf
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:218    .text.HAL_UARTEx_RxEventCallback:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:224    .text.HAL_UARTEx_RxEventCallback:00000000 HAL_UARTEx_RxEventCallback
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:369    .text.HAL_UARTEx_RxEventCallback:00000050 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:377    .text.HAL_UART_ErrorCallback:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:383    .text.HAL_UART_ErrorCallback:00000000 HAL_UART_ErrorCallback
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:442    .text.HAL_UART_ErrorCallback:00000034 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:448    .bss.s_dbus_err:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:454    .bss.s_dbus_rx:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccv0psZ5.s:460    .dma_buffer:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_UARTEx_ReceiveToIdle_DMA
+HAL_UART_AbortReceive
+huart5

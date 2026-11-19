@@ -1,0 +1,109 @@
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccbekug7.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"bsp_time.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "bsp/bsp_time.c"
+  19              		.section	.text.BSP_Now,"ax",%progbits
+  20              		.align	1
+  21              		.global	BSP_Now
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	BSP_Now:
+  27              	.LFB146:
+   1:bsp/bsp_time.c **** /**
+   2:bsp/bsp_time.c ****  * @file    bsp_time.c
+   3:bsp/bsp_time.c ****  * @brief   毫秒时间基准（上层不再直接调 HAL_GetTick / HAL_Delay）
+   4:bsp/bsp_time.c ****  */
+   5:bsp/bsp_time.c **** #include "main.h"
+   6:bsp/bsp_time.c **** #include "bsp_time.h"
+   7:bsp/bsp_time.c **** 
+   8:bsp/bsp_time.c **** uint32_t BSP_Now(void)
+   9:bsp/bsp_time.c **** {
+  28              		.loc 1 9 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 08B5     		push	{r3, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 3, -8
+  36              		.cfi_offset 14, -4
+  10:bsp/bsp_time.c ****     return HAL_GetTick();
+  37              		.loc 1 10 5 view .LVU1
+  38              		.loc 1 10 12 is_stmt 0 view .LVU2
+  39 0002 FFF7FEFF 		bl	HAL_GetTick
+  40              	.LVL0:
+  11:bsp/bsp_time.c **** }
+  41              		.loc 1 11 1 view .LVU3
+  42 0006 08BD     		pop	{r3, pc}
+  43              		.cfi_endproc
+  44              	.LFE146:
+  46              		.section	.text.BSP_DelayMs,"ax",%progbits
+  47              		.align	1
+  48              		.global	BSP_DelayMs
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccbekug7.s 			page 2
+
+
+  49              		.syntax unified
+  50              		.thumb
+  51              		.thumb_func
+  53              	BSP_DelayMs:
+  54              	.LVL1:
+  55              	.LFB147:
+  12:bsp/bsp_time.c **** 
+  13:bsp/bsp_time.c **** void BSP_DelayMs(uint32_t ms)
+  14:bsp/bsp_time.c **** {
+  56              		.loc 1 14 1 is_stmt 1 view -0
+  57              		.cfi_startproc
+  58              		@ args = 0, pretend = 0, frame = 0
+  59              		@ frame_needed = 0, uses_anonymous_args = 0
+  60              		.loc 1 14 1 is_stmt 0 view .LVU5
+  61 0000 08B5     		push	{r3, lr}
+  62              	.LCFI1:
+  63              		.cfi_def_cfa_offset 8
+  64              		.cfi_offset 3, -8
+  65              		.cfi_offset 14, -4
+  15:bsp/bsp_time.c ****     HAL_Delay(ms);
+  66              		.loc 1 15 5 is_stmt 1 view .LVU6
+  67 0002 FFF7FEFF 		bl	HAL_Delay
+  68              	.LVL2:
+  16:bsp/bsp_time.c **** }
+  69              		.loc 1 16 1 is_stmt 0 view .LVU7
+  70 0006 08BD     		pop	{r3, pc}
+  71              		.cfi_endproc
+  72              	.LFE147:
+  74              		.text
+  75              	.Letext0:
+  76              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+  77              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+  78              		.file 4 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccbekug7.s 			page 3
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 bsp_time.c
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccbekug7.s:20     .text.BSP_Now:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccbekug7.s:26     .text.BSP_Now:00000000 BSP_Now
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccbekug7.s:47     .text.BSP_DelayMs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccbekug7.s:53     .text.BSP_DelayMs:00000000 BSP_DelayMs
+
+UNDEFINED SYMBOLS
+HAL_GetTick
+HAL_Delay
