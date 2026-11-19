@@ -10,20 +10,14 @@
   */
 
 #include "ins.h"
-#include "spi.h"
 #include "main.h"
+#include "bsp_spi.h"
 #include <string.h>
 #include <math.h>
 
-/* ======================= 引脚 ======================= */
-#define INS_CS_PORT        GPIOC
-#define INS_CS_ACC_PIN     GPIO_PIN_0
-#define INS_CS_GYRO_PIN    GPIO_PIN_3
-
-#define INS_CS_ACC_LOW()   HAL_GPIO_WritePin(INS_CS_PORT, INS_CS_ACC_PIN,  GPIO_PIN_RESET)
-#define INS_CS_ACC_HIGH()  HAL_GPIO_WritePin(INS_CS_PORT, INS_CS_ACC_PIN,  GPIO_PIN_SET)
-#define INS_CS_GYRO_LOW()  HAL_GPIO_WritePin(INS_CS_PORT, INS_CS_GYRO_PIN, GPIO_PIN_RESET)
-#define INS_CS_GYRO_HIGH() HAL_GPIO_WritePin(INS_CS_PORT, INS_CS_GYRO_PIN, GPIO_PIN_SET)
+/* ======================= 引脚 =======================
+ * 片选/模拟开关等片上细节已下沉到 bsp/bsp_spi.c（2026-11-19 P2d），
+ * 这里只保留"用哪个器件"的语义。 */
 
 /* dev: 0 = 加速度计, 1 = 陀螺 */
 #define DEV_ACC   0u
@@ -221,11 +215,7 @@ static void ins_ahrs_step(float gx, float gy, float gz, float ax, float ay, floa
 
 static void ins_cs(uint8_t dev, uint8_t low)
 {
-    if (dev == DEV_ACC) {
-        if (low) INS_CS_ACC_LOW(); else INS_CS_ACC_HIGH();
-    } else {
-        if (low) INS_CS_GYRO_LOW(); else INS_CS_GYRO_HIGH();
-    }
+    BSP_IMU_Cs((dev == DEV_ACC) ? BSP_IMU_DEV_ACC : BSP_IMU_DEV_GYRO, low);
 }
 
 /* 读寄存器时要丢弃的哑字节个数（上电后由 ins_detect_skip() 实测校准）
@@ -248,7 +238,7 @@ static uint8_t ins_read_at(uint8_t dev, uint8_t skip, uint8_t reg)
     tx[0] = (uint8_t)(reg | 0x80u);          /* bit7=1 → 读 */
 
     ins_cs(dev, 1);
-    HAL_SPI_TransmitReceive(&hspi2, tx, rx, n, 50);
+    (void)BSP_IMU_Transfer(tx, rx, n);
     ins_cs(dev, 0);
 
     return rx[1u + skip];
@@ -273,10 +263,10 @@ static uint8_t ins_read(uint8_t dev, uint8_t reg, uint8_t *buf, uint16_t len)
     tx[0] = (uint8_t)(reg | 0x80u);          /* bit7=1 → 读 */
 
     ins_cs(dev, 1);
-    HAL_StatusTypeDef st = HAL_SPI_TransmitReceive(&hspi2, tx, rx, n, 50);
+    uint8_t st = BSP_IMU_Transfer(tx, rx, n);
     ins_cs(dev, 0);
 
-    if (st != HAL_OK) return 0u;             /* SPI 失败：数据不可信 */
+    if (st == 0u) return 0u;                 /* SPI 失败：数据不可信 */
 
     for (i = 0; i < len; i++) {
         buf[i] = rx[1u + skip + i];
@@ -291,7 +281,7 @@ static void ins_write(uint8_t dev, uint8_t reg, uint8_t val)
     tx[1] = val;
 
     ins_cs(dev, 1);
-    HAL_SPI_Transmit(&hspi2, tx, 2, 20);
+    (void)BSP_IMU_Send(tx, 2);
     ins_cs(dev, 0);
 }
 
@@ -354,25 +344,11 @@ static void ins_detect_skip(void)
   * @note   PC0/PC3 在 CubeMX 里没配成输出（gpio.c 只管了 PD2），
   *         不在这里配的话片选是悬空的，芯片永远不会被选中 → 读回 0x00。
   */
-static void ins_gpio_init(void)
+/* 当前被 INS_Init 里的“临时停用”注释掉；保留函数避免以后要用时重写 */
+static void __attribute__((unused)) ins_gpio_init(void)
 {
-    GPIO_InitTypeDef g = {0};
-
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_SYSCFG_CLK_ENABLE();
-
-    /* 先把电平置高（未选中），再切成输出，避免切换瞬间误选通 */
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0 | GPIO_PIN_3, GPIO_PIN_SET);
-
-    g.Pin   = GPIO_PIN_0 | GPIO_PIN_3;
-    g.Mode  = GPIO_MODE_OUTPUT_PP;
-    g.Pull  = GPIO_NOPULL;
-    g.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(GPIOC, &g);
-
-    /* H7 的 PC2_C/PC3_C 与 PC2/PC3 之间有模拟开关，不闭合则引脚不通 */
-    HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC2, SYSCFG_SWITCH_PC2_CLOSE);
-    HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC3, SYSCFG_SWITCH_PC3_CLOSE);
+    /* 片选 GPIO + H7 模拟开关：实现在 bsp_spi.c */
+    BSP_IMU_Init();
 }
 
 static void ins_acc_init(void)
@@ -380,7 +356,7 @@ static void ins_acc_init(void)
     uint8_t id = 0;
 
     /* 上电默认 I2C 模式：CS 拉高再拉低，产生上升沿后切到 SPI */
-    INS_CS_ACC_HIGH();
+    BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
     HAL_Delay(2);
 
     /* 第一次读多半读到 0xFF/0x00（正在切模式），读两次更稳 */
@@ -421,7 +397,7 @@ static void ins_gyro_init(void)
 {
     uint8_t id = 0;
 
-    INS_CS_GYRO_HIGH();
+    BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
     HAL_Delay(2);
 
     ins_read(DEV_GYRO, GYRO_CHIP_ID, &id, 1);
@@ -469,8 +445,8 @@ void INS_Init(void)
         s_sum[i]     = 0.0f;
     }
 
-    INS_CS_ACC_HIGH();
-    INS_CS_GYRO_HIGH();
+    BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
+    BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
     /* ins_gpio_init();   临时停用：验证 PC0/PC3 是否与 CAN2 收发器共用引脚 */
     HAL_Delay(10);
 
