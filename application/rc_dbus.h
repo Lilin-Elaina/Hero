@@ -358,7 +358,7 @@ extern float RC_WheelOut[];
 
 void  RC_Init(void);                 /* 启动 DBUS 接收（UART5 + DMA + IDLE） */
 void  RC_StartReceive(void);         /* 重启一次 DMA 接收 */
-void  RC_Decode(uint8_t *buf);       /* 18 字节帧解析 */
+void  RC_Decode(const uint8_t *buf);       /* 18 字节帧解析（只读，不修改缓冲） */
 void  RC_SwitchAutoName(void);       /* 拨杆位域自动判定（在 RC_Decode 内被调用） */
 uint8_t RC_IsOnline(uint32_t now_ms);/* 失联检测 */
 float RC_Norm(uint16_t ch);          /* 归一化函数，摇杆 → -1.0~+1.0（含死区） */

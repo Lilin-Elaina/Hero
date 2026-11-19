@@ -12,6 +12,7 @@
 #include "ins.h"
 #include "fdcan.h"
 #include "bsp_can.h"
+#include "bsp_uart.h"
 #include <string.h>
 #include <math.h>
 
@@ -28,44 +29,34 @@
 #include "ins.h"
 #include "fdcan.h"
 #include "bsp_can.h"
+#include "bsp_uart.h"
 #include <string.h>
 #include <math.h>
 
 RC_TypeDef RC_Data = {0};
 
-/* DMA 接收缓冲：2 帧容量
- *
- * ★ 必须放在 DMA 可访问的内存里：STM32H7 的 DTCM(0x20000000) 只有 Cortex-M7
- *   的 D-bus 能访问，DMA1/DMA2 往 DTCM 写会在第一个字节就报传输错误。
- *   本工程 .data/.bss 都在 DTCMRAM，所以这里显式指定 .dma_buffer 段，
- *   该段在 STM32H723xG_flash.ld 里被链接到 RAM_D1(0x24000000)。
- *   32 字节对齐是为了将来若打开 D-Cache 仍能安全做 cache 维护。 */
-#if defined(__GNUC__)
-static uint8_t dbus_buf[DBUS_FRAME_LEN * 2]
-    __attribute__((section(".dma_buffer"), aligned(32)));
-#else
-static uint8_t dbus_buf[DBUS_FRAME_LEN * 2];
-#endif
-
+/* UART/DMA 细节已下沉到 bsp/bsp_uart.c（2026-11-19 P2c）：
+ *   - DMA 缓冲、IDLE 判定、错误重开、D-Cache 维护都在 bsp；
+ *   - 这里只注册“收到一帧怎么办”。
+ * 名字保留 RC_StartReceive，是为了让外部重启接收的调用点不变。 */
 void RC_StartReceive(void)
-{//启动dbus数据的idle dma接收中断
-    /* 上一帧若因溢出/噪声卡在 ORE，不清掉就再也收不到新数据 */
-    __HAL_UART_CLEAR_OREFLAG(&huart5);
+{
+    BSP_UART_DBusStart();
+}
 
-    /* DMA 普通模式，靠串口总线空闲（IDLE）判定一帧结束 */
-    if (HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf)) != HAL_OK)
+/* bsp 收到一帧 18 字节后回调到这里 */
+static void DBUS_OnRx(const uint8_t *data, uint16_t len)
+{
+    if (len >= DBUS_FRAME_LEN)
     {
-        /* 启动失败（上一次接收还没拆干净）：强制中止后重试一次，
-         * 否则接收链会永久静默，表现为“遥控器完全没反应” */
-        HAL_UART_AbortReceive(&huart5);
-        (void)HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf));
+        RC_Decode(data);
     }
+}
 
-    /* 关掉半传输中断，避免回调被提前触发一次 */
-    if (huart5.hdmarx != NULL)
-    {
-        __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
-    }
+/* UART 错误计数：bsp 出错时回调，计数变量仍在本工程 diag 区（application/robot.c 定义） */
+static void DBUS_OnError(void)
+{
+    RC_ErrCnt++;
 }
 
 /*清除摇杆数据，在线状态，确定拨杆，开启接收*/
@@ -74,6 +65,8 @@ void RC_Init(void)
     memset(&RC_Data, 0, sizeof(RC_Data));
     RC_Data.online = 0;
     RC_Data.sw_swap = 1u;
+    BSP_UART_DBusRegisterRx(DBUS_OnRx);
+    BSP_UART_DBusRegisterError(DBUS_OnError);
     RC_StartReceive();
 }
 
@@ -155,7 +148,7 @@ void RC_SwitchAutoName(void)
     }
 }
 
-void RC_Decode(uint8_t *b)
+void RC_Decode(const uint8_t *b)
 {
     /* ---- 4 路摇杆 × 11bit，LSB 先 / 小端顺序打包 ---- */
     RC_Data.ch[0] = (uint16_t)(b[0]            | ((uint16_t)b[1] << 8))                 & 0x07FF;
@@ -253,50 +246,8 @@ float RC_Norm(uint16_t ch)
 
 
  /*求绝对值 */
-/* ------------------------------------------------------------------ */
-/* UART 空闲中断回调：一帧收完由 HAL 调用                                */
-/* ------------------------------------------------------------------ */
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
-{
-    if (huart->Instance == UART5)
-    {
-        /* 只有真正打开了 D-Cache 才需要做 cache 维护。
-         * 本工程 D-Cache 关闭（SCB->CCR.DC=0），实测此处若无条件调用
-         * SCB_InvalidateDCache_by_Addr() 会在第一帧到达时触发
-         * HardFault（CFSR.IMPRECISERR），导致摇杆永远没反应。 */
-        if ((SCB->CCR & SCB_CCR_DC_Msk) != 0U)
-        {
-            SCB_InvalidateDCache_by_Addr((uint32_t *)dbus_buf, sizeof(dbus_buf));
-        }
+/* UART 空闲中断回调与错误回调已迁到 bsp/bsp_uart.c（P2c） */
 
-        if (Size >= DBUS_FRAME_LEN)
-        {
-            /* 收到多帧时取最后一帧完整数据 */
-            RC_Decode(&dbus_buf[Size - DBUS_FRAME_LEN]);
-        }
-
-        RC_StartReceive();   /* 普通模式，需要重新启动 */
-    }
-}
-
-/* ------------------------------------------------------------------ */
-/* UART 错误回调（ORE/FE/NE/PE）                                        */
-/*   HAL 一旦报错就会把接收整个拆掉（关 IDLE/DMA），如果这里不重开，      */
-/*   接收链会永久静默 —— 这正是“摇杆怎么推都没反应”的典型死法之一。      */
-/* ------------------------------------------------------------------ */
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
-{
-    if (huart->Instance == UART5)
-    {
-        RC_ErrCnt++;                      /* 每次错误回调 +1：ORE/FE/NE/PE 的直接证据 */
-
-        __HAL_UART_CLEAR_OREFLAG(huart);
-        __HAL_UART_CLEAR_FEFLAG(huart);
-        __HAL_UART_CLEAR_NEFLAG(huart);
-        __HAL_UART_CLEAR_PEFLAG(huart);
-        RC_StartReceive();
-    }
-}
 
 
 
