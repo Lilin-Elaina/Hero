@@ -73,3 +73,41 @@ void HAL_FDCAN_ErrorStatusCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t ErrorSt
         FDCAN1_Start();
     }
 }
+
+/* ------------------------------------------------------------------
+ * 统一发送：把“帧头怎么填”这件事收在 bsp 层，modules 只管 id + 8 字节负载。
+ * 帧头各字段与原来 modules/DJ_Motor.c 里手写的一致（标准帧/数据帧/8 字节/
+ * 不切波特率/FD 关闭/无 TX 事件），所以字节与总线时序完全不变。
+ * ------------------------------------------------------------------ */
+HAL_StatusTypeDef BSP_CAN_Send(uint8_t bus, uint32_t id, const uint8_t *data, uint8_t len)
+{
+    FDCAN_TxHeaderTypeDef hdr = {0};
+    FDCAN_HandleTypeDef *h = (bus == 1u) ? &hfdcan1 : &hfdcan2;
+
+    hdr.Identifier = id;
+    hdr.IdType = FDCAN_STANDARD_ID;
+    hdr.TxFrameType = FDCAN_DATA_FRAME;
+    hdr.ErrorStateIndicator = DISABLE;
+    hdr.BitRateSwitch = DISABLE;
+    hdr.FDFormat = DISABLE;
+    hdr.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+    hdr.MessageMarker = 0;
+
+    switch (len)
+    {
+        case 1u: hdr.DataLength = FDCAN_DLC_BYTES_1; break;
+        case 2u: hdr.DataLength = FDCAN_DLC_BYTES_2; break;
+        case 4u: hdr.DataLength = FDCAN_DLC_BYTES_4; break;
+        case 5u: hdr.DataLength = FDCAN_DLC_BYTES_5; break;
+        case 6u: hdr.DataLength = FDCAN_DLC_BYTES_6; break;
+        case 7u: hdr.DataLength = FDCAN_DLC_BYTES_7; break;
+        default: hdr.DataLength = FDCAN_DLC_BYTES_8; break;   /* 本工程一律 8 字节 */
+    }
+
+    return HAL_FDCAN_AddMessageToTxFifoQ(h, &hdr, (uint8_t *)data);
+}
+
+void BSP_CAN_Stop(uint8_t bus)
+{
+    HAL_FDCAN_Stop((bus == 1u) ? &hfdcan1 : &hfdcan2);
+}

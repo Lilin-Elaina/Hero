@@ -39,7 +39,7 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
     const float cur = (float)gim6020.angle;
     const float alpha_deg = RC_GetOffsetAngle();   /* 枪口相对车头，度（关节角） */
     const uint8_t fresh = ((HAL_GetTick() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
-    float aim, e, w_cmd, w_chassis, rpm_d, err_v, volt;
+    float aim, e, w_chassis, rpm_d, err_v, volt;
 
     if ((online == 0u) || (fresh == 0u) || (s_spin_ready == 0u) || (INS_AhrsReady == 0u)) {
         s_spin_ref   = (float)INS_WorldYaw;
@@ -95,11 +95,10 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
         float a_err = (s_spin_ref - psi_c) - alpha_deg;  /* 关节角误差（deg） */
 
         rpm_d = GM_YAW_ANG_KP * (a_err * 22.7556f) - w_chassis * (1.0f / 6.0f);
-        w_cmd = rpm_d * 6.0f;
     }
 #else
     /* ④ 目标世界角速度 = 摇杆那份 + 把误差拉回 */
-    w_cmd = aim + SPIN_YAW_POS_KP * e;
+    float w_cmd = aim + SPIN_YAW_POS_KP * e;
 
     if (w_cmd >  SPIN_YAW_RATE_MAX) w_cmd =  SPIN_YAW_RATE_MAX;
     if (w_cmd < -SPIN_YAW_RATE_MAX) w_cmd = -SPIN_YAW_RATE_MAX;

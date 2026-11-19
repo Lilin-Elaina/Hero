@@ -203,7 +203,7 @@ void RC_Control_Task(void)
             if ((s_can2_frozen >= 20u) && (((s_can2_frozen - 20u) % 100u) == 0u))
             {
                 RC_Can2RestartCnt++;
-                HAL_FDCAN_Stop(&hfdcan2);
+                BSP_CAN_Stop(2u);          /* bsp 层接口：上层不再直接调 HAL_FDCAN */
                 FDCAN2_Start();
             }
         }

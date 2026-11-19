@@ -7,17 +7,6 @@
  */
 HAL_StatusTypeDef DJ3508_Send_I_Can2(int16_t ID1_I, int16_t ID2_I, int16_t ID3_I, int16_t ID4_I)
 {
-    const FDCAN_TxHeaderTypeDef TxHeader = {
-        .Identifier = 0x200 ,
-        .IdType = FDCAN_STANDARD_ID,
-        .TxFrameType = FDCAN_DATA_FRAME,
-        .DataLength = FDCAN_DLC_BYTES_8,
-        .ErrorStateIndicator = DISABLE,
-        .BitRateSwitch = DISABLE,
-        .FDFormat = DISABLE,
-        .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-        .MessageMarker = 0
-    };
       
     int16_t I_Raw[4] = {ID1_I, ID2_I, ID3_I, ID4_I};
     /*限流处理*/
@@ -40,7 +29,7 @@ HAL_StatusTypeDef DJ3508_Send_I_Can2(int16_t ID1_I, int16_t ID2_I, int16_t ID3_I
        TxData[2 * i] = (uint8_t)((I_Raw[i] >> 8)& 0xFF);
        TxData[2 * i + 1] =(uint8_t)((I_Raw[i])& 0xFF); 
     }
-        return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &TxHeader, TxData );
+        return BSP_CAN_Send(2u, 0x200u, TxData, 8u);
 }
 
 /* 
@@ -48,17 +37,6 @@ HAL_StatusTypeDef DJ3508_Send_I_Can2(int16_t ID1_I, int16_t ID2_I, int16_t ID3_I
  */
 HAL_StatusTypeDef DJ6020_Send_V_Can2(int16_t ID1_V, int16_t ID2_V)
 {
-    const FDCAN_TxHeaderTypeDef TxHeader = {
-        .Identifier = 0x1FF ,
-        .IdType = FDCAN_STANDARD_ID,
-        .TxFrameType = FDCAN_DATA_FRAME,
-        .DataLength = FDCAN_DLC_BYTES_8,
-        .ErrorStateIndicator = DISABLE,
-        .BitRateSwitch = DISABLE,
-        .FDFormat = DISABLE,
-        .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-        .MessageMarker = 0
-    };
    
      uint8_t  TxData[8] = {0};
      
@@ -85,24 +63,13 @@ HAL_StatusTypeDef DJ6020_Send_V_Can2(int16_t ID1_V, int16_t ID2_V)
     TxData[2] = (uint8_t)((ID2_V >> 8 ) & 0xFF);
     TxData[3] = (uint8_t)(ID2_V & 0xFF);
 
-        return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan2, &TxHeader, TxData );
+        return BSP_CAN_Send(2u, 0x1FFu, TxData, 8u);
 }
 /*
  *@ brief: 控制两个摩擦轮转动
  */
 HAL_StatusTypeDef DJ3508_Send_Can1(int16_t ID2_I, int16_t ID3_I)
 {
-    const FDCAN_TxHeaderTypeDef TxHeader = {
-        .Identifier = 0x200 ,
-        .IdType = FDCAN_STANDARD_ID,
-        .TxFrameType = FDCAN_DATA_FRAME,
-        .DataLength = FDCAN_DLC_BYTES_8,
-        .ErrorStateIndicator = DISABLE,
-        .BitRateSwitch = DISABLE,
-        .FDFormat = DISABLE,
-        .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-        .MessageMarker = 0
-    };
 
      uint8_t  TxData[8] = {0};
 
@@ -125,23 +92,12 @@ HAL_StatusTypeDef DJ3508_Send_Can1(int16_t ID2_I, int16_t ID3_I)
             TxData[4] = (uint8_t)((I_Raw[1] >> 8)& 0xFF);
             TxData[5] = (uint8_t)((I_Raw[1])& 0xFF);
 
-        return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, TxData );
+        return BSP_CAN_Send(1u, 0x200u, TxData, 8u);
 }
 
 /* ---------------- CAN1：pitch（6020 ID2）---------------- */
 HAL_StatusTypeDef DJ6020_Send_Can1(int16_t ID2_V)
 {
-    const FDCAN_TxHeaderTypeDef TxHeader = {
-        .Identifier = 0x1FF ,
-        .IdType = FDCAN_STANDARD_ID,
-        .TxFrameType = FDCAN_DATA_FRAME,
-        .DataLength = FDCAN_DLC_BYTES_8,
-        .ErrorStateIndicator = DISABLE,
-        .BitRateSwitch = DISABLE,
-        .FDFormat = DISABLE,
-        .TxEventFifoControl = FDCAN_NO_TX_EVENTS,
-        .MessageMarker = 0
-    };
 
      uint8_t  TxData[8] = {0};
 
@@ -157,7 +113,7 @@ HAL_StatusTypeDef DJ6020_Send_Can1(int16_t ID2_V)
     TxData[2] = (uint8_t)((ID2_V >> 8 ) & 0xFF);
     TxData[3] = (uint8_t)(ID2_V & 0xFF);
 
-        return HAL_FDCAN_AddMessageToTxFifoQ(&hfdcan1, &TxHeader, TxData );
+        return BSP_CAN_Send(1u, 0x1FFu, TxData, 8u);
 }
 
 volatile GM6020_State_t gim6020 = {0};
