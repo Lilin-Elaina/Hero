@@ -79,7 +79,7 @@ static void RC_Fric_Step(uint8_t online, int16_t *fric_l, int16_t *fric_r);
  * Ozone 里读 RC_BuildTag，必须等于下面这个值；读出来是 0/乱数 = 挂的 ELF 与芯片
  * 固件不是同一版（地址全错位，Watch 里所有变量读数都不可信）。
  * 每次改了全局变量布局/新增变量就把后 4 位改一下，方便确认。 */
-volatile uint32_t RC_BuildTag = 0x1117235Au;   /* 0x…5A = 2026-11-19 分层 + 使能三态机版 */
+volatile uint32_t RC_BuildTag = 0x1117235Bu;   /* 0x…5B = 2026-11-19 删 len + 看门狗改 last_tick 判据 */
 /* ------------------------------------------------------------------ */
 /* 控制任务：1kHz 调用一次                                              */
 /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              */
@@ -227,32 +227,55 @@ void RC_Control_Task(void)
         RC_EnableMs    = (s_en_state == RC_EN_ARMING) ? (now - s_en_since) : 0u;
     }
 
-    /* ---- CAN2 RX 活性看门狗（2026-11-18）----
-     * 底盘四轮 + yaw 全在 CAN2，五个节点每个 1kHz 反馈，总线正常时
-     * can_rx2_total 不可能 20ms 不动。实测出现整条 CAN2 静默 337 秒不恢复：
-     * 唯一能解释"死透且无人再试"的软件路径 = Bus-Off 回调里 Stop+Start 万一
-     * 没救回来（ISR 内重启 HAL 状态机有竞态），控制器就永远卡在 CCCR.INIT，
-     * 而全工程没有任何代码会再试第二次。看门狗补上这一课：
-     *   - 连续 20ms 无 CAN2 帧 → Stop + FDCAN2_Start 重启一次
-     *   - 没救回来每 100ms 再试一次
+    /* ---- CAN2 RX 活性看门狗（2026-11-18 加，2026-11-19 改判据）----
+     * 底盘四轮 + yaw 全在 CAN2，五个节点每个 1kHz 反馈。实测出现过整条 CAN2
+     * 静默 337 秒不恢复：唯一能解释“死透且无人再试”的软件路径 = Bus-Off 回调里
+     * Stop+Start 万一没救回来（ISR 内重启 HAL 状态机有竞态），控制器就永远卡在
+     * CCCR.INIT，而全工程没有任何代码会再试第二次。
+     *
+     * 判据用 yaw 6020 的反馈时间戳 gim6020.last_tick（每收到一帧 0x205 就更新），
+     * 不再依赖“帧数计数器”——计数器删掉了看门狗也不会跟着失效：
+     *   - 距上一帧 >= 20ms → Stop + FDCAN2_Start 重启一次
+     *   - 之后每 100ms 再试一次，直到恢复
      *   - RC_Can2RestartCnt 计数留证：重启后立刻恢复 = 卡死确系软件；
      *     重启多少次都没用 = 总线物理上真的死了（回头查硬件）
-     *   - 只在"上电以来见过总线活着(>1000 帧)"且已使能时启用，
-     *     避免台架上不带电调时空转重启 */
+     *   - 上电后必须先见过至少一帧（last_tick != 0）且已使能才启用，
+     *     避免台架上不带电调时不停空转重启 */
     {
-        static uint32_t s_can2_last   = 0u;
-        static uint32_t s_can2_frozen = 0u;
+        /* 最近一次收到 CAN2 任意节点反馈的时刻：五个节点（四轮 + yaw）取最新。
+         * 只要还有一个节点在回帧，就说明总线是活的，不重启——否则单个节点
+         * 掉线（或某个 C620 拨码跳到 ID5 冒充 0x205）会让我们每秒重启十次总线，
+         * 反而把好好的四轮打断。 */
+        uint32_t last_rx = gim6020.last_tick;
 
-        if (can_rx2_total != s_can2_last)
+        for (uint8_t i = 0u; i < MECANUM_WHEEL_NUM; i++)
         {
-            s_can2_last   = can_rx2_total;
-            s_can2_frozen = 0u;
+            if ((int32_t)(dj_wheel[i].last_tick - last_rx) > 0)
+            {
+                last_rx = dj_wheel[i].last_tick;
+            }
         }
-        else if ((can_rx2_total > 1000u) && (enabled != 0u))
-        {
-            if (s_can2_frozen < 1000000u) s_can2_frozen++;
 
-            if ((s_can2_frozen >= 20u) && (((s_can2_frozen - 20u) % 100u) == 0u))
+        static uint8_t s_can2_seen = 0u;   /* 上电后是否见过 CAN2 帧 */
+
+        if (last_rx != 0u)
+        {
+            s_can2_seen = 1u;
+        }
+
+        if ((s_can2_seen != 0u) && (enabled != 0u))
+        {
+            int32_t age = (int32_t)(now - last_rx);   /* 距最近一帧的毫秒数 */
+
+            /* ISR 可能在本拍取到 now 之后才更新 last_tick，差值为负时按 0 处理 */
+            if (age < 0)
+            {
+                age = 0;
+            }
+
+            /* age 达到 20 之后每 100ms 触发一次（20/120/220…），
+             * 用 age 直接取模，省掉一个“冻结计数器” */
+            if ((age >= 20) && (((age - 20) % 100) == 0))
             {
                 RC_Can2RestartCnt++;
                 BSP_CAN_Stop(2u);          /* bsp 层接口：上层不再直接调 HAL_FDCAN */

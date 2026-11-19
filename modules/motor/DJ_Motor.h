@@ -27,18 +27,10 @@ extern volatile GM6020_State_t gim6020;
 extern volatile GM6020_State_t gim_pitch;
 extern volatile GM6020_State_t dj_motor[4];  /* CAN1 上的 3508：ID1~ID4（本工程用 ID2/ID3 摩擦轮） */
 extern volatile GM6020_State_t dj_wheel[4];  /* CAN2 上的 3508：底盘四轮 LF/RF/RB/LB（ID1~ID4） */
-/* 诊断计数器：看 CAN 接收到底通不通 *//*排错结构体*/
-extern volatile uint32_t can_rx_total;
-extern volatile uint32_t can_rx_205;
-extern volatile uint32_t can_rx_last_id;
-extern volatile int16_t  can_rx_last_d0;
+/* 诊断计数器：只看 0x205（yaw）这一路，其余总线级计数已随 bsp 层简化删掉。
+ * 活性判断改用 gim6020.last_tick 的年龄，不依赖帧计数。 */
+extern volatile uint32_t can_rx_205;           /* 0x205 的帧数 */
 extern volatile uint32_t can_rx_205_bad;      /* 0x205 中 |rpm|>600（6020 物理不可能）被整帧丢弃的帧数 */
 extern volatile int16_t  can_rx_205_bad_rpm;   /* 最近一帧被丢弃时帧内的 rpm 原始值 */
-/* 按 ID 分别的收帧计数：can_rx_id_cnt[0..4] = 0x201..0x205（轮1~4 / yaw）。
- * 5 秒读差值，正常各自 +1000 左右；哪个停了/谁翻倍一眼定罪：
- *   - 某[轮]计数停 → 该电调掉线/拨码跳走（跳到 ID5 则 [4] 翻倍涨）
- *   - can_rx_id_cnt[4] 停但四轮都在涨 → yaw 6020 供电/CAN 断 */
-extern volatile uint32_t can_rx_id_cnt[8];    /* 下标 = CAN ID − 0x201，0x208 以内有效 */
-extern volatile uint32_t can_rx2_total;      /* 仅 CAN2 收到的帧数（活性看门狗用） */
 
 #endif

@@ -103,11 +103,7 @@ void BSP_CAN_Stop(uint8_t bus)
 /* ------------------------------------------------------------------
  * 接收：唯一的 HAL 回调留在 bsp；取到帧后按总线交给注册者解析。
  * ------------------------------------------------------------------ */
-volatile uint32_t can_rx_total    = 0;   /* 两路合计帧数 */
-volatile uint32_t can_rx2_total   = 0;   /* 仅 CAN2 帧数（活性看门狗用） */
-volatile uint32_t can_rx_last_id  = 0;   /* 最近一帧的 CAN ID */
-volatile int16_t  can_rx_last_d0  = 0;   /* 最近一帧的 data[0] */
-volatile uint32_t can_rx_id_cnt[8] = {0};/* 0x201..0x208 分别计数 */
+
 
 static BSP_CAN_RxHandler s_rx_handler[3] = {0};   /* [1]=CAN1，[2]=CAN2 */
 
@@ -124,28 +120,22 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     FDCAN_RxHeaderTypeDef rx;
     uint8_t d[8];
     const uint8_t bus = (hfdcan->Instance == FDCAN2) ? 2u : 1u;
-    (void)RxFifo0ITs;   /* 这个参数是 HAL 回调固定签名带来的，本工程用不到：
-                         * 它表示“哪些 FIFO 事件触发了这次回调”，而我们下面
-                         * 无条件把 FIFO0 读空，所以显式 void 掉，避免编译告警。 */
+   
 
     /* 循环读空：一次中断把所有待处理帧都消费掉 */
     while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx, d) == HAL_OK)
     {
-        can_rx_total++;
-        can_rx_last_id = rx.Identifier;
-        can_rx_last_d0 = d[0];
-        if (bus == 2u)
+        /* 长度检查放在 bsp：本工程所有合法报文都是 8 字节，
+         * 短帧只可能来自异常节点，直接丢，避免上层拿“残留的旧字节”当有效数据。
+         * 这样上层解析函数就不需要再传 len 参数。 */
+        if (rx.DataLength < FDCAN_DLC_BYTES_8)
         {
-            can_rx2_total++;                       /* CAN2 专属活性计数（看门狗用） */
-        }
-        if ((rx.Identifier >= 0x201u) && (rx.Identifier <= 0x208u))
-        {
-            can_rx_id_cnt[rx.Identifier - 0x201u]++;   /* 按 ID 计数 */
+            continue;
         }
 
         if (s_rx_handler[bus] != 0)
         {
-            s_rx_handler[bus](bus, rx.Identifier, d, 8u);
+            s_rx_handler[bus](bus, rx.Identifier, d);
         }
     }
 }

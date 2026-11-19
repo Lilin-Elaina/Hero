@@ -122,9 +122,9 @@ volatile GM6020_State_t gim_pitch = {0};
 volatile GM6020_State_t dj_motor[4] = {0};   /* CAN1：摩擦轮 ID2/ID3 */
 volatile GM6020_State_t dj_wheel[4] = {0};   /* CAN2：底盘四轮 ID1~ID4 */
 /* ---- 诊断计数器（只读观察，不参与控制）（调试排错时使用）----
- * 总线级的那几个（can_rx_total / can_rx2_total / can_rx_last_id /
- * can_rx_last_d0 / can_rx_id_cnt）随接收回调一起下沉到 bsp/bsp_can.c，
- * 这里只留与 0x205 有关的。 */
+ * 总线级计数（原 can_rx_total / can_rx2_total / can_rx_id_cnt 等）已随 bsp 层
+ * 简化删除；判活改用 gim6020.last_tick 的年龄，不依赖帧计数。
+ * 这里只保留与 0x205 有关的两个：一帧都没进 gim6020 时靠它们定罪。 */
 volatile uint32_t can_rx_205     = 0;   /* 其中 0x205 的帧数 */
 volatile uint32_t can_rx_205_bad    = 0;  /* |rpm|>600 被判“非 6020 帧”丢弃的 0x205 帧数 */
 volatile int16_t  can_rx_205_bad_rpm = 0;  /* 最近一帧被丢弃时的 rpm 原始值 */
@@ -132,10 +132,8 @@ volatile int16_t  can_rx_205_bad_rpm = 0;  /* 最近一帧被丢弃时的 rpm �
 
 /* 处理 3508 / 6020 反馈报文，解析电机状态。
  * 由 bsp_can 的 HAL 回调收到帧后按总线派发过来：bus 1=CAN1，2=CAN2。 */
-static void DJ_Motor_OnRx(uint8_t bus, uint32_t id, const uint8_t *d, uint8_t len)
+static void DJ_Motor_OnRx(uint8_t bus, uint32_t id, const uint8_t *d)
 {
-    (void)len;
-
     if ((id >= 0x201u) && (id <= 0x204u))                     /* 3508 ID1~ID4 */
     {
         uint8_t i = (uint8_t)(id - 0x201u);
