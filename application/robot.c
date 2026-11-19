@@ -367,7 +367,12 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
           }
           else
           {
-              a = wheel_clamp(-RC_WHEEL_STOP_KP * rpm, -RC_WHEEL_STOP_A, RC_WHEEL_STOP_A);
+              /* 比例项 + 恒定项：只靠 -KP*rpm 时，转速越低制动越小，
+               * 架空测试（几乎没有摩擦）会一直悠悠地转，甚至在过零后反向漂。
+               * 加一个恒定的库仑分量，保证最后几十 rpm 也能干脆停住。 */
+              float brake = RC_WHEEL_STOP_KP * wheel_abs(rpm) + RC_WHEEL_STOP_KP0;
+              a = (rpm > 0.0f) ? -brake : brake;
+              a = wheel_clamp(a, -RC_WHEEL_STOP_A, RC_WHEEL_STOP_A);
           }
 
           raw[i] = (int16_t)(a / 20.0f * 16384.0f);

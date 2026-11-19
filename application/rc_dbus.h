@@ -46,9 +46,10 @@
 #define RC_WHEEL_FF_A_PER_RPM  0.0008f    /*前馈系数：按 7758rpm≈7A 估的起点，实测再校准*/
 #define RC_WHEEL_I_MAX         1.5f       /*积分只做静差微调，封顶1.5A*/
 
-#define RC_WHEEL_STOP_KP       0.002f     /*回中制动系数A/rpm：输出=-STOP_KP*rpm，恒逆实测转速*/
+#define RC_WHEEL_STOP_KP       0.004f     /*回中制动比例项 A/rpm：输出=-STOP_KP*rpm，恒逆实测转速*/
+#define RC_WHEEL_STOP_KP0      0.6f       /*回中制动恒定项 A：低速段比例项太小，靠它把最后几十 rpm 刹住*/
 #define RC_WHEEL_STOP_A        3.5f       /*回中制动限流A*/
-#define RC_WHEEL_STOP_QUIET_RPM 50.0f     /*轮速低于此值撤掉制动电流，杜绝静止残余顶力*/
+#define RC_WHEEL_STOP_QUIET_RPM 6.0f      /*轮速低于此值才撤掉制动电流（原来是 50，空中会一直漂）*/
 
 #define RC_WHEEL_FEEDBACK_MS   100u        /*超过这个时间没反馈就认为失联，输出 0 */
 #define RC_WHEEL_TEMP_LIMIT    75u        /*温控值，超过这个温度就不输出电流*/
