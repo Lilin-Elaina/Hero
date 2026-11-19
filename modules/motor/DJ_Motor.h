@@ -10,6 +10,9 @@ HAL_StatusTypeDef DJ6020_Send_V_Can2(int16_t ID1_V, int16_t ID2_V);
 /* CAN1 专用：摩擦轮 3508 ID2/ID3 + 云台 pitch 6020 ID2 */
 HAL_StatusTypeDef DJ3508_Send_Can1(int16_t ID2_I, int16_t ID3_I);
 HAL_StatusTypeDef DJ6020_Send_Can1(int16_t ID2_V);
+
+/* 在 CAN 启动之前调用一次：把接收解析函数注册给 bsp 层 */
+void DJ_Motor_Init(void);
 /* GM6020 ID1 的实时状态（由 CAN 接收回调更新） *//* 电机状态反馈*/
 typedef struct
 {

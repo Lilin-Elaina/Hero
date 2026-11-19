@@ -104,6 +104,7 @@ int main(void)
   MX_SPI2_Init();
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
+  DJ_Motor_Init();       /* 先注册 CAN 接收解析，再开总线（bsp 只负责收帧） */
   FDCAN2_Start();        /* CAN2：底盘左/右 + 云台 yaw */
   FDCAN1_Start();        /* CAN1：摩擦轮 + 云台 pitch */
   RC_Init();             /* 启动 DBUS(UART5) 接收 */
