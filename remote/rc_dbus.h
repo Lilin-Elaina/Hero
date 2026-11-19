@@ -56,7 +56,7 @@
 
 /* ---- 底盘跟随（右拨杆中位）：把车头追向枪口，α→0 ----
  * 用云台编码器算相对角，零漂、不依赖陀螺；速度环仍在下面闭环 */
-#define RC_FOLLOW_KP       0.015f   /*自转指令 / 度：α=10° 给 0.20
+#define RC_FOLLOW_KP       0.018f   /*自转指令 / 度：α=10° 给 0.20
                                      *尾段慢（最后几度拖 2 s）就加这个：0.020→0.026。
                                      *别一次跳太大，0.030 以上在旧版律下摆过*/
 #define RC_FOLLOW_KICK     0.035f   /*起步量：边界处为 0，随 |e| 线性长到满值，否则小角度推不动车*/
@@ -154,14 +154,14 @@ extern volatile uint8_t  RC_YawKill;      /* 本拍断电原因：0=正常 1=离
 extern volatile uint32_t RC_YawKillCnt;   /* 断电累计拍数（1kHz 调用，2000 = 累计断过 2 秒） */
 extern volatile uint32_t RC_Can2TEC;      /* CAN2 发送错误计数 TEC（>127 = 错误被动） */
 extern volatile uint32_t RC_Can2REC;      /* CAN2 接收错误计数 REC（>127 = 错误被动） */
-extern volatile uint32_t RC_Can2TECMax;  /* TEC 历史最大值 */
+extern volatile uint32_t RC_Can2TECMax;   /* TEC 历史最大值 */
 extern volatile uint32_t RC_Can2RECMax;   /* REC 历史最大值 */
 extern volatile uint32_t RC_YawOutageCnt; /* yaw 反馈断流次数（每断一次 +1，写 0 复位） */
 extern volatile uint32_t RC_Can2PSR;      /* CAN2 PSR 寄存器：bits[2:0]=LEC 最后错误码，bit7=BO，bit9=ACT */
 extern volatile uint32_t RC_Can2CCCR;     /* CAN2 CCCR 寄存器：bit0=INIT（1=控制器停着） */
 extern volatile uint32_t RC_Can2BusOffCnt;/* CAN2 Bus-Off 中断次数（累计，写 0 复位） */
 extern volatile uint32_t RC_Can2RestartCnt;/* CAN2 RX 看门狗重启次数（连续 20ms 无帧触发，写 0 复位） */
-extern volatile uint32_t RC_BuildTag;     /* 固件版本指纹：应为 0x11172358，不符 = Ozone 挂了旧 ELF */
+extern volatile uint32_t RC_BuildTag;      /* 固件版本指纹：应为 0x11172358，不符 = Ozone 挂了旧 ELF */
 /* 0x205 假帧证据在 DJ_Motor.h：can_rx_205_bad / can_rx_205_bad_rpm */
 
 /*
