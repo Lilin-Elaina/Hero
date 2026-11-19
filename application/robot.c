@@ -59,7 +59,7 @@ volatile uint32_t RC_Can2RestartCnt = 0;  /* RX 活性看门狗触发的 Stop+St
  * Ozone 里读 RC_BuildTag，必须等于下面这个值；读出来是 0/乱数 = 挂的 ELF 与芯片
  * 固件不是同一版（地址全错位，Watch 里所有变量读数都不可信）。
  * 每次改了全局变量布局/新增变量就把后 4 位改一下，方便确认。 */
-volatile uint32_t RC_BuildTag = 0x11172358u;
+volatile uint32_t RC_BuildTag = 0x11172359u;   /* 0x…59 = 2026-11-19 分层版 */
 /* ------------------------------------------------------------------ */
 /* 控制任务：1kHz 调用一次                                              */
 /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              */
@@ -87,8 +87,8 @@ void RC_Control_Task(void)
         RC_Can2CCCR = hfdcan2.Instance->CCCR;
 
         /* 版本指纹：每拍写入常量（同时保证该变量不被 --gc-sections 回收）。
-         * Watch 读到的值 ≠ 0x11172358 → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
-        RC_BuildTag = 0x11172358u;
+         * Watch 读到的值 ≠ 0x11172359 → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
+        RC_BuildTag = 0x11172359u;
     }
 
 #if (RC_ENABLE_SW_POS != 0)

@@ -162,7 +162,7 @@ extern volatile uint32_t RC_Can2PSR;      /* CAN2 PSR 寄存器：bits[2:0]=LEC 
 extern volatile uint32_t RC_Can2CCCR;     /* CAN2 CCCR 寄存器：bit0=INIT（1=控制器停着） */
 extern volatile uint32_t RC_Can2BusOffCnt;/* CAN2 Bus-Off 中断次数（累计，写 0 复位） */
 extern volatile uint32_t RC_Can2RestartCnt;/* CAN2 RX 看门狗重启次数（连续 20ms 无帧触发，写 0 复位） */
-extern volatile uint32_t RC_BuildTag;      /* 固件版本指纹：应为 0x11172358，不符 = Ozone 挂了旧 ELF */
+extern volatile uint32_t RC_BuildTag;      /* 固件版本指纹：应为 0x11172359（分层版），不符 = Ozone 挂了旧 ELF */
 /* 0x205 假帧证据在 DJ_Motor.h：can_rx_205_bad / can_rx_205_bad_rpm */
 
 /*
