@@ -56,7 +56,6 @@ volatile uint32_t RC_YawOutageCnt = 0;
  * CCCR.INIT=1 → 控制器停在初始化态（Stop 后未重启，或 Bus-Off 恢复失败）*/
 volatile uint32_t RC_Can2PSR     = 0;
 volatile uint32_t RC_Can2CCCR    = 0;
-volatile uint32_t RC_Can2BusOffCnt = 0;   /* Bus-Off 中断次数（bsp.can.c 里 +1） */
 volatile uint32_t RC_Can2RestartCnt = 0;  /* RX 活性看门狗触发的 Stop+Start 次数 */
 
 /* ------------------------------------------------------------------ */

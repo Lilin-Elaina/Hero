@@ -146,7 +146,6 @@ extern volatile uint32_t RC_Can2RECMax;   /* REC 历史最大值 */
 extern volatile uint32_t RC_YawOutageCnt; /* yaw 反馈断流次数（每断一次 +1，写 0 复位） */
 extern volatile uint32_t RC_Can2PSR;      /* CAN2 PSR 寄存器：bits[2:0]=LEC 最后错误码，bit7=BO，bit9=ACT */
 extern volatile uint32_t RC_Can2CCCR;     /* CAN2 CCCR 寄存器：bit0=INIT（1=控制器停着） */
-extern volatile uint32_t RC_Can2BusOffCnt;/* CAN2 Bus-Off 中断次数（累计，写 0 复位） */
 extern volatile uint32_t RC_Can2RestartCnt;/* CAN2 RX 看门狗重启次数（连续 20ms 无帧触发，写 0 复位） */
 extern volatile uint32_t RC_BuildTag;      /* 固件版本指纹：应为 0x1117235A（使能三态机版），不符 = Ozone 挂了旧 ELF */
 /* 使能三态机镜像（robot.c）：0=等待条件 1=计时中 2=已使能 */

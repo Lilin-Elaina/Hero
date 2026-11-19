@@ -2,8 +2,6 @@
 #include "bsp_can.h"
 #include "fdcan.h"
 
-/* CAN2 故障取证镜像（定义在 rc_dbus.c，这里只 +1，避免互相 include） */
-extern volatile uint32_t RC_Can2BusOffCnt;
 /*
  * @ brief: 开启fdcan2，并启动fdcan2的总线关闭中断与fifo0接收中断（控制底盘电机与云台yaw）
  * @ note:过滤器的配置必须在启动fdcan2之前。 
@@ -56,14 +54,13 @@ void FDCAN1_Start(void)
  */
 void HAL_FDCAN_ErrorStatusCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t ErrorStatusITs)
 {  
-    if ((ErrorStatusITs & FDCAN_IT_BUS_OFF) == 0 )
+    if ((ErrorStatusITs & FDCAN_IT_BUS_OFF) == 0u)
     {
         return;
     }
 
     if (hfdcan->Instance == FDCAN2)
     {
-        RC_Can2BusOffCnt++;          /* ★计数留证：反复 Bus-Off = 物理层在出错，不是软件 */
         HAL_FDCAN_Stop(hfdcan);
         FDCAN2_Start();
     }
@@ -78,8 +75,9 @@ void HAL_FDCAN_ErrorStatusCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t ErrorSt
  * 统一发送：把“帧头怎么填”这件事收在 bsp 层，modules 只管 id + 8 字节负载。
  * 帧头各字段与原来 modules/DJ_Motor.c 里手写的一致（标准帧/数据帧/8 字节/
  * 不切波特率/FD 关闭/无 TX 事件），所以字节与总线时序完全不变。
+ * 本工程只有 8 字节报文，所以数据长度不传参、直接写死。
  * ------------------------------------------------------------------ */
-HAL_StatusTypeDef BSP_CAN_Send(uint8_t bus, uint32_t id, const uint8_t *data, uint8_t len)
+HAL_StatusTypeDef BSP_CAN_Send(uint8_t bus, uint32_t id, const uint8_t *data)
 {
     FDCAN_TxHeaderTypeDef hdr = {0};
     FDCAN_HandleTypeDef *h = (bus == 1u) ? &hfdcan1 : &hfdcan2;
@@ -92,17 +90,7 @@ HAL_StatusTypeDef BSP_CAN_Send(uint8_t bus, uint32_t id, const uint8_t *data, ui
     hdr.FDFormat = DISABLE;
     hdr.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
     hdr.MessageMarker = 0;
-
-    switch (len)
-    {
-        case 1u: hdr.DataLength = FDCAN_DLC_BYTES_1; break;
-        case 2u: hdr.DataLength = FDCAN_DLC_BYTES_2; break;
-        case 4u: hdr.DataLength = FDCAN_DLC_BYTES_4; break;
-        case 5u: hdr.DataLength = FDCAN_DLC_BYTES_5; break;
-        case 6u: hdr.DataLength = FDCAN_DLC_BYTES_6; break;
-        case 7u: hdr.DataLength = FDCAN_DLC_BYTES_7; break;
-        default: hdr.DataLength = FDCAN_DLC_BYTES_8; break;   /* 本工程一律 8 字节 */
-    }
+    hdr.DataLength = FDCAN_DLC_BYTES_8;
 
     return HAL_FDCAN_AddMessageToTxFifoQ(h, &hdr, (uint8_t *)data);
 }
@@ -136,7 +124,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     FDCAN_RxHeaderTypeDef rx;
     uint8_t d[8];
     const uint8_t bus = (hfdcan->Instance == FDCAN2) ? 2u : 1u;
-    (void)RxFifo0ITs;
+    (void)RxFifo0ITs;   /* 这个参数是 HAL 回调固定签名带来的，本工程用不到：
+                         * 它表示“哪些 FIFO 事件触发了这次回调”，而我们下面
+                         * 无条件把 FIFO0 读空，所以显式 void 掉，避免编译告警。 */
 
     /* 循环读空：一次中断把所有待处理帧都消费掉 */
     while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx, d) == HAL_OK)

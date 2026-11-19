@@ -30,7 +30,7 @@ HAL_StatusTypeDef DJ3508_Send_I_Can2(int16_t ID1_I, int16_t ID2_I, int16_t ID3_I
        TxData[2 * i] = (uint8_t)((I_Raw[i] >> 8)& 0xFF);
        TxData[2 * i + 1] =(uint8_t)((I_Raw[i])& 0xFF); 
     }
-        return BSP_CAN_Send(2u, 0x200u, TxData, 8u);
+        return BSP_CAN_Send(2u, 0x200u, TxData);
 }
 
 /* 
@@ -64,7 +64,7 @@ HAL_StatusTypeDef DJ6020_Send_V_Can2(int16_t ID1_V, int16_t ID2_V)
     TxData[2] = (uint8_t)((ID2_V >> 8 ) & 0xFF);
     TxData[3] = (uint8_t)(ID2_V & 0xFF);
 
-        return BSP_CAN_Send(2u, 0x1FFu, TxData, 8u);
+        return BSP_CAN_Send(2u, 0x1FFu, TxData);
 }
 /*
  *@ brief: 控制两个摩擦轮转动
@@ -93,7 +93,7 @@ HAL_StatusTypeDef DJ3508_Send_Can1(int16_t ID2_I, int16_t ID3_I)
             TxData[4] = (uint8_t)((I_Raw[1] >> 8)& 0xFF);
             TxData[5] = (uint8_t)((I_Raw[1])& 0xFF);
 
-        return BSP_CAN_Send(1u, 0x200u, TxData, 8u);
+        return BSP_CAN_Send(1u, 0x200u, TxData);
 }
 
 /* ---------------- CAN1：pitch（6020 ID2）---------------- */
@@ -114,7 +114,7 @@ HAL_StatusTypeDef DJ6020_Send_Can1(int16_t ID2_V)
     TxData[2] = (uint8_t)((ID2_V >> 8 ) & 0xFF);
     TxData[3] = (uint8_t)(ID2_V & 0xFF);
 
-        return BSP_CAN_Send(1u, 0x1FFu, TxData, 8u);
+        return BSP_CAN_Send(1u, 0x1FFu, TxData);
 }
 
 volatile GM6020_State_t gim6020 = {0};
