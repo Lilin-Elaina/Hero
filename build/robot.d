@@ -30,10 +30,11 @@ build/robot.o: application/robot.c application/rc_dbus.h Core/Inc/main.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi_ex.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h \
- modules/remote/dbus.h bsp/bsp_time.h application/rc_state.h \
- Core/Inc/usart.h Core/Inc/main.h modules/motor/DJ_Motor.h \
- modules/chassis/mecanum.h modules/imu/ins.h Core/Inc/fdcan.h \
- bsp/bsp_can.h
+ modules/remote/dbus.h application/chassis/chassis.h \
+ application/gimbal/gimbal.h application/gimbal/gimbal_spin.h \
+ bsp/bsp_time.h application/rc_state.h Core/Inc/usart.h Core/Inc/main.h \
+ modules/motor/DJ_Motor.h modules/chassis/mecanum.h modules/imu/ins.h \
+ Core/Inc/fdcan.h bsp/bsp_can.h
 application/rc_dbus.h:
 Core/Inc/main.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
@@ -71,6 +72,9 @@ Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi_ex.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h:
 modules/remote/dbus.h:
+application/chassis/chassis.h:
+application/gimbal/gimbal.h:
+application/gimbal/gimbal_spin.h:
 bsp/bsp_time.h:
 application/rc_state.h:
 Core/Inc/usart.h:

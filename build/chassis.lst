@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -34,55 +34,54 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cck
    4:application/chassis/chassis.c ****  * @note    2026-11-19 分层整理：以下内容从 remote/rc_dbus.c 原样搬迁，逻辑未改�
    5:application/chassis/chassis.c ****  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
    6:application/chassis/chassis.c ****  */
-   7:application/chassis/chassis.c **** #include "rc_dbus.h"
-   8:application/chassis/chassis.c **** #include "rc_state.h"
-   9:application/chassis/chassis.c **** #include "usart.h"
+   7:application/chassis/chassis.c **** #include "chassis.h"
+   8:application/chassis/chassis.c **** #include "rc_dbus.h"
+   9:application/chassis/chassis.c **** #include "rc_state.h"
   10:application/chassis/chassis.c **** #include "DJ_Motor.h"
   11:application/chassis/chassis.c **** #include "mecanum.h"
   12:application/chassis/chassis.c **** #include "ins.h"
-  13:application/chassis/chassis.c **** #include "fdcan.h"
-  14:application/chassis/chassis.c **** #include "bsp_can.h"
-  15:application/chassis/chassis.c **** #include <string.h>
-  16:application/chassis/chassis.c **** #include <math.h>
-  17:application/chassis/chassis.c **** 
-  18:application/chassis/chassis.c **** /*=============底盘四轮速度闭环===========*/
-  19:application/chassis/chassis.c ****  volatile uint8_t RC_WheelFault = 0; /*轮子故障标志位，1表示有轮子故障，0表示正�
-  20:application/chassis/chassis.c **** 
-  21:application/chassis/chassis.c **** /* 三层共享（robot.c 的失速兜底要清零积分）——只改存储类，语义不变 */
-  22:application/chassis/chassis.c **** float s_wheel_i[MECANUM_WHEEL_NUM];
-  23:application/chassis/chassis.c **** 
-  24:application/chassis/chassis.c **** /* 目标轮速镜像（只给调试器看，控制里不读） */
-  25:application/chassis/chassis.c **** float RC_WheelRef[4] = {0.0f};
-  26:application/chassis/chassis.c **** /* 非 static：robot.c 的四轮循环也要用这两个小工具 */
-  27:application/chassis/chassis.c **** float wheel_abs(float x )
-  28:application/chassis/chassis.c **** {
-  29              		.loc 1 28 1 view -0
+  13:application/chassis/chassis.c **** #include "bsp_can.h"
+  14:application/chassis/chassis.c **** #include <string.h>
+  15:application/chassis/chassis.c **** #include <math.h>
+  16:application/chassis/chassis.c **** 
+  17:application/chassis/chassis.c **** /*=============底盘四轮速度闭环===========*/
+  18:application/chassis/chassis.c ****  volatile uint8_t RC_WheelFault = 0; /*轮子故障标志位，1表示有轮子故障，0表示正�
+  19:application/chassis/chassis.c **** 
+  20:application/chassis/chassis.c **** /* 三层共享（robot.c 的失速兜底要清零积分）——只改存储类，语义不变 */
+  21:application/chassis/chassis.c **** float s_wheel_i[MECANUM_WHEEL_NUM];
+  22:application/chassis/chassis.c **** 
+  23:application/chassis/chassis.c **** /* 目标轮速镜像（只给调试器看，控制里不读） */
+  24:application/chassis/chassis.c **** float RC_WheelRef[4] = {0.0f};
+  25:application/chassis/chassis.c **** /* 非 static：robot.c 的四轮循环也要用这两个小工具 */
+  26:application/chassis/chassis.c **** float wheel_abs(float x )
+  27:application/chassis/chassis.c **** {
+  29              		.loc 1 27 1 view -0
   30              		.cfi_startproc
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s 			page 2
-
-
   31              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s 			page 2
+
+
   32              		@ frame_needed = 0, uses_anonymous_args = 0
   33              		@ link register save eliminated.
-  29:application/chassis/chassis.c ****     return (x < 0.0f) ? -x : x;
-  34              		.loc 1 29 5 view .LVU1
-  35              		.loc 1 29 28 is_stmt 0 view .LVU2
+  28:application/chassis/chassis.c ****     return (x < 0.0f) ? -x : x;
+  34              		.loc 1 28 5 view .LVU1
+  35              		.loc 1 28 28 is_stmt 0 view .LVU2
   36 0000 B5EEC00A 		vcmpe.f32	s0, #0
   37 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
   38 0008 00D4     		bmi	.L5
   39              	.LVL1:
   40              	.L2:
-  30:application/chassis/chassis.c **** }
-  41              		.loc 1 30 1 view .LVU3
+  29:application/chassis/chassis.c **** }
+  41              		.loc 1 29 1 view .LVU3
   42 000a 7047     		bx	lr
   43              	.LVL2:
   44              	.L5:
-  29:application/chassis/chassis.c ****     return (x < 0.0f) ? -x : x;
-  45              		.loc 1 29 28 discriminator 1 view .LVU4
+  28:application/chassis/chassis.c ****     return (x < 0.0f) ? -x : x;
+  45              		.loc 1 28 28 discriminator 1 view .LVU4
   46 000c B1EE400A 		vneg.f32	s0, s0
   47              	.LVL3:
-  29:application/chassis/chassis.c ****     return (x < 0.0f) ? -x : x;
-  48              		.loc 1 29 28 discriminator 1 view .LVU5
+  28:application/chassis/chassis.c ****     return (x < 0.0f) ? -x : x;
+  48              		.loc 1 28 28 discriminator 1 view .LVU5
   49 0010 FBE7     		b	.L2
   50              		.cfi_endproc
   51              	.LFE146:
@@ -95,43 +94,43 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cck
   60              	wheel_clamp:
   61              	.LVL4:
   62              	.LFB147:
-  31:application/chassis/chassis.c **** 
-  32:application/chassis/chassis.c **** float wheel_clamp(float v, float lo, float hi)
-  33:application/chassis/chassis.c **** {
-  63              		.loc 1 33 1 is_stmt 1 view -0
+  30:application/chassis/chassis.c **** 
+  31:application/chassis/chassis.c **** float wheel_clamp(float v, float lo, float hi)
+  32:application/chassis/chassis.c **** {
+  63              		.loc 1 32 1 is_stmt 1 view -0
   64              		.cfi_startproc
   65              		@ args = 0, pretend = 0, frame = 0
   66              		@ frame_needed = 0, uses_anonymous_args = 0
   67              		@ link register save eliminated.
-  68              		.loc 1 33 1 is_stmt 0 view .LVU7
+  68              		.loc 1 32 1 is_stmt 0 view .LVU7
   69 0000 F0EE407A 		vmov.f32	s15, s0
   70 0004 B0EE410A 		vmov.f32	s0, s2
   71              	.LVL5:
-  34:application/chassis/chassis.c ****     if (v < lo) v = lo;
-  72              		.loc 1 34 5 is_stmt 1 view .LVU8
-  73              		.loc 1 34 8 is_stmt 0 view .LVU9
+  33:application/chassis/chassis.c ****     if (v < lo) v = lo;
+  72              		.loc 1 33 5 is_stmt 1 view .LVU8
+  73              		.loc 1 33 8 is_stmt 0 view .LVU9
   74 0008 F4EEE07A 		vcmpe.f32	s15, s1
   75 000c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
   76 0010 01D4     		bmi	.L7
   77 0012 F0EE670A 		vmov.f32	s1, s15
   78              	.LVL6:
   79              	.L7:
-  35:application/chassis/chassis.c ****     if (v > hi) v = hi;
-  80              		.loc 1 35 5 is_stmt 1 view .LVU10
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s 			page 3
+  34:application/chassis/chassis.c ****     if (v > hi) v = hi;
+  80              		.loc 1 34 5 is_stmt 1 view .LVU10
+  81              		.loc 1 34 8 is_stmt 0 view .LVU11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s 			page 3
 
 
-  81              		.loc 1 35 8 is_stmt 0 view .LVU11
   82 0016 F4EEC00A 		vcmpe.f32	s1, s0
   83 001a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
   84 001e 01DC     		bgt	.L8
   85 0020 B0EE600A 		vmov.f32	s0, s1
   86              	.L8:
   87              	.LVL7:
-  36:application/chassis/chassis.c ****     return v;
-  88              		.loc 1 36 5 is_stmt 1 view .LVU12
-  37:application/chassis/chassis.c **** }
-  89              		.loc 1 37 1 is_stmt 0 view .LVU13
+  35:application/chassis/chassis.c ****     return v;
+  88              		.loc 1 35 5 is_stmt 1 view .LVU12
+  36:application/chassis/chassis.c **** }
+  89              		.loc 1 36 1 is_stmt 0 view .LVU13
   90 0024 7047     		bx	lr
   91              		.cfi_endproc
   92              	.LFE147:
@@ -143,53 +142,53 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cck
   99              		.thumb_func
  101              	RC_Wheel_Reset:
  102              	.LFB148:
-  38:application/chassis/chassis.c **** 
-  39:application/chassis/chassis.c **** void RC_Wheel_Reset()
-  40:application/chassis/chassis.c **** {
- 103              		.loc 1 40 1 is_stmt 1 view -0
+  37:application/chassis/chassis.c **** 
+  38:application/chassis/chassis.c **** void RC_Wheel_Reset()
+  39:application/chassis/chassis.c **** {
+ 103              		.loc 1 39 1 is_stmt 1 view -0
  104              		.cfi_startproc
  105              		@ args = 0, pretend = 0, frame = 0
  106              		@ frame_needed = 0, uses_anonymous_args = 0
  107              		@ link register save eliminated.
-  41:application/chassis/chassis.c ****      uint8_t i;
- 108              		.loc 1 41 6 view .LVU15
-  42:application/chassis/chassis.c **** 
-  43:application/chassis/chassis.c ****      for(i = 0; i < MECANUM_WHEEL_NUM; i++)
- 109              		.loc 1 43 6 view .LVU16
+  40:application/chassis/chassis.c ****      uint8_t i;
+ 108              		.loc 1 40 6 view .LVU15
+  41:application/chassis/chassis.c **** 
+  42:application/chassis/chassis.c ****      for(i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 109              		.loc 1 42 6 view .LVU16
  110              	.LVL8:
- 111              		.loc 1 43 12 is_stmt 0 view .LVU17
+ 111              		.loc 1 42 12 is_stmt 0 view .LVU17
  112 0000 0023     		movs	r3, #0
- 113              		.loc 1 43 6 view .LVU18
+ 113              		.loc 1 42 6 view .LVU18
  114 0002 06E0     		b	.L10
  115              	.LVL9:
  116              	.L11:
-  44:application/chassis/chassis.c ****      {
-  45:application/chassis/chassis.c ****          s_wheel_i[i] = 0.0f;
- 117              		.loc 1 45 10 is_stmt 1 view .LVU19
- 118              		.loc 1 45 23 is_stmt 0 view .LVU20
+  43:application/chassis/chassis.c ****      {
+  44:application/chassis/chassis.c ****          s_wheel_i[i] = 0.0f;
+ 117              		.loc 1 44 10 is_stmt 1 view .LVU19
+ 118              		.loc 1 44 23 is_stmt 0 view .LVU20
  119 0004 044A     		ldr	r2, .L12
  120 0006 02EB8302 		add	r2, r2, r3, lsl #2
  121 000a 0021     		movs	r1, #0
  122 000c 1160     		str	r1, [r2]	@ float
-  43:application/chassis/chassis.c ****      {
- 123              		.loc 1 43 41 is_stmt 1 discriminator 3 view .LVU21
+  42:application/chassis/chassis.c ****      {
+ 123              		.loc 1 42 41 is_stmt 1 discriminator 3 view .LVU21
  124 000e 0133     		adds	r3, r3, #1
  125              	.LVL10:
-  43:application/chassis/chassis.c ****      {
- 126              		.loc 1 43 41 is_stmt 0 discriminator 3 view .LVU22
+  42:application/chassis/chassis.c ****      {
+ 126              		.loc 1 42 41 is_stmt 0 discriminator 3 view .LVU22
  127 0010 DBB2     		uxtb	r3, r3
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s 			page 4
-
-
  128              	.LVL11:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s 			page 4
+
+
  129              	.L10:
-  43:application/chassis/chassis.c ****      {
- 130              		.loc 1 43 19 is_stmt 1 discriminator 1 view .LVU23
+  42:application/chassis/chassis.c ****      {
+ 130              		.loc 1 42 19 is_stmt 1 discriminator 1 view .LVU23
  131 0012 032B     		cmp	r3, #3
  132 0014 F6D9     		bls	.L11
-  46:application/chassis/chassis.c ****      }
-  47:application/chassis/chassis.c **** }
- 133              		.loc 1 47 1 is_stmt 0 view .LVU24
+  45:application/chassis/chassis.c ****      }
+  46:application/chassis/chassis.c **** }
+ 133              		.loc 1 46 1 is_stmt 0 view .LVU24
  134 0016 7047     		bx	lr
  135              	.L13:
  136              		.align	2
@@ -206,16 +205,16 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cck
  149              	RC_Wheel_Speed_PI:
  150              	.LVL12:
  151              	.LFB149:
-  48:application/chassis/chassis.c **** 
-  49:application/chassis/chassis.c ****   /*单轮速度  PI  :前馈 + P +条件积分 + 输出限幅
-  50:application/chassis/chassis.c ****    * 非 static：robot.c 的四轮循环要调用它（分层前是同文件，天然可见） */
-  51:application/chassis/chassis.c **** float RC_Wheel_Speed_PI(uint8_t id, float ref , float rpm, float limit)
-  52:application/chassis/chassis.c **** {
- 152              		.loc 1 52 1 is_stmt 1 view -0
+  47:application/chassis/chassis.c **** 
+  48:application/chassis/chassis.c ****   /*单轮速度  PI  :前馈 + P +条件积分 + 输出限幅
+  49:application/chassis/chassis.c ****    * 非 static：robot.c 的四轮循环要调用它（分层前是同文件，天然可见） */
+  50:application/chassis/chassis.c **** float RC_Wheel_Speed_PI(uint8_t id, float ref , float rpm, float limit)
+  51:application/chassis/chassis.c **** {
+ 152              		.loc 1 51 1 is_stmt 1 view -0
  153              		.cfi_startproc
  154              		@ args = 0, pretend = 0, frame = 0
  155              		@ frame_needed = 0, uses_anonymous_args = 0
- 156              		.loc 1 52 1 is_stmt 0 view .LVU26
+ 156              		.loc 1 51 1 is_stmt 0 view .LVU26
  157 0000 38B5     		push	{r3, r4, r5, lr}
  158              	.LCFI0:
  159              		.cfi_def_cfa_offset 16
@@ -234,114 +233,114 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cck
  172              		.cfi_offset 85, -20
  173 0006 0446     		mov	r4, r0
  174 0008 F0EE418A 		vmov.f32	s17, s2
-  53:application/chassis/chassis.c ****     float err  = ref - rpm;
- 175              		.loc 1 53 5 is_stmt 1 view .LVU27
- 176              		.loc 1 53 11 is_stmt 0 view .LVU28
+  52:application/chassis/chassis.c ****     float err  = ref - rpm;
+ 175              		.loc 1 52 5 is_stmt 1 view .LVU27
+ 176              		.loc 1 52 11 is_stmt 0 view .LVU28
  177 000c 30EE60AA 		vsub.f32	s20, s0, s1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s 			page 5
-
-
  178              	.LVL13:
-  54:application/chassis/chassis.c ****     float a_ff = RC_WHEEL_FF_A_PER_RPM * ref;
- 179              		.loc 1 54 5 is_stmt 1 view .LVU29
- 180              		.loc 1 54 11 is_stmt 0 view .LVU30
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s 			page 5
+
+
+  53:application/chassis/chassis.c ****     float a_ff = RC_WHEEL_FF_A_PER_RPM * ref;
+ 179              		.loc 1 53 5 is_stmt 1 view .LVU29
+ 180              		.loc 1 53 11 is_stmt 0 view .LVU30
  181 0010 DFED297A 		vldr.32	s15, .L24
  182 0014 20EE270A 		vmul.f32	s0, s0, s15
  183              	.LVL14:
-  55:application/chassis/chassis.c ****     float a    = a_ff + RC_WHEEL_SPD_KP * err + s_wheel_i[id];
- 184              		.loc 1 55 5 is_stmt 1 view .LVU31
- 185              		.loc 1 55 41 is_stmt 0 view .LVU32
+  54:application/chassis/chassis.c ****     float a    = a_ff + RC_WHEEL_SPD_KP * err + s_wheel_i[id];
+ 184              		.loc 1 54 5 is_stmt 1 view .LVU31
+ 185              		.loc 1 54 41 is_stmt 0 view .LVU32
  186 0018 9FED289A 		vldr.32	s18, .L24+4
  187 001c 2AEE099A 		vmul.f32	s18, s20, s18
- 188              		.loc 1 55 23 view .LVU33
+ 188              		.loc 1 54 23 view .LVU33
  189 0020 39EE008A 		vadd.f32	s16, s18, s0
- 190              		.loc 1 55 58 view .LVU34
+ 190              		.loc 1 54 58 view .LVU34
  191 0024 264B     		ldr	r3, .L24+8
  192 0026 03EB8003 		add	r3, r3, r0, lsl #2
  193 002a D3ED009A 		vldr.32	s19, [r3]
- 194              		.loc 1 55 11 view .LVU35
+ 194              		.loc 1 54 11 view .LVU35
  195 002e 78EE29AA 		vadd.f32	s21, s16, s19
  196              	.LVL15:
-  56:application/chassis/chassis.c **** 
-  57:application/chassis/chassis.c ****     if(wheel_abs(a) < limit || (a >= limit && err < 0.0f) || (a <= -limit && err > 0.0f))
- 197              		.loc 1 57 5 is_stmt 1 view .LVU36
- 198              		.loc 1 57 8 is_stmt 0 view .LVU37
+  55:application/chassis/chassis.c **** 
+  56:application/chassis/chassis.c ****     if(wheel_abs(a) < limit || (a >= limit && err < 0.0f) || (a <= -limit && err > 0.0f))
+ 197              		.loc 1 56 5 is_stmt 1 view .LVU36
+ 198              		.loc 1 56 8 is_stmt 0 view .LVU37
  199 0032 B0EE6A0A 		vmov.f32	s0, s21
  200              	.LVL16:
- 201              		.loc 1 57 8 view .LVU38
+ 201              		.loc 1 56 8 view .LVU38
  202 0036 FFF7FEFF 		bl	wheel_abs
  203              	.LVL17:
- 204              		.loc 1 57 7 discriminator 1 view .LVU39
+ 204              		.loc 1 56 7 discriminator 1 view .LVU39
  205 003a F4EEC08A 		vcmpe.f32	s17, s0
  206 003e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  207 0042 15DC     		bgt	.L15
- 208              		.loc 1 57 29 discriminator 1 view .LVU40
+ 208              		.loc 1 56 29 discriminator 1 view .LVU40
  209 0044 F4EEE8AA 		vcmpe.f32	s21, s17
  210 0048 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  211 004c 04DB     		blt	.L16
- 212              		.loc 1 57 44 discriminator 2 view .LVU41
+ 212              		.loc 1 56 44 discriminator 2 view .LVU41
  213 004e B5EEC0AA 		vcmpe.f32	s20, #0
  214 0052 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  215 0056 0BD4     		bmi	.L15
  216              	.L16:
- 217              		.loc 1 57 68 discriminator 4 view .LVU42
+ 217              		.loc 1 56 68 discriminator 4 view .LVU42
  218 0058 F1EE687A 		vneg.f32	s15, s17
- 219              		.loc 1 57 59 discriminator 4 view .LVU43
+ 219              		.loc 1 56 59 discriminator 4 view .LVU43
  220 005c F4EEEA7A 		vcmpe.f32	s15, s21
  221 0060 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  222 0064 17DB     		blt	.L18
- 223              		.loc 1 57 75 discriminator 5 view .LVU44
+ 223              		.loc 1 56 75 discriminator 5 view .LVU44
  224 0066 B5EEC0AA 		vcmpe.f32	s20, #0
  225 006a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  226 006e 12DD     		ble	.L18
  227              	.L15:
-  58:application/chassis/chassis.c ****     {
-  59:application/chassis/chassis.c ****         s_wheel_i[id] += RC_WHEEL_SPD_KI * err * RC_WHEEL_SPD_DT_S;
- 228              		.loc 1 59 9 is_stmt 1 view .LVU45
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s 			page 6
+  57:application/chassis/chassis.c ****     {
+  58:application/chassis/chassis.c ****         s_wheel_i[id] += RC_WHEEL_SPD_KI * err * RC_WHEEL_SPD_DT_S;
+ 228              		.loc 1 58 9 is_stmt 1 view .LVU45
+ 229              		.loc 1 58 48 is_stmt 0 view .LVU46
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s 			page 6
 
 
- 229              		.loc 1 59 48 is_stmt 0 view .LVU46
  230 0070 DFED147A 		vldr.32	s15, .L24+12
  231 0074 29EE279A 		vmul.f32	s18, s18, s15
- 232              		.loc 1 59 23 view .LVU47
+ 232              		.loc 1 58 23 view .LVU47
  233 0078 39EE890A 		vadd.f32	s0, s19, s18
  234 007c 104D     		ldr	r5, .L24+8
  235 007e 05EB8405 		add	r5, r5, r4, lsl #2
  236 0082 85ED000A 		vstr.32	s0, [r5]
-  60:application/chassis/chassis.c ****         s_wheel_i[id] = wheel_clamp(s_wheel_i[id], -RC_WHEEL_I_MAX, RC_WHEEL_I_MAX);
- 237              		.loc 1 60 9 is_stmt 1 view .LVU48
- 238              		.loc 1 60 25 is_stmt 0 view .LVU49
+  59:application/chassis/chassis.c ****         s_wheel_i[id] = wheel_clamp(s_wheel_i[id], -RC_WHEEL_I_MAX, RC_WHEEL_I_MAX);
+ 237              		.loc 1 59 9 is_stmt 1 view .LVU48
+ 238              		.loc 1 59 25 is_stmt 0 view .LVU49
  239 0086 B7EE081A 		vmov.f32	s2, #1.5e+0
  240 008a FFEE080A 		vmov.f32	s1, #-1.5e+0
  241 008e FFF7FEFF 		bl	wheel_clamp
  242              	.LVL18:
- 243              		.loc 1 60 23 discriminator 1 view .LVU50
+ 243              		.loc 1 59 23 discriminator 1 view .LVU50
  244 0092 85ED000A 		vstr.32	s0, [r5]
  245              	.L18:
-  61:application/chassis/chassis.c ****     }
-  62:application/chassis/chassis.c **** 
-  63:application/chassis/chassis.c ****     a = a_ff + RC_WHEEL_SPD_KP * err + s_wheel_i[id];
- 246              		.loc 1 63 5 is_stmt 1 view .LVU51
- 247              		.loc 1 63 49 is_stmt 0 view .LVU52
+  60:application/chassis/chassis.c ****     }
+  61:application/chassis/chassis.c **** 
+  62:application/chassis/chassis.c ****     a = a_ff + RC_WHEEL_SPD_KP * err + s_wheel_i[id];
+ 246              		.loc 1 62 5 is_stmt 1 view .LVU51
+ 247              		.loc 1 62 49 is_stmt 0 view .LVU52
  248 0096 0A4B     		ldr	r3, .L24+8
  249 0098 03EB8403 		add	r3, r3, r4, lsl #2
  250 009c 93ED000A 		vldr.32	s0, [r3]
  251              	.LVL19:
-  64:application/chassis/chassis.c ****     
-  65:application/chassis/chassis.c ****     return wheel_clamp(a, -limit, limit);
- 252              		.loc 1 65 5 is_stmt 1 view .LVU53
- 253              		.loc 1 65 12 is_stmt 0 view .LVU54
+  63:application/chassis/chassis.c ****     
+  64:application/chassis/chassis.c ****     return wheel_clamp(a, -limit, limit);
+ 252              		.loc 1 64 5 is_stmt 1 view .LVU53
+ 253              		.loc 1 64 12 is_stmt 0 view .LVU54
  254 00a0 B0EE681A 		vmov.f32	s2, s17
  255 00a4 F1EE680A 		vneg.f32	s1, s17
  256 00a8 38EE000A 		vadd.f32	s0, s16, s0
  257              	.LVL20:
- 258              		.loc 1 65 12 view .LVU55
+ 258              		.loc 1 64 12 view .LVU55
  259 00ac FFF7FEFF 		bl	wheel_clamp
  260              	.LVL21:
-  66:application/chassis/chassis.c **** 
-  67:application/chassis/chassis.c **** }
- 261              		.loc 1 67 1 view .LVU56
+  65:application/chassis/chassis.c **** 
+  66:application/chassis/chassis.c **** }
+ 261              		.loc 1 66 1 view .LVU56
  262 00b0 BDEC068B 		vldm	sp!, {d8-d10}
  263              	.LCFI2:
  264              		.cfi_restore 84
@@ -352,16 +351,16 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cck
  269              		.cfi_restore 81
  270              		.cfi_def_cfa_offset 16
  271              	.LVL22:
- 272              		.loc 1 67 1 view .LVU57
+ 272              		.loc 1 66 1 view .LVU57
  273 00b4 38BD     		pop	{r3, r4, r5, pc}
  274              	.LVL23:
  275              	.L25:
- 276              		.loc 1 67 1 view .LVU58
+ 276              		.loc 1 66 1 view .LVU58
  277 00b6 00BF     		.align	2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s 			page 7
-
-
  278              	.L24:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s 			page 7
+
+
  279 00b8 17B7513A 		.word	978433815
  280 00bc 6F12033B 		.word	990057071
  281 00c0 00000000 		.word	s_wheel_i
@@ -394,26 +393,26 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cck
  309              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  310              		.file 4 "application/rc_dbus.h"
  311              		.file 5 "application/rc_state.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s 			page 8
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 chassis.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:20     .text.wheel_abs:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:26     .text.wheel_abs:00000000 wheel_abs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:54     .text.wheel_clamp:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:60     .text.wheel_clamp:00000000 wheel_clamp
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:95     .text.RC_Wheel_Reset:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:101    .text.RC_Wheel_Reset:00000000 RC_Wheel_Reset
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:138    .text.RC_Wheel_Reset:00000018 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:298    .bss.s_wheel_i:00000000 s_wheel_i
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:143    .text.RC_Wheel_Speed_PI:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:149    .text.RC_Wheel_Speed_PI:00000000 RC_Wheel_Speed_PI
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:279    .text.RC_Wheel_Speed_PI:000000b8 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:291    .bss.RC_WheelRef:00000000 RC_WheelRef
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:288    .bss.RC_WheelRef:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:295    .bss.s_wheel_i:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:304    .bss.RC_WheelFault:00000000 RC_WheelFault
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cckDgKnd.s:305    .bss.RC_WheelFault:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:20     .text.wheel_abs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:26     .text.wheel_abs:00000000 wheel_abs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:54     .text.wheel_clamp:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:60     .text.wheel_clamp:00000000 wheel_clamp
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:95     .text.RC_Wheel_Reset:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:101    .text.RC_Wheel_Reset:00000000 RC_Wheel_Reset
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:138    .text.RC_Wheel_Reset:00000018 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:298    .bss.s_wheel_i:00000000 s_wheel_i
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:143    .text.RC_Wheel_Speed_PI:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:149    .text.RC_Wheel_Speed_PI:00000000 RC_Wheel_Speed_PI
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:279    .text.RC_Wheel_Speed_PI:000000b8 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:291    .bss.RC_WheelRef:00000000 RC_WheelRef
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:288    .bss.RC_WheelRef:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:295    .bss.s_wheel_i:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:304    .bss.RC_WheelFault:00000000 RC_WheelFault
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccQq3IKg.s:305    .bss.RC_WheelFault:00000000 $d
 
 NO UNDEFINED SYMBOLS

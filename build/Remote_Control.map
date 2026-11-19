@@ -3235,7 +3235,7 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .comment       0x00000043       0x44 build/spi.o
  .comment       0x00000043       0x44 build/stm32h7xx_hal_spi.o
 
-.debug_info     0x00000000    0x26846
+.debug_info     0x00000000    0x2683b
  .debug_info    0x00000000      0xa98 build/main.o
  .debug_info    0x00000a98     0x12d6 build/stm32h7xx_it.o
  .debug_info    0x00001d6e      0x543 build/stm32h7xx_hal_msp.o
@@ -3262,15 +3262,15 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .debug_info    0x0001f308      0x468 build/mecanum.o
  .debug_info    0x0001f770     0x1131 build/ins.o
  .debug_info    0x000208a1      0x5db build/dbus.o
- .debug_info    0x00020e7c     0x1c3f build/robot.o
- .debug_info    0x00022abb      0x2d4 build/chassis.o
- .debug_info    0x00022d8f      0x8ce build/gimbal.o
- .debug_info    0x0002365d      0x477 build/gimbal_spin.o
- .debug_info    0x00023ad4     0x101f build/spi.o
- .debug_info    0x00024af3     0x1d23 build/stm32h7xx_hal_spi.o
- .debug_info    0x00026816       0x30 build/startup_stm32h723xx.o
+ .debug_info    0x00020e7c     0x1c36 build/robot.o
+ .debug_info    0x00022ab2      0x2d4 build/chassis.o
+ .debug_info    0x00022d86      0x8ce build/gimbal.o
+ .debug_info    0x00023654      0x475 build/gimbal_spin.o
+ .debug_info    0x00023ac9     0x101f build/spi.o
+ .debug_info    0x00024ae8     0x1d23 build/stm32h7xx_hal_spi.o
+ .debug_info    0x0002680b       0x30 build/startup_stm32h723xx.o
 
-.debug_abbrev   0x00000000     0x4986
+.debug_abbrev   0x00000000     0x4956
  .debug_abbrev  0x00000000      0x22f build/main.o
  .debug_abbrev  0x0000022f      0x193 build/stm32h7xx_it.o
  .debug_abbrev  0x000003c2       0xc8 build/stm32h7xx_hal_msp.o
@@ -3297,13 +3297,13 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .debug_abbrev  0x00003521      0x207 build/mecanum.o
  .debug_abbrev  0x00003728      0x270 build/ins.o
  .debug_abbrev  0x00003998      0x237 build/dbus.o
- .debug_abbrev  0x00003bcf      0x348 build/robot.o
- .debug_abbrev  0x00003f17      0x185 build/chassis.o
- .debug_abbrev  0x0000409c      0x229 build/gimbal.o
- .debug_abbrev  0x000042c5      0x15f build/gimbal_spin.o
- .debug_abbrev  0x00004424      0x233 build/spi.o
- .debug_abbrev  0x00004657      0x312 build/stm32h7xx_hal_spi.o
- .debug_abbrev  0x00004969       0x1d build/startup_stm32h723xx.o
+ .debug_abbrev  0x00003bcf      0x320 build/robot.o
+ .debug_abbrev  0x00003eef      0x185 build/chassis.o
+ .debug_abbrev  0x00004074      0x229 build/gimbal.o
+ .debug_abbrev  0x0000429d      0x157 build/gimbal_spin.o
+ .debug_abbrev  0x000043f4      0x233 build/spi.o
+ .debug_abbrev  0x00004627      0x312 build/stm32h7xx_hal_spi.o
+ .debug_abbrev  0x00004939       0x1d build/startup_stm32h723xx.o
 
 .debug_loc      0x00000000    0x17427
  .debug_loc     0x00000000      0x10b build/main.o
@@ -3442,7 +3442,7 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .debug_ranges  0x00001300      0x198 build/stm32h7xx_hal_spi.o
  .debug_ranges  0x00001498       0x20 build/startup_stm32h723xx.o
 
-.debug_line     0x00000000    0x19d6c
+.debug_line     0x00000000    0x19dc9
  .debug_line    0x00000000      0x504 build/main.o
  .debug_line    0x00000504      0x38c build/stm32h7xx_it.o
  .debug_line    0x00000890      0x1b8 build/stm32h7xx_hal_msp.o
@@ -3469,13 +3469,13 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .debug_line    0x00013b08      0x484 build/mecanum.o
  .debug_line    0x00013f8c      0xc73 build/ins.o
  .debug_line    0x00014bff      0x631 build/dbus.o
- .debug_line    0x00015230      0xdba build/robot.o
- .debug_line    0x00015fea      0x2af build/chassis.o
- .debug_line    0x00016299      0x9a9 build/gimbal.o
- .debug_line    0x00016c42      0x53d build/gimbal_spin.o
- .debug_line    0x0001717f      0x3c6 build/spi.o
- .debug_line    0x00017545     0x27b3 build/stm32h7xx_hal_spi.o
- .debug_line    0x00019cf8       0x74 build/startup_stm32h723xx.o
+ .debug_line    0x00015230      0xe0b build/robot.o
+ .debug_line    0x0001603b      0x2af build/chassis.o
+ .debug_line    0x000162ea      0x9a9 build/gimbal.o
+ .debug_line    0x00016c93      0x549 build/gimbal_spin.o
+ .debug_line    0x000171dc      0x3c6 build/spi.o
+ .debug_line    0x000175a2     0x27b3 build/stm32h7xx_hal_spi.o
+ .debug_line    0x00019d55       0x74 build/startup_stm32h723xx.o
 
 .debug_str      0x00000000     0x7457
  .debug_str     0x00000000     0x7457 build/main.o

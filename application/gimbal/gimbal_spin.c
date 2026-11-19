@@ -4,14 +4,13 @@
  * @note    2026-11-19 分层整理：以下内容从 remote/rc_dbus.c 原样搬迁，逻辑未改。
  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
  */
+#include "gimbal_spin.h"
 #include "rc_dbus.h"
 #include "bsp_time.h"
 #include "rc_state.h"
-#include "usart.h"
 #include "DJ_Motor.h"
 #include "mecanum.h"
 #include "ins.h"
-#include "fdcan.h"
 #include "bsp_can.h"
 #include <string.h>
 #include <math.h>

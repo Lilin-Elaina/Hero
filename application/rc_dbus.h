@@ -313,15 +313,14 @@ extern float RC_WheelOut[];
 /* 每个控制周期调用一次：解码后的摇杆 →3508 的电流指令 */
 void RC_Control_Task(void);
 
-/* ---- 分层后跨文件调用的入口（实现分别在 application/chassis、application/gimbal） ---- */
-float wheel_abs(float x);                                          /* chassis.c  */
-float wheel_clamp(float v, float lo, float hi);                    /* chassis.c  */
-void  RC_Wheel_Reset(void);                                        /* chassis.c  */
-float RC_Wheel_Speed_PI(uint8_t id, float ref, float rpm, float limit); /* chassis.c  */
-float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick);     /* gimbal.c   */
-float RC_GetOffsetAngle(void);                                     /* gimbal.c   */
-float RC_Yaw_Control(uint8_t online, float stick);                 /* gimbal.c   */
-float RC_Yaw_Spin_Control(uint8_t online, float stick);            /* gimbal_spin.c */
-void  RC_Yaw_Handover(void);                                       /* gimbal_spin.c */
+/* ---- 分层后跨文件调用的入口 ----------------------------------------
+ * 原型已经按层拆到自己文件的头里，这里只做汇总 include，
+ * 这样老的 `#include "rc_dbus.h"` 一处都不用改：
+ *   application/chassis/chassis.h      —— 四轮速度环
+ *   application/gimbal/gimbal.h        —— pitch / yaw 车体系环
+ *   application/gimbal/gimbal_spin.h   —— 小陀螺世界系环 */
+#include "chassis.h"
+#include "gimbal.h"
+#include "gimbal_spin.h"
 
 #endif
