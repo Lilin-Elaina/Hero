@@ -19,8 +19,11 @@
 /* 最近一次 RC_Control_Task 算出的各轮归一化目标（调试用，可在调试器里看） */
 float RC_WheelOut[MECANUM_WHEEL_NUM] = {0};
 
-/* 使能条件持续的起始时刻：用于“拨杆刚到位也要等 100ms 才给电流”的软启动门 */
-static uint32_t rc_enable_since = 0;
+/* 使能三态机：0=等待条件 1=计时中（软启动门） 2=已使能 */
+typedef enum { RC_EN_WAIT = 0, RC_EN_ARMING = 1, RC_EN_READY = 2 } RC_EnableState_t;
+
+volatile uint8_t  RC_EnableState = RC_EN_WAIT;   /* 调试镜像 */
+volatile uint32_t RC_EnableMs    = 0u;           /* 计时中已等了多久 ms */
 
 /* 调试镜像：yaw 闭环内部量（只读，给 Ozone 看） */
 volatile float RC_YawRef    = 0.0f;   /* 目标角 counts */
@@ -56,11 +59,28 @@ volatile uint32_t RC_Can2CCCR    = 0;
 volatile uint32_t RC_Can2BusOffCnt = 0;   /* Bus-Off 中断次数（bsp.can.c 里 +1） */
 volatile uint32_t RC_Can2RestartCnt = 0;  /* RX 活性看门狗触发的 Stop+Start 次数 */
 
+/* ------------------------------------------------------------------ */
+/* 阶段函数的文件级状态（原先是函数内 static，提取后语义完全等价）      */
+/* ------------------------------------------------------------------ */
+/* 每轮电流指令的极性：D 之后的车体四个轮子 */
+static const float s_wheel_sign[MECANUM_WHEEL_NUM] = {
+    MOTOR_POL_ID1, MOTOR_POL_ID2, MOTOR_POL_ID3, MOTOR_POL_ID4};
+
+static float s_yaw_volt_prev = 0.0f;   /* yaw 电压斜坡状态 */
+static float s_fric_a        = 0.0f;   /* 摩擦轮电流斜坡状态 */
+
+/* 1 kHz 控制拆成四段：底盘 → 云台 → 摩擦轮，顺序与拆分前逐拍一致 */
+static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mode,
+                          int16_t *raw);
+static void RC_Yaw_Step(uint32_t now, uint8_t online, uint8_t spin_mode, float *volt);
+static void RC_Fric_Step(uint8_t online, int16_t *fric_l, int16_t *fric_r);
+
+
 /* ★固件版本指纹（Watch 自检用）：
  * Ozone 里读 RC_BuildTag，必须等于下面这个值；读出来是 0/乱数 = 挂的 ELF 与芯片
  * 固件不是同一版（地址全错位，Watch 里所有变量读数都不可信）。
  * 每次改了全局变量布局/新增变量就把后 4 位改一下，方便确认。 */
-volatile uint32_t RC_BuildTag = 0x11172359u;   /* 0x…59 = 2026-11-19 分层版 */
+volatile uint32_t RC_BuildTag = 0x1117235Au;   /* 0x…5A = 2026-11-19 分层 + 使能三态机版 */
 /* ------------------------------------------------------------------ */
 /* 控制任务：1kHz 调用一次                                              */
 /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              */
@@ -88,8 +108,8 @@ void RC_Control_Task(void)
         RC_Can2CCCR = hfdcan2.Instance->CCCR;
 
         /* 版本指纹：每拍写入常量（同时保证该变量不被 --gc-sections 回收）。
-         * Watch 读到的值 ≠ 0x11172359 → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
-        RC_BuildTag = 0x11172359u;
+         * Watch 读到的值 ≠ 0x1117235A → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
+        RC_BuildTag = 0x1117235Au;
     }
 
 #if (RC_ENABLE_SW_POS != 0)
@@ -156,24 +176,56 @@ void RC_Control_Task(void)
         }
     }
 
-    uint8_t enabled = (online && armed);
+    uint8_t enabled = 0u;
 
-    /* 使能条件必须“连续保持”才放行：失联恢复或拨杆刚到位时不立刻上电，
-     * 避免遥控信号抖动导致电机抽搐（软启动门） */
-    if (enabled)
+    /* 使能门：拨杆到位/失联恢复后必须“连续保持 RC_ENABLE_DELAY_MS”才放行。
+     * 旧版是 if/else 两拍写法，有一个实实在在的 bug：
+     *   enabled 第一次为真的那一拍只记录起始时刻，**当拍并没有清 enabled**，
+     *   于是电机先拿满指令、下一拍才被门挡住 → 手感是“点一下、停 100ms、再上电”。
+     * 现在改成显式三态机，等待期一定输出 0，且等待期内只要条件掉一次就重新计时。 */
     {
-        if (rc_enable_since == 0)
+        static uint8_t  s_en_state = RC_EN_WAIT;
+        static uint32_t s_en_since = 0u;
+
+        const uint8_t req = (uint8_t)((online != 0u) && (armed != 0u));
+
+        if (req == 0u)
         {
-            rc_enable_since = now;
+            s_en_state = RC_EN_WAIT;        /* 条件不成立：立即撤销，并清计时 */
+            s_en_since = 0u;
+            enabled    = 0u;
         }
-        else if ((now - rc_enable_since) < RC_ENABLE_DELAY_MS)
+        else
         {
-            enabled = 0;                /* 门时间内先不给力，但斜坡已开始回零 */
+            switch (s_en_state)
+            {
+            case RC_EN_WAIT:
+                s_en_state = RC_EN_ARMING;  /* 刚满足：开始计时，当拍仍不给力 */
+                s_en_since = now;
+                enabled    = 0u;
+                break;
+
+            case RC_EN_ARMING:
+                if ((now - s_en_since) >= RC_ENABLE_DELAY_MS)
+                {
+                    s_en_state = RC_EN_READY;
+                    enabled    = 1u;
+                }
+                else
+                {
+                    enabled = 0u;
+                }
+                break;
+
+            case RC_EN_READY:
+            default:
+                enabled = 1u;
+                break;
+            }
         }
-    }
-    else
-    {
-        rc_enable_since = 0;
+
+        RC_EnableState = s_en_state;        /* 调试镜像：0=等待 1=计时中 2=已使能 */
+        RC_EnableMs    = (s_en_state == RC_EN_ARMING) ? (now - s_en_since) : 0u;
     }
 
     /* ---- CAN2 RX 活性看门狗（2026-11-18）----
@@ -301,11 +353,54 @@ void RC_Control_Task(void)
     mix_state = 2u;
 }
 
-static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
-    MOTOR_POL_ID1, MOTOR_POL_ID2, MOTOR_POL_ID3, MOTOR_POL_ID4};
-
-     float max_a = (float )RC_MAX_CURRENT_A;
      int16_t  raw[MECANUM_WHEEL_NUM];
+
+     RC_Wheel_Step(mix_state, follow_on, spin_mode, raw);
+
+    float volt;
+
+    RC_Yaw_Step(now, online, spin_mode, &volt);
+
+     /*pitch电机赋值*/
+      float pit  = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;
+      float volt_p = RC_Pitch_Control(online, 1u, pit);
+
+    int16_t fric_l;
+    int16_t fric_r;
+
+    RC_Fric_Step(online, &fric_l, &fric_r);
+
+    /* ⑤ 安全开关：yaw / pitch / 摩擦轮 全部清零 */
+#if GM_SAFE_NO_OUTPUT
+    volt   = 0.0f;
+    volt_p = 0.0f;
+    fric_l = 0;
+    fric_r = 0;
+#endif
+    s_yaw_volt_prev = volt;     /* ★ 记下本拍输出，下一拍才能继续爬（斜坡状态在阶段 3） */
+    RC_YawVoltOut = volt;       /* 斜坡之后的真实发送值（RC_YawVolt 是斜坡之前） */
+
+    /* ⑥ 发送：CAN2 = 底盘四轮 + yaw；CAN1 = 摩擦轮 + pitch */
+#if (FRIC_USE_CAN1)
+  #if (MECANUM_WHEEL_NUM == 4)
+    DJ3508_Send_I_Can2(raw[0], raw[1], raw[2], raw[3]); /* CAN2：四轮 0x200 槽位全用 */
+ 
+  #endif
+    DJ6020_Send_V_Can2((int16_t)volt, 0);       /* CAN2：yaw ID1 */
+    DJ3508_Send_Can1(fric_l, fric_r);           /* CAN1：摩擦轮 ID2 / ID3 */
+    DJ6020_Send_Can1((int16_t)volt_p);          /* CAN1：pitch ID2 */
+
+#endif
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 阶段 2：底盘四轮 → 电流指令（原 RC_Control_Task 的第 5 段）          */
+/* ------------------------------------------------------------------ */
+static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mode,
+                          int16_t *raw)
+{
+     float max_a = (float )RC_MAX_CURRENT_A;
      uint8_t  fault_mask = 0u;
 
 
@@ -410,10 +505,17 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
      }
     }
 
+}
+
+/* ------------------------------------------------------------------ */
+/* 阶段 3：yaw（限位/超速兜底/斜坡）→ volt                             */
+/* ------------------------------------------------------------------ */
+static void RC_Yaw_Step(uint32_t now, uint8_t online, uint8_t spin_mode, float *out_volt)
+{
     /* 6) 云台 GM6020（yaw）：限位 + 超速兜底 + 斜坡 + 安全开关
      *    小陀螺走专用世界航向环，其余模式走原来的手控/跟随环，两条路互不干扰 */
     float gim  = online ? RC_Norm(RC_CH_GIMBAL) : 0.0f;
-    float volt = (spin_mode != 0u) ? RC_Yaw_Spin_Control(online, gim)
+    float v = (spin_mode != 0u) ? RC_Yaw_Spin_Control(online, gim)
                                    : RC_Yaw_Control(online, gim);
 
     /* ① 反馈超时 / 遥控离线 → 断电（没有反馈就等于没有限位）
@@ -448,7 +550,7 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
 
         /* ② 超速兜底（带去抖）：
          *    旧版单帧就断：0x205 里混进一帧别的节点的帧（|rpm| 几千）→ 每拍断电 →
-         *    电压钉 0（“枪口无阻力”）+ volt_prev 清零 → 斜坡从零重爬 → 整车抽搐。
+         *    电压钉 0（“枪口无阻力”）+ s_yaw_volt_prev 清零 → 斜坡从零重爬 → 整车抽搐。
          *    现在：假帧在 DJ_Motor.c 已整帧丢弃（|rpm|>600）；这里再要求连续
          *    GM_RPM_KICK_MS(10ms) 都超限才认“真超速”，安全性不降。 */
         static uint16_t s_rpm_over = 0u;
@@ -467,24 +569,27 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
     /* ④ 斜坡：每拍最多变 GM_VOLT_SLEW，避免扭矩冲击
      *    故障时不能走斜坡——否则上一拍 18000，这一拍只是 17800，
      *    要 90 ms 才掉到 0，等于故障期间还在给扭矩。直接把斜坡状态也清掉。 */
-    static float volt_prev = 0.0f;
     if (s_yaw_slew_kick != 0u) {
         s_yaw_slew_kick = 0u;
-        volt_prev = 0.0f;       /* 交接后从 0 重新爬，不吃上一模式的旧斜坡 */
+        s_yaw_volt_prev = 0.0f;       /* 交接后从 0 重新爬，不吃上一模式的旧斜坡 */
     }
     if (yaw_kill != 0u) {
-        volt      = 0.0f;
-        volt_prev = 0.0f;       /* 恢复时从 0 重新往上爬 */
+        v      = 0.0f;
+        s_yaw_volt_prev = 0.0f;       /* 恢复时从 0 重新往上爬 */
     } else {
-        if (volt > volt_prev + GM_VOLT_SLEW) volt = volt_prev + GM_VOLT_SLEW;
-        if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+        if (v > s_yaw_volt_prev + GM_VOLT_SLEW) v = s_yaw_volt_prev + GM_VOLT_SLEW;
+        if (v < s_yaw_volt_prev - GM_VOLT_SLEW) v = s_yaw_volt_prev - GM_VOLT_SLEW;
     }
-    RC_YawSpinOut = volt;       /* 实发电压（斜坡之后），小陀螺环的积分回算用它 */
+    RC_YawSpinOut = v;       /* 实发电压（斜坡之后），小陀螺环的积分回算用它 */
 
-     /*pitch电机赋值*/
-      float pit  = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;
-      float volt_p = RC_Pitch_Control(online, 1u, pit);
+    *out_volt = v;
+}
 
+/* ------------------------------------------------------------------ */
+/* 阶段 4：摩擦轮 → 电流指令（含松杆主动刹车）                          */
+/* ------------------------------------------------------------------ */
+static void RC_Fric_Step(uint8_t online, int16_t *out_l, int16_t *out_r)
+{
     /* ⑧ 摩擦轮：左拨杆上 → 3508 ID2/ID3 反向同电流 */
 #if (FRIC_ENABLE_USE_LEFT)
     uint8_t fric_sw = (RC_Data.s_left  == FRIC_ENABLE_SW);
@@ -500,10 +605,9 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
         (BSP_Now() - dj_motor[2].last_tick) > FRIC_TIMEOUT_MS)
         fric_tgt = 0.0f;
 
-    static float fric_a = 0.0f;
-    if      (fric_tgt > fric_a + FRIC_RAMP_A_PER_MS) fric_a += FRIC_RAMP_A_PER_MS;
-    else if (fric_tgt < fric_a - FRIC_RAMP_A_PER_MS) fric_a -= FRIC_RAMP_A_PER_MS;
-    else                                             fric_a  = fric_tgt;
+    if      (fric_tgt > s_fric_a + FRIC_RAMP_A_PER_MS) s_fric_a += FRIC_RAMP_A_PER_MS;
+    else if (fric_tgt < s_fric_a - FRIC_RAMP_A_PER_MS) s_fric_a -= FRIC_RAMP_A_PER_MS;
+    else                                             s_fric_a  = fric_tgt;
 
     int16_t fric_l;
     int16_t fric_r;
@@ -511,8 +615,8 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
     if (fric_tgt > 0.0001f)
     {
         /* 正常出力：两轮反向，把弹丸往外挤 */
-        fric_l = (int16_t)(FRIC_L_SIGN * fric_a / 20.0f * 16384.0f);
-        fric_r = (int16_t)(FRIC_R_SIGN * fric_a / 20.0f * 16384.0f);
+        fric_l = (int16_t)(FRIC_L_SIGN * s_fric_a / 20.0f * 16384.0f);
+        fric_r = (int16_t)(FRIC_R_SIGN * s_fric_a / 20.0f * 16384.0f);
     }
     else//若未给值即拨杆不在上
     {
@@ -546,25 +650,6 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
         }
     }
 
-    /* ⑤ 安全开关：yaw / pitch / 摩擦轮 全部清零 */
-#if GM_SAFE_NO_OUTPUT
-    volt   = 0.0f;
-    volt_p = 0.0f;
-    fric_l = 0;
-    fric_r = 0;
-#endif
-    volt_prev = volt;           /* ★ 记下本拍输出，下一拍才能继续爬 */
-    RC_YawVoltOut = volt;       /* 斜坡之后的真实发送值（RC_YawVolt 是斜坡之前） */
-
-    /* ⑥ 发送：CAN2 = 底盘四轮 + yaw；CAN1 = 摩擦轮 + pitch */
-#if (FRIC_USE_CAN1)
-  #if (MECANUM_WHEEL_NUM == 4)
-    DJ3508_Send_I_Can2(raw[0], raw[1], raw[2], raw[3]); /* CAN2：四轮 0x200 槽位全用 */
- 
-  #endif
-    DJ6020_Send_V_Can2((int16_t)volt, 0);       /* CAN2：yaw ID1 */
-    DJ3508_Send_Can1(fric_l, fric_r);           /* CAN1：摩擦轮 ID2 / ID3 */
-    DJ6020_Send_Can1((int16_t)volt_p);          /* CAN1：pitch ID2 */
-
-#endif
+    *out_l = fric_l;
+    *out_r = fric_r;
 }

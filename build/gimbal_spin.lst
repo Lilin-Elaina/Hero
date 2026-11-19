@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
   28:application/gimbal/gimbal_spin.c **** volatile float RC_SpinErr = 0.0f;
   29:application/gimbal/gimbal_spin.c **** volatile float RC_YawSpinOut = 0.0f;   /* 小陀螺环上一拍真正发出去的电压（斜坡+�
   30:application/gimbal/gimbal_spin.c **** /* ======================= 云台 yaw：小陀螺专用（世界航向闭环） ===================
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 2
 
 
   31:application/gimbal/gimbal_spin.c ****  * 为什么单独一套：小陀螺下"保持世界朝向"是个跟踪问题——底盘在匀速�
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
   71 0026 AB68     		ldr	r3, [r5, #8]
   72              		.loc 1 42 39 discriminator 1 view .LVU11
   73 0028 C01A     		subs	r0, r0, r3
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 3
 
 
   74              		.loc 1 42 19 discriminator 1 view .LVU12
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  108 0056 66EEA76A 		vmul.f32	s13, s13, s15
  109              	.LVL7:
  110              		.loc 1 62 16 view .LVU26
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 4
 
 
  111 005a A54B     		ldr	r3, .L34+20
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  153 0090 23B1     		cbz	r3, .L23
   48:application/gimbal/gimbal_spin.c ****         RC_SpinYaw   = (float)INS_WorldYaw;
  154              		.loc 1 48 84 discriminator 1 view .LVU41
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 5
 
 
  155 0092 944B     		ldr	r3, .L34+8
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  194 00c8 83ED000A 		vstr.32	s0, [r3]
   55:application/gimbal/gimbal_spin.c ****         RC_YawI      = s_spin_i;
  195              		.loc 1 55 9 is_stmt 1 view .LVU57
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 6
 
 
   55:application/gimbal/gimbal_spin.c ****         RC_YawI      = s_spin_i;
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  108:application/gimbal/gimbal_spin.c ****     rpm_d = (w_cmd - w_chassis) * (1.0f / 6.0f);
  109:application/gimbal/gimbal_spin.c **** #endif
  110:application/gimbal/gimbal_spin.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 7
 
 
  111:application/gimbal/gimbal_spin.c ****     if (rpm_d >  SPIN_YAW_RPM_MAX) rpm_d =  SPIN_YAW_RPM_MAX;
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
   48:application/gimbal/gimbal_spin.c ****         RC_SpinYaw   = (float)INS_WorldYaw;
  221              		.loc 1 48 66 discriminator 3 view .LVU64
  222 00de 0122     		movs	r2, #1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 8
 
 
  223 00e0 DDE7     		b	.L5
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  265 012c 75EEC75A 		vsub.f32	s11, s11, s14
  266              	.LVL18:
   75:application/gimbal/gimbal_spin.c ****         if (s_spin_bad < 300u) s_spin_bad++;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 9
 
 
  267              		.loc 1 75 5 is_stmt 1 view .LVU77
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  307 016e 614B     		ldr	r3, .L34+24
  308 0170 93ED007A 		vldr.32	s14, [r3]
   95:application/gimbal/gimbal_spin.c ****         float a_err = (s_spin_ref - psi_c) - alpha_deg;  /* 关节角误差（deg） */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 10
 
 
  309              		.loc 1 95 15 view .LVU92
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  349              	.LVL24:
  112:application/gimbal/gimbal_spin.c **** 
  350              		.loc 1 112 42 discriminator 1 view .LVU107
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 11
 
 
  351 01bc 18E0     		b	.L16
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  390              		.loc 1 111 42 discriminator 1 view .LVU122
  391 01ec 9FED567A 		vldr.32	s14, .L34+108
  392              	.LVL27:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 12
 
 
  393              	.L16:
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  432 0232 9FED4B4A 		vldr.32	s8, .L34+132
  433              	.LVL31:
  128:application/gimbal/gimbal_spin.c ****         if (s_spin_i >  SPIN_YAW_I_MAX) s_spin_i =  SPIN_YAW_I_MAX;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 13
 
 
  434              		.loc 1 128 35 view .LVU138
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  473 027a 93ED006A 		vldr.32	s12, [r3]
  132:application/gimbal/gimbal_spin.c **** 
  474              		.loc 1 132 10 view .LVU154
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 14
 
 
  475 027e 30EE060A 		vadd.f32	s0, s0, s12
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  141:application/gimbal/gimbal_spin.c ****     RC_YawErr    = e;
  515              		.loc 1 141 18 is_stmt 0 view .LVU169
  516 02bc 134B     		ldr	r3, .L34+48
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 15
 
 
  517 02be C3ED006A 		vstr.32	s13, [r3]
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  561 0330 00004844 		.word	1145569280
  562 0334 000048C4 		.word	-1001914368
  563 0338 00000000 		.word	s_spin_bad
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 16
 
 
  564 033c 780BB641 		.word	1102449528
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  612              		.loc 1 156 18 is_stmt 0 view .LVU188
  613 001a 0023     		movs	r3, #0
  614 001c 0949     		ldr	r1, .L37+12
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 17
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 17
 
 
  615 001e 0B70     		strb	r3, [r1]
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  665 0000 00000000 		.space	4
  666              		.global	RC_SpinWch
  667              		.section	.bss.RC_SpinWch,"aw",%nobits
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 18
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 18
 
 
  668              		.align	2
@@ -1057,35 +1057,35 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1
  715              		.file 6 "modules/motor/DJ_Motor.h"
  716              		.file 7 "modules/imu/ins.h"
  717              		.file 8 "bsp/bsp_time.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s 			page 19
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s 			page 19
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 gimbal_spin.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:20     .text.RC_Yaw_Spin_Control:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:26     .text.RC_Yaw_Spin_Control:00000000 RC_Yaw_Spin_Control
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:540    .text.RC_Yaw_Spin_Control:000002dc $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:695    .bss.s_spin_ready:00000000 s_spin_ready
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:707    .bss.s_spin_ref:00000000 s_spin_ref
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:701    .bss.s_spin_i:00000000 s_spin_i
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:678    .bss.RC_SpinYaw:00000000 RC_SpinYaw
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:671    .bss.RC_SpinWch:00000000 RC_SpinWch
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:664    .bss.RC_SpinErr:00000000 RC_SpinErr
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:690    .bss.s_spin_bad:00000000 s_spin_bad
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:657    .bss.RC_YawSpinOut:00000000 RC_YawSpinOut
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:582    .text.RC_Yaw_Handover:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:588    .text.RC_Yaw_Handover:00000000 RC_Yaw_Handover
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:640    .text.RC_Yaw_Handover:00000038 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:684    .bss.s_yaw_slew_kick:00000000 s_yaw_slew_kick
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:654    .bss.RC_YawSpinOut:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:661    .bss.RC_SpinErr:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:668    .bss.RC_SpinWch:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:675    .bss.RC_SpinYaw:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:685    .bss.s_yaw_slew_kick:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:687    .bss.s_spin_bad:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:696    .bss.s_spin_ready:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:698    .bss.s_spin_i:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc10mixA.s:704    .bss.s_spin_ref:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:20     .text.RC_Yaw_Spin_Control:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:26     .text.RC_Yaw_Spin_Control:00000000 RC_Yaw_Spin_Control
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:540    .text.RC_Yaw_Spin_Control:000002dc $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:695    .bss.s_spin_ready:00000000 s_spin_ready
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:707    .bss.s_spin_ref:00000000 s_spin_ref
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:701    .bss.s_spin_i:00000000 s_spin_i
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:678    .bss.RC_SpinYaw:00000000 RC_SpinYaw
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:671    .bss.RC_SpinWch:00000000 RC_SpinWch
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:664    .bss.RC_SpinErr:00000000 RC_SpinErr
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:690    .bss.s_spin_bad:00000000 s_spin_bad
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:657    .bss.RC_YawSpinOut:00000000 RC_YawSpinOut
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:582    .text.RC_Yaw_Handover:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:588    .text.RC_Yaw_Handover:00000000 RC_Yaw_Handover
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:640    .text.RC_Yaw_Handover:00000038 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:684    .bss.s_yaw_slew_kick:00000000 s_yaw_slew_kick
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:654    .bss.RC_YawSpinOut:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:661    .bss.RC_SpinErr:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:668    .bss.RC_SpinWch:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:675    .bss.RC_SpinYaw:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:685    .bss.s_yaw_slew_kick:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:687    .bss.s_spin_bad:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:696    .bss.s_spin_ready:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:698    .bss.s_spin_i:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1a77Tz.s:704    .bss.s_spin_ref:00000000 $d
 
 UNDEFINED SYMBOLS
 RC_GetOffsetAngle
