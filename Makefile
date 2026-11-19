@@ -228,6 +228,13 @@ clean:
 	-rm -fR $(BUILD_DIR)
 
 #######################################
+# 分层自检（只读，不参与构建）
+#   make check  —— 硬规则违规会 exit 1，可用于提交前自查/CI
+#######################################
+check:
+	@node tools/check_layers.js
+
+#######################################
 # flash (J-Link) —— 交给全局 flash.mk
 #   D:/STM32CUBE/flash.mk 由环境变量 MAKEFILES 自动加载，
 #   这里不再重复定义 flash / download，否则会连着烧两次。

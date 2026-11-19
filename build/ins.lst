@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
   29:modules/imu/ins.c **** #define ACC_CHIP_ID     0x00u
   30:modules/imu/ins.c **** #define ACC_DATA        0x12u
   31:modules/imu/ins.c **** #define ACC_CONF        0x40u
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 2
 
 
   32:modules/imu/ins.c **** #define ACC_RANGE       0x41u
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
   86:modules/imu/ins.c ****  * pitch 一动 x 轴就离开竖直，-Gyro[0] 不再是世界偏航角速度，必须用重力
   87:modules/imu/ins.c ****  * 方向把陀螺投影到竖直轴上：ω_world = ω·v，v = 世界“上”在体轴系的投�
   88:modules/imu/ins.c ****  * 无磁力计 → 偏航角靠陀螺积分，零偏偏移会让 INS_WorldYaw 缓慢漂移（正�
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 3
 
 
   89:modules/imu/ins.c ****  */
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  143:modules/imu/ins.c ****     ex = ay * vz - az * vy;
  144:modules/imu/ins.c ****     ey = az * vx - ax * vz;
  145:modules/imu/ins.c ****     ez = ax * vy - ay * vx;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 4
 
 
  146:modules/imu/ins.c **** 
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  200:modules/imu/ins.c ****         if (s_ahrs_cnt == MAHONY_WARMUP) {
  201:modules/imu/ins.c ****             INS_AhrsReady = 1u;
  202:modules/imu/ins.c ****         }
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 5
 
 
  203:modules/imu/ins.c ****         return;                     /* 收敛期内只跑姿态，不发布积分 */
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  226:modules/imu/ins.c ****  *   说明多丢了 1 个字节。默认改成 acc=1 / gyro=0，上电再自动确认。 */
  227:modules/imu/ins.c **** static uint8_t s_skip_acc  = 1u;
  228:modules/imu/ins.c **** static uint8_t s_skip_gyro = 0u;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 6
 
 
  229:modules/imu/ins.c **** 
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  242:modules/imu/ins.c ****     (void)BSP_IMU_Transfer(tx, rx, n);
  102              		.loc 1 242 5 is_stmt 1 view .LVU19
  103              		.loc 1 242 11 is_stmt 0 view .LVU20
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 7
 
 
  104 001e 3A46     		mov	r2, r7
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  265:modules/imu/ins.c **** 
  266:modules/imu/ins.c ****     ins_cs(dev, 1);
  267:modules/imu/ins.c ****     uint8_t st = BSP_IMU_Transfer(tx, rx, n);
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 8
 
 
  268:modules/imu/ins.c ****     ins_cs(dev, 0);
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  145              		.cfi_offset 4, -8
  146              		.cfi_offset 14, -4
  315:modules/imu/ins.c ****     uint8_t k;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 9
 
 
  147              		.loc 1 315 5 view .LVU27
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  189 0026 0022     		movs	r2, #0
  190 0028 2146     		mov	r1, r4
  191 002a 1046     		mov	r0, r2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 10
 
 
  192 002c FFF7FEFF 		bl	ins_read_at
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  235 0058 1B49     		ldr	r1, .L21+8
  236 005a 0978     		ldrb	r1, [r1]	@ zero_extendqisi2
  237              		.loc 1 332 51 discriminator 1 view .LVU57
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 11
 
 
  238 005c FF29     		cmp	r1, #255
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  285              		.loc 1 336 21 is_stmt 0 view .LVU74
  286 008e 0E4B     		ldr	r3, .L21+8
  287              	.LVL27:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 12
 
 
  288              		.loc 1 336 21 view .LVU75
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  333 00c0 00000000 		.word	INS_AccDump
  334 00c4 00000000 		.word	INS_GyroDump
  335 00c8 00000000 		.word	s_skip_acc
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 13
 
 
  336 00cc 00000000 		.word	s_skip_gyro
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  257:modules/imu/ins.c ****     uint16_t i;
  384              		.loc 1 257 5 is_stmt 1 view .LVU97
  257:modules/imu/ins.c ****     uint16_t i;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 14
 
 
  385              		.loc 1 257 42 is_stmt 0 view .LVU98
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  263:modules/imu/ins.c ****     tx[0] = (uint8_t)(reg | 0x80u);          /* bit7=1 → 读 */
  430              		.loc 1 263 5 view .LVU108
  431 004e CDF80080 		str	r8, [sp]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 15
 
 
  432 0052 CDF80480 		str	r8, [sp, #4]
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  273:modules/imu/ins.c ****     }
  474              		.loc 1 273 31 is_stmt 0 view .LVU121
  475 0092 7018     		adds	r0, r6, r1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 16
 
 
  273:modules/imu/ins.c ****     }
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  299:modules/imu/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
  523              		.loc 1 299 5 view .LVU131
  524              	.LVL46:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 17
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 17
 
 
  299:modules/imu/ins.c ****         ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  571              		.syntax unified
  572              		.thumb
  573              		.thumb_func
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 18
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 18
 
 
  575              	ins_write:
@@ -1078,7 +1078,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  287:modules/imu/ins.c **** 
  617              		.loc 1 287 1 is_stmt 0 view .LVU153
  618 0028 02B0     		add	sp, sp, #8
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 19
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 19
 
 
  619              	.LCFI12:
@@ -1138,7 +1138,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  655 000e FFF7FEFF 		bl	BSP_IMU_Cs
  656              	.LVL58:
  361:modules/imu/ins.c ****     BSP_DelayMs(2);
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 20
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 20
 
 
  657              		.loc 1 361 5 view .LVU159
@@ -1198,7 +1198,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  376:modules/imu/ins.c **** 
  377:modules/imu/ins.c ****     /* 复位后要重新建立 SPI 通信 */
  378:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 21
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 21
 
 
  379:modules/imu/ins.c ****     BSP_DelayMs(1);
@@ -1258,7 +1258,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  729              		.loc 1 380 5 view .LVU175
  730 007a 0123     		movs	r3, #1
  731 007c 2246     		mov	r2, r4
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 22
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 22
 
 
  732 007e 0021     		movs	r1, #0
@@ -1318,7 +1318,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  775              	.LVL71:
  393:modules/imu/ins.c ****     BSP_DelayMs(10);
  776              		.loc 1 393 5 view .LVU187
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 23
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 23
 
 
  777 00c2 0122     		movs	r2, #1
@@ -1378,7 +1378,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  825 0012 0220     		movs	r0, #2
  826 0014 FFF7FEFF 		bl	BSP_DelayMs
  827              	.LVL75:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 24
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 24
 
 
  403:modules/imu/ins.c **** 
@@ -1438,7 +1438,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  857              		@ sp needed
  858 003e 10BD     		pop	{r4, pc}
  859              	.L51:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 25
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 25
 
 
  860              	.LCFI20:
@@ -1498,7 +1498,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  424:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_LPM1,      0x00u);  /* 正常模式 */
  903              		.loc 1 424 5 view .LVU214
  904 0080 0222     		movs	r2, #2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 26
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 26
 
 
  905 0082 1021     		movs	r1, #16
@@ -1558,7 +1558,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  957              		.cfi_offset 87, -12
  958 0006 F0EE408A 		vmov.f32	s17, s0
  959 000a F0EE609A 		vmov.f32	s19, s1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 27
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 27
 
 
  960 000e B0EE419A 		vmov.f32	s18, s2
@@ -1618,7 +1618,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  997              		.loc 1 126 5 is_stmt 1 view .LVU235
  126:modules/imu/ins.c **** 
  998              		.loc 1 126 8 is_stmt 0 view .LVU236
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 28
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 28
 
 
  999 0052 88EE003A 		vdiv.f32	s6, s16, s0
@@ -1678,7 +1678,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  134:modules/imu/ins.c ****     q3q3 = s_q3 * s_q3;
  1037              		.loc 1 134 5 is_stmt 1 view .LVU253
  134:modules/imu/ins.c ****     q3q3 = s_q3 * s_q3;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 29
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 29
 
 
  1038              		.loc 1 134 10 is_stmt 0 view .LVU254
@@ -1738,7 +1738,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1076 00b2 72EEE12A 		vsub.f32	s5, s5, s3
  1077              	.LVL106:
  144:modules/imu/ins.c ****     ez = ax * vy - ay * vx;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 30
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 30
 
 
  1078              		.loc 1 144 5 is_stmt 1 view .LVU271
@@ -1798,7 +1798,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1116              		.loc 1 153 17 is_stmt 0 view .LVU287
  1117 00ee 9FEDA47A 		vldr.32	s14, .L77+20
  1118 00f2 62EE876A 		vmul.f32	s13, s5, s14
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 31
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 31
 
 
  153:modules/imu/ins.c ****     s_eyi += ey * (MAHONY_KI * MAHONY_DT);
@@ -1858,7 +1858,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1157              		.loc 1 158 19 view .LVU303
  1158 0138 34EE034A 		vadd.f32	s8, s8, s6
  158:modules/imu/ins.c ****     gz += kp * ez + s_ezi;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 32
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 32
 
 
  1159              		.loc 1 158 8 view .LVU304
@@ -1918,7 +1918,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1195              		.loc 1 167 18 is_stmt 0 view .LVU322
  1196 0172 67EEA6AA 		vmul.f32	s21, s15, s13
  167:modules/imu/ins.c ****     s_q2 += ( t0 * gy - t1 * gz + t3 * gx) * MAHONY_HALFT;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 33
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 33
 
 
  1197              		.loc 1 167 28 view .LVU323
@@ -1978,7 +1978,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1234              		.loc 1 169 23 view .LVU340
  1235 01be 38EE078A 		vadd.f32	s16, s16, s14
  169:modules/imu/ins.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 34
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 34
 
 
  1236              		.loc 1 169 38 view .LVU341
@@ -2038,7 +2038,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1275 020e C3ED005A 		vstr.32	s11, [r3]
  178:modules/imu/ins.c ****     s_q2 /= norm;
  1276              		.loc 1 178 5 is_stmt 1 view .LVU357
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 35
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 35
 
 
  178:modules/imu/ins.c ****     s_q2 /= norm;
@@ -2098,7 +2098,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1314              	.LVL132:
  189:modules/imu/ins.c ****     q3q3 = s_q3 * s_q3;
  1315              		.loc 1 189 5 is_stmt 1 view .LVU375
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 36
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 36
 
 
  189:modules/imu/ins.c ****     q3q3 = s_q3 * s_q3;
@@ -2158,7 +2158,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1353 0274 78EEA98A 		vadd.f32	s17, s17, s19
  196:modules/imu/ins.c **** 
  1354              		.loc 1 196 75 view .LVU393
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 37
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 37
 
 
  1355 0278 29EE279A 		vmul.f32	s18, s18, s15
@@ -2218,7 +2218,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  207:modules/imu/ins.c ****     if (INS_WorldYaw < -36000.0f) INS_WorldYaw += 72000.0f;
  1395              		.loc 1 207 35 is_stmt 1 discriminator 1 view .LVU408
  207:modules/imu/ins.c ****     if (INS_WorldYaw < -36000.0f) INS_WorldYaw += 72000.0f;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 38
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 38
 
 
  1396              		.loc 1 207 48 is_stmt 0 discriminator 1 view .LVU409
@@ -2278,7 +2278,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1437 031c 38EE4A0A 		vsub.f32	s0, s16, s20
  212:modules/imu/ins.c **** }
  1438              		.loc 1 212 20 view .LVU423
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 39
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 39
 
 
  1439 0320 30EE000A 		vadd.f32	s0, s0, s0
@@ -2338,7 +2338,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  174:modules/imu/ins.c ****         return;
  1484              		.loc 1 174 35 is_stmt 1 view .LVU433
  174:modules/imu/ins.c ****         return;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 40
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 40
 
 
  1485              		.loc 1 174 40 is_stmt 0 view .LVU434
@@ -2398,7 +2398,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1529 03a0 00000000 		.word	s_ahrs_cnt
  1530 03a4 6F12833A 		.word	981668463
  1531 03a8 00000000 		.word	INS_WorldYaw
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 41
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 41
 
 
  1532 03ac 00A00C47 		.word	1192009728
@@ -2458,7 +2458,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1578              		.loc 1 437 17 is_stmt 0 view .LVU456
  1579 0014 214A     		ldr	r2, .L84+16
  1580 0016 1380     		strh	r3, [r2]	@ movhi
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 42
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 42
 
 
  438:modules/imu/ins.c ****     INS_Sample  = 0;
@@ -2518,7 +2518,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1624 004a DBB2     		uxtb	r3, r3
  1625              	.LVL156:
  1626              	.L80:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 43
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 43
 
 
  442:modules/imu/ins.c ****         INS_Bias[i]  = 0.0f;
@@ -2578,7 +2578,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1665 0080 0123     		movs	r3, #1
  1666 0082 044A     		ldr	r2, .L84+8
  1667 0084 1370     		strb	r3, [r2]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 44
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 44
 
 
  462:modules/imu/ins.c ****         s_inited  = 1;
@@ -2638,7 +2638,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  470:modules/imu/ins.c ****         s_sum[i]    = 0.0f;
  1716              		.loc 1 470 9 is_stmt 1 view .LVU496
  1717              		.loc 1 470 21 is_stmt 0 view .LVU497
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 45
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 45
 
 
  1718 0004 0B4A     		ldr	r2, .L89
@@ -2698,7 +2698,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1763              		.cfi_endproc
  1764              	.LFE157:
  1766              		.section	.text.INS_Task,"ax",%progbits
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 46
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 46
 
 
  1767              		.align	1
@@ -2758,7 +2758,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  492:modules/imu/ins.c ****     if (ins_read(DEV_GYRO, GYRO_RATE_DATA, b, 6) == 0u) {
  1806              		.loc 1 492 5 is_stmt 1 view .LVU522
  1807              		.loc 1 492 9 is_stmt 0 view .LVU523
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 47
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 47
 
 
  1808 0012 0623     		movs	r3, #6
@@ -2818,7 +2818,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1853              		.loc 1 500 5 view .LVU543
  1854 0058 0BE0     		b	.L94
  1855              	.LVL172:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 48
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 48
 
 
  1856              	.L122:
@@ -2878,7 +2878,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  542:modules/imu/ins.c ****     if (ins_read(DEV_ACC, ACC_DATA, b, 6) == 0u) {
  543:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
  544:modules/imu/ins.c ****         return;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 49
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 49
 
 
  545:modules/imu/ins.c ****     }
@@ -2938,7 +2938,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  501:modules/imu/ins.c ****         g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
  1900              		.loc 1 501 38 view .LVU555
  1901 0086 DFED7A6A 		vldr.32	s13, .L125+20
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 50
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 50
 
 
  1902 008a 67EEA67A 		vmul.f32	s15, s15, s13
@@ -2998,7 +2998,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1943 00ce 74E0     		b	.L99
  1944              	.LVL181:
  1945              	.L100:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 51
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 51
 
 
  511:modules/imu/ins.c ****             INS_Gyro[i] = 0.0f;
@@ -3058,7 +3058,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  1986 010a DFED5F7A 		vldr.32	s15, .L125+44
  1987 010e B4EEE77A 		vcmpe.f32	s14, s15
  1988 0112 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 52
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 52
 
 
  1989 0116 14DD     		ble	.L116
@@ -3118,7 +3118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  523:modules/imu/ins.c ****         }
  2030              		.loc 1 523 13 is_stmt 1 view .LVU596
  2031 0140 90E7     		b	.L91
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 53
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 53
 
 
  2032              	.L116:
@@ -3178,7 +3178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  532:modules/imu/ins.c ****     }
  2073              		.loc 1 532 9 is_stmt 1 view .LVU610
  2074 017a 73E7     		b	.L91
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 54
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 54
 
 
  2075              	.LVL195:
@@ -3238,7 +3238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  2116 01bc DED9     		bls	.L108
  542:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
  2117              		.loc 1 542 5 view .LVU624
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 55
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 55
 
 
  542:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
@@ -3298,7 +3298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  2155              		.loc 1 548 21 view .LVU641
  2156 01f6 43EA0123 		orr	r3, r3, r1, lsl #8
  2157 01fa 1BB2     		sxth	r3, r3
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 56
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 56
 
 
  548:modules/imu/ins.c **** 
@@ -3358,7 +3358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  2198              	.LVL206:
  2199              	.L110:
  550:modules/imu/ins.c ****         INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 57
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 57
 
 
  2200              		.loc 1 550 19 is_stmt 1 discriminator 1 view .LVU656
@@ -3418,7 +3418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  2245              	.LFE158:
  2247              		.section	.bss.s_skip_gyro,"aw",%nobits
  2250              	s_skip_gyro:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 58
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 58
 
 
  2251 0000 00       		.space	1
@@ -3478,7 +3478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  2331 0000 00000000 		.space	4
  2332              		.global	INS_WorldYawRate
  2333              		.section	.bss.INS_WorldYawRate,"aw",%nobits
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 59
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 59
 
 
  2334              		.align	2
@@ -3538,7 +3538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  2391      0000
  2392              		.global	INS_AccRaw
  2393              		.section	.bss.INS_AccRaw,"aw",%nobits
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 60
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 60
 
 
  2394              		.align	2
@@ -3584,108 +3584,108 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccS
  2449              		.file 6 "bsp/bsp_spi.h"
  2450              		.file 7 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  2451              		.file 8 "bsp/bsp_time.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 61
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 61
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 ins.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:20     .text.ins_cs:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:25     .text.ins_cs:00000000 ins_cs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:53     .text.ins_read_at:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:58     .text.ins_read_at:00000000 ins_read_at
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:131    .text.ins_detect_skip:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:136    .text.ins_detect_skip:00000000 ins_detect_skip
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:333    .text.ins_detect_skip:000000c0 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2362   .bss.INS_AccDump:00000000 INS_AccDump
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2355   .bss.INS_GyroDump:00000000 INS_GyroDump
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2255   .data.s_skip_acc:00000000 s_skip_acc
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2250   .bss.s_skip_gyro:00000000 s_skip_gyro
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:341    .text.ins_read:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:346    .text.ins_read:00000000 ins_read
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:500    .text.ins_read:000000b0 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:506    .text.ins_dump:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:511    .text.ins_dump:00000000 ins_dump
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:564    .text.ins_dump:0000002c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:570    .text.ins_write:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:575    .text.ins_write:00000000 ins_write
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:628    .text.ins_acc_init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:633    .text.ins_acc_init:00000000 ins_acc_init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:790    .text.ins_acc_init:000000d4 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2441   .bss.INS_AccId:00000000 INS_AccId
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2403   .bss.INS_Err:00000000 INS_Err
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:796    .text.ins_gyro_init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:801    .text.ins_gyro_init:00000000 ins_gyro_init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:923    .text.ins_gyro_init:0000009c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2435   .bss.INS_GyroId:00000000 INS_GyroId
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:929    .text.ins_ahrs_step:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:934    .text.ins_ahrs_step:00000000 ins_ahrs_step
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1516   .text.ins_ahrs_step:0000036c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2303   .data.s_q0:00000000 s_q0
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2297   .bss.s_q1:00000000 s_q1
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2291   .bss.s_q2:00000000 s_q2
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2285   .bss.s_q3:00000000 s_q3
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2279   .bss.s_exi:00000000 s_exi
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2273   .bss.s_eyi:00000000 s_eyi
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2267   .bss.s_ezi:00000000 s_ezi
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2337   .bss.INS_WorldYawRate:00000000 INS_WorldYawRate
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2261   .bss.s_ahrs_cnt:00000000 s_ahrs_cnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2330   .bss.INS_WorldYaw:00000000 INS_WorldYaw
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2323   .bss.INS_RollDeg:00000000 INS_RollDeg
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2316   .bss.INS_PitchDeg:00000000 INS_PitchDeg
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2309   .bss.INS_AhrsReady:00000000 INS_AhrsReady
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1542   .text.INS_Init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1548   .text.INS_Init:00000000 INS_Init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1678   .text.INS_Init:0000008c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2429   .bss.INS_Ready:00000000 INS_Ready
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2423   .bss.INS_CalDone:00000000 INS_CalDone
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2417   .bss.INS_CalCnt:00000000 INS_CalCnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2410   .bss.INS_Sample:00000000 INS_Sample
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2342   .bss.s_inited:00000000 s_inited
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2369   .bss.INS_Bias:00000000 INS_Bias
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2376   .bss.INS_Gyro:00000000 INS_Gyro
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2383   .bss.INS_Acc:00000000 INS_Acc
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s 			page 62
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:20     .text.ins_cs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:25     .text.ins_cs:00000000 ins_cs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:53     .text.ins_read_at:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:58     .text.ins_read_at:00000000 ins_read_at
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:131    .text.ins_detect_skip:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:136    .text.ins_detect_skip:00000000 ins_detect_skip
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:333    .text.ins_detect_skip:000000c0 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2362   .bss.INS_AccDump:00000000 INS_AccDump
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2355   .bss.INS_GyroDump:00000000 INS_GyroDump
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2255   .data.s_skip_acc:00000000 s_skip_acc
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2250   .bss.s_skip_gyro:00000000 s_skip_gyro
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:341    .text.ins_read:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:346    .text.ins_read:00000000 ins_read
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:500    .text.ins_read:000000b0 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:506    .text.ins_dump:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:511    .text.ins_dump:00000000 ins_dump
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:564    .text.ins_dump:0000002c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:570    .text.ins_write:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:575    .text.ins_write:00000000 ins_write
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:628    .text.ins_acc_init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:633    .text.ins_acc_init:00000000 ins_acc_init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:790    .text.ins_acc_init:000000d4 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2441   .bss.INS_AccId:00000000 INS_AccId
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2403   .bss.INS_Err:00000000 INS_Err
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:796    .text.ins_gyro_init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:801    .text.ins_gyro_init:00000000 ins_gyro_init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:923    .text.ins_gyro_init:0000009c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2435   .bss.INS_GyroId:00000000 INS_GyroId
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:929    .text.ins_ahrs_step:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:934    .text.ins_ahrs_step:00000000 ins_ahrs_step
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1516   .text.ins_ahrs_step:0000036c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2303   .data.s_q0:00000000 s_q0
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2297   .bss.s_q1:00000000 s_q1
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2291   .bss.s_q2:00000000 s_q2
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2285   .bss.s_q3:00000000 s_q3
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2279   .bss.s_exi:00000000 s_exi
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2273   .bss.s_eyi:00000000 s_eyi
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2267   .bss.s_ezi:00000000 s_ezi
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2337   .bss.INS_WorldYawRate:00000000 INS_WorldYawRate
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2261   .bss.s_ahrs_cnt:00000000 s_ahrs_cnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2330   .bss.INS_WorldYaw:00000000 INS_WorldYaw
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2323   .bss.INS_RollDeg:00000000 INS_RollDeg
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2316   .bss.INS_PitchDeg:00000000 INS_PitchDeg
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2309   .bss.INS_AhrsReady:00000000 INS_AhrsReady
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1542   .text.INS_Init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1548   .text.INS_Init:00000000 INS_Init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1678   .text.INS_Init:0000008c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2429   .bss.INS_Ready:00000000 INS_Ready
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2423   .bss.INS_CalDone:00000000 INS_CalDone
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2417   .bss.INS_CalCnt:00000000 INS_CalCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2410   .bss.INS_Sample:00000000 INS_Sample
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2342   .bss.s_inited:00000000 s_inited
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2369   .bss.INS_Bias:00000000 INS_Bias
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2376   .bss.INS_Gyro:00000000 INS_Gyro
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2383   .bss.INS_Acc:00000000 INS_Acc
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s 			page 62
 
 
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2348   .bss.s_sum:00000000 s_sum
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1694   .text.INS_ResetBias:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1700   .text.INS_ResetBias:00000000 INS_ResetBias
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1758   .text.INS_ResetBias:00000034 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1767   .text.INS_Task:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:1773   .text.INS_Task:00000000 INS_Task
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2226   .text.INS_Task:0000025c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2390   .bss.INS_GyroRaw:00000000 INS_GyroRaw
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2397   .bss.INS_AccRaw:00000000 INS_AccRaw
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2251   .bss.s_skip_gyro:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2258   .bss.s_ahrs_cnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2264   .bss.s_ezi:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2270   .bss.s_eyi:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2276   .bss.s_exi:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2282   .bss.s_q3:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2288   .bss.s_q2:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2294   .bss.s_q1:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2300   .data.s_q0:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2310   .bss.INS_AhrsReady:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2313   .bss.INS_PitchDeg:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2320   .bss.INS_RollDeg:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2327   .bss.INS_WorldYaw:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2334   .bss.INS_WorldYawRate:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2343   .bss.s_inited:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2345   .bss.s_sum:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2352   .bss.INS_GyroDump:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2359   .bss.INS_AccDump:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2366   .bss.INS_Bias:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2373   .bss.INS_Gyro:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2380   .bss.INS_Acc:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2387   .bss.INS_GyroRaw:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2394   .bss.INS_AccRaw:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2404   .bss.INS_Err:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2407   .bss.INS_Sample:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2414   .bss.INS_CalCnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2424   .bss.INS_CalDone:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2430   .bss.INS_Ready:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2436   .bss.INS_GyroId:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSX3o5o.s:2442   .bss.INS_AccId:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2348   .bss.s_sum:00000000 s_sum
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1694   .text.INS_ResetBias:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1700   .text.INS_ResetBias:00000000 INS_ResetBias
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1758   .text.INS_ResetBias:00000034 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1767   .text.INS_Task:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:1773   .text.INS_Task:00000000 INS_Task
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2226   .text.INS_Task:0000025c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2390   .bss.INS_GyroRaw:00000000 INS_GyroRaw
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2397   .bss.INS_AccRaw:00000000 INS_AccRaw
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2251   .bss.s_skip_gyro:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2258   .bss.s_ahrs_cnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2264   .bss.s_ezi:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2270   .bss.s_eyi:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2276   .bss.s_exi:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2282   .bss.s_q3:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2288   .bss.s_q2:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2294   .bss.s_q1:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2300   .data.s_q0:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2310   .bss.INS_AhrsReady:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2313   .bss.INS_PitchDeg:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2320   .bss.INS_RollDeg:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2327   .bss.INS_WorldYaw:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2334   .bss.INS_WorldYawRate:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2343   .bss.s_inited:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2345   .bss.s_sum:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2352   .bss.INS_GyroDump:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2359   .bss.INS_AccDump:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2366   .bss.INS_Bias:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2373   .bss.INS_Gyro:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2380   .bss.INS_Acc:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2387   .bss.INS_GyroRaw:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2394   .bss.INS_AccRaw:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2404   .bss.INS_Err:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2407   .bss.INS_Sample:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2414   .bss.INS_CalCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2424   .bss.INS_CalDone:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2430   .bss.INS_Ready:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2436   .bss.INS_GyroId:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccznpJ92.s:2442   .bss.INS_AccId:00000000 $d
 
 UNDEFINED SYMBOLS
 BSP_IMU_Cs

@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   43 0006 0E4C     		ldr	r4, .L3
   44 0008 0FCC     		ldmia	r4!, {r0, r1, r2, r3}
   45 000a ACE80F00 		stmia	ip!, {r0, r1, r2, r3}
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 2
 
 
   46 000e 94E80F00 		ldm	r4, {r0, r1, r2, r3}
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   85              		.align	1
   86              		.global	FDCAN1_Start
   87              		.syntax unified
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 3
 
 
   88              		.thumb
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
   50:bsp/bsp_can.c ****     HAL_FDCAN_ActivateNotification(&hfdcan1, FDCAN_IT_BUS_OFF, 0);
  123              		.loc 1 50 5 view .LVU13
  124 0026 0022     		movs	r2, #0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 4
 
 
  125 0028 4FF00071 		mov	r1, #33554432
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  171              		.cfi_offset 3, -8
  172              		.cfi_offset 14, -4
   60:bsp/bsp_can.c ****     {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 5
 
 
   61:bsp/bsp_can.c ****         return;
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  207 002a FFF7FEFF 		bl	HAL_FDCAN_Stop
  208              	.LVL14:
   73:bsp/bsp_can.c ****     }
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 6
 
 
  209              		.loc 1 73 9 view .LVU31
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  256 0004 0746     		mov	r7, r0
  257 0006 0E46     		mov	r6, r1
  258 0008 1546     		mov	r5, r2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 7
 
 
  259 000a 1C46     		mov	r4, r3
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  300 002b 11       		.byte	(.L27-.L24)/2
  301 002c 14       		.byte	(.L26-.L24)/2
  302 002d 17       		.byte	(.L25-.L24)/2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 8
 
 
  303 002e 1A       		.byte	(.L23-.L24)/2
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  341              	.L27:
  100:bsp/bsp_can.c ****         case 5u: hdr.DataLength = FDCAN_DLC_BYTES_5; break;
  342              		.loc 1 100 18 view .LVU63
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 9
 
 
  100:bsp/bsp_can.c ****         case 5u: hdr.DataLength = FDCAN_DLC_BYTES_5; break;
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  384              		.section	.text.BSP_CAN_Stop,"ax",%progbits
  385              		.align	1
  386              		.global	BSP_CAN_Stop
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 10
 
 
  387              		.syntax unified
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  436              		.thumb_func
  438              	BSP_CAN_RegisterRx:
  439              	.LVL32:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 11
 
 
  440              	.LFB151:
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  474              		.thumb
  475              		.thumb_func
  477              	HAL_FDCAN_RxFifo0Callback:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 12
 
 
  478              	.LVL33:
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  145:bsp/bsp_can.c ****         can_rx_last_id = rx.Identifier;
  146:bsp/bsp_can.c ****         can_rx_last_d0 = d[0];
  147:bsp/bsp_can.c ****         if (bus == 2u)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 13
 
 
  148:bsp/bsp_can.c ****         {
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  146:bsp/bsp_can.c ****         if (bus == 2u)
  556              		.loc 1 146 9 is_stmt 1 view .LVU119
  146:bsp/bsp_can.c ****         if (bus == 2u)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 14
 
 
  557              		.loc 1 146 27 is_stmt 0 view .LVU120
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  597              	.L62:
  598              		.loc 1 161 1 view .LVU132
  599              		.align	2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 15
 
 
  600              	.L61:
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  661 0014 00000000 		.word	0
  662 0018 00000000 		.word	0
  663 001c 00000000 		.word	0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 16
 
 
  664              		.text
@@ -912,48 +912,48 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccB
  672              		.file 8 "bsp/bsp_can.h"
  673              		.file 9 "Core/Inc/fdcan.h"
  674              		.file 10 "<built-in>"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s 			page 17
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s 			page 17
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 bsp_can.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:20     .text.FDCAN2_Start:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:26     .text.FDCAN2_Start:00000000 FDCAN2_Start
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:79     .text.FDCAN2_Start:00000040 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:85     .text.FDCAN1_Start:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:91     .text.FDCAN1_Start:00000000 FDCAN1_Start
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:144    .text.FDCAN1_Start:00000040 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:150    .text.HAL_FDCAN_ErrorStatusCallback:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:156    .text.HAL_FDCAN_ErrorStatusCallback:00000000 HAL_FDCAN_ErrorStatusCallback
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:224    .text.HAL_FDCAN_ErrorStatusCallback:00000038 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:231    .text.BSP_CAN_Send:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:237    .text.BSP_CAN_Send:00000000 BSP_CAN_Send
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:297    .text.BSP_CAN_Send:00000028 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:379    .text.BSP_CAN_Send:00000068 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:385    .text.BSP_CAN_Stop:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:391    .text.BSP_CAN_Stop:00000000 BSP_CAN_Stop
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:426    .text.BSP_CAN_Stop:00000014 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:432    .text.BSP_CAN_RegisterRx:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:438    .text.BSP_CAN_RegisterRx:00000000 BSP_CAN_RegisterRx
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:466    .text.BSP_CAN_RegisterRx:00000014 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:615    .bss.s_rx_handler:00000000 s_rx_handler
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:471    .text.HAL_FDCAN_RxFifo0Callback:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:477    .text.HAL_FDCAN_RxFifo0Callback:00000000 HAL_FDCAN_RxFifo0Callback
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:601    .text.HAL_FDCAN_RxFifo0Callback:00000074 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:643    .bss.can_rx2_total:00000000 can_rx2_total
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:650    .bss.can_rx_total:00000000 can_rx_total
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:636    .bss.can_rx_last_id:00000000 can_rx_last_id
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:629    .bss.can_rx_last_d0:00000000 can_rx_last_d0
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:622    .bss.can_rx_id_cnt:00000000 can_rx_id_cnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:612    .bss.s_rx_handler:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:619    .bss.can_rx_id_cnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:626    .bss.can_rx_last_d0:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:633    .bss.can_rx_last_id:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:640    .bss.can_rx2_total:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:647    .bss.can_rx_total:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:653    .rodata:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:305    .text.BSP_CAN_Send:0000002f $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBZhqC3.s:305    .text.BSP_CAN_Send:00000030 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:20     .text.FDCAN2_Start:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:26     .text.FDCAN2_Start:00000000 FDCAN2_Start
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:79     .text.FDCAN2_Start:00000040 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:85     .text.FDCAN1_Start:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:91     .text.FDCAN1_Start:00000000 FDCAN1_Start
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:144    .text.FDCAN1_Start:00000040 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:150    .text.HAL_FDCAN_ErrorStatusCallback:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:156    .text.HAL_FDCAN_ErrorStatusCallback:00000000 HAL_FDCAN_ErrorStatusCallback
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:224    .text.HAL_FDCAN_ErrorStatusCallback:00000038 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:231    .text.BSP_CAN_Send:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:237    .text.BSP_CAN_Send:00000000 BSP_CAN_Send
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:297    .text.BSP_CAN_Send:00000028 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:379    .text.BSP_CAN_Send:00000068 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:385    .text.BSP_CAN_Stop:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:391    .text.BSP_CAN_Stop:00000000 BSP_CAN_Stop
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:426    .text.BSP_CAN_Stop:00000014 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:432    .text.BSP_CAN_RegisterRx:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:438    .text.BSP_CAN_RegisterRx:00000000 BSP_CAN_RegisterRx
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:466    .text.BSP_CAN_RegisterRx:00000014 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:615    .bss.s_rx_handler:00000000 s_rx_handler
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:471    .text.HAL_FDCAN_RxFifo0Callback:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:477    .text.HAL_FDCAN_RxFifo0Callback:00000000 HAL_FDCAN_RxFifo0Callback
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:601    .text.HAL_FDCAN_RxFifo0Callback:00000074 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:643    .bss.can_rx2_total:00000000 can_rx2_total
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:650    .bss.can_rx_total:00000000 can_rx_total
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:636    .bss.can_rx_last_id:00000000 can_rx_last_id
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:629    .bss.can_rx_last_d0:00000000 can_rx_last_d0
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:622    .bss.can_rx_id_cnt:00000000 can_rx_id_cnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:612    .bss.s_rx_handler:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:619    .bss.can_rx_id_cnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:626    .bss.can_rx_last_d0:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:633    .bss.can_rx_last_id:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:640    .bss.can_rx2_total:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:647    .bss.can_rx_total:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:653    .rodata:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:305    .text.BSP_CAN_Send:0000002f $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc9XLHKq.s:305    .text.BSP_CAN_Send:00000030 $t
 
 UNDEFINED SYMBOLS
 HAL_FDCAN_ConfigFilter

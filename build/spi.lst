@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
   29:Core/Src/spi.c **** /* SPI2 init function */
   30:Core/Src/spi.c **** void MX_SPI2_Init(void)
   31:Core/Src/spi.c **** {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 2
 
 
   28              		.loc 1 31 1 view -0
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
   66              		.loc 1 47 3 is_stmt 1 view .LVU15
   67              		.loc 1 47 32 is_stmt 0 view .LVU16
   68 0028 4FF0A042 		mov	r2, #1342177280
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 3
 
 
   69 002c C261     		str	r2, [r0, #28]
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
   61:Core/Src/spi.c ****   hspi2.Init.IOSwap = SPI_IO_SWAP_DISABLE;
  110              		.loc 1 61 3 is_stmt 1 view .LVU43
  111              		.loc 1 61 21 is_stmt 0 view .LVU44
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 4
 
 
  112 004c 8365     		str	r3, [r0, #88]
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
  155              		.cfi_offset 5, -12
  156              		.cfi_offset 6, -8
  157              		.cfi_offset 14, -4
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 5
 
 
  158 0002 88B0     		sub	sp, sp, #32
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
  108:Core/Src/spi.c ****   }
  109:Core/Src/spi.c **** }
  178              		.loc 1 109 1 view .LVU58
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 6
 
 
  179 0018 08B0     		add	sp, sp, #32
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
  220              		.loc 1 85 5 view .LVU71
  221              	.LBB4:
   85:Core/Src/spi.c ****     /**SPI2 GPIO Configuration
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 7
 
 
  222              		.loc 1 85 5 view .LVU72
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
  260 0080 0393     		str	r3, [sp, #12]
   99:Core/Src/spi.c ****     GPIO_InitStruct.Pull = GPIO_NOPULL;
  261              		.loc 1 99 5 is_stmt 1 view .LVU89
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 8
 
 
   99:Core/Src/spi.c ****     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
  307              	.LCFI5:
  308              		.cfi_def_cfa_offset 8
  309              		.cfi_offset 3, -8
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 9
 
 
  310              		.cfi_offset 14, -4
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
  337 0022 4FF40051 		mov	r1, #8192
  338 0026 0548     		ldr	r0, .L17+12
  339 0028 FFF7FEFF 		bl	HAL_GPIO_DeInit
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 10
 
 
  340              	.LVL13:
@@ -573,22 +573,22 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8
  368              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h"
  369              		.file 9 "Core/Inc/spi.h"
  370              		.file 10 "Core/Inc/main.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s 			page 11
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 spi.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:20     .text.MX_SPI2_Init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:26     .text.MX_SPI2_Init:00000000 MX_SPI2_Init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:131    .text.MX_SPI2_Init:0000005c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:358    .bss.hspi2:00000000 hspi2
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:137    .text.HAL_SPI_MspInit:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:143    .text.HAL_SPI_MspInit:00000000 HAL_SPI_MspInit
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:284    .text.HAL_SPI_MspInit:00000098 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:292    .text.HAL_SPI_MspDeInit:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:298    .text.HAL_SPI_MspDeInit:00000000 HAL_SPI_MspDeInit
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:346    .text.HAL_SPI_MspDeInit:00000030 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc8bVkhC.s:355    .bss.hspi2:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:20     .text.MX_SPI2_Init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:26     .text.MX_SPI2_Init:00000000 MX_SPI2_Init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:131    .text.MX_SPI2_Init:0000005c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:358    .bss.hspi2:00000000 hspi2
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:137    .text.HAL_SPI_MspInit:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:143    .text.HAL_SPI_MspInit:00000000 HAL_SPI_MspInit
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:284    .text.HAL_SPI_MspInit:00000098 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:292    .text.HAL_SPI_MspDeInit:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:298    .text.HAL_SPI_MspDeInit:00000000 HAL_SPI_MspDeInit
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:346    .text.HAL_SPI_MspDeInit:00000030 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccKK0Dsy.s:355    .bss.hspi2:00000000 $d
 
 UNDEFINED SYMBOLS
 HAL_SPI_Init
