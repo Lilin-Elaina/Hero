@@ -4,9 +4,8 @@
  * @note    2026-11-19 分层整理：以下内容从 remote/rc_dbus.c 原样搬迁，逻辑未改。
  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
  */
-#include "rc_dbus.h"
+#include "dbus.h"
 #include "bsp_time.h"
-#include "rc_state.h"
 #include "usart.h"
 #include "DJ_Motor.h"
 #include "mecanum.h"
@@ -18,12 +17,12 @@
 #include <math.h>
 
 /**
- * @file    rc_dbus.c
- * @brief   DT7 + DR16 遥控器 DBUS 接收与解析
+ * @file    dbus.c
+ * @brief   DT7 + DR16 遥控器 DBUS 帧解析（收帧在 bsp_uart）
  * @note    硬件：达妙 DM-MC-Board02 SBUS 口（官方例程走 UART5 / RX=PD2 AF8）
  *          协议：100000bps, 8数据位+偶校验, 2停止位, 每帧18字节
  */
-#include "rc_dbus.h"
+#include "dbus.h"
 #include "usart.h"
 #include "DJ_Motor.h"
 #include "mecanum.h"
