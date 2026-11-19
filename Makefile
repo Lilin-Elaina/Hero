@@ -67,11 +67,15 @@ Core/Src/gpio.c \
 Core/Src/dma.c \
 Core/Src/usart.c \
 Core/Src/fdcan.c \
-bsp/bsp.can.c \
-modules/DJ_Motor.c \
-modules/mecanum.c \
-modules/ins.c \
-remote/rc_dbus.c \
+bsp/bsp_can.c \
+modules/motor/DJ_Motor.c \
+modules/chassis/mecanum.c \
+modules/imu/ins.c \
+modules/remote/dbus.c \
+application/robot.c \
+application/chassis/chassis.c \
+application/gimbal/gimbal.c \
+application/gimbal/gimbal_spin.c \
 Core/Src/spi.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_spi_ex.c
@@ -143,7 +147,13 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Include \
 -Ibsp \
 -Imodules \
--Iremote
+-Imodules/motor \
+-Imodules/chassis \
+-Imodules/imu \
+-Imodules/remote \
+-Iapplication \
+-Iapplication/chassis \
+-Iapplication/gimbal
 
 
 # compile gcc flags

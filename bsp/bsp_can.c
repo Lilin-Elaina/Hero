@@ -1,5 +1,5 @@
 #include "main.h"
-#include "bsp.can.h"
+#include "bsp_can.h"
 #include "fdcan.h"
 
 /* CAN2 故障取证镜像（定义在 rc_dbus.c，这里只 +1，避免互相 include） */

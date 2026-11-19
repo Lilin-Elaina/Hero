@@ -1,0 +1,3149 @@
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"robot.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "application/robot.c"
+  19              		.section	.text.RC_Control_Task,"ax",%progbits
+  20              		.align	1
+  21              		.global	RC_Control_Task
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	RC_Control_Task:
+  27              	.LFB146:
+   1:application/robot.c **** /**
+   2:application/robot.c ****  * @file    robot.c
+   3:application/robot.c ****  * @brief   1 kHz 控制编排（RC_Control_Task）与全局调试镜像定义
+   4:application/robot.c ****  * @note    2026-11-19 分层整理：以下内容从 remote/rc_dbus.c 原样搬迁，逻辑未改�
+   5:application/robot.c ****  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
+   6:application/robot.c ****  */
+   7:application/robot.c **** #include "rc_dbus.h"
+   8:application/robot.c **** #include "rc_state.h"
+   9:application/robot.c **** #include "usart.h"
+  10:application/robot.c **** #include "DJ_Motor.h"
+  11:application/robot.c **** #include "mecanum.h"
+  12:application/robot.c **** #include "ins.h"
+  13:application/robot.c **** #include "fdcan.h"
+  14:application/robot.c **** #include "bsp_can.h"
+  15:application/robot.c **** #include <string.h>
+  16:application/robot.c **** #include <math.h>
+  17:application/robot.c **** 
+  18:application/robot.c **** /* 最近一次 RC_Control_Task 算出的各轮归一化目标（调试用，可在调试器里看�
+  19:application/robot.c **** float RC_WheelOut[MECANUM_WHEEL_NUM] = {0};
+  20:application/robot.c **** 
+  21:application/robot.c **** /* 使能条件持续的起始时刻：用于“拨杆刚到位也要等 100ms 才给电流”的�
+  22:application/robot.c **** static uint32_t rc_enable_since = 0;
+  23:application/robot.c **** 
+  24:application/robot.c **** /* 调试镜像：yaw 闭环内部量（只读，给 Ozone 看） */
+  25:application/robot.c **** volatile float RC_YawRef    = 0.0f;   /* 目标角 counts */
+  26:application/robot.c **** volatile float RC_YawErr    = 0.0f;   /* 角度误差 counts */
+  27:application/robot.c **** volatile float RC_YawRpmDes = 0.0f;   /* 位置环输出的目标转速 rpm */
+  28:application/robot.c **** volatile float RC_YawVolt   = 0.0f;   /* 斜坡之前的电压指令 */
+  29:application/robot.c **** volatile float RC_YawVoltOut= 0.0f;   /* 斜坡之后、真正发出去的电压 */
+  30:application/robot.c **** volatile float RC_YawI      = 0.0f;   /* 速度环积分 */
+  31:application/robot.c **** volatile float RC_HoldWz    = 0.0f;   /* 稳向看到的枪口世界角速度 deg/s */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 2
+
+
+  32:application/robot.c **** volatile float RC_HoldRate  = 0.0f;   /* 稳向折算出的补偿角速度 deg/s */
+  33:application/robot.c **** 
+  34:application/robot.c **** /* ---- 掉线 / yaw 断电取证镜像（定义见 rc_dbus.h 注释）---- */
+  35:application/robot.c **** volatile uint32_t RC_FrameCnt    = 0;
+  36:application/robot.c **** volatile uint32_t RC_GapMaxMs    = 0;
+  37:application/robot.c **** volatile uint32_t RC_ErrCnt      = 0;
+  38:application/robot.c **** volatile uint32_t RC_YawFbAgeMax = 0;
+  39:application/robot.c **** volatile float    RC_YawSpdMax   = 0.0f;
+  40:application/robot.c **** volatile uint8_t  RC_YawKill     = 0u;
+  41:application/robot.c **** volatile uint32_t RC_YawKillCnt  = 0;
+  42:application/robot.c **** volatile uint32_t RC_Can2TEC     = 0;
+  43:application/robot.c **** volatile uint32_t RC_Can2REC     = 0;
+  44:application/robot.c **** volatile uint32_t RC_Can2TECMax  = 0;
+  45:application/robot.c **** volatile uint32_t RC_Can2RECMax  = 0;
+  46:application/robot.c **** volatile uint32_t RC_YawOutageCnt = 0;
+  47:application/robot.c **** /* ---- CAN2 控制器状态镜像（比 TEC/REC 更能区分“线断了”和“有人应答失�
+  48:application/robot.c ****  * PSR.LEC 最后错误码：0=无错 1=填充错 2=格式错 3=ACK错 4=位1错 5=位0错 6=CRC错
+  49:application/robot.c ****  *   → 3(ACK)  = 我们发出去了但没有任何节点应答（线断/对端全掉电）
+  50:application/robot.c ****  *   → 4/5(位错)= 线上电平与预期不符（短路/终端电阻/收发器坏）
+  51:application/robot.c ****  *   → 1/2/6    = 干扰/反射（终端电阻、屏蔽、线长）
+  52:application/robot.c ****  * CCCR.INIT=1 → 控制器停在初始化态（Stop 后未重启，或 Bus-Off 恢复失败）*/
+  53:application/robot.c **** volatile uint32_t RC_Can2PSR     = 0;
+  54:application/robot.c **** volatile uint32_t RC_Can2CCCR    = 0;
+  55:application/robot.c **** volatile uint32_t RC_Can2BusOffCnt = 0;   /* Bus-Off 中断次数（bsp.can.c 里 +1） */
+  56:application/robot.c **** volatile uint32_t RC_Can2RestartCnt = 0;  /* RX 活性看门狗触发的 Stop+Start 次数 */
+  57:application/robot.c **** 
+  58:application/robot.c **** /* ★固件版本指纹（Watch 自检用）：
+  59:application/robot.c ****  * Ozone 里读 RC_BuildTag，必须等于下面这个值；读出来是 0/乱数 = 挂的 ELF 与�
+  60:application/robot.c ****  * 固件不是同一版（地址全错位，Watch 里所有变量读数都不可信）。
+  61:application/robot.c ****  * 每次改了全局变量布局/新增变量就把后 4 位改一下，方便确认。 */
+  62:application/robot.c **** volatile uint32_t RC_BuildTag = 0x11172358u;
+  63:application/robot.c **** /* ------------------------------------------------------------------ */
+  64:application/robot.c **** /* 控制任务：1kHz 调用一次                                              */
+  65:application/robot.c **** /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              
+  66:application/robot.c **** /* ------------------------------------------------------------------ */
+  67:application/robot.c **** void RC_Control_Task(void)
+  68:application/robot.c **** {     /*通信在线判断*/
+  28              		.loc 1 68 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 24
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 36
+  35              		.cfi_offset 4, -36
+  36              		.cfi_offset 5, -32
+  37              		.cfi_offset 6, -28
+  38              		.cfi_offset 7, -24
+  39              		.cfi_offset 8, -20
+  40              		.cfi_offset 9, -16
+  41              		.cfi_offset 10, -12
+  42              		.cfi_offset 11, -8
+  43              		.cfi_offset 14, -4
+  44 0004 2DED088B 		vpush.64	{d8, d9, d10, d11}
+  45              	.LCFI1:
+  46              		.cfi_def_cfa_offset 68
+  47              		.cfi_offset 80, -68
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 3
+
+
+  48              		.cfi_offset 81, -64
+  49              		.cfi_offset 82, -60
+  50              		.cfi_offset 83, -56
+  51              		.cfi_offset 84, -52
+  52              		.cfi_offset 85, -48
+  53              		.cfi_offset 86, -44
+  54              		.cfi_offset 87, -40
+  55 0008 87B0     		sub	sp, sp, #28
+  56              	.LCFI2:
+  57              		.cfi_def_cfa_offset 96
+  69:application/robot.c ****     uint32_t now = HAL_GetTick();
+  58              		.loc 1 69 5 view .LVU1
+  59              		.loc 1 69 20 is_stmt 0 view .LVU2
+  60 000a FFF7FEFF 		bl	HAL_GetTick
+  61              	.LVL0:
+  62 000e 0290     		str	r0, [sp, #8]
+  63              	.LVL1:
+  70:application/robot.c **** 
+  71:application/robot.c ****     uint8_t online = RC_IsOnline(now);
+  64              		.loc 1 71 5 is_stmt 1 view .LVU3
+  65              		.loc 1 71 22 is_stmt 0 view .LVU4
+  66 0010 FFF7FEFF 		bl	RC_IsOnline
+  67              	.LVL2:
+  68              		.loc 1 71 22 view .LVU5
+  69 0014 8046     		mov	r8, r0
+  70              	.LVL3:
+  71              	.LBB2:
+  72:application/robot.c **** 
+  73:application/robot.c ****     /* ---- CAN2 总线健康快照（每拍一次，读 ECR 寄存器无副作用）----
+  74:application/robot.c ****      * TEC/REC 是 FDCAN 的错误计数器：>127 = 错误被动（收发开始拖延迟重试，
+  75:application/robot.c ****      * 表现就是整车“游戏延迟”）；255 = 接近/已 bus-off。
+  76:application/robot.c ****      * 之前这只能拿 J-Link 手动读寄存器，现在出问题当场在 Ozone 里定罪。 *
+  77:application/robot.c ****     {
+  78:application/robot.c ****         uint32_t ecr = hfdcan2.Instance->ECR;
+  72              		.loc 1 78 9 is_stmt 1 view .LVU6
+  73              		.loc 1 78 31 is_stmt 0 view .LVU7
+  74 0016 B14B     		ldr	r3, .L150
+  75 0018 1A68     		ldr	r2, [r3]
+  76              		.loc 1 78 18 view .LVU8
+  77 001a 136C     		ldr	r3, [r2, #64]
+  78              	.LVL4:
+  79:application/robot.c ****         uint32_t tec = ecr & 0xFFu;
+  79              		.loc 1 79 9 is_stmt 1 view .LVU9
+  80              		.loc 1 79 18 is_stmt 0 view .LVU10
+  81 001c D9B2     		uxtb	r1, r3
+  82              	.LVL5:
+  80:application/robot.c ****         uint32_t rec = (ecr >> 8) & 0x7Fu;
+  83              		.loc 1 80 9 is_stmt 1 view .LVU11
+  84              		.loc 1 80 18 is_stmt 0 view .LVU12
+  85 001e C3F30623 		ubfx	r3, r3, #8, #7
+  86              	.LVL6:
+  81:application/robot.c **** 
+  82:application/robot.c ****         RC_Can2TEC = tec;
+  87              		.loc 1 82 9 is_stmt 1 view .LVU13
+  88              		.loc 1 82 20 is_stmt 0 view .LVU14
+  89 0022 AF48     		ldr	r0, .L150+4
+  90 0024 0160     		str	r1, [r0]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 4
+
+
+  83:application/robot.c ****         RC_Can2REC = rec;
+  91              		.loc 1 83 9 is_stmt 1 view .LVU15
+  92              		.loc 1 83 20 is_stmt 0 view .LVU16
+  93 0026 AF48     		ldr	r0, .L150+8
+  94 0028 0360     		str	r3, [r0]
+  84:application/robot.c ****         if (tec > RC_Can2TECMax) RC_Can2TECMax = tec;
+  95              		.loc 1 84 9 is_stmt 1 view .LVU17
+  96              		.loc 1 84 17 is_stmt 0 view .LVU18
+  97 002a AF48     		ldr	r0, .L150+12
+  98 002c 0068     		ldr	r0, [r0]
+  99              		.loc 1 84 12 view .LVU19
+ 100 002e 8842     		cmp	r0, r1
+ 101 0030 01D2     		bcs	.L2
+ 102              		.loc 1 84 34 is_stmt 1 discriminator 1 view .LVU20
+ 103              		.loc 1 84 48 is_stmt 0 discriminator 1 view .LVU21
+ 104 0032 AD48     		ldr	r0, .L150+12
+ 105 0034 0160     		str	r1, [r0]
+ 106              	.L2:
+  85:application/robot.c ****         if (rec > RC_Can2RECMax) RC_Can2RECMax = rec;
+ 107              		.loc 1 85 9 is_stmt 1 view .LVU22
+ 108              		.loc 1 85 17 is_stmt 0 view .LVU23
+ 109 0036 AD49     		ldr	r1, .L150+16
+ 110              	.LVL7:
+ 111              		.loc 1 85 17 view .LVU24
+ 112 0038 0968     		ldr	r1, [r1]
+ 113              		.loc 1 85 12 view .LVU25
+ 114 003a 9942     		cmp	r1, r3
+ 115 003c 01D2     		bcs	.L3
+ 116              		.loc 1 85 34 is_stmt 1 discriminator 1 view .LVU26
+ 117              		.loc 1 85 48 is_stmt 0 discriminator 1 view .LVU27
+ 118 003e AB49     		ldr	r1, .L150+16
+ 119 0040 0B60     		str	r3, [r1]
+ 120              	.L3:
+  86:application/robot.c ****         RC_Can2PSR  = hfdcan2.Instance->PSR;
+ 121              		.loc 1 86 9 is_stmt 1 view .LVU28
+ 122              		.loc 1 86 39 is_stmt 0 view .LVU29
+ 123 0042 516C     		ldr	r1, [r2, #68]
+ 124              		.loc 1 86 21 view .LVU30
+ 125 0044 AA4B     		ldr	r3, .L150+20
+ 126              	.LVL8:
+ 127              		.loc 1 86 21 view .LVU31
+ 128 0046 1960     		str	r1, [r3]
+  87:application/robot.c ****         RC_Can2CCCR = hfdcan2.Instance->CCCR;
+ 129              		.loc 1 87 9 is_stmt 1 view .LVU32
+ 130              		.loc 1 87 39 is_stmt 0 view .LVU33
+ 131 0048 9269     		ldr	r2, [r2, #24]
+ 132              		.loc 1 87 21 view .LVU34
+ 133 004a AA4B     		ldr	r3, .L150+24
+ 134 004c 1A60     		str	r2, [r3]
+  88:application/robot.c **** 
+  89:application/robot.c ****         /* 版本指纹：每拍写入常量（同时保证该变量不被 --gc-sections 回收）�
+  90:application/robot.c ****          * Watch 读到的值 ≠ 0x11172358 → 挂的 ELF 与芯片固件不是同一版，其余
+  91:application/robot.c ****         RC_BuildTag = 0x11172358u;
+ 135              		.loc 1 91 9 is_stmt 1 view .LVU35
+ 136              		.loc 1 91 21 is_stmt 0 view .LVU36
+ 137 004e AA4B     		ldr	r3, .L150+28
+ 138 0050 AA4A     		ldr	r2, .L150+32
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 5
+
+
+ 139 0052 1A60     		str	r2, [r3]
+ 140              	.LBE2:
+  92:application/robot.c ****     }
+  93:application/robot.c **** 
+  94:application/robot.c **** #if (RC_ENABLE_SW_POS != 0)
+  95:application/robot.c ****   #if (RC_ENABLE_USE_LEFT)
+  96:application/robot.c ****     #define RC_ARM_SW   (RC_Data.s_left)
+  97:application/robot.c ****   #else
+  98:application/robot.c ****     #define RC_ARM_SW   (RC_Data.s_right)
+  99:application/robot.c ****   #endif
+ 100:application/robot.c **** #else
+ 101:application/robot.c ****   #define RC_ARM_SW     1
+ 102:application/robot.c **** #endif
+ 103:application/robot.c **** 
+ 104:application/robot.c ****     /* 右拨杆三挡：下=底盘失能 / 中=跟随 / 上=小陀螺
+ 105:application/robot.c ****      * 去抖：位置连续 40ms 不变才认（上电慢 40ms），一变化就重新计时；
+ 106:application/robot.c ****      * 位域单帧错乱读到的“别的值”一律按失能处理（安全侧）。 */
+ 107:application/robot.c **** #if (RC_ENABLE_SW_POS == 0)
+ 108:application/robot.c ****     uint8_t armed     = 1u;
+ 109:application/robot.c ****     uint8_t follow_on = 0u;
+ 110:application/robot.c ****     uint8_t spin_mode = 0u;
+ 111:application/robot.c **** #else
+ 112:application/robot.c ****     static uint8_t  s_sw_prev = 0u;
+ 141              		.loc 1 112 5 is_stmt 1 view .LVU37
+ 113:application/robot.c ****     static uint16_t s_sw_cnt  = 0u;
+ 142              		.loc 1 113 5 view .LVU38
+ 114:application/robot.c **** 
+ 115:application/robot.c ****     uint8_t sw_now = (uint8_t)RC_ARM_SW;
+ 143              		.loc 1 115 5 view .LVU39
+ 144              		.loc 1 115 13 is_stmt 0 view .LVU40
+ 145 0054 AA4B     		ldr	r3, .L150+36
+ 146 0056 5C7A     		ldrb	r4, [r3, #9]	@ zero_extendqisi2
+ 147              	.LVL9:
+ 116:application/robot.c **** 
+ 117:application/robot.c ****     if (sw_now == s_sw_prev) {
+ 148              		.loc 1 117 5 is_stmt 1 view .LVU41
+ 149              		.loc 1 117 16 is_stmt 0 view .LVU42
+ 150 0058 AA4B     		ldr	r3, .L150+40
+ 151 005a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 152              		.loc 1 117 8 view .LVU43
+ 153 005c A342     		cmp	r3, r4
+ 154 005e 11D0     		beq	.L135
+ 118:application/robot.c ****         if (s_sw_cnt < 60u) s_sw_cnt++;
+ 119:application/robot.c ****     } else {
+ 120:application/robot.c ****         s_sw_prev = sw_now;
+ 155              		.loc 1 120 9 is_stmt 1 view .LVU44
+ 156              		.loc 1 120 19 is_stmt 0 view .LVU45
+ 157 0060 A84B     		ldr	r3, .L150+40
+ 158 0062 1C70     		strb	r4, [r3]
+ 121:application/robot.c ****         s_sw_cnt  = 0u;
+ 159              		.loc 1 121 9 is_stmt 1 view .LVU46
+ 160              		.loc 1 121 19 is_stmt 0 view .LVU47
+ 161 0064 A84B     		ldr	r3, .L150+44
+ 162 0066 0022     		movs	r2, #0
+ 163 0068 1A80     		strh	r2, [r3]	@ movhi
+ 164              	.L5:
+ 122:application/robot.c ****     }
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 6
+
+
+ 123:application/robot.c **** 
+ 124:application/robot.c ****     uint8_t sw_ok = (s_sw_cnt >= 40u);
+ 165              		.loc 1 124 5 is_stmt 1 view .LVU48
+ 166              		.loc 1 124 31 is_stmt 0 view .LVU49
+ 167 006a A74B     		ldr	r3, .L150+44
+ 168 006c 1B88     		ldrh	r3, [r3]
+ 169              	.LVL10:
+ 125:application/robot.c **** 
+ 126:application/robot.c ****     uint8_t armed     = 0u;
+ 170              		.loc 1 126 5 is_stmt 1 view .LVU50
+ 127:application/robot.c ****     uint8_t follow_on = 0u;
+ 171              		.loc 1 127 5 view .LVU51
+ 128:application/robot.c ****     uint8_t spin_mode = 0u;
+ 172              		.loc 1 128 5 view .LVU52
+ 129:application/robot.c **** 
+ 130:application/robot.c ****     if (sw_ok) {
+ 173              		.loc 1 130 5 view .LVU53
+ 174              		.loc 1 130 8 is_stmt 0 view .LVU54
+ 175 006e 272B     		cmp	r3, #39
+ 176 0070 10D9     		bls	.L83
+ 131:application/robot.c ****         if (sw_now == RC_SW_MID) {          /* 中位：底盘跟随 */
+ 177              		.loc 1 131 9 is_stmt 1 view .LVU55
+ 178              		.loc 1 131 12 is_stmt 0 view .LVU56
+ 179 0072 032C     		cmp	r4, #3
+ 180 0074 21D0     		beq	.L84
+ 132:application/robot.c ****             armed     = 1u;
+ 133:application/robot.c ****             follow_on = 1u;
+ 134:application/robot.c ****         } else if (sw_now == RC_SW_UP) {    /* 上位：小陀螺，底盘自己转 */
+ 181              		.loc 1 134 16 is_stmt 1 view .LVU57
+ 182              		.loc 1 134 19 is_stmt 0 view .LVU58
+ 183 0076 012C     		cmp	r4, #1
+ 184 0078 24D0     		beq	.L85
+ 128:application/robot.c **** 
+ 185              		.loc 1 128 13 view .LVU59
+ 186 007a 4FF0000A 		mov	r10, #0
+ 127:application/robot.c ****     uint8_t spin_mode = 0u;
+ 187              		.loc 1 127 13 view .LVU60
+ 188 007e 5246     		mov	r2, r10
+ 126:application/robot.c ****     uint8_t follow_on = 0u;
+ 189              		.loc 1 126 13 view .LVU61
+ 190 0080 5446     		mov	r4, r10
+ 191              	.LVL11:
+ 126:application/robot.c ****     uint8_t follow_on = 0u;
+ 192              		.loc 1 126 13 view .LVU62
+ 193 0082 0BE0     		b	.L6
+ 194              	.LVL12:
+ 195              	.L135:
+ 118:application/robot.c ****     } else {
+ 196              		.loc 1 118 9 is_stmt 1 view .LVU63
+ 118:application/robot.c ****     } else {
+ 197              		.loc 1 118 22 is_stmt 0 view .LVU64
+ 198 0084 A04B     		ldr	r3, .L150+44
+ 199 0086 1B88     		ldrh	r3, [r3]
+ 118:application/robot.c ****     } else {
+ 200              		.loc 1 118 12 view .LVU65
+ 201 0088 3B2B     		cmp	r3, #59
+ 202 008a EED8     		bhi	.L5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 7
+
+
+ 118:application/robot.c ****     } else {
+ 203              		.loc 1 118 29 is_stmt 1 discriminator 1 view .LVU66
+ 118:application/robot.c ****     } else {
+ 204              		.loc 1 118 37 is_stmt 0 discriminator 1 view .LVU67
+ 205 008c 0133     		adds	r3, r3, #1
+ 206 008e 9E4A     		ldr	r2, .L150+44
+ 207 0090 1380     		strh	r3, [r2]	@ movhi
+ 208 0092 EAE7     		b	.L5
+ 209              	.LVL13:
+ 210              	.L83:
+ 128:application/robot.c **** 
+ 211              		.loc 1 128 13 view .LVU68
+ 212 0094 4FF0000A 		mov	r10, #0
+ 127:application/robot.c ****     uint8_t spin_mode = 0u;
+ 213              		.loc 1 127 13 view .LVU69
+ 214 0098 5246     		mov	r2, r10
+ 126:application/robot.c ****     uint8_t follow_on = 0u;
+ 215              		.loc 1 126 13 view .LVU70
+ 216 009a 5446     		mov	r4, r10
+ 217              	.LVL14:
+ 218              	.L6:
+ 135:application/robot.c ****             armed     = 1u;
+ 136:application/robot.c ****             spin_mode = 1u;
+ 137:application/robot.c ****         }
+ 138:application/robot.c ****     }
+ 139:application/robot.c **** 
+ 140:application/robot.c ****     /* 没有陀螺就没有稳向：此时跟随会变成"自己一直转"，宁可不跟 */
+ 141:application/robot.c ****     if (INS_Ready == 0u) follow_on = 0u;
+ 219              		.loc 1 141 5 is_stmt 1 view .LVU71
+ 220              		.loc 1 141 19 is_stmt 0 view .LVU72
+ 221 009c 9B4B     		ldr	r3, .L150+48
+ 222 009e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 223              		.loc 1 141 8 view .LVU73
+ 224 00a0 03F0FF09 		and	r9, r3, #255
+ 225 00a4 03B1     		cbz	r3, .L7
+ 226 00a6 9146     		mov	r9, r2
+ 227              	.L7:
+ 228              	.LVL15:
+ 142:application/robot.c **** 
+ 143:application/robot.c ****     /* 小陀螺的世界航向完全依赖 IMU：姿态没收敛/零偏没标定完就撤掉自动
+ 144:application/robot.c ****      * 退化为手动（底盘不转、yaw 走手控），绝不偷偷退回旧环继续转 */
+ 145:application/robot.c ****     if ((INS_Ready == 0u) || (INS_CalDone == 0u)) spin_mode = 0u;
+ 229              		.loc 1 145 5 is_stmt 1 view .LVU74
+ 230              		.loc 1 145 20 is_stmt 0 view .LVU75
+ 231 00a8 984B     		ldr	r3, .L150+48
+ 232 00aa 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 233              		.loc 1 145 8 view .LVU76
+ 234 00ac 6BB1     		cbz	r3, .L86
+ 235              		.loc 1 145 43 discriminator 2 view .LVU77
+ 236 00ae 984B     		ldr	r3, .L150+52
+ 237 00b0 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 238              		.loc 1 145 27 discriminator 2 view .LVU78
+ 239 00b2 63B9     		cbnz	r3, .L8
+ 240              		.loc 1 145 61 discriminator 3 view .LVU79
+ 241 00b4 4FF0000A 		mov	r10, #0
+ 242              	.LVL16:
+ 243              		.loc 1 145 61 discriminator 3 view .LVU80
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 8
+
+
+ 244 00b8 09E0     		b	.L8
+ 245              	.LVL17:
+ 246              	.L84:
+ 128:application/robot.c **** 
+ 247              		.loc 1 128 13 view .LVU81
+ 248 00ba 4FF0000A 		mov	r10, #0
+ 133:application/robot.c ****         } else if (sw_now == RC_SW_UP) {    /* 上位：小陀螺，底盘自己转 */
+ 249              		.loc 1 133 23 view .LVU82
+ 250 00be 0122     		movs	r2, #1
+ 132:application/robot.c ****             follow_on = 1u;
+ 251              		.loc 1 132 23 view .LVU83
+ 252 00c0 1446     		mov	r4, r2
+ 253              	.LVL18:
+ 132:application/robot.c ****             follow_on = 1u;
+ 254              		.loc 1 132 23 view .LVU84
+ 255 00c2 EBE7     		b	.L6
+ 256              	.LVL19:
+ 257              	.L85:
+ 136:application/robot.c ****         }
+ 258              		.loc 1 136 23 view .LVU85
+ 259 00c4 A246     		mov	r10, r4
+ 127:application/robot.c ****     uint8_t spin_mode = 0u;
+ 260              		.loc 1 127 13 view .LVU86
+ 261 00c6 0022     		movs	r2, #0
+ 262 00c8 E8E7     		b	.L6
+ 263              	.LVL20:
+ 264              	.L86:
+ 265              		.loc 1 145 61 discriminator 3 view .LVU87
+ 266 00ca 4FF0000A 		mov	r10, #0
+ 267              	.LVL21:
+ 268              	.L8:
+ 269              	.LBB3:
+ 146:application/robot.c **** #endif
+ 147:application/robot.c **** 
+ 148:application/robot.c ****     /* 模式切换 → 两个 yaw 控制器交接状态（避免拿旧目标把枪口拽一下） 
+ 149:application/robot.c ****     {
+ 150:application/robot.c ****         static uint8_t s_spin_prev = 0u;
+ 270              		.loc 1 150 9 is_stmt 1 view .LVU88
+ 151:application/robot.c **** 
+ 152:application/robot.c ****         if (spin_mode != s_spin_prev) {
+ 271              		.loc 1 152 9 view .LVU89
+ 272              		.loc 1 152 23 is_stmt 0 view .LVU90
+ 273 00ce 914B     		ldr	r3, .L150+56
+ 274 00d0 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 275              		.loc 1 152 12 view .LVU91
+ 276 00d2 5345     		cmp	r3, r10
+ 277 00d4 10D1     		bne	.L136
+ 278              	.LVL22:
+ 279              	.L9:
+ 280              		.loc 1 152 12 view .LVU92
+ 281              	.LBE3:
+ 153:application/robot.c ****             s_spin_prev = spin_mode;
+ 154:application/robot.c ****             RC_Yaw_Handover();
+ 155:application/robot.c ****         }
+ 156:application/robot.c ****     }
+ 157:application/robot.c **** 
+ 158:application/robot.c ****     uint8_t enabled = (online && armed);
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 9
+
+
+ 282              		.loc 1 158 5 is_stmt 1 view .LVU93
+ 283              		.loc 1 158 24 is_stmt 0 view .LVU94
+ 284 00d6 B8F1000B 		subs	fp, r8, #0
+ 285 00da 18BF     		it	ne
+ 286 00dc 4FF0010B 		movne	fp, #1
+ 287              		.loc 1 158 31 view .LVU95
+ 288 00e0 C4F30004 		ubfx	r4, r4, #0, #1
+ 289              	.LVL23:
+ 159:application/robot.c **** 
+ 160:application/robot.c ****     /* 使能条件必须“连续保持”才放行：失联恢复或拨杆刚到位时不立刻�
+ 161:application/robot.c ****      * 避免遥控信号抖动导致电机抽搐（软启动门） */
+ 162:application/robot.c ****     if (enabled)
+ 290              		.loc 1 162 5 is_stmt 1 view .LVU96
+ 291              		.loc 1 162 8 is_stmt 0 view .LVU97
+ 292 00e4 1BEA0404 		ands	r4, fp, r4
+ 293              	.LVL24:
+ 294              		.loc 1 162 8 view .LVU98
+ 295 00e8 12D0     		beq	.L10
+ 163:application/robot.c ****     {
+ 164:application/robot.c ****         if (rc_enable_since == 0)
+ 296              		.loc 1 164 9 is_stmt 1 view .LVU99
+ 297              		.loc 1 164 29 is_stmt 0 view .LVU100
+ 298 00ea 8B4B     		ldr	r3, .L150+60
+ 299 00ec 1B68     		ldr	r3, [r3]
+ 300              		.loc 1 164 12 view .LVU101
+ 301 00ee 4BB9     		cbnz	r3, .L11
+ 165:application/robot.c ****         {
+ 166:application/robot.c ****             rc_enable_since = now;
+ 302              		.loc 1 166 13 is_stmt 1 view .LVU102
+ 303              		.loc 1 166 29 is_stmt 0 view .LVU103
+ 304 00f0 894B     		ldr	r3, .L150+60
+ 305 00f2 029A     		ldr	r2, [sp, #8]
+ 306 00f4 1A60     		str	r2, [r3]
+ 307 00f6 0EE0     		b	.L12
+ 308              	.LVL25:
+ 309              	.L136:
+ 310              	.LBB4:
+ 153:application/robot.c ****             RC_Yaw_Handover();
+ 311              		.loc 1 153 13 is_stmt 1 view .LVU104
+ 153:application/robot.c ****             RC_Yaw_Handover();
+ 312              		.loc 1 153 25 is_stmt 0 view .LVU105
+ 313 00f8 864B     		ldr	r3, .L150+56
+ 314 00fa 83F800A0 		strb	r10, [r3]
+ 154:application/robot.c ****         }
+ 315              		.loc 1 154 13 is_stmt 1 view .LVU106
+ 316 00fe FFF7FEFF 		bl	RC_Yaw_Handover
+ 317              	.LVL26:
+ 154:application/robot.c ****         }
+ 318              		.loc 1 154 13 is_stmt 0 view .LVU107
+ 319 0102 E8E7     		b	.L9
+ 320              	.LVL27:
+ 321              	.L11:
+ 154:application/robot.c ****         }
+ 322              		.loc 1 154 13 view .LVU108
+ 323              	.LBE4:
+ 167:application/robot.c ****         }
+ 168:application/robot.c ****         else if ((now - rc_enable_since) < RC_ENABLE_DELAY_MS)
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 10
+
+
+ 324              		.loc 1 168 14 is_stmt 1 view .LVU109
+ 325              		.loc 1 168 23 is_stmt 0 view .LVU110
+ 326 0104 029A     		ldr	r2, [sp, #8]
+ 327 0106 D31A     		subs	r3, r2, r3
+ 328              		.loc 1 168 17 view .LVU111
+ 329 0108 632B     		cmp	r3, #99
+ 330 010a 04D8     		bhi	.L12
+ 169:application/robot.c ****         {
+ 170:application/robot.c ****             enabled = 0;                /* 门时间内先不给力，但斜坡已开始回零 */
+ 331              		.loc 1 170 21 view .LVU112
+ 332 010c 0024     		movs	r4, #0
+ 333              	.LVL28:
+ 334              		.loc 1 170 21 view .LVU113
+ 335 010e 02E0     		b	.L12
+ 336              	.LVL29:
+ 337              	.L10:
+ 171:application/robot.c ****         }
+ 172:application/robot.c ****     }
+ 173:application/robot.c ****     else
+ 174:application/robot.c ****     {
+ 175:application/robot.c ****         rc_enable_since = 0;
+ 338              		.loc 1 175 9 is_stmt 1 view .LVU114
+ 339              		.loc 1 175 25 is_stmt 0 view .LVU115
+ 340 0110 814B     		ldr	r3, .L150+60
+ 341 0112 0022     		movs	r2, #0
+ 342 0114 1A60     		str	r2, [r3]
+ 343              	.LVL30:
+ 344              	.L12:
+ 345              	.LBB5:
+ 176:application/robot.c ****     }
+ 177:application/robot.c **** 
+ 178:application/robot.c ****     /* ---- CAN2 RX 活性看门狗（2026-11-18）----
+ 179:application/robot.c ****      * 底盘四轮 + yaw 全在 CAN2，五个节点每个 1kHz 反馈，总线正常时
+ 180:application/robot.c ****      * can_rx2_total 不可能 20ms 不动。实测出现整条 CAN2 静默 337 秒不恢复：
+ 181:application/robot.c ****      * 唯一能解释"死透且无人再试"的软件路径 = Bus-Off 回调里 Stop+Start 万一
+ 182:application/robot.c ****      * 没救回来（ISR 内重启 HAL 状态机有竞态），控制器就永远卡在 CCCR.INIT�
+ 183:application/robot.c ****      * 而全工程没有任何代码会再试第二次。看门狗补上这一课：
+ 184:application/robot.c ****      *   - 连续 20ms 无 CAN2 帧 → Stop + FDCAN2_Start 重启一次
+ 185:application/robot.c ****      *   - 没救回来每 100ms 再试一次
+ 186:application/robot.c ****      *   - RC_Can2RestartCnt 计数留证：重启后立刻恢复 = 卡死确系软件；
+ 187:application/robot.c ****      *     重启多少次都没用 = 总线物理上真的死了（回头查硬件）
+ 188:application/robot.c ****      *   - 只在"上电以来见过总线活着(>1000 帧)"且已使能时启用，
+ 189:application/robot.c ****      *     避免台架上不带电调时空转重启 */
+ 190:application/robot.c ****     {
+ 191:application/robot.c ****         static uint32_t s_can2_last   = 0u;
+ 346              		.loc 1 191 9 is_stmt 1 view .LVU116
+ 192:application/robot.c ****         static uint32_t s_can2_frozen = 0u;
+ 347              		.loc 1 192 9 view .LVU117
+ 193:application/robot.c **** 
+ 194:application/robot.c ****         if (can_rx2_total != s_can2_last)
+ 348              		.loc 1 194 9 view .LVU118
+ 349              		.loc 1 194 27 is_stmt 0 view .LVU119
+ 350 0116 814B     		ldr	r3, .L150+64
+ 351 0118 1A68     		ldr	r2, [r3]
+ 352 011a 814B     		ldr	r3, .L150+68
+ 353 011c 1B68     		ldr	r3, [r3]
+ 354              		.loc 1 194 12 view .LVU120
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 11
+
+
+ 355 011e 9A42     		cmp	r2, r3
+ 356 0120 00F09E80 		beq	.L13
+ 195:application/robot.c ****         {
+ 196:application/robot.c ****             s_can2_last   = can_rx2_total;
+ 357              		.loc 1 196 13 is_stmt 1 view .LVU121
+ 358              		.loc 1 196 27 is_stmt 0 view .LVU122
+ 359 0124 7D4B     		ldr	r3, .L150+64
+ 360 0126 1A68     		ldr	r2, [r3]
+ 361 0128 7D4B     		ldr	r3, .L150+68
+ 362 012a 1A60     		str	r2, [r3]
+ 197:application/robot.c ****             s_can2_frozen = 0u;
+ 363              		.loc 1 197 13 is_stmt 1 view .LVU123
+ 364              		.loc 1 197 27 is_stmt 0 view .LVU124
+ 365 012c 7D4B     		ldr	r3, .L150+72
+ 366 012e 0022     		movs	r2, #0
+ 367 0130 1A60     		str	r2, [r3]
+ 368              	.L14:
+ 369              	.LBE5:
+ 198:application/robot.c ****         }
+ 199:application/robot.c ****         else if ((can_rx2_total > 1000u) && (enabled != 0u))
+ 200:application/robot.c ****         {
+ 201:application/robot.c ****             if (s_can2_frozen < 1000000u) s_can2_frozen++;
+ 202:application/robot.c **** 
+ 203:application/robot.c ****             if ((s_can2_frozen >= 20u) && (((s_can2_frozen - 20u) % 100u) == 0u))
+ 204:application/robot.c ****             {
+ 205:application/robot.c ****                 RC_Can2RestartCnt++;
+ 206:application/robot.c ****                 HAL_FDCAN_Stop(&hfdcan2);
+ 207:application/robot.c ****                 FDCAN2_Start();
+ 208:application/robot.c ****             }
+ 209:application/robot.c ****         }
+ 210:application/robot.c ****     }
+ 211:application/robot.c **** 
+ 212:application/robot.c ****     /* 2) 摇杆归一化：死区内为 0，范围 -1.0 ~ +1.0 */
+ 213:application/robot.c ****     float fwd  = online ?  RC_Norm(RC_CH_FWD)  : 0.0f;
+ 370              		.loc 1 213 5 is_stmt 1 view .LVU125
+ 371              		.loc 1 213 48 is_stmt 0 view .LVU126
+ 372 0132 B8F1000F 		cmp	r8, #0
+ 373 0136 40F0BE80 		bne	.L137
+ 374              		.loc 1 213 48 discriminator 2 view .LVU127
+ 375 013a 9FED7B8A 		vldr.32	s16, .L150+76
+ 214:application/robot.c ****     float spin = online ? RC_Norm(RC_CH_TURN) : 0.0f;
+ 376              		.loc 1 214 47 discriminator 2 view .LVU128
+ 377 013e F0EE488A 		vmov.f32	s17, s16
+ 378              	.L16:
+ 379              	.LVL31:
+ 215:application/robot.c **** 
+ 216:application/robot.c ****     /* 小陀螺模式：底盘自己转起来，转轮再叠加一点微调 */
+ 217:application/robot.c ****     if (spin_mode != 0u)
+ 380              		.loc 1 217 5 is_stmt 1 view .LVU129
+ 381              		.loc 1 217 8 is_stmt 0 view .LVU130
+ 382 0142 BAF1000F 		cmp	r10, #0
+ 383 0146 11D0     		beq	.L17
+ 218:application/robot.c ****     {
+ 219:application/robot.c ****         spin = GM_SPIN_BASE + RC_SPIN_TRIM * spin;
+ 384              		.loc 1 219 9 is_stmt 1 view .LVU131
+ 385              		.loc 1 219 44 is_stmt 0 view .LVU132
+ 386 0148 F6EE007A 		vmov.f32	s15, #5.0e-1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 12
+
+
+ 387 014c 68EEA77A 		vmul.f32	s15, s17, s15
+ 388              		.loc 1 219 14 view .LVU133
+ 389 0150 DFED768A 		vldr.32	s17, .L150+80
+ 390              	.LVL32:
+ 391              		.loc 1 219 14 view .LVU134
+ 392 0154 77EEA88A 		vadd.f32	s17, s15, s17
+ 393              	.LVL33:
+ 220:application/robot.c ****         if (spin >  1.0f) spin =  1.0f;
+ 394              		.loc 1 220 9 is_stmt 1 view .LVU135
+ 395              		.loc 1 220 12 is_stmt 0 view .LVU136
+ 396 0158 F7EE007A 		vmov.f32	s15, #1.0e+0
+ 397 015c F4EEE78A 		vcmpe.f32	s17, s15
+ 398 0160 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 399 0164 40F3F680 		ble	.L138
+ 400              		.loc 1 220 32 discriminator 1 view .LVU137
+ 401 0168 F7EE008A 		vmov.f32	s17, #1.0e+0
+ 402              	.LVL34:
+ 403              	.L17:
+ 221:application/robot.c ****         if (spin < -1.0f) spin = -1.0f;
+ 222:application/robot.c ****     }
+ 223:application/robot.c ****     float strafe = 0.0f;
+ 404              		.loc 1 223 5 is_stmt 1 view .LVU138
+ 224:application/robot.c **** #if (MECANUM_WHEEL_NUM == 4)
+ 225:application/robot.c ****    
+ 226:application/robot.c ****    strafe  =online ? RC_Norm(RC_CH_STRAFE) : 0.0f;
+ 405              		.loc 1 226 4 view .LVU139
+ 406              		.loc 1 226 44 is_stmt 0 view .LVU140
+ 407 016c B8F1000F 		cmp	r8, #0
+ 408 0170 40F0FB80 		bne	.L139
+ 409              		.loc 1 226 44 discriminator 2 view .LVU141
+ 410 0174 9FED6C9A 		vldr.32	s18, .L150+76
+ 411              	.L18:
+ 412              	.LVL35:
+ 227:application/robot.c **** 
+ 228:application/robot.c **** #endif
+ 229:application/robot.c **** 
+ 230:application/robot.c **** #if (GM_GUN_ANGLE_ENABLE)
+ 231:application/robot.c ****     float alpha_deg = RC_GetOffsetAngle();         /* 枪口相对车头，度，+ 为左 */
+ 413              		.loc 1 231 5 is_stmt 1 view .LVU142
+ 414              		.loc 1 231 23 is_stmt 0 view .LVU143
+ 415 0178 FFF7FEFF 		bl	RC_GetOffsetAngle
+ 416              	.LVL36:
+ 417 017c F0EE40AA 		vmov.f32	s21, s0
+ 418              	.LVL37:
+ 419              	.LBB6:
+ 232:application/robot.c **** 
+ 233:application/robot.c ****     /* 枪口系 → 车体系：摇杆方向按枪口朝向解释
+ 234:application/robot.c ****      * 实车标定（2026-11-13）：α=0 / α=±180 正确，α=±90 两组全反
+ 235:application/robot.c ****      * → 旋转方向取反（等价于用 -α 旋转），0 和 180 不受影响
+ 236:application/robot.c ****      *   fwd_b = cosα·vx_g - sinα·vy_g
+ 237:application/robot.c ****      *   vy_b  = sinα·vx_g + cosα·vy_g
+ 238:application/robot.c ****      * α=0 时必须是单位阵（推左就往左），这条是判据 */
+ 239:application/robot.c ****     {
+ 240:application/robot.c ****         float a = GM_GUN_ANGLE_SIGN * alpha_deg * 0.017453292f;
+ 420              		.loc 1 240 9 is_stmt 1 view .LVU144
+ 421              		.loc 1 240 37 is_stmt 0 view .LVU145
+ 422 0180 B1EE40BA 		vneg.f32	s22, s0
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 13
+
+
+ 423              		.loc 1 240 15 view .LVU146
+ 424 0184 9FED6AAA 		vldr.32	s20, .L150+84
+ 425 0188 20EE4AAA 		vnmul.f32	s20, s0, s20
+ 426              	.LVL38:
+ 241:application/robot.c ****         float c = cosf(a);
+ 427              		.loc 1 241 9 is_stmt 1 view .LVU147
+ 428              		.loc 1 241 19 is_stmt 0 view .LVU148
+ 429 018c B0EE4A0A 		vmov.f32	s0, s20
+ 430              	.LVL39:
+ 431              		.loc 1 241 19 view .LVU149
+ 432 0190 FFF7FEFF 		bl	cosf
+ 433              	.LVL40:
+ 434 0194 F0EE409A 		vmov.f32	s19, s0
+ 435              	.LVL41:
+ 242:application/robot.c ****         float s = sinf(a);
+ 436              		.loc 1 242 9 is_stmt 1 view .LVU150
+ 437              		.loc 1 242 19 is_stmt 0 view .LVU151
+ 438 0198 B0EE4A0A 		vmov.f32	s0, s20
+ 439              	.LVL42:
+ 440              		.loc 1 242 19 view .LVU152
+ 441 019c FFF7FEFF 		bl	sinf
+ 442              	.LVL43:
+ 243:application/robot.c ****         float fwd_g    = fwd;
+ 443              		.loc 1 243 9 is_stmt 1 view .LVU153
+ 244:application/robot.c ****         float strafe_g = strafe;
+ 444              		.loc 1 244 9 view .LVU154
+ 245:application/robot.c **** 
+ 246:application/robot.c ****         fwd    = c * fwd_g - s * strafe_g;
+ 445              		.loc 1 246 9 view .LVU155
+ 446              		.loc 1 246 20 is_stmt 0 view .LVU156
+ 447 01a0 28EE29AA 		vmul.f32	s20, s16, s19
+ 448              	.LVL44:
+ 449              		.loc 1 246 32 view .LVU157
+ 450 01a4 69EE007A 		vmul.f32	s15, s18, s0
+ 451              		.loc 1 246 16 view .LVU158
+ 452 01a8 3AEE67AA 		vsub.f32	s20, s20, s15
+ 453              	.LVL45:
+ 247:application/robot.c ****         strafe = s * fwd_g + c * strafe_g;
+ 454              		.loc 1 247 9 is_stmt 1 view .LVU159
+ 455              		.loc 1 247 20 is_stmt 0 view .LVU160
+ 456 01ac 28EE008A 		vmul.f32	s16, s16, s0
+ 457              	.LVL46:
+ 458              		.loc 1 247 32 view .LVU161
+ 459 01b0 29EE299A 		vmul.f32	s18, s18, s19
+ 460              	.LVL47:
+ 461              		.loc 1 247 16 view .LVU162
+ 462 01b4 38EE098A 		vadd.f32	s16, s16, s18
+ 463              	.LVL48:
+ 464              		.loc 1 247 16 view .LVU163
+ 465              	.LBE6:
+ 248:application/robot.c ****     }
+ 249:application/robot.c **** 
+ 250:application/robot.c ****     /* 底盘跟随（右拨杆中位）：车头追向枪口，α→0
+ 251:application/robot.c ****      * 只用云台编码器，零漂、不积分；死区内不动，避免到位后原地左右�
+ 252:application/robot.c ****      * 2026-11-13：纯 P 在小角度只剩 0.05 的自转指令，推不动车 → 磨蹭；
+ 253:application/robot.c ****      * 加一条小积分，死区外慢慢攒，到位立刻清，专门治"最后几度拖" */
+ 254:application/robot.c ****     if (follow_on != 0u)
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 14
+
+
+ 466              		.loc 1 254 5 is_stmt 1 view .LVU164
+ 467              		.loc 1 254 8 is_stmt 0 view .LVU165
+ 468 01b8 B9F1000F 		cmp	r9, #0
+ 469 01bc 00F0F080 		beq	.L19
+ 470              	.LBB7:
+ 255:application/robot.c ****     {
+ 256:application/robot.c ****         float e   = alpha_deg;
+ 471              		.loc 1 256 9 is_stmt 1 view .LVU166
+ 472              	.LVL49:
+ 257:application/robot.c ****         float ae  = (e > 0.0f) ? e : -e;
+ 473              		.loc 1 257 9 view .LVU167
+ 474              		.loc 1 257 36 is_stmt 0 view .LVU168
+ 475 01c0 F5EEC0AA 		vcmpe.f32	s21, #0
+ 476 01c4 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 477 01c8 40F3D680 		ble	.L127
+ 478              		.loc 1 257 36 discriminator 1 view .LVU169
+ 479 01cc B0EE6ABA 		vmov.f32	s22, s21
+ 258:application/robot.c ****         float dir = (e > 0.0f) ? 1.0f : -1.0f;
+ 480              		.loc 1 258 39 discriminator 1 view .LVU170
+ 481 01d0 F7EE008A 		vmov.f32	s17, #1.0e+0
+ 482              	.LVL50:
+ 483              	.L20:
+ 259:application/robot.c **** 
+ 260:application/robot.c ****         ae -= RC_FOLLOW_DEAD;               /* 死区外才纠，边界处输出恰为 0 */
+ 484              		.loc 1 260 9 is_stmt 1 view .LVU171
+ 485              		.loc 1 260 12 is_stmt 0 view .LVU172
+ 486 01d4 F0EE047A 		vmov.f32	s15, #2.5e+0
+ 487 01d8 7BEE677A 		vsub.f32	s15, s22, s15
+ 488              	.LVL51:
+ 261:application/robot.c **** 
+ 262:application/robot.c ****         if (ae > 0.0f)
+ 489              		.loc 1 262 9 is_stmt 1 view .LVU173
+ 490              		.loc 1 262 12 is_stmt 0 view .LVU174
+ 491 01dc F5EEC07A 		vcmpe.f32	s15, #0
+ 492 01e0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 493 01e4 40F3D380 		ble	.L128
+ 494              	.LBB8:
+ 263:application/robot.c ****         {
+ 264:application/robot.c ****             float ramp = (ae > RC_FOLLOW_DEAD) ? 1.0f : (ae / RC_FOLLOW_DEAD);
+ 495              		.loc 1 264 13 is_stmt 1 view .LVU175
+ 496              		.loc 1 264 55 is_stmt 0 view .LVU176
+ 497 01e8 B0EE047A 		vmov.f32	s14, #2.5e+0
+ 498 01ec F4EEC77A 		vcmpe.f32	s15, s14
+ 499 01f0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 500 01f4 00F3C380 		bgt	.L96
+ 501              		.loc 1 264 55 discriminator 2 view .LVU177
+ 502 01f8 F0EE476A 		vmov.f32	s13, s14
+ 503 01fc 87EEA67A 		vdiv.f32	s14, s15, s13
+ 504              	.L24:
+ 505              	.LVL52:
+ 265:application/robot.c ****             float mag  = RC_FOLLOW_KP * ae + RC_FOLLOW_KICK * ramp;
+ 506              		.loc 1 265 13 is_stmt 1 view .LVU178
+ 507              		.loc 1 265 39 is_stmt 0 view .LVU179
+ 508 0200 DFED4C6A 		vldr.32	s13, .L150+88
+ 509 0204 67EEA67A 		vmul.f32	s15, s15, s13
+ 510              	.LVL53:
+ 511              		.loc 1 265 61 view .LVU180
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 15
+
+
+ 512 0208 DFED4B6A 		vldr.32	s13, .L150+92
+ 513 020c 27EE267A 		vmul.f32	s14, s14, s13
+ 514              	.LVL54:
+ 515              		.loc 1 265 19 view .LVU181
+ 516 0210 77EE877A 		vadd.f32	s15, s15, s14
+ 517              	.LVL55:
+ 266:application/robot.c **** 
+ 267:application/robot.c ****             /* 阻尼：α̇ 直接用编码器转速 6·rpm（可测、无滤波、无相位代价
+ 268:application/robot.c ****              * α̇ 与 e 反号 = 正在回来 → 收油；同号 = 还在往外跑 → 加大。
+ 269:application/robot.c ****              * 原来的纯 P 没有这一项，冲过头再回来就是"摆"。 */
+ 270:application/robot.c ****             mag += RC_FOLLOW_KD * (dir * 6.0f * (float)gim6020.rpm);
+ 518              		.loc 1 270 13 is_stmt 1 view .LVU182
+ 519              		.loc 1 270 40 is_stmt 0 view .LVU183
+ 520 0214 B1EE087A 		vmov.f32	s14, #6.0e+0
+ 521 0218 28EE877A 		vmul.f32	s14, s17, s14
+ 522              		.loc 1 270 63 view .LVU184
+ 523 021c 474B     		ldr	r3, .L150+96
+ 524 021e 5B88     		ldrh	r3, [r3, #2]
+ 525 0220 1BB2     		sxth	r3, r3
+ 526              		.loc 1 270 49 view .LVU185
+ 527 0222 06EE903A 		vmov	s13, r3	@ int
+ 528 0226 F8EEE66A 		vcvt.f32.s32	s13, s13
+ 529              		.loc 1 270 47 view .LVU186
+ 530 022a 27EE267A 		vmul.f32	s14, s14, s13
+ 531              		.loc 1 270 33 view .LVU187
+ 532 022e DFED446A 		vldr.32	s13, .L150+100
+ 533 0232 27EE267A 		vmul.f32	s14, s14, s13
+ 534              		.loc 1 270 17 view .LVU188
+ 535 0236 77EE877A 		vadd.f32	s15, s15, s14
+ 536              	.LVL56:
+ 271:application/robot.c ****             if (mag < 0.0f) mag = 0.0f;
+ 537              		.loc 1 271 13 is_stmt 1 view .LVU189
+ 538              		.loc 1 271 16 is_stmt 0 view .LVU190
+ 539 023a F5EEC07A 		vcmpe.f32	s15, #0
+ 540 023e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 541 0242 00F19F80 		bmi	.L140
+ 272:application/robot.c **** 
+ 273:application/robot.c ****             spin = RC_FOLLOW_SIGN * dir * mag;
+ 542              		.loc 1 273 13 is_stmt 1 view .LVU191
+ 543              		.loc 1 273 18 is_stmt 0 view .LVU192
+ 544 0246 68EEA78A 		vmul.f32	s17, s17, s15
+ 545              	.LVL57:
+ 546              		.loc 1 273 18 view .LVU193
+ 547              	.LBE8:
+ 274:application/robot.c ****         }
+ 275:application/robot.c ****         else
+ 276:application/robot.c ****         {
+ 277:application/robot.c ****             spin = 0.0f;
+ 278:application/robot.c ****         }
+ 279:application/robot.c **** 
+ 280:application/robot.c ****         if (spin >  RC_FOLLOW_MAX) spin =  RC_FOLLOW_MAX;
+ 548              		.loc 1 280 9 is_stmt 1 view .LVU194
+ 549              		.loc 1 280 12 is_stmt 0 view .LVU195
+ 550 024a DFED3E7A 		vldr.32	s15, .L150+104
+ 551              	.LVL58:
+ 552              		.loc 1 280 12 view .LVU196
+ 553 024e F4EEE78A 		vcmpe.f32	s17, s15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 16
+
+
+ 554 0252 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 555 0256 40F39C80 		ble	.L22
+ 556              		.loc 1 280 41 discriminator 1 view .LVU197
+ 557 025a DFED3A8A 		vldr.32	s17, .L150+104
+ 558              	.LVL59:
+ 559              		.loc 1 280 41 discriminator 1 view .LVU198
+ 560 025e 9FE0     		b	.L19
+ 561              	.LVL60:
+ 562              	.L13:
+ 563              		.loc 1 280 41 discriminator 1 view .LVU199
+ 564              	.LBE7:
+ 565              	.LBB10:
+ 199:application/robot.c ****         {
+ 566              		.loc 1 199 14 is_stmt 1 view .LVU200
+ 199:application/robot.c ****         {
+ 567              		.loc 1 199 33 is_stmt 0 view .LVU201
+ 568 0260 2E4B     		ldr	r3, .L150+64
+ 569 0262 1B68     		ldr	r3, [r3]
+ 199:application/robot.c ****         {
+ 570              		.loc 1 199 17 view .LVU202
+ 571 0264 B3F57A7F 		cmp	r3, #1000
+ 572 0268 7FF663AF 		bls	.L14
+ 199:application/robot.c ****         {
+ 573              		.loc 1 199 42 discriminator 1 view .LVU203
+ 574 026c 002C     		cmp	r4, #0
+ 575 026e 3FF460AF 		beq	.L14
+ 201:application/robot.c **** 
+ 576              		.loc 1 201 13 is_stmt 1 view .LVU204
+ 201:application/robot.c **** 
+ 577              		.loc 1 201 31 is_stmt 0 view .LVU205
+ 578 0272 2C4B     		ldr	r3, .L150+72
+ 579 0274 1B68     		ldr	r3, [r3]
+ 201:application/robot.c **** 
+ 580              		.loc 1 201 16 view .LVU206
+ 581 0276 344A     		ldr	r2, .L150+108
+ 582 0278 9342     		cmp	r3, r2
+ 583 027a 02D8     		bhi	.L15
+ 201:application/robot.c **** 
+ 584              		.loc 1 201 43 is_stmt 1 discriminator 1 view .LVU207
+ 201:application/robot.c **** 
+ 585              		.loc 1 201 56 is_stmt 0 discriminator 1 view .LVU208
+ 586 027c 0133     		adds	r3, r3, #1
+ 587 027e 294A     		ldr	r2, .L150+72
+ 588 0280 1360     		str	r3, [r2]
+ 589              	.L15:
+ 203:application/robot.c ****             {
+ 590              		.loc 1 203 13 is_stmt 1 view .LVU209
+ 203:application/robot.c ****             {
+ 591              		.loc 1 203 32 is_stmt 0 view .LVU210
+ 592 0282 284B     		ldr	r3, .L150+72
+ 593 0284 1B68     		ldr	r3, [r3]
+ 203:application/robot.c ****             {
+ 594              		.loc 1 203 16 view .LVU211
+ 595 0286 132B     		cmp	r3, #19
+ 596 0288 7FF653AF 		bls	.L14
+ 203:application/robot.c ****             {
+ 597              		.loc 1 203 60 discriminator 1 view .LVU212
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 17
+
+
+ 598 028c 143B     		subs	r3, r3, #20
+ 203:application/robot.c ****             {
+ 599              		.loc 1 203 67 discriminator 1 view .LVU213
+ 600 028e 2F4A     		ldr	r2, .L150+112
+ 601 0290 A2FB0312 		umull	r1, r2, r2, r3
+ 602 0294 5209     		lsrs	r2, r2, #5
+ 603 0296 6421     		movs	r1, #100
+ 604 0298 01FB1232 		mls	r2, r1, r2, r3
+ 203:application/robot.c ****             {
+ 605              		.loc 1 203 40 discriminator 1 view .LVU214
+ 606 029c 002A     		cmp	r2, #0
+ 607 029e 7FF448AF 		bne	.L14
+ 205:application/robot.c ****                 HAL_FDCAN_Stop(&hfdcan2);
+ 608              		.loc 1 205 17 is_stmt 1 view .LVU215
+ 205:application/robot.c ****                 HAL_FDCAN_Stop(&hfdcan2);
+ 609              		.loc 1 205 34 is_stmt 0 view .LVU216
+ 610 02a2 2B4A     		ldr	r2, .L150+116
+ 611 02a4 1368     		ldr	r3, [r2]
+ 612 02a6 0133     		adds	r3, r3, #1
+ 613 02a8 1360     		str	r3, [r2]
+ 206:application/robot.c ****                 FDCAN2_Start();
+ 614              		.loc 1 206 17 is_stmt 1 view .LVU217
+ 615 02aa 0C48     		ldr	r0, .L150
+ 616 02ac FFF7FEFF 		bl	HAL_FDCAN_Stop
+ 617              	.LVL61:
+ 207:application/robot.c ****             }
+ 618              		.loc 1 207 17 view .LVU218
+ 619 02b0 FFF7FEFF 		bl	FDCAN2_Start
+ 620              	.LVL62:
+ 621 02b4 3DE7     		b	.L14
+ 622              	.L137:
+ 623              	.LBE10:
+ 213:application/robot.c ****     float spin = online ? RC_Norm(RC_CH_TURN) : 0.0f;
+ 624              		.loc 1 213 28 is_stmt 0 discriminator 1 view .LVU219
+ 625 02b6 124B     		ldr	r3, .L150+36
+ 626 02b8 D888     		ldrh	r0, [r3, #6]
+ 627 02ba FFF7FEFF 		bl	RC_Norm
+ 628              	.LVL63:
+ 629 02be B0EE408A 		vmov.f32	s16, s0
+ 630              	.LVL64:
+ 214:application/robot.c **** 
+ 631              		.loc 1 214 5 is_stmt 1 view .LVU220
+ 214:application/robot.c **** 
+ 632              		.loc 1 214 47 is_stmt 0 view .LVU221
+ 633 02c2 B8F1000F 		cmp	r8, #0
+ 634 02c6 02D1     		bne	.L141
+ 214:application/robot.c **** 
+ 635              		.loc 1 214 47 discriminator 2 view .LVU222
+ 636 02c8 DFED178A 		vldr.32	s17, .L150+76
+ 637 02cc 39E7     		b	.L16
+ 638              	.L141:
+ 214:application/robot.c **** 
+ 639              		.loc 1 214 27 discriminator 1 view .LVU223
+ 640 02ce 0C4B     		ldr	r3, .L150+36
+ 641 02d0 D889     		ldrh	r0, [r3, #14]
+ 642 02d2 FFF7FEFF 		bl	RC_Norm
+ 643              	.LVL65:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 18
+
+
+ 214:application/robot.c **** 
+ 644              		.loc 1 214 27 discriminator 1 view .LVU224
+ 645 02d6 F0EE408A 		vmov.f32	s17, s0
+ 646 02da 32E7     		b	.L16
+ 647              	.L151:
+ 648              		.align	2
+ 649              	.L150:
+ 650 02dc 00000000 		.word	hfdcan2
+ 651 02e0 00000000 		.word	RC_Can2TEC
+ 652 02e4 00000000 		.word	RC_Can2REC
+ 653 02e8 00000000 		.word	RC_Can2TECMax
+ 654 02ec 00000000 		.word	RC_Can2RECMax
+ 655 02f0 00000000 		.word	RC_Can2PSR
+ 656 02f4 00000000 		.word	RC_Can2CCCR
+ 657 02f8 00000000 		.word	RC_BuildTag
+ 658 02fc 58231711 		.word	286729048
+ 659 0300 00000000 		.word	RC_Data
+ 660 0304 00000000 		.word	s_sw_prev.9
+ 661 0308 00000000 		.word	s_sw_cnt.8
+ 662 030c 00000000 		.word	INS_Ready
+ 663 0310 00000000 		.word	INS_CalDone
+ 664 0314 00000000 		.word	s_spin_prev.7
+ 665 0318 00000000 		.word	rc_enable_since
+ 666 031c 00000000 		.word	can_rx2_total
+ 667 0320 00000000 		.word	s_can2_last.6
+ 668 0324 00000000 		.word	s_can2_frozen.5
+ 669 0328 00000000 		.word	0
+ 670 032c 6666E63E 		.word	1055286886
+ 671 0330 35FA8E3C 		.word	1016003125
+ 672 0334 BC74933C 		.word	1016296636
+ 673 0338 295C0F3D 		.word	1024416809
+ 674 033c 00000000 		.word	gim6020
+ 675 0340 17B7513A 		.word	978433815
+ 676 0344 3333333F 		.word	1060320051
+ 677 0348 3F420F00 		.word	999999
+ 678 034c 1F85EB51 		.word	1374389535
+ 679 0350 00000000 		.word	RC_Can2RestartCnt
+ 680              	.LVL66:
+ 681              	.L138:
+ 221:application/robot.c ****     }
+ 682              		.loc 1 221 9 is_stmt 1 view .LVU225
+ 221:application/robot.c ****     }
+ 683              		.loc 1 221 12 is_stmt 0 view .LVU226
+ 684 0354 FFEE007A 		vmov.f32	s15, #-1.0e+0
+ 685 0358 F4EEE78A 		vcmpe.f32	s17, s15
+ 686 035c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 687 0360 7FF504AF 		bpl	.L17
+ 221:application/robot.c ****     }
+ 688              		.loc 1 221 32 discriminator 1 view .LVU227
+ 689 0364 FFEE008A 		vmov.f32	s17, #-1.0e+0
+ 690              	.LVL67:
+ 221:application/robot.c ****     }
+ 691              		.loc 1 221 32 discriminator 1 view .LVU228
+ 692 0368 00E7     		b	.L17
+ 693              	.LVL68:
+ 694              	.L139:
+ 226:application/robot.c **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 19
+
+
+ 695              		.loc 1 226 22 discriminator 1 view .LVU229
+ 696 036a BB4B     		ldr	r3, .L152
+ 697 036c 9888     		ldrh	r0, [r3, #4]
+ 698 036e FFF7FEFF 		bl	RC_Norm
+ 699              	.LVL69:
+ 700 0372 B0EE409A 		vmov.f32	s18, s0
+ 701 0376 FFE6     		b	.L18
+ 702              	.LVL70:
+ 703              	.L127:
+ 704              	.LBB11:
+ 258:application/robot.c **** 
+ 705              		.loc 1 258 39 discriminator 2 view .LVU230
+ 706 0378 FFEE008A 		vmov.f32	s17, #-1.0e+0
+ 707              	.LVL71:
+ 258:application/robot.c **** 
+ 708              		.loc 1 258 39 discriminator 2 view .LVU231
+ 709 037c 2AE7     		b	.L20
+ 710              	.LVL72:
+ 711              	.L96:
+ 712              	.LBB9:
+ 264:application/robot.c ****             float mag  = RC_FOLLOW_KP * ae + RC_FOLLOW_KICK * ramp;
+ 713              		.loc 1 264 55 discriminator 1 view .LVU232
+ 714 037e B7EE007A 		vmov.f32	s14, #1.0e+0
+ 715 0382 3DE7     		b	.L24
+ 716              	.LVL73:
+ 717              	.L140:
+ 271:application/robot.c **** 
+ 718              		.loc 1 271 29 is_stmt 1 discriminator 1 view .LVU233
+ 273:application/robot.c ****         }
+ 719              		.loc 1 273 13 view .LVU234
+ 273:application/robot.c ****         }
+ 720              		.loc 1 273 18 is_stmt 0 view .LVU235
+ 721 0384 DFEDB57A 		vldr.32	s15, .L152+4
+ 722 0388 68EEA78A 		vmul.f32	s17, s17, s15
+ 723              	.LVL74:
+ 273:application/robot.c ****         }
+ 724              		.loc 1 273 18 view .LVU236
+ 725              	.LBE9:
+ 726              		.loc 1 280 9 is_stmt 1 view .LVU237
+ 727 038c 01E0     		b	.L22
+ 728              	.LVL75:
+ 729              	.L128:
+ 277:application/robot.c ****         }
+ 730              		.loc 1 277 18 is_stmt 0 view .LVU238
+ 731 038e DFEDB38A 		vldr.32	s17, .L152+4
+ 732              	.LVL76:
+ 733              	.L22:
+ 281:application/robot.c ****         if (spin < -RC_FOLLOW_MAX) spin = -RC_FOLLOW_MAX;
+ 734              		.loc 1 281 9 is_stmt 1 view .LVU239
+ 735              		.loc 1 281 12 is_stmt 0 view .LVU240
+ 736 0392 DFEDB37A 		vldr.32	s15, .L152+8
+ 737 0396 F4EEE78A 		vcmpe.f32	s17, s15
+ 738 039a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 739 039e 20D4     		bmi	.L98
+ 740              	.LVL77:
+ 741              	.L19:
+ 742              		.loc 1 281 12 view .LVU241
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 20
+
+
+ 743              	.LBE11:
+ 282:application/robot.c ****     }
+ 283:application/robot.c **** #endif
+ 284:application/robot.c **** 
+ 285:application/robot.c ****    /* 跟随/小陀螺的自转指令是闭环算出来的（常常 < 0.02），必须旁路混控�
+ 286:application/robot.c ****     * 否则 3.1° 以内指令全被清零：起转有门槛、到位后一顿一顿 */
+ 287:application/robot.c ****    Mecanum_SetSpinDeadbandBypass((uint8_t)((follow_on != 0u) || (spin_mode != 0u)));
+ 744              		.loc 1 287 4 is_stmt 1 view .LVU242
+ 745 03a0 49EA0A03 		orr	r3, r9, r10
+ 746 03a4 DBB2     		uxtb	r3, r3
+ 747 03a6 0393     		str	r3, [sp, #12]
+ 748 03a8 181E     		subs	r0, r3, #0
+ 749 03aa 18BF     		it	ne
+ 750 03ac 0120     		movne	r0, #1
+ 751 03ae FFF7FEFF 		bl	Mecanum_SetSpinDeadbandBypass
+ 752              	.LVL78:
+ 288:application/robot.c **** 
+ 289:application/robot.c ****    uint8_t mix_state = Mecanum_Mix(fwd, strafe, spin, enabled, RC_WheelOut);
+ 753              		.loc 1 289 4 view .LVU243
+ 754              		.loc 1 289 24 is_stmt 0 view .LVU244
+ 755 03b2 AC49     		ldr	r1, .L152+12
+ 756 03b4 2046     		mov	r0, r4
+ 757 03b6 B0EE681A 		vmov.f32	s2, s17
+ 758 03ba F0EE480A 		vmov.f32	s1, s16
+ 759 03be B0EE4A0A 		vmov.f32	s0, s20
+ 760 03c2 FFF7FEFF 		bl	Mecanum_Mix
+ 761              	.LVL79:
+ 762 03c6 0190     		str	r0, [sp, #4]
+ 763              	.LVL80:
+ 290:application/robot.c **** 
+ 291:application/robot.c ****    if(!online && ((now - RC_Data.last_tick) > RC_FAILSAFE_MS))
+ 764              		.loc 1 291 4 is_stmt 1 view .LVU245
+ 765              		.loc 1 291 6 is_stmt 0 view .LVU246
+ 766 03c8 B8F1000F 		cmp	r8, #0
+ 767 03cc 06D1     		bne	.L27
+ 768              		.loc 1 291 33 discriminator 1 view .LVU247
+ 769 03ce A24B     		ldr	r3, .L152
+ 770 03d0 9B6A     		ldr	r3, [r3, #40]
+ 771              		.loc 1 291 24 discriminator 1 view .LVU248
+ 772 03d2 029A     		ldr	r2, [sp, #8]
+ 773 03d4 D31A     		subs	r3, r2, r3
+ 774              		.loc 1 291 15 discriminator 1 view .LVU249
+ 775 03d6 B3F5FA7F 		cmp	r3, #500
+ 776 03da 15D8     		bhi	.L99
+ 777              	.LVL81:
+ 778              	.L27:
+ 292:application/robot.c **** {
+ 293:application/robot.c ****     for(uint8_t i = 0 ; i < MECANUM_WHEEL_NUM; i++)
+ 294:application/robot.c ****     {
+ 295:application/robot.c ****         RC_WheelOut[i] = 0.0f;
+ 296:application/robot.c ****     }
+ 297:application/robot.c ****    
+ 298:application/robot.c ****     Mecanum_Reset();
+ 299:application/robot.c ****     RC_Wheel_Reset();
+ 300:application/robot.c ****     mix_state = 2u;
+ 301:application/robot.c **** }
+ 302:application/robot.c **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 21
+
+
+ 303:application/robot.c **** static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
+ 779              		.loc 1 303 1 is_stmt 1 view .LVU250
+ 304:application/robot.c ****     MOTOR_POL_ID1, MOTOR_POL_ID2, MOTOR_POL_ID3, MOTOR_POL_ID4};
+ 305:application/robot.c **** 
+ 306:application/robot.c ****      float max_a = (float )RC_MAX_CURRENT_A;
+ 780              		.loc 1 306 6 view .LVU251
+ 307:application/robot.c ****      int16_t  raw[MECANUM_WHEEL_NUM];
+ 781              		.loc 1 307 6 view .LVU252
+ 308:application/robot.c ****      uint8_t  fault_mask = 0u;
+ 782              		.loc 1 308 6 view .LVU253
+ 309:application/robot.c **** 
+ 310:application/robot.c **** 
+ 311:application/robot.c ****     for (uint8_t i = 0 ; i < MECANUM_WHEEL_NUM; i++)
+ 783              		.loc 1 311 5 view .LVU254
+ 784              	.LBB12:
+ 785              		.loc 1 311 10 view .LVU255
+ 786              		.loc 1 311 18 is_stmt 0 view .LVU256
+ 787 03dc 0024     		movs	r4, #0
+ 788              	.LVL82:
+ 789              		.loc 1 311 18 view .LVU257
+ 790              	.LBE12:
+ 308:application/robot.c ****      uint8_t  fault_mask = 0u;
+ 791              		.loc 1 308 15 view .LVU258
+ 792 03de 2746     		mov	r7, r4
+ 793              	.LBB13:
+ 794              		.loc 1 311 5 view .LVU259
+ 795 03e0 16E0     		b	.L30
+ 796              	.LVL83:
+ 797              	.L98:
+ 798              		.loc 1 311 5 view .LVU260
+ 799              	.LBE13:
+ 800              	.LBB14:
+ 281:application/robot.c ****     }
+ 801              		.loc 1 281 41 discriminator 1 view .LVU261
+ 802 03e2 DFED9F8A 		vldr.32	s17, .L152+8
+ 803              	.LVL84:
+ 281:application/robot.c ****     }
+ 804              		.loc 1 281 41 discriminator 1 view .LVU262
+ 805 03e6 DBE7     		b	.L19
+ 806              	.LVL85:
+ 807              	.L29:
+ 281:application/robot.c ****     }
+ 808              		.loc 1 281 41 discriminator 1 view .LVU263
+ 809              	.LBE14:
+ 810              	.LBB15:
+ 295:application/robot.c ****     }
+ 811              		.loc 1 295 9 is_stmt 1 view .LVU264
+ 295:application/robot.c ****     }
+ 812              		.loc 1 295 24 is_stmt 0 view .LVU265
+ 813 03e8 9E4A     		ldr	r2, .L152+12
+ 814 03ea 02EB8302 		add	r2, r2, r3, lsl #2
+ 815 03ee 0021     		movs	r1, #0
+ 816 03f0 1160     		str	r1, [r2]	@ float
+ 293:application/robot.c ****     {
+ 817              		.loc 1 293 49 is_stmt 1 discriminator 3 view .LVU266
+ 818 03f2 0133     		adds	r3, r3, #1
+ 819              	.LVL86:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 22
+
+
+ 293:application/robot.c ****     {
+ 820              		.loc 1 293 49 is_stmt 0 discriminator 3 view .LVU267
+ 821 03f4 DBB2     		uxtb	r3, r3
+ 822              	.LVL87:
+ 823              	.L28:
+ 293:application/robot.c ****     {
+ 824              		.loc 1 293 27 is_stmt 1 discriminator 1 view .LVU268
+ 825 03f6 032B     		cmp	r3, #3
+ 826 03f8 F6D9     		bls	.L29
+ 827              	.LBE15:
+ 298:application/robot.c ****     RC_Wheel_Reset();
+ 828              		.loc 1 298 5 view .LVU269
+ 829 03fa FFF7FEFF 		bl	Mecanum_Reset
+ 830              	.LVL88:
+ 299:application/robot.c ****     mix_state = 2u;
+ 831              		.loc 1 299 5 view .LVU270
+ 832 03fe FFF7FEFF 		bl	RC_Wheel_Reset
+ 833              	.LVL89:
+ 300:application/robot.c **** }
+ 834              		.loc 1 300 5 view .LVU271
+ 300:application/robot.c **** }
+ 835              		.loc 1 300 15 is_stmt 0 view .LVU272
+ 836 0402 0223     		movs	r3, #2
+ 837 0404 0193     		str	r3, [sp, #4]
+ 838 0406 E9E7     		b	.L27
+ 839              	.LVL90:
+ 840              	.L99:
+ 841              	.LBB16:
+ 293:application/robot.c ****     {
+ 842              		.loc 1 293 17 view .LVU273
+ 843 0408 4346     		mov	r3, r8
+ 844 040a F4E7     		b	.L28
+ 845              	.LVL91:
+ 846              	.L32:
+ 293:application/robot.c ****     {
+ 847              		.loc 1 293 17 view .LVU274
+ 848              	.LBE16:
+ 849              	.LBB17:
+ 850              		.loc 1 311 50 is_stmt 1 discriminator 2 view .LVU275
+ 851 040c 0134     		adds	r4, r4, #1
+ 852              	.LVL92:
+ 853              		.loc 1 311 50 is_stmt 0 discriminator 2 view .LVU276
+ 854 040e E4B2     		uxtb	r4, r4
+ 855              	.LVL93:
+ 856              	.L30:
+ 857              		.loc 1 311 28 is_stmt 1 discriminator 1 view .LVU277
+ 858 0410 032C     		cmp	r4, #3
+ 859 0412 27D8     		bhi	.L142
+ 312:application/robot.c ****     {
+ 313:application/robot.c ****         raw[i] = 0;
+ 860              		.loc 1 313 9 view .LVU278
+ 861              		.loc 1 313 12 is_stmt 0 view .LVU279
+ 862 0414 2646     		mov	r6, r4
+ 863              		.loc 1 313 16 view .LVU280
+ 864 0416 6500     		lsls	r5, r4, #1
+ 865 0418 0022     		movs	r2, #0
+ 866 041a 06AB     		add	r3, sp, #24
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 23
+
+
+ 867 041c 03EB4403 		add	r3, r3, r4, lsl #1
+ 868 0420 23F8082C 		strh	r2, [r3, #-8]	@ movhi
+ 314:application/robot.c ****         RC_WheelRef[i] = 0.0f;      /* 断使能/故障时不残留上一拍目标值 */
+ 869              		.loc 1 314 9 is_stmt 1 view .LVU281
+ 870              		.loc 1 314 24 is_stmt 0 view .LVU282
+ 871 0424 904B     		ldr	r3, .L152+16
+ 872 0426 03EB8403 		add	r3, r3, r4, lsl #2
+ 873 042a 0022     		movs	r2, #0
+ 874 042c 1A60     		str	r2, [r3]	@ float
+ 315:application/robot.c ****         
+ 316:application/robot.c ****         if((HAL_GetTick() - dj_wheel[i].last_tick) > RC_WHEEL_FEEDBACK_MS)
+ 875              		.loc 1 316 9 is_stmt 1 view .LVU283
+ 876              		.loc 1 316 13 is_stmt 0 view .LVU284
+ 877 042e FFF7FEFF 		bl	HAL_GetTick
+ 878              	.LVL94:
+ 879              		.loc 1 316 40 discriminator 1 view .LVU285
+ 880 0432 2544     		add	r5, r5, r4
+ 881 0434 8D4B     		ldr	r3, .L152+20
+ 882 0436 03EB8503 		add	r3, r3, r5, lsl #2
+ 883 043a 9B68     		ldr	r3, [r3, #8]
+ 884              		.loc 1 316 27 discriminator 1 view .LVU286
+ 885 043c C01A     		subs	r0, r0, r3
+ 886              		.loc 1 316 11 discriminator 1 view .LVU287
+ 887 043e 6428     		cmp	r0, #100
+ 888 0440 03D9     		bls	.L31
+ 317:application/robot.c ****          {
+ 318:application/robot.c ****                 fault_mask |= (uint8_t)(1u << i);
+ 889              		.loc 1 318 17 is_stmt 1 view .LVU288
+ 890              		.loc 1 318 44 is_stmt 0 view .LVU289
+ 891 0442 0123     		movs	r3, #1
+ 892 0444 A340     		lsls	r3, r3, r4
+ 893              		.loc 1 318 31 view .LVU290
+ 894 0446 DBB2     		uxtb	r3, r3
+ 895              		.loc 1 318 28 view .LVU291
+ 896 0448 1F43     		orrs	r7, r7, r3
+ 897              	.LVL95:
+ 898              	.L31:
+ 319:application/robot.c ****          }
+ 320:application/robot.c ****         if(dj_wheel[i].temp > RC_WHEEL_TEMP_LIMIT)
+ 899              		.loc 1 320 9 is_stmt 1 view .LVU292
+ 900              		.loc 1 320 23 is_stmt 0 view .LVU293
+ 901 044a 06EB4602 		add	r2, r6, r6, lsl #1
+ 902 044e 874B     		ldr	r3, .L152+20
+ 903 0450 03EB8203 		add	r3, r3, r2, lsl #2
+ 904 0454 9B79     		ldrb	r3, [r3, #6]	@ zero_extendqisi2
+ 905              		.loc 1 320 11 view .LVU294
+ 906 0456 4B2B     		cmp	r3, #75
+ 907 0458 D8D9     		bls	.L32
+ 321:application/robot.c ****          {
+ 322:application/robot.c ****                 fault_mask |= (uint8_t)(1u << i);
+ 908              		.loc 1 322 17 is_stmt 1 view .LVU295
+ 909              		.loc 1 322 44 is_stmt 0 view .LVU296
+ 910 045a 0123     		movs	r3, #1
+ 911 045c B340     		lsls	r3, r3, r6
+ 912              		.loc 1 322 31 view .LVU297
+ 913 045e DBB2     		uxtb	r3, r3
+ 914              		.loc 1 322 28 view .LVU298
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 24
+
+
+ 915 0460 1F43     		orrs	r7, r7, r3
+ 916              	.LVL96:
+ 917              		.loc 1 322 28 view .LVU299
+ 918 0462 D3E7     		b	.L32
+ 919              	.LVL97:
+ 920              	.L142:
+ 921              		.loc 1 322 28 view .LVU300
+ 922              	.LBE17:
+ 323:application/robot.c ****          }
+ 324:application/robot.c **** 
+ 325:application/robot.c ****     }
+ 326:application/robot.c ****       RC_WheelFault = fault_mask;
+ 923              		.loc 1 326 7 is_stmt 1 view .LVU301
+ 924              		.loc 1 326 21 is_stmt 0 view .LVU302
+ 925 0464 824B     		ldr	r3, .L152+24
+ 926 0466 1F70     		strb	r7, [r3]
+ 327:application/robot.c **** 
+ 328:application/robot.c ****       if(mix_state == 2u || (fault_mask != 0u && RC_WHEEL_FAULT_ISOLATE == 0))
+ 927              		.loc 1 328 7 is_stmt 1 view .LVU303
+ 928              		.loc 1 328 9 is_stmt 0 view .LVU304
+ 929 0468 019B     		ldr	r3, [sp, #4]
+ 930 046a 022B     		cmp	r3, #2
+ 931 046c 15D0     		beq	.L143
+ 329:application/robot.c ****     {
+ 330:application/robot.c ****       RC_Wheel_Reset();
+ 331:application/robot.c ****       for(uint8_t i = 0 ; i < MECANUM_WHEEL_NUM; i++)
+ 332:application/robot.c ****       {
+ 333:application/robot.c ****           raw[i] = 0;
+ 334:application/robot.c ****           RC_WheelRef[i] = 0.0f;
+ 335:application/robot.c ****       }
+ 336:application/robot.c **** 
+ 337:application/robot.c ****     }
+ 338:application/robot.c ****     else if ((mix_state == 1u) && (follow_on == 0u) && (spin_mode == 0u))
+ 932              		.loc 1 338 10 is_stmt 1 view .LVU305
+ 933              		.loc 1 338 46 is_stmt 0 view .LVU306
+ 934 046e C9F30003 		ubfx	r3, r9, #0, #1
+ 935 0472 83F00103 		eor	r3, r3, #1
+ 936              		.loc 1 338 32 view .LVU307
+ 937 0476 019A     		ldr	r2, [sp, #4]
+ 938 0478 012A     		cmp	r2, #1
+ 939 047a 14BF     		ite	ne
+ 940 047c 0023     		movne	r3, #0
+ 941 047e 03F00103 		andeq	r3, r3, #1
+ 942              		.loc 1 338 13 view .LVU308
+ 943 0482 002B     		cmp	r3, #0
+ 944 0484 00F03181 		beq	.L100
+ 945              		.loc 1 338 53 discriminator 1 view .LVU309
+ 946 0488 BAF1000F 		cmp	r10, #0
+ 947 048c 40F02F81 		bne	.L101
+ 339:application/robot.c ****     {
+ 340:application/robot.c ****       /* 整车回中：当拍四轮积分与目标归零，跳过普通 PI；
+ 341:application/robot.c ****        * 用实测转速做纯 P 反刹（恒逆着运动方向），停稳后撤掉电流。
+ 342:application/robot.c ****        * 跟随/小陀螺模式下自转指令是环算出来的，会频繁穿过 0，
+ 343:application/robot.c ****        * 这时清斜坡等于每穿一次就从零重加速 → 保留斜坡，只给零电流 */
+ 344:application/robot.c ****       if ((follow_on == 0u) && (spin_mode == 0u))
+ 948              		.loc 1 344 7 is_stmt 1 view .LVU310
+ 949              		.loc 1 344 10 is_stmt 0 view .LVU311
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 25
+
+
+ 950 0490 039B     		ldr	r3, [sp, #12]
+ 951 0492 002B     		cmp	r3, #0
+ 952 0494 5DD0     		beq	.L144
+ 953              	.L39:
+ 954              	.LBB18:
+ 955              	.LBB19:
+ 345:application/robot.c ****       {
+ 346:application/robot.c ****           Mecanum_Reset();                /* 手动模式：旧斜坡一并清掉，重新推杆从
+ 347:application/robot.c ****       }
+ 348:application/robot.c ****       for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 349:application/robot.c ****       {
+ 350:application/robot.c ****           float rpm = (float)dj_wheel[i].rpm;
+ 351:application/robot.c ****           float a;
+ 352:application/robot.c **** 
+ 353:application/robot.c ****           s_wheel_i[i]   = 0.0f;
+ 354:application/robot.c ****           RC_WheelRef[i] = 0.0f;
+ 355:application/robot.c **** 
+ 356:application/robot.c ****           /* 故障轮：反馈已停更，它的 rpm 是最后一帧的旧值，
+ 357:application/robot.c ****            * 拿它算刹车会一直往已停的轮子上灌逆向电流 → 直接给 0 */
+ 358:application/robot.c ****           if ((fault_mask & (uint8_t)(1u << i)) != 0u)
+ 359:application/robot.c ****           {
+ 360:application/robot.c ****               raw[i] = 0;
+ 361:application/robot.c ****               continue;
+ 362:application/robot.c ****           }
+ 363:application/robot.c **** 
+ 364:application/robot.c ****           if (wheel_abs(rpm) < RC_WHEEL_STOP_QUIET_RPM)
+ 365:application/robot.c ****           {
+ 366:application/robot.c ****               a = 0.0f;
+ 956              		.loc 1 366 17 view .LVU312
+ 957 0496 5446     		mov	r4, r10
+ 958              	.LVL98:
+ 959              		.loc 1 366 17 view .LVU313
+ 960 0498 7AE0     		b	.L43
+ 961              	.LVL99:
+ 962              	.L143:
+ 963              		.loc 1 366 17 view .LVU314
+ 964              	.LBE19:
+ 965              	.LBE18:
+ 330:application/robot.c ****       for(uint8_t i = 0 ; i < MECANUM_WHEEL_NUM; i++)
+ 966              		.loc 1 330 7 is_stmt 1 view .LVU315
+ 967 049a FFF7FEFF 		bl	RC_Wheel_Reset
+ 968              	.LVL100:
+ 331:application/robot.c ****       {
+ 969              		.loc 1 331 7 view .LVU316
+ 970              	.LBB22:
+ 331:application/robot.c ****       {
+ 971              		.loc 1 331 11 view .LVU317
+ 331:application/robot.c ****       {
+ 972              		.loc 1 331 19 is_stmt 0 view .LVU318
+ 973 049e 0023     		movs	r3, #0
+ 331:application/robot.c ****       {
+ 974              		.loc 1 331 7 view .LVU319
+ 975 04a0 0CE0     		b	.L35
+ 976              	.LVL101:
+ 977              	.L36:
+ 333:application/robot.c ****           RC_WheelRef[i] = 0.0f;
+ 978              		.loc 1 333 11 is_stmt 1 view .LVU320
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 26
+
+
+ 333:application/robot.c ****           RC_WheelRef[i] = 0.0f;
+ 979              		.loc 1 333 18 is_stmt 0 view .LVU321
+ 980 04a2 06AA     		add	r2, sp, #24
+ 981 04a4 02EB4302 		add	r2, r2, r3, lsl #1
+ 982 04a8 0021     		movs	r1, #0
+ 983 04aa 22F8081C 		strh	r1, [r2, #-8]	@ movhi
+ 334:application/robot.c ****       }
+ 984              		.loc 1 334 11 is_stmt 1 view .LVU322
+ 334:application/robot.c ****       }
+ 985              		.loc 1 334 26 is_stmt 0 view .LVU323
+ 986 04ae 6E4A     		ldr	r2, .L152+16
+ 987 04b0 02EB8302 		add	r2, r2, r3, lsl #2
+ 988 04b4 0021     		movs	r1, #0
+ 989 04b6 1160     		str	r1, [r2]	@ float
+ 331:application/robot.c ****       {
+ 990              		.loc 1 331 51 is_stmt 1 discriminator 3 view .LVU324
+ 991 04b8 0133     		adds	r3, r3, #1
+ 992              	.LVL102:
+ 331:application/robot.c ****       {
+ 993              		.loc 1 331 51 is_stmt 0 discriminator 3 view .LVU325
+ 994 04ba DBB2     		uxtb	r3, r3
+ 995              	.LVL103:
+ 996              	.L35:
+ 331:application/robot.c ****       {
+ 997              		.loc 1 331 29 is_stmt 1 discriminator 1 view .LVU326
+ 998 04bc 032B     		cmp	r3, #3
+ 999 04be F0D9     		bls	.L36
+ 1000              	.LVL104:
+ 1001              	.L37:
+ 331:application/robot.c ****       {
+ 1002              		.loc 1 331 29 is_stmt 0 discriminator 1 view .LVU327
+ 1003              	.LBE22:
+ 367:application/robot.c ****           }
+ 368:application/robot.c ****           else
+ 369:application/robot.c ****           {
+ 370:application/robot.c ****               a = wheel_clamp(-RC_WHEEL_STOP_KP * rpm, -RC_WHEEL_STOP_A, RC_WHEEL_STOP_A);
+ 371:application/robot.c ****           }
+ 372:application/robot.c **** 
+ 373:application/robot.c ****           raw[i] = (int16_t)(a / 20.0f * 16384.0f);
+ 374:application/robot.c ****       }
+ 375:application/robot.c ****     }
+ 376:application/robot.c ****     else {
+ 377:application/robot.c **** 
+ 378:application/robot.c ****       for(uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+ 379:application/robot.c ****      {
+ 380:application/robot.c ****        if(RC_WHEEL_FAULT_ISOLATE == 1 && (fault_mask & (uint8_t)(1u << i)))
+ 381:application/robot.c ****        {
+ 382:application/robot.c ****           s_wheel_i[i] = 0.0f;
+ 383:application/robot.c ****           raw[i] = 0;
+ 384:application/robot.c ****           continue;
+ 385:application/robot.c ****        }
+ 386:application/robot.c **** 
+ 387:application/robot.c ****       float  ref = s_wheel_sign[i] * RC_WheelOut[i] * RC_WHEEL_RPM_MAX;
+ 388:application/robot.c ****       float  a;
+ 389:application/robot.c **** 
+ 390:application/robot.c ****       RC_WheelRef[i] = ref;      /* 调试镜像：该轮目标转速 */
+ 391:application/robot.c **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 27
+
+
+ 392:application/robot.c ****       #if (RC_WHEEL_ENABLE_PID ==1)
+ 393:application/robot.c ****         a = RC_Wheel_Speed_PI(i, ref, dj_wheel[i].rpm, max_a);
+ 394:application/robot.c ****       #else 
+ 395:application/robot.c ****         (void)ref;
+ 396:application/robot.c ****         a = s_wheel_sign[i] * RC_WheelOut[i] * max_a;
+ 397:application/robot.c ****       #endif
+ 398:application/robot.c **** 
+ 399:application/robot.c ****       if(a > RC_ABS_CURRENT_A) a = RC_ABS_CURRENT_A;
+ 400:application/robot.c ****       if(a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+ 401:application/robot.c **** 
+ 402:application/robot.c ****         raw[i] = (int16_t)(a / 20.0f * 16384.0f);
+ 403:application/robot.c **** 
+ 404:application/robot.c ****      }
+ 405:application/robot.c ****     }
+ 406:application/robot.c **** 
+ 407:application/robot.c ****     /* 6) 云台 GM6020（yaw）：限位 + 超速兜底 + 斜坡 + 安全开关
+ 408:application/robot.c ****      *    小陀螺走专用世界航向环，其余模式走原来的手控/跟随环，两条路�
+ 409:application/robot.c ****     float gim  = online ? RC_Norm(RC_CH_GIMBAL) : 0.0f;
+ 1004              		.loc 1 409 5 is_stmt 1 view .LVU328
+ 1005              		.loc 1 409 49 is_stmt 0 view .LVU329
+ 1006 04c0 B8F1000F 		cmp	r8, #0
+ 1007 04c4 40F01581 		bne	.L145
+ 1008              		.loc 1 409 49 discriminator 2 view .LVU330
+ 1009 04c8 9FED640A 		vldr.32	s0, .L152+4
+ 1010              	.L50:
+ 1011              	.LVL105:
+ 410:application/robot.c ****     float volt = (spin_mode != 0u) ? RC_Yaw_Spin_Control(online, gim)
+ 1012              		.loc 1 410 5 is_stmt 1 view .LVU331
+ 411:application/robot.c ****                                    : RC_Yaw_Control(online, gim);
+ 1013              		.loc 1 411 36 is_stmt 0 view .LVU332
+ 1014 04cc BAF1000F 		cmp	r10, #0
+ 1015 04d0 00F01481 		beq	.L51
+ 410:application/robot.c ****     float volt = (spin_mode != 0u) ? RC_Yaw_Spin_Control(online, gim)
+ 1016              		.loc 1 410 38 view .LVU333
+ 1017 04d4 4046     		mov	r0, r8
+ 1018 04d6 FFF7FEFF 		bl	RC_Yaw_Spin_Control
+ 1019              	.LVL106:
+ 1020              	.L52:
+ 412:application/robot.c **** 
+ 413:application/robot.c ****     /* ① 反馈超时 / 遥控离线 → 断电（没有反馈就等于没有限位）
+ 414:application/robot.c ****      *    ★每次断电都留下“为什么”：原因码 + 历史最大反馈年龄 + 历史�
+ 415:application/robot.c ****      *      不再靠 Watch 猜（Watch 在故障瞬间的读数不可信，教训见 2026-11-17 �
+ 416:application/robot.c ****     uint8_t yaw_kill     = 0u;
+ 1021              		.loc 1 416 5 is_stmt 1 view .LVU334
+ 417:application/robot.c ****     uint8_t kill_reason  = 0u;
+ 1022              		.loc 1 417 5 view .LVU335
+ 1023              	.LBB23:
+ 418:application/robot.c **** 
+ 419:application/robot.c ****     {
+ 420:application/robot.c ****         uint32_t fb_age  = now - gim6020.last_tick;
+ 1024              		.loc 1 420 9 view .LVU336
+ 1025              		.loc 1 420 41 is_stmt 0 view .LVU337
+ 1026 04da 664A     		ldr	r2, .L152+28
+ 1027 04dc 9368     		ldr	r3, [r2, #8]
+ 1028              		.loc 1 420 18 view .LVU338
+ 1029 04de 0299     		ldr	r1, [sp, #8]
+ 1030 04e0 CB1A     		subs	r3, r1, r3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 28
+
+
+ 1031              	.LVL107:
+ 421:application/robot.c ****         float    rpm_abs = (float)gim6020.rpm;
+ 1032              		.loc 1 421 9 is_stmt 1 view .LVU339
+ 1033              		.loc 1 421 42 is_stmt 0 view .LVU340
+ 1034 04e2 5288     		ldrh	r2, [r2, #2]
+ 1035 04e4 12B2     		sxth	r2, r2
+ 1036              		.loc 1 421 18 view .LVU341
+ 1037 04e6 07EE902A 		vmov	s15, r2	@ int
+ 1038 04ea F8EEE77A 		vcvt.f32.s32	s15, s15
+ 1039              	.LVL108:
+ 422:application/robot.c **** 
+ 423:application/robot.c ****         if (rpm_abs < 0.0f) rpm_abs = -rpm_abs;
+ 1040              		.loc 1 423 9 is_stmt 1 view .LVU342
+ 1041              		.loc 1 423 12 is_stmt 0 view .LVU343
+ 1042 04ee 002A     		cmp	r2, #0
+ 1043 04f0 C0F20881 		blt	.L146
+ 1044              	.LVL109:
+ 1045              	.L53:
+ 424:application/robot.c ****         if (fb_age  > RC_YawFbAgeMax) RC_YawFbAgeMax = fb_age;
+ 1046              		.loc 1 424 9 is_stmt 1 view .LVU344
+ 1047              		.loc 1 424 21 is_stmt 0 view .LVU345
+ 1048 04f4 604A     		ldr	r2, .L152+32
+ 1049 04f6 1268     		ldr	r2, [r2]
+ 1050              		.loc 1 424 12 view .LVU346
+ 1051 04f8 9A42     		cmp	r2, r3
+ 1052 04fa 01D2     		bcs	.L54
+ 1053              		.loc 1 424 39 is_stmt 1 discriminator 1 view .LVU347
+ 1054              		.loc 1 424 54 is_stmt 0 discriminator 1 view .LVU348
+ 1055 04fc 5E4A     		ldr	r2, .L152+32
+ 1056 04fe 1360     		str	r3, [r2]
+ 1057              	.L54:
+ 425:application/robot.c ****         if (rpm_abs > RC_YawSpdMax)  RC_YawSpdMax  = rpm_abs;
+ 1058              		.loc 1 425 9 is_stmt 1 view .LVU349
+ 1059              		.loc 1 425 21 is_stmt 0 view .LVU350
+ 1060 0500 5E4A     		ldr	r2, .L152+36
+ 1061 0502 92ED007A 		vldr.32	s14, [r2]
+ 1062              		.loc 1 425 12 view .LVU351
+ 1063 0506 B4EEE77A 		vcmpe.f32	s14, s15
+ 1064 050a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1065 050e 01D5     		bpl	.L55
+ 1066              		.loc 1 425 38 is_stmt 1 discriminator 1 view .LVU352
+ 1067              		.loc 1 425 52 is_stmt 0 discriminator 1 view .LVU353
+ 1068 0510 C2ED007A 		vstr.32	s15, [r2]
+ 1069              	.L55:
+ 426:application/robot.c **** 
+ 427:application/robot.c ****         if (online == 0u)                        { yaw_kill = 1u; kill_reason = 1u; }
+ 1070              		.loc 1 427 9 is_stmt 1 view .LVU354
+ 1071              		.loc 1 427 12 is_stmt 0 view .LVU355
+ 1072 0514 B8F1000F 		cmp	r8, #0
+ 1073 0518 00F0F780 		beq	.L106
+ 1074              	.LBE23:
+ 416:application/robot.c ****     uint8_t kill_reason  = 0u;
+ 1075              		.loc 1 416 13 view .LVU356
+ 1076 051c 0021     		movs	r1, #0
+ 1077              	.L57:
+ 1078              	.LVL110:
+ 1079              	.LBB26:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 29
+
+
+ 428:application/robot.c ****         if (fb_age > GM_FEEDBACK_TIMEOUT_MS)      { yaw_kill = 1u; kill_reason = 2u; }
+ 1080              		.loc 1 428 9 is_stmt 1 view .LVU357
+ 1081              		.loc 1 428 12 is_stmt 0 view .LVU358
+ 1082 051e 642B     		cmp	r3, #100
+ 1083 0520 00F2F580 		bhi	.L58
+ 1084              	.LBB24:
+ 429:application/robot.c **** 
+ 430:application/robot.c ****         /* 断流集数：故障是间歇性的，Ozone 不一定守得住现场；
+ 431:application/robot.c ****          * 事后读 RC_YawOutageCnt 就知道断过几次（配合 RC_YawFbAgeMax 看最长一次�
+ 432:application/robot.c ****         {
+ 433:application/robot.c ****             static uint16_t s_out_ms = 0u;
+ 1085              		.loc 1 433 13 is_stmt 1 view .LVU359
+ 434:application/robot.c **** 
+ 435:application/robot.c ****             if (fb_age > GM_FEEDBACK_TIMEOUT_MS) {
+ 1086              		.loc 1 435 13 view .LVU360
+ 436:application/robot.c ****                 if (s_out_ms == 0u) RC_YawOutageCnt++;
+ 437:application/robot.c ****                 if (s_out_ms < 60000u) s_out_ms++;
+ 438:application/robot.c ****             } else {
+ 439:application/robot.c ****                 s_out_ms = 0u;
+ 1087              		.loc 1 439 17 view .LVU361
+ 1088              		.loc 1 439 26 is_stmt 0 view .LVU362
+ 1089 0524 564B     		ldr	r3, .L152+40
+ 1090              	.LVL111:
+ 1091              		.loc 1 439 26 view .LVU363
+ 1092 0526 0022     		movs	r2, #0
+ 1093 0528 1A80     		strh	r2, [r3]	@ movhi
+ 1094 052a 0B46     		mov	r3, r1
+ 1095              	.LVL112:
+ 1096              	.L59:
+ 1097              		.loc 1 439 26 view .LVU364
+ 1098              	.LBE24:
+ 440:application/robot.c ****             }
+ 441:application/robot.c ****         }
+ 442:application/robot.c **** 
+ 443:application/robot.c ****         /* ② 超速兜底（带去抖）：
+ 444:application/robot.c ****          *    旧版单帧就断：0x205 里混进一帧别的节点的帧（|rpm| 几千）→ 每
+ 445:application/robot.c ****          *    电压钉 0（“枪口无阻力”）+ volt_prev 清零 → 斜坡从零重爬 → �
+ 446:application/robot.c ****          *    现在：假帧在 DJ_Motor.c 已整帧丢弃（|rpm|>600）；这里再要求连续
+ 447:application/robot.c ****          *    GM_RPM_KICK_MS(10ms) 都超限才认“真超速”，安全性不降。 */
+ 448:application/robot.c ****         static uint16_t s_rpm_over = 0u;
+ 1099              		.loc 1 448 9 is_stmt 1 view .LVU365
+ 449:application/robot.c **** 
+ 450:application/robot.c ****         if (rpm_abs > GM_RPM_LIMIT) {
+ 1100              		.loc 1 450 9 view .LVU366
+ 1101              		.loc 1 450 12 is_stmt 0 view .LVU367
+ 1102 052c 9FED557A 		vldr.32	s14, .L152+44
+ 1103 0530 F4EEC77A 		vcmpe.f32	s15, s14
+ 1104 0534 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1105 0538 40F3FD80 		ble	.L130
+ 451:application/robot.c ****             if (s_rpm_over < 60000u) s_rpm_over++;
+ 1106              		.loc 1 451 13 is_stmt 1 view .LVU368
+ 1107              		.loc 1 451 28 is_stmt 0 view .LVU369
+ 1108 053c 524A     		ldr	r2, .L152+48
+ 1109 053e 1288     		ldrh	r2, [r2]
+ 1110              		.loc 1 451 16 view .LVU370
+ 1111 0540 4EF65F20 		movw	r0, #59999
+ 1112 0544 8242     		cmp	r2, r0
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 30
+
+
+ 1113 0546 00F2F980 		bhi	.L63
+ 1114              		.loc 1 451 38 is_stmt 1 discriminator 1 view .LVU371
+ 1115              		.loc 1 451 48 is_stmt 0 discriminator 1 view .LVU372
+ 1116 054a 0132     		adds	r2, r2, #1
+ 1117 054c 4E48     		ldr	r0, .L152+48
+ 1118 054e 0280     		strh	r2, [r0]	@ movhi
+ 1119 0550 F4E0     		b	.L63
+ 1120              	.LVL113:
+ 1121              	.L144:
+ 1122              		.loc 1 451 48 discriminator 1 view .LVU373
+ 1123              	.LBE26:
+ 346:application/robot.c ****       }
+ 1124              		.loc 1 346 11 is_stmt 1 view .LVU374
+ 1125 0552 FFF7FEFF 		bl	Mecanum_Reset
+ 1126              	.LVL114:
+ 1127 0556 9EE7     		b	.L39
+ 1128              	.LVL115:
+ 1129              	.L40:
+ 1130              	.LBB27:
+ 1131              	.LBB20:
+ 364:application/robot.c ****           {
+ 1132              		.loc 1 364 11 view .LVU375
+ 364:application/robot.c ****           {
+ 1133              		.loc 1 364 15 is_stmt 0 view .LVU376
+ 1134 0558 B0EE480A 		vmov.f32	s0, s16
+ 1135 055c FFF7FEFF 		bl	wheel_abs
+ 1136              	.LVL116:
+ 364:application/robot.c ****           {
+ 1137              		.loc 1 364 14 discriminator 1 view .LVU377
+ 1138 0560 DFED4A7A 		vldr.32	s15, .L152+52
+ 1139 0564 F4EEC07A 		vcmpe.f32	s15, s0
+ 1140 0568 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1141 056c 32DD     		ble	.L147
+ 366:application/robot.c ****           }
+ 1142              		.loc 1 366 17 view .LVU378
+ 1143 056e 9FED3B0A 		vldr.32	s0, .L152+4
+ 1144              	.L42:
+ 1145              	.LVL117:
+ 373:application/robot.c ****       }
+ 1146              		.loc 1 373 11 is_stmt 1 view .LVU379
+ 373:application/robot.c ****       }
+ 1147              		.loc 1 373 32 is_stmt 0 view .LVU380
+ 1148 0572 B3EE047A 		vmov.f32	s14, #2.0e+1
+ 1149 0576 C0EE077A 		vdiv.f32	s15, s0, s14
+ 373:application/robot.c ****       }
+ 1150              		.loc 1 373 20 view .LVU381
+ 1151 057a FEEEC97A 		vcvt.s32.f32	s15, s15, #14
+ 373:application/robot.c ****       }
+ 1152              		.loc 1 373 18 view .LVU382
+ 1153 057e 06AB     		add	r3, sp, #24
+ 1154 0580 03EB4505 		add	r5, r3, r5, lsl #1
+ 1155 0584 17EE903A 		vmov	r3, s15	@ int
+ 1156 0588 25F8083C 		strh	r3, [r5, #-8]	@ movhi
+ 1157              	.LVL118:
+ 1158              	.L41:
+ 373:application/robot.c ****       }
+ 1159              		.loc 1 373 18 view .LVU383
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 31
+
+
+ 1160              	.LBE20:
+ 348:application/robot.c ****       {
+ 1161              		.loc 1 348 51 is_stmt 1 discriminator 2 view .LVU384
+ 1162 058c 0134     		adds	r4, r4, #1
+ 1163              	.LVL119:
+ 348:application/robot.c ****       {
+ 1164              		.loc 1 348 51 is_stmt 0 discriminator 2 view .LVU385
+ 1165 058e E4B2     		uxtb	r4, r4
+ 1166              	.LVL120:
+ 1167              	.L43:
+ 348:application/robot.c ****       {
+ 1168              		.loc 1 348 29 is_stmt 1 discriminator 1 view .LVU386
+ 1169 0590 032C     		cmp	r4, #3
+ 1170 0592 95D8     		bhi	.L37
+ 1171              	.LBB21:
+ 350:application/robot.c ****           float a;
+ 1172              		.loc 1 350 11 view .LVU387
+ 350:application/robot.c ****           float a;
+ 1173              		.loc 1 350 41 is_stmt 0 view .LVU388
+ 1174 0594 2546     		mov	r5, r4
+ 1175 0596 04EB4402 		add	r2, r4, r4, lsl #1
+ 1176 059a 344B     		ldr	r3, .L152+20
+ 1177 059c 03EB8203 		add	r3, r3, r2, lsl #2
+ 1178 05a0 5B88     		ldrh	r3, [r3, #2]
+ 1179 05a2 1BB2     		sxth	r3, r3
+ 350:application/robot.c ****           float a;
+ 1180              		.loc 1 350 17 view .LVU389
+ 1181 05a4 07EE903A 		vmov	s15, r3	@ int
+ 1182 05a8 B8EEE78A 		vcvt.f32.s32	s16, s15
+ 1183              	.LVL121:
+ 351:application/robot.c **** 
+ 1184              		.loc 1 351 11 is_stmt 1 view .LVU390
+ 353:application/robot.c ****           RC_WheelRef[i] = 0.0f;
+ 1185              		.loc 1 353 11 view .LVU391
+ 353:application/robot.c ****           RC_WheelRef[i] = 0.0f;
+ 1186              		.loc 1 353 26 is_stmt 0 view .LVU392
+ 1187 05ac 384B     		ldr	r3, .L152+56
+ 1188 05ae 03EB8403 		add	r3, r3, r4, lsl #2
+ 1189 05b2 0022     		movs	r2, #0
+ 1190 05b4 1A60     		str	r2, [r3]	@ float
+ 354:application/robot.c **** 
+ 1191              		.loc 1 354 11 is_stmt 1 view .LVU393
+ 354:application/robot.c **** 
+ 1192              		.loc 1 354 26 is_stmt 0 view .LVU394
+ 1193 05b6 2C4B     		ldr	r3, .L152+16
+ 1194 05b8 03EB8403 		add	r3, r3, r4, lsl #2
+ 1195 05bc 1A60     		str	r2, [r3]	@ float
+ 358:application/robot.c ****           {
+ 1196              		.loc 1 358 11 is_stmt 1 view .LVU395
+ 358:application/robot.c ****           {
+ 1197              		.loc 1 358 42 is_stmt 0 view .LVU396
+ 1198 05be 0123     		movs	r3, #1
+ 1199 05c0 A340     		lsls	r3, r3, r4
+ 358:application/robot.c ****           {
+ 1200              		.loc 1 358 14 view .LVU397
+ 1201 05c2 3B42     		tst	r3, r7
+ 1202 05c4 C8D0     		beq	.L40
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 32
+
+
+ 360:application/robot.c ****               continue;
+ 1203              		.loc 1 360 15 is_stmt 1 view .LVU398
+ 360:application/robot.c ****               continue;
+ 1204              		.loc 1 360 22 is_stmt 0 view .LVU399
+ 1205 05c6 0022     		movs	r2, #0
+ 1206 05c8 06AB     		add	r3, sp, #24
+ 1207 05ca 03EB4403 		add	r3, r3, r4, lsl #1
+ 1208 05ce 23F8082C 		strh	r2, [r3, #-8]	@ movhi
+ 361:application/robot.c ****           }
+ 1209              		.loc 1 361 15 is_stmt 1 view .LVU400
+ 1210 05d2 DBE7     		b	.L41
+ 1211              	.L147:
+ 370:application/robot.c ****           }
+ 1212              		.loc 1 370 15 view .LVU401
+ 370:application/robot.c ****           }
+ 1213              		.loc 1 370 19 is_stmt 0 view .LVU402
+ 1214 05d4 B0EE0C1A 		vmov.f32	s2, #3.5e+0
+ 1215 05d8 F8EE0C0A 		vmov.f32	s1, #-3.5e+0
+ 1216 05dc 9FED2D0A 		vldr.32	s0, .L152+60
+ 1217 05e0 28EE000A 		vmul.f32	s0, s16, s0
+ 1218 05e4 FFF7FEFF 		bl	wheel_clamp
+ 1219              	.LVL122:
+ 370:application/robot.c ****           }
+ 1220              		.loc 1 370 19 view .LVU403
+ 1221 05e8 C3E7     		b	.L42
+ 1222              	.LVL123:
+ 1223              	.L45:
+ 370:application/robot.c ****           }
+ 1224              		.loc 1 370 19 view .LVU404
+ 1225              	.LBE21:
+ 1226              	.LBE27:
+ 1227              	.LBB28:
+ 1228              	.LBB29:
+ 387:application/robot.c ****       float  a;
+ 1229              		.loc 1 387 7 is_stmt 1 view .LVU405
+ 387:application/robot.c ****       float  a;
+ 1230              		.loc 1 387 32 is_stmt 0 view .LVU406
+ 1231 05ea 2B4B     		ldr	r3, .L152+64
+ 1232 05ec 03EB8403 		add	r3, r3, r4, lsl #2
+ 1233 05f0 93ED000A 		vldr.32	s0, [r3]
+ 387:application/robot.c ****       float  a;
+ 1234              		.loc 1 387 49 view .LVU407
+ 1235 05f4 1B4B     		ldr	r3, .L152+12
+ 1236 05f6 03EB8403 		add	r3, r3, r4, lsl #2
+ 1237 05fa D3ED007A 		vldr.32	s15, [r3]
+ 387:application/robot.c ****       float  a;
+ 1238              		.loc 1 387 36 view .LVU408
+ 1239 05fe 20EE270A 		vmul.f32	s0, s0, s15
+ 387:application/robot.c ****       float  a;
+ 1240              		.loc 1 387 14 view .LVU409
+ 1241 0602 DFED267A 		vldr.32	s15, .L152+68
+ 1242 0606 20EE270A 		vmul.f32	s0, s0, s15
+ 1243              	.LVL124:
+ 388:application/robot.c **** 
+ 1244              		.loc 1 388 7 is_stmt 1 view .LVU410
+ 390:application/robot.c **** 
+ 1245              		.loc 1 390 7 view .LVU411
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 33
+
+
+ 390:application/robot.c **** 
+ 1246              		.loc 1 390 22 is_stmt 0 view .LVU412
+ 1247 060a 174B     		ldr	r3, .L152+16
+ 1248 060c 03EB8403 		add	r3, r3, r4, lsl #2
+ 1249 0610 83ED000A 		vstr.32	s0, [r3]
+ 393:application/robot.c ****       #else 
+ 1250              		.loc 1 393 9 is_stmt 1 view .LVU413
+ 393:application/robot.c ****       #else 
+ 1251              		.loc 1 393 50 is_stmt 0 view .LVU414
+ 1252 0614 04EB4402 		add	r2, r4, r4, lsl #1
+ 1253 0618 144B     		ldr	r3, .L152+20
+ 1254 061a 03EB8203 		add	r3, r3, r2, lsl #2
+ 1255 061e 5B88     		ldrh	r3, [r3, #2]
+ 1256 0620 1BB2     		sxth	r3, r3
+ 1257 0622 00EE903A 		vmov	s1, r3	@ int
+ 393:application/robot.c ****       #else 
+ 1258              		.loc 1 393 13 view .LVU415
+ 1259 0626 B1EE0C1A 		vmov.f32	s2, #7.0e+0
+ 1260 062a F8EEE00A 		vcvt.f32.s32	s1, s1
+ 1261 062e 2046     		mov	r0, r4
+ 1262 0630 FFF7FEFF 		bl	RC_Wheel_Speed_PI
+ 1263              	.LVL125:
+ 399:application/robot.c ****       if(a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+ 1264              		.loc 1 399 7 is_stmt 1 view .LVU416
+ 399:application/robot.c ****       if(a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+ 1265              		.loc 1 399 9 is_stmt 0 view .LVU417
+ 1266 0634 F2EE007A 		vmov.f32	s15, #8.0e+0
+ 1267 0638 B4EEE70A 		vcmpe.f32	s0, s15
+ 1268 063c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1269 0640 2EDC     		bgt	.L103
+ 400:application/robot.c **** 
+ 1270              		.loc 1 400 7 is_stmt 1 view .LVU418
+ 400:application/robot.c **** 
+ 1271              		.loc 1 400 9 is_stmt 0 view .LVU419
+ 1272 0642 FAEE007A 		vmov.f32	s15, #-8.0e+0
+ 1273 0646 B4EEE70A 		vcmpe.f32	s0, s15
+ 1274 064a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1275 064e 29D5     		bpl	.L47
+ 400:application/robot.c **** 
+ 1276              		.loc 1 400 35 discriminator 1 view .LVU420
+ 1277 0650 BAEE000A 		vmov.f32	s0, #-8.0e+0
+ 1278              	.LVL126:
+ 400:application/robot.c **** 
+ 1279              		.loc 1 400 35 discriminator 1 view .LVU421
+ 1280 0654 26E0     		b	.L47
+ 1281              	.L153:
+ 1282 0656 00BF     		.align	2
+ 1283              	.L152:
+ 1284 0658 00000000 		.word	RC_Data
+ 1285 065c 00000000 		.word	0
+ 1286 0660 333333BF 		.word	-1087163597
+ 1287 0664 00000000 		.word	RC_WheelOut
+ 1288 0668 00000000 		.word	RC_WheelRef
+ 1289 066c 00000000 		.word	dj_wheel
+ 1290 0670 00000000 		.word	RC_WheelFault
+ 1291 0674 00000000 		.word	gim6020
+ 1292 0678 00000000 		.word	RC_YawFbAgeMax
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 34
+
+
+ 1293 067c 00000000 		.word	RC_YawSpdMax
+ 1294 0680 00000000 		.word	s_out_ms.3
+ 1295 0684 0000FA43 		.word	1140457472
+ 1296 0688 00000000 		.word	s_rpm_over.2
+ 1297 068c 00004842 		.word	1112014848
+ 1298 0690 00000000 		.word	s_wheel_i
+ 1299 0694 6F1203BB 		.word	-1157426577
+ 1300 0698 00000000 		.word	s_wheel_sign.4
+ 1301 069c 0000FA45 		.word	1174011904
+ 1302              	.LVL127:
+ 1303              	.L103:
+ 399:application/robot.c ****       if(a < -RC_ABS_CURRENT_A) a = -RC_ABS_CURRENT_A;
+ 1304              		.loc 1 399 34 discriminator 1 view .LVU422
+ 1305 06a0 B2EE000A 		vmov.f32	s0, #8.0e+0
+ 1306              	.LVL128:
+ 1307              	.L47:
+ 402:application/robot.c **** 
+ 1308              		.loc 1 402 9 is_stmt 1 view .LVU423
+ 402:application/robot.c **** 
+ 1309              		.loc 1 402 30 is_stmt 0 view .LVU424
+ 1310 06a4 B3EE047A 		vmov.f32	s14, #2.0e+1
+ 1311 06a8 C0EE077A 		vdiv.f32	s15, s0, s14
+ 402:application/robot.c **** 
+ 1312              		.loc 1 402 18 view .LVU425
+ 1313 06ac FEEEC97A 		vcvt.s32.f32	s15, s15, #14
+ 402:application/robot.c **** 
+ 1314              		.loc 1 402 16 view .LVU426
+ 1315 06b0 06AB     		add	r3, sp, #24
+ 1316 06b2 03EB4505 		add	r5, r3, r5, lsl #1
+ 1317 06b6 17EE903A 		vmov	r3, s15	@ int
+ 1318 06ba 25F8083C 		strh	r3, [r5, #-8]	@ movhi
+ 1319              	.LVL129:
+ 1320              	.L46:
+ 402:application/robot.c **** 
+ 1321              		.loc 1 402 16 view .LVU427
+ 1322              	.LBE29:
+ 378:application/robot.c ****      {
+ 1323              		.loc 1 378 50 is_stmt 1 discriminator 2 view .LVU428
+ 1324 06be 0134     		adds	r4, r4, #1
+ 1325              	.LVL130:
+ 378:application/robot.c ****      {
+ 1326              		.loc 1 378 50 is_stmt 0 discriminator 2 view .LVU429
+ 1327 06c0 E4B2     		uxtb	r4, r4
+ 1328              	.LVL131:
+ 1329              	.L48:
+ 378:application/robot.c ****      {
+ 1330              		.loc 1 378 28 is_stmt 1 discriminator 1 view .LVU430
+ 1331 06c2 032C     		cmp	r4, #3
+ 1332 06c4 3FF6FCAE 		bhi	.L37
+ 1333              	.LBB30:
+ 380:application/robot.c ****        {
+ 1334              		.loc 1 380 8 view .LVU431
+ 380:application/robot.c ****        {
+ 1335              		.loc 1 380 69 is_stmt 0 view .LVU432
+ 1336 06c8 2546     		mov	r5, r4
+ 1337 06ca 0123     		movs	r3, #1
+ 1338 06cc A340     		lsls	r3, r3, r4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 35
+
+
+ 380:application/robot.c ****        {
+ 1339              		.loc 1 380 10 view .LVU433
+ 1340 06ce 3B42     		tst	r3, r7
+ 1341 06d0 8BD0     		beq	.L45
+ 382:application/robot.c ****           raw[i] = 0;
+ 1342              		.loc 1 382 11 is_stmt 1 view .LVU434
+ 382:application/robot.c ****           raw[i] = 0;
+ 1343              		.loc 1 382 24 is_stmt 0 view .LVU435
+ 1344 06d2 9F4B     		ldr	r3, .L154
+ 1345 06d4 03EB8403 		add	r3, r3, r4, lsl #2
+ 1346 06d8 0022     		movs	r2, #0
+ 1347 06da 1A60     		str	r2, [r3]	@ float
+ 383:application/robot.c ****           continue;
+ 1348              		.loc 1 383 11 is_stmt 1 view .LVU436
+ 383:application/robot.c ****           continue;
+ 1349              		.loc 1 383 18 is_stmt 0 view .LVU437
+ 1350 06dc 0022     		movs	r2, #0
+ 1351 06de 06AB     		add	r3, sp, #24
+ 1352 06e0 03EB4403 		add	r3, r3, r4, lsl #1
+ 1353 06e4 23F8082C 		strh	r2, [r3, #-8]	@ movhi
+ 384:application/robot.c ****        }
+ 1354              		.loc 1 384 11 is_stmt 1 view .LVU438
+ 1355 06e8 E9E7     		b	.L46
+ 1356              	.LVL132:
+ 1357              	.L100:
+ 384:application/robot.c ****        }
+ 1358              		.loc 1 384 11 is_stmt 0 view .LVU439
+ 1359              	.LBE30:
+ 1360              	.LBE28:
+ 1361 06ea 0024     		movs	r4, #0
+ 1362              	.LVL133:
+ 384:application/robot.c ****        }
+ 1363              		.loc 1 384 11 view .LVU440
+ 1364 06ec E9E7     		b	.L48
+ 1365              	.LVL134:
+ 1366              	.L101:
+ 384:application/robot.c ****        }
+ 1367              		.loc 1 384 11 view .LVU441
+ 1368 06ee 0024     		movs	r4, #0
+ 1369              	.LVL135:
+ 384:application/robot.c ****        }
+ 1370              		.loc 1 384 11 view .LVU442
+ 1371 06f0 E7E7     		b	.L48
+ 1372              	.LVL136:
+ 1373              	.L145:
+ 409:application/robot.c ****     float volt = (spin_mode != 0u) ? RC_Yaw_Spin_Control(online, gim)
+ 1374              		.loc 1 409 27 discriminator 1 view .LVU443
+ 1375 06f2 984B     		ldr	r3, .L154+4
+ 1376 06f4 1888     		ldrh	r0, [r3]
+ 1377 06f6 FFF7FEFF 		bl	RC_Norm
+ 1378              	.LVL137:
+ 1379 06fa E7E6     		b	.L50
+ 1380              	.LVL138:
+ 1381              	.L51:
+ 411:application/robot.c **** 
+ 1382              		.loc 1 411 38 discriminator 1 view .LVU444
+ 1383 06fc 4046     		mov	r0, r8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 36
+
+
+ 1384 06fe FFF7FEFF 		bl	RC_Yaw_Control
+ 1385              	.LVL139:
+ 411:application/robot.c **** 
+ 1386              		.loc 1 411 38 discriminator 1 view .LVU445
+ 1387 0702 EAE6     		b	.L52
+ 1388              	.LVL140:
+ 1389              	.L146:
+ 1390              	.LBB31:
+ 423:application/robot.c ****         if (fb_age  > RC_YawFbAgeMax) RC_YawFbAgeMax = fb_age;
+ 1391              		.loc 1 423 29 is_stmt 1 discriminator 1 view .LVU446
+ 423:application/robot.c ****         if (fb_age  > RC_YawFbAgeMax) RC_YawFbAgeMax = fb_age;
+ 1392              		.loc 1 423 37 is_stmt 0 discriminator 1 view .LVU447
+ 1393 0704 F1EE677A 		vneg.f32	s15, s15
+ 1394              	.LVL141:
+ 423:application/robot.c ****         if (fb_age  > RC_YawFbAgeMax) RC_YawFbAgeMax = fb_age;
+ 1395              		.loc 1 423 37 discriminator 1 view .LVU448
+ 1396 0708 F4E6     		b	.L53
+ 1397              	.LVL142:
+ 1398              	.L106:
+ 427:application/robot.c ****         if (fb_age > GM_FEEDBACK_TIMEOUT_MS)      { yaw_kill = 1u; kill_reason = 2u; }
+ 1399              		.loc 1 427 61 discriminator 1 view .LVU449
+ 1400 070a 0121     		movs	r1, #1
+ 1401 070c 07E7     		b	.L57
+ 1402              	.LVL143:
+ 1403              	.L58:
+ 428:application/robot.c **** 
+ 1404              		.loc 1 428 53 is_stmt 1 discriminator 1 view .LVU450
+ 428:application/robot.c **** 
+ 1405              		.loc 1 428 68 view .LVU451
+ 1406              	.LBB25:
+ 433:application/robot.c **** 
+ 1407              		.loc 1 433 13 view .LVU452
+ 435:application/robot.c ****                 if (s_out_ms == 0u) RC_YawOutageCnt++;
+ 1408              		.loc 1 435 13 view .LVU453
+ 436:application/robot.c ****                 if (s_out_ms < 60000u) s_out_ms++;
+ 1409              		.loc 1 436 17 view .LVU454
+ 436:application/robot.c ****                 if (s_out_ms < 60000u) s_out_ms++;
+ 1410              		.loc 1 436 30 is_stmt 0 view .LVU455
+ 1411 070e 924B     		ldr	r3, .L154+8
+ 1412              	.LVL144:
+ 436:application/robot.c ****                 if (s_out_ms < 60000u) s_out_ms++;
+ 1413              		.loc 1 436 30 view .LVU456
+ 1414 0710 1B88     		ldrh	r3, [r3]
+ 436:application/robot.c ****                 if (s_out_ms < 60000u) s_out_ms++;
+ 1415              		.loc 1 436 20 view .LVU457
+ 1416 0712 1BB9     		cbnz	r3, .L60
+ 436:application/robot.c ****                 if (s_out_ms < 60000u) s_out_ms++;
+ 1417              		.loc 1 436 37 is_stmt 1 discriminator 1 view .LVU458
+ 436:application/robot.c ****                 if (s_out_ms < 60000u) s_out_ms++;
+ 1418              		.loc 1 436 52 is_stmt 0 discriminator 1 view .LVU459
+ 1419 0714 9149     		ldr	r1, .L154+12
+ 1420 0716 0A68     		ldr	r2, [r1]
+ 1421 0718 0132     		adds	r2, r2, #1
+ 1422 071a 0A60     		str	r2, [r1]
+ 1423              	.L60:
+ 437:application/robot.c ****             } else {
+ 1424              		.loc 1 437 17 is_stmt 1 view .LVU460
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 37
+
+
+ 437:application/robot.c ****             } else {
+ 1425              		.loc 1 437 20 is_stmt 0 view .LVU461
+ 1426 071c 4EF65F22 		movw	r2, #59999
+ 1427 0720 9342     		cmp	r3, r2
+ 1428 0722 05D8     		bhi	.L107
+ 437:application/robot.c ****             } else {
+ 1429              		.loc 1 437 40 is_stmt 1 discriminator 1 view .LVU462
+ 437:application/robot.c ****             } else {
+ 1430              		.loc 1 437 48 is_stmt 0 discriminator 1 view .LVU463
+ 1431 0724 0133     		adds	r3, r3, #1
+ 1432 0726 8C4A     		ldr	r2, .L154+8
+ 1433 0728 1380     		strh	r3, [r2]	@ movhi
+ 1434              	.LBE25:
+ 428:application/robot.c **** 
+ 1435              		.loc 1 428 80 discriminator 1 view .LVU464
+ 1436 072a 0223     		movs	r3, #2
+ 428:application/robot.c **** 
+ 1437              		.loc 1 428 62 discriminator 1 view .LVU465
+ 1438 072c 0121     		movs	r1, #1
+ 1439 072e FDE6     		b	.L59
+ 1440              	.L107:
+ 428:application/robot.c **** 
+ 1441              		.loc 1 428 80 discriminator 1 view .LVU466
+ 1442 0730 0223     		movs	r3, #2
+ 428:application/robot.c **** 
+ 1443              		.loc 1 428 62 discriminator 1 view .LVU467
+ 1444 0732 0121     		movs	r1, #1
+ 1445 0734 FAE6     		b	.L59
+ 1446              	.LVL145:
+ 1447              	.L130:
+ 452:application/robot.c ****         } else {
+ 453:application/robot.c ****             s_rpm_over = 0u;
+ 1448              		.loc 1 453 13 is_stmt 1 view .LVU468
+ 1449              		.loc 1 453 24 is_stmt 0 view .LVU469
+ 1450 0736 8A4A     		ldr	r2, .L154+16
+ 1451 0738 0020     		movs	r0, #0
+ 1452 073a 1080     		strh	r0, [r2]	@ movhi
+ 1453              	.L63:
+ 454:application/robot.c ****         }
+ 455:application/robot.c ****         if (s_rpm_over >= GM_RPM_KICK_MS)        { yaw_kill = 1u; kill_reason = 3u; }
+ 1454              		.loc 1 455 9 is_stmt 1 view .LVU470
+ 1455              		.loc 1 455 24 is_stmt 0 view .LVU471
+ 1456 073c 884A     		ldr	r2, .L154+16
+ 1457 073e 1288     		ldrh	r2, [r2]
+ 1458              		.loc 1 455 12 view .LVU472
+ 1459 0740 092A     		cmp	r2, #9
+ 1460 0742 04D8     		bhi	.L108
+ 1461              	.LVL146:
+ 1462              		.loc 1 455 12 view .LVU473
+ 1463              	.LBE31:
+ 456:application/robot.c ****     }
+ 457:application/robot.c **** 
+ 458:application/robot.c ****     RC_YawKill = (yaw_kill != 0u) ? kill_reason : 0u;
+ 1464              		.loc 1 458 5 is_stmt 1 view .LVU474
+ 1465              		.loc 1 458 16 is_stmt 0 view .LVU475
+ 1466 0744 29B9     		cbnz	r1, .L64
+ 1467              		.loc 1 458 16 discriminator 4 view .LVU476
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 38
+
+
+ 1468 0746 874B     		ldr	r3, .L154+20
+ 1469              	.LVL147:
+ 1470              		.loc 1 458 16 discriminator 4 view .LVU477
+ 1471 0748 0022     		movs	r2, #0
+ 1472 074a 1A70     		strb	r2, [r3]
+ 459:application/robot.c ****     if (yaw_kill != 0u) RC_YawKillCnt++;
+ 1473              		.loc 1 459 5 is_stmt 1 view .LVU478
+ 1474 074c 07E0     		b	.L65
+ 1475              	.LVL148:
+ 1476              	.L108:
+ 1477              	.LBB32:
+ 455:application/robot.c ****     }
+ 1478              		.loc 1 455 79 is_stmt 0 discriminator 1 view .LVU479
+ 1479 074e 0323     		movs	r3, #3
+ 455:application/robot.c ****     }
+ 1480              		.loc 1 455 61 discriminator 1 view .LVU480
+ 1481 0750 0121     		movs	r1, #1
+ 1482              	.L64:
+ 1483              	.LBE32:
+ 458:application/robot.c ****     if (yaw_kill != 0u) RC_YawKillCnt++;
+ 1484              		.loc 1 458 16 discriminator 4 view .LVU481
+ 1485 0752 844A     		ldr	r2, .L154+20
+ 1486 0754 1370     		strb	r3, [r2]
+ 1487              		.loc 1 459 5 is_stmt 1 view .LVU482
+ 1488              		.loc 1 459 25 discriminator 1 view .LVU483
+ 1489              		.loc 1 459 38 is_stmt 0 discriminator 1 view .LVU484
+ 1490 0756 844A     		ldr	r2, .L154+24
+ 1491 0758 1368     		ldr	r3, [r2]
+ 1492 075a 0133     		adds	r3, r3, #1
+ 1493 075c 1360     		str	r3, [r2]
+ 1494              	.L65:
+ 460:application/robot.c **** 
+ 461:application/robot.c ****     /* ④ 斜坡：每拍最多变 GM_VOLT_SLEW，避免扭矩冲击
+ 462:application/robot.c ****      *    故障时不能走斜坡——否则上一拍 18000，这一拍只是 17800，
+ 463:application/robot.c ****      *    要 90 ms 才掉到 0，等于故障期间还在给扭矩。直接把斜坡状态也清�
+ 464:application/robot.c ****     static float volt_prev = 0.0f;
+ 1495              		.loc 1 464 5 is_stmt 1 view .LVU485
+ 465:application/robot.c ****     if (s_yaw_slew_kick != 0u) {
+ 1496              		.loc 1 465 5 view .LVU486
+ 1497              		.loc 1 465 25 is_stmt 0 view .LVU487
+ 1498 075e 834B     		ldr	r3, .L154+28
+ 1499 0760 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1500              		.loc 1 465 8 view .LVU488
+ 1501 0762 2BB1     		cbz	r3, .L66
+ 466:application/robot.c ****         s_yaw_slew_kick = 0u;
+ 1502              		.loc 1 466 9 is_stmt 1 view .LVU489
+ 1503              		.loc 1 466 25 is_stmt 0 view .LVU490
+ 1504 0764 814B     		ldr	r3, .L154+28
+ 1505 0766 0022     		movs	r2, #0
+ 1506 0768 1A70     		strb	r2, [r3]
+ 467:application/robot.c ****         volt_prev = 0.0f;       /* 交接后从 0 重新爬，不吃上一模式的旧斜坡 */
+ 1507              		.loc 1 467 9 is_stmt 1 view .LVU491
+ 1508              		.loc 1 467 19 is_stmt 0 view .LVU492
+ 1509 076a 814B     		ldr	r3, .L154+32
+ 1510 076c 0022     		movs	r2, #0
+ 1511 076e 1A60     		str	r2, [r3]	@ float
+ 1512              	.L66:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 39
+
+
+ 468:application/robot.c ****     }
+ 469:application/robot.c ****     if (yaw_kill != 0u) {
+ 1513              		.loc 1 469 5 is_stmt 1 view .LVU493
+ 1514              		.loc 1 469 8 is_stmt 0 view .LVU494
+ 1515 0770 39B3     		cbz	r1, .L67
+ 470:application/robot.c ****         volt      = 0.0f;
+ 1516              		.loc 1 470 9 is_stmt 1 view .LVU495
+ 1517              	.LVL149:
+ 471:application/robot.c ****         volt_prev = 0.0f;       /* 恢复时从 0 重新往上爬 */
+ 1518              		.loc 1 471 9 view .LVU496
+ 1519              		.loc 1 471 19 is_stmt 0 view .LVU497
+ 1520 0772 9FED808A 		vldr.32	s16, .L154+36
+ 1521 0776 7E4B     		ldr	r3, .L154+32
+ 1522 0778 83ED008A 		vstr.32	s16, [r3]
+ 1523              	.LVL150:
+ 1524              	.L68:
+ 472:application/robot.c ****     } else {
+ 473:application/robot.c ****         if (volt > volt_prev + GM_VOLT_SLEW) volt = volt_prev + GM_VOLT_SLEW;
+ 474:application/robot.c ****         if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+ 475:application/robot.c ****     }
+ 476:application/robot.c ****     RC_YawSpinOut = volt;       /* 实发电压（斜坡之后），小陀螺环的积分回算用�
+ 1525              		.loc 1 476 5 is_stmt 1 view .LVU498
+ 1526              		.loc 1 476 19 is_stmt 0 view .LVU499
+ 1527 077c 7E4B     		ldr	r3, .L154+40
+ 1528 077e 83ED008A 		vstr.32	s16, [r3]
+ 477:application/robot.c **** 
+ 478:application/robot.c ****      /*pitch电机赋值*/
+ 479:application/robot.c ****       float pit  = online ? RC_Norm(RC_CH_GIMBAL_PITCH) : 0.0f;
+ 1529              		.loc 1 479 7 is_stmt 1 view .LVU500
+ 1530              		.loc 1 479 57 is_stmt 0 view .LVU501
+ 1531 0782 B8F1000F 		cmp	r8, #0
+ 1532 0786 36D1     		bne	.L148
+ 1533              		.loc 1 479 57 discriminator 2 view .LVU502
+ 1534 0788 9FED7A0A 		vldr.32	s0, .L154+36
+ 1535              	.L70:
+ 1536              	.LVL151:
+ 480:application/robot.c ****       float volt_p = RC_Pitch_Control(online, 1u, pit);
+ 1537              		.loc 1 480 7 is_stmt 1 view .LVU503
+ 1538              		.loc 1 480 22 is_stmt 0 view .LVU504
+ 1539 078c 0121     		movs	r1, #1
+ 1540 078e 4046     		mov	r0, r8
+ 1541 0790 FFF7FEFF 		bl	RC_Pitch_Control
+ 1542              	.LVL152:
+ 1543              		.loc 1 480 22 view .LVU505
+ 1544 0794 F0EE408A 		vmov.f32	s17, s0
+ 1545              	.LVL153:
+ 481:application/robot.c **** 
+ 482:application/robot.c ****     /* ⑧ 摩擦轮：左拨杆上 → 3508 ID2/ID3 反向同电流 */
+ 483:application/robot.c **** #if (FRIC_ENABLE_USE_LEFT)
+ 484:application/robot.c ****     uint8_t fric_sw = (RC_Data.s_left  == FRIC_ENABLE_SW);
+ 1546              		.loc 1 484 5 is_stmt 1 view .LVU506
+ 1547              		.loc 1 484 31 is_stmt 0 view .LVU507
+ 1548 0798 6E4B     		ldr	r3, .L154+4
+ 1549 079a 1A7A     		ldrb	r2, [r3, #8]	@ zero_extendqisi2
+ 1550              	.LVL154:
+ 485:application/robot.c **** #else
+ 486:application/robot.c ****     uint8_t fric_sw = (RC_Data.s_right == FRIC_ENABLE_SW);
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 40
+
+
+ 487:application/robot.c **** #endif
+ 488:application/robot.c **** 
+ 489:application/robot.c ****     float fric_tgt = (online && fric_sw) ? FRIC_CURRENT_A : 0.0f;
+ 1551              		.loc 1 489 5 is_stmt 1 view .LVU508
+ 1552              		.loc 1 489 30 is_stmt 0 view .LVU509
+ 1553 079c 012A     		cmp	r2, #1
+ 1554 079e 14BF     		ite	ne
+ 1555 07a0 0023     		movne	r3, #0
+ 1556 07a2 0BF00103 		andeq	r3, fp, #1
+ 1557              	.LVL155:
+ 1558              		.loc 1 489 59 view .LVU510
+ 1559 07a6 5BB3     		cbz	r3, .L110
+ 1560              		.loc 1 489 59 discriminator 1 view .LVU511
+ 1561 07a8 B7EE009A 		vmov.f32	s18, #1.0e+0
+ 1562              	.L71:
+ 1563              	.LVL156:
+ 490:application/robot.c **** 
+ 491:application/robot.c ****     if (dj_motor[1].temp > FRIC_TEMP_LIMIT || dj_motor[2].temp > FRIC_TEMP_LIMIT)
+ 1564              		.loc 1 491 5 is_stmt 1 view .LVU512
+ 1565              		.loc 1 491 20 is_stmt 0 view .LVU513
+ 1566 07ac 734B     		ldr	r3, .L154+44
+ 1567 07ae 9B7C     		ldrb	r3, [r3, #18]	@ zero_extendqisi2
+ 1568              		.loc 1 491 8 view .LVU514
+ 1569 07b0 3C2B     		cmp	r3, #60
+ 1570 07b2 28D8     		bhi	.L111
+ 1571              		.loc 1 491 58 discriminator 1 view .LVU515
+ 1572 07b4 714B     		ldr	r3, .L154+44
+ 1573 07b6 9B7F     		ldrb	r3, [r3, #30]	@ zero_extendqisi2
+ 1574              		.loc 1 491 44 discriminator 1 view .LVU516
+ 1575 07b8 3C2B     		cmp	r3, #60
+ 1576 07ba 26D9     		bls	.L72
+ 492:application/robot.c ****         fric_tgt = 0.0f;
+ 1577              		.loc 1 492 18 view .LVU517
+ 1578 07bc 9FED6D9A 		vldr.32	s18, .L154+36
+ 1579              	.LVL157:
+ 1580              		.loc 1 492 18 view .LVU518
+ 1581 07c0 23E0     		b	.L72
+ 1582              	.LVL158:
+ 1583              	.L67:
+ 473:application/robot.c ****         if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+ 1584              		.loc 1 473 9 is_stmt 1 view .LVU519
+ 473:application/robot.c ****         if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+ 1585              		.loc 1 473 30 is_stmt 0 view .LVU520
+ 1586 07c2 6B4B     		ldr	r3, .L154+32
+ 1587 07c4 93ED008A 		vldr.32	s16, [r3]
+ 1588 07c8 DFED6D7A 		vldr.32	s15, .L154+48
+ 1589              	.LVL159:
+ 473:application/robot.c ****         if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+ 1590              		.loc 1 473 30 view .LVU521
+ 1591 07cc 78EE277A 		vadd.f32	s15, s16, s15
+ 473:application/robot.c ****         if (volt < volt_prev - GM_VOLT_SLEW) volt = volt_prev - GM_VOLT_SLEW;
+ 1592              		.loc 1 473 12 view .LVU522
+ 1593 07d0 F4EEC07A 		vcmpe.f32	s15, s0
+ 1594 07d4 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1595 07d8 01D4     		bmi	.L69
+ 410:application/robot.c ****                                    : RC_Yaw_Control(online, gim);
+ 1596              		.loc 1 410 11 discriminator 1 view .LVU523
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 41
+
+
+ 1597 07da F0EE407A 		vmov.f32	s15, s0
+ 1598              	.L69:
+ 1599              	.LVL160:
+ 474:application/robot.c ****     }
+ 1600              		.loc 1 474 9 is_stmt 1 view .LVU524
+ 474:application/robot.c ****     }
+ 1601              		.loc 1 474 30 is_stmt 0 view .LVU525
+ 1602 07de 9FED687A 		vldr.32	s14, .L154+48
+ 1603 07e2 38EE478A 		vsub.f32	s16, s16, s14
+ 474:application/robot.c ****     }
+ 1604              		.loc 1 474 12 view .LVU526
+ 1605 07e6 B4EEE78A 		vcmpe.f32	s16, s15
+ 1606 07ea F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1607 07ee C5DC     		bgt	.L68
+ 1608 07f0 B0EE678A 		vmov.f32	s16, s15
+ 1609 07f4 C2E7     		b	.L68
+ 1610              	.LVL161:
+ 1611              	.L148:
+ 479:application/robot.c ****       float volt_p = RC_Pitch_Control(online, 1u, pit);
+ 1612              		.loc 1 479 29 discriminator 1 view .LVU527
+ 1613 07f6 574B     		ldr	r3, .L154+4
+ 1614 07f8 5888     		ldrh	r0, [r3, #2]
+ 1615 07fa FFF7FEFF 		bl	RC_Norm
+ 1616              	.LVL162:
+ 1617 07fe C5E7     		b	.L70
+ 1618              	.LVL163:
+ 1619              	.L110:
+ 489:application/robot.c **** 
+ 1620              		.loc 1 489 59 discriminator 2 view .LVU528
+ 1621 0800 9FED5C9A 		vldr.32	s18, .L154+36
+ 1622 0804 D2E7     		b	.L71
+ 1623              	.LVL164:
+ 1624              	.L111:
+ 1625              		.loc 1 492 18 view .LVU529
+ 1626 0806 9FED5B9A 		vldr.32	s18, .L154+36
+ 1627              	.LVL165:
+ 1628              	.L72:
+ 493:application/robot.c ****     if ((HAL_GetTick() - dj_motor[1].last_tick) > FRIC_TIMEOUT_MS ||
+ 1629              		.loc 1 493 5 is_stmt 1 view .LVU530
+ 1630              		.loc 1 493 10 is_stmt 0 view .LVU531
+ 1631 080a FFF7FEFF 		bl	HAL_GetTick
+ 1632              	.LVL166:
+ 1633              		.loc 1 493 37 discriminator 1 view .LVU532
+ 1634 080e 5B4B     		ldr	r3, .L154+44
+ 1635 0810 5B69     		ldr	r3, [r3, #20]
+ 1636              		.loc 1 493 24 discriminator 1 view .LVU533
+ 1637 0812 C01A     		subs	r0, r0, r3
+ 1638              		.loc 1 493 8 discriminator 1 view .LVU534
+ 1639 0814 41F28833 		movw	r3, #5000
+ 1640 0818 9842     		cmp	r0, r3
+ 1641 081a 57D9     		bls	.L149
+ 494:application/robot.c ****         (HAL_GetTick() - dj_motor[2].last_tick) > FRIC_TIMEOUT_MS)
+ 495:application/robot.c ****         fric_tgt = 0.0f;
+ 1642              		.loc 1 495 18 view .LVU535
+ 1643 081c 9FED559A 		vldr.32	s18, .L154+36
+ 1644              	.LVL167:
+ 1645              	.L73:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 42
+
+
+ 496:application/robot.c **** 
+ 497:application/robot.c ****     static float fric_a = 0.0f;
+ 1646              		.loc 1 497 5 is_stmt 1 view .LVU536
+ 498:application/robot.c ****     if      (fric_tgt > fric_a + FRIC_RAMP_A_PER_MS) fric_a += FRIC_RAMP_A_PER_MS;
+ 1647              		.loc 1 498 5 view .LVU537
+ 1648              		.loc 1 498 32 is_stmt 0 view .LVU538
+ 1649 0820 584B     		ldr	r3, .L154+52
+ 1650 0822 93ED007A 		vldr.32	s14, [r3]
+ 1651 0826 DFED587A 		vldr.32	s15, .L154+56
+ 1652 082a 77EE277A 		vadd.f32	s15, s14, s15
+ 1653              		.loc 1 498 13 view .LVU539
+ 1654 082e F4EEC97A 		vcmpe.f32	s15, s18
+ 1655 0832 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1656 0836 55D5     		bpl	.L131
+ 1657              		.loc 1 498 54 is_stmt 1 discriminator 1 view .LVU540
+ 1658              		.loc 1 498 61 is_stmt 0 discriminator 1 view .LVU541
+ 1659 0838 C3ED007A 		vstr.32	s15, [r3]
+ 1660              	.L76:
+ 499:application/robot.c ****     else if (fric_tgt < fric_a - FRIC_RAMP_A_PER_MS) fric_a -= FRIC_RAMP_A_PER_MS;
+ 500:application/robot.c ****     else                                             fric_a  = fric_tgt;
+ 501:application/robot.c **** 
+ 502:application/robot.c ****     int16_t fric_l;
+ 1661              		.loc 1 502 5 is_stmt 1 view .LVU542
+ 503:application/robot.c ****     int16_t fric_r;
+ 1662              		.loc 1 503 5 view .LVU543
+ 504:application/robot.c **** 
+ 505:application/robot.c ****     if (fric_tgt > 0.0001f)
+ 1663              		.loc 1 505 5 view .LVU544
+ 1664              		.loc 1 505 8 is_stmt 0 view .LVU545
+ 1665 083c DFED537A 		vldr.32	s15, .L154+60
+ 1666 0840 B4EEE79A 		vcmpe.f32	s18, s15
+ 1667 0844 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1668 0848 5DDD     		ble	.L133
+ 506:application/robot.c ****     {
+ 507:application/robot.c ****         /* 正常出力：两轮反向，把弹丸往外挤 */
+ 508:application/robot.c ****         fric_l = (int16_t)(FRIC_L_SIGN * fric_a / 20.0f * 16384.0f);
+ 1669              		.loc 1 508 9 is_stmt 1 view .LVU546
+ 1670              		.loc 1 508 40 is_stmt 0 view .LVU547
+ 1671 084a 4E4B     		ldr	r3, .L154+52
+ 1672 084c 93ED007A 		vldr.32	s14, [r3]
+ 1673 0850 B1EE477A 		vneg.f32	s14, s14
+ 1674              		.loc 1 508 49 view .LVU548
+ 1675 0854 F3EE046A 		vmov.f32	s13, #2.0e+1
+ 1676 0858 C7EE267A 		vdiv.f32	s15, s14, s13
+ 1677              		.loc 1 508 57 view .LVU549
+ 1678 085c 9FED4C7A 		vldr.32	s14, .L154+64
+ 1679 0860 67EE877A 		vmul.f32	s15, s15, s14
+ 1680              		.loc 1 508 16 view .LVU550
+ 1681 0864 BDEEE77A 		vcvt.s32.f32	s14, s15
+ 1682 0868 17EE103A 		vmov	r3, s14	@ int
+ 1683 086c 1DB2     		sxth	r5, r3
+ 1684              	.LVL168:
+ 509:application/robot.c ****         fric_r = (int16_t)(FRIC_R_SIGN * fric_a / 20.0f * 16384.0f);
+ 1685              		.loc 1 509 9 is_stmt 1 view .LVU551
+ 1686              		.loc 1 509 16 is_stmt 0 view .LVU552
+ 1687 086e F1EE677A 		vneg.f32	s15, s15
+ 1688 0872 FDEEE77A 		vcvt.s32.f32	s15, s15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 43
+
+
+ 1689 0876 17EE903A 		vmov	r3, s15	@ int
+ 1690 087a 1CB2     		sxth	r4, r3
+ 1691              	.LVL169:
+ 1692              	.L81:
+ 510:application/robot.c ****     }
+ 511:application/robot.c ****     else//若未给值即拨杆不在上
+ 512:application/robot.c ****     {
+ 513:application/robot.c ****         /* 松杆：反向小电流主动刹车，否则纯靠惯性会滑很久 */
+ 514:application/robot.c ****         int16_t brake = (int16_t)(FRIC_BRAKE_A / 20.0f * 16384.0f);
+ 515:application/robot.c **** 
+ 516:application/robot.c ****         if (dj_motor[1].rpm >  FRIC_BRAKE_RPM)
+ 517:application/robot.c ****         {
+ 518:application/robot.c ****             fric_l = -brake;
+ 519:application/robot.c ****         }
+ 520:application/robot.c ****         else if (dj_motor[1].rpm < -FRIC_BRAKE_RPM)
+ 521:application/robot.c ****         {
+ 522:application/robot.c ****             fric_l =  brake;
+ 523:application/robot.c ****         }
+ 524:application/robot.c ****         else
+ 525:application/robot.c ****         {
+ 526:application/robot.c ****             fric_l = 0;
+ 527:application/robot.c ****         }
+ 528:application/robot.c **** 
+ 529:application/robot.c ****         if (dj_motor[2].rpm >  FRIC_BRAKE_RPM)
+ 530:application/robot.c ****         {
+ 531:application/robot.c ****             fric_r = -brake;
+ 532:application/robot.c ****         }
+ 533:application/robot.c ****         else if (dj_motor[2].rpm < -FRIC_BRAKE_RPM)
+ 534:application/robot.c ****         {
+ 535:application/robot.c ****             fric_r =  brake;
+ 536:application/robot.c ****         }
+ 537:application/robot.c ****         else
+ 538:application/robot.c ****         {
+ 539:application/robot.c ****             fric_r = 0;
+ 540:application/robot.c ****         }
+ 541:application/robot.c ****     }
+ 542:application/robot.c **** 
+ 543:application/robot.c ****     /* ⑤ 安全开关：yaw / pitch / 摩擦轮 全部清零 */
+ 544:application/robot.c **** #if GM_SAFE_NO_OUTPUT
+ 545:application/robot.c ****     volt   = 0.0f;
+ 546:application/robot.c ****     volt_p = 0.0f;
+ 547:application/robot.c ****     fric_l = 0;
+ 548:application/robot.c ****     fric_r = 0;
+ 549:application/robot.c **** #endif
+ 550:application/robot.c ****     volt_prev = volt;           /* ★ 记下本拍输出，下一拍才能继续爬 */
+ 1693              		.loc 1 550 5 is_stmt 1 view .LVU553
+ 1694              		.loc 1 550 15 is_stmt 0 view .LVU554
+ 1695 087c 3C4B     		ldr	r3, .L154+32
+ 1696 087e 83ED008A 		vstr.32	s16, [r3]
+ 551:application/robot.c ****     RC_YawVoltOut = volt;       /* 斜坡之后的真实发送值（RC_YawVolt 是斜坡之前） *
+ 1697              		.loc 1 551 5 is_stmt 1 view .LVU555
+ 1698              		.loc 1 551 19 is_stmt 0 view .LVU556
+ 1699 0882 444B     		ldr	r3, .L154+68
+ 1700 0884 83ED008A 		vstr.32	s16, [r3]
+ 552:application/robot.c **** 
+ 553:application/robot.c ****     /* ⑥ 发送：CAN2 = 底盘四轮 + yaw；CAN1 = 摩擦轮 + pitch */
+ 554:application/robot.c **** #if (FRIC_USE_CAN1)
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 44
+
+
+ 555:application/robot.c ****   #if (MECANUM_WHEEL_NUM == 4)
+ 556:application/robot.c ****     DJ3508_Send_I_Can2(raw[0], raw[1], raw[2], raw[3]); /* CAN2：四轮 0x200 槽位全用 */
+ 1701              		.loc 1 556 5 is_stmt 1 view .LVU557
+ 1702 0888 BDF91630 		ldrsh	r3, [sp, #22]
+ 1703 088c BDF91420 		ldrsh	r2, [sp, #20]
+ 1704 0890 BDF91210 		ldrsh	r1, [sp, #18]
+ 1705 0894 BDF91000 		ldrsh	r0, [sp, #16]
+ 1706 0898 FFF7FEFF 		bl	DJ3508_Send_I_Can2
+ 1707              	.LVL170:
+ 557:application/robot.c ****  
+ 558:application/robot.c ****   #endif
+ 559:application/robot.c ****     DJ6020_Send_V_Can2((int16_t)volt, 0);       /* CAN2：yaw ID1 */
+ 1708              		.loc 1 559 5 view .LVU558
+ 1709              		.loc 1 559 24 is_stmt 0 view .LVU559
+ 1710 089c BDEEC88A 		vcvt.s32.f32	s16, s16
+ 1711              	.LVL171:
+ 1712              		.loc 1 559 5 view .LVU560
+ 1713 08a0 0021     		movs	r1, #0
+ 1714 08a2 18EE103A 		vmov	r3, s16	@ int
+ 1715 08a6 18B2     		sxth	r0, r3
+ 1716 08a8 FFF7FEFF 		bl	DJ6020_Send_V_Can2
+ 1717              	.LVL172:
+ 560:application/robot.c ****     DJ3508_Send_Can1(fric_l, fric_r);           /* CAN1：摩擦轮 ID2 / ID3 */
+ 1718              		.loc 1 560 5 is_stmt 1 view .LVU561
+ 1719 08ac 2146     		mov	r1, r4
+ 1720 08ae 2846     		mov	r0, r5
+ 1721 08b0 FFF7FEFF 		bl	DJ3508_Send_Can1
+ 1722              	.LVL173:
+ 561:application/robot.c ****     DJ6020_Send_Can1((int16_t)volt_p);          /* CAN1：pitch ID2 */
+ 1723              		.loc 1 561 5 view .LVU562
+ 1724              		.loc 1 561 22 is_stmt 0 view .LVU563
+ 1725 08b4 FDEEE88A 		vcvt.s32.f32	s17, s17
+ 1726              	.LVL174:
+ 1727              		.loc 1 561 5 view .LVU564
+ 1728 08b8 18EE903A 		vmov	r3, s17	@ int
+ 1729 08bc 18B2     		sxth	r0, r3
+ 1730 08be FFF7FEFF 		bl	DJ6020_Send_Can1
+ 1731              	.LVL175:
+ 562:application/robot.c **** 
+ 563:application/robot.c **** #endif
+ 564:application/robot.c **** }
+ 1732              		.loc 1 564 1 view .LVU565
+ 1733 08c2 07B0     		add	sp, sp, #28
+ 1734              	.LCFI3:
+ 1735              		.cfi_remember_state
+ 1736              		.cfi_def_cfa_offset 68
+ 1737              		@ sp needed
+ 1738 08c4 BDEC088B 		vldm	sp!, {d8-d11}
+ 1739              	.LCFI4:
+ 1740              		.cfi_restore 86
+ 1741              		.cfi_restore 87
+ 1742              		.cfi_restore 84
+ 1743              		.cfi_restore 85
+ 1744              		.cfi_restore 82
+ 1745              		.cfi_restore 83
+ 1746              		.cfi_restore 80
+ 1747              		.cfi_restore 81
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 45
+
+
+ 1748              		.cfi_def_cfa_offset 36
+ 1749              	.LVL176:
+ 1750              		.loc 1 564 1 view .LVU566
+ 1751 08c8 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 1752              	.LVL177:
+ 1753              	.L149:
+ 1754              	.LCFI5:
+ 1755              		.cfi_restore_state
+ 494:application/robot.c ****         fric_tgt = 0.0f;
+ 1756              		.loc 1 494 10 view .LVU567
+ 1757 08cc FFF7FEFF 		bl	HAL_GetTick
+ 1758              	.LVL178:
+ 494:application/robot.c ****         fric_tgt = 0.0f;
+ 1759              		.loc 1 494 37 discriminator 1 view .LVU568
+ 1760 08d0 2A4B     		ldr	r3, .L154+44
+ 1761 08d2 1B6A     		ldr	r3, [r3, #32]
+ 494:application/robot.c ****         fric_tgt = 0.0f;
+ 1762              		.loc 1 494 24 discriminator 1 view .LVU569
+ 1763 08d4 C01A     		subs	r0, r0, r3
+ 493:application/robot.c ****         (HAL_GetTick() - dj_motor[2].last_tick) > FRIC_TIMEOUT_MS)
+ 1764              		.loc 1 493 67 discriminator 1 view .LVU570
+ 1765 08d6 41F28833 		movw	r3, #5000
+ 1766 08da 9842     		cmp	r0, r3
+ 1767 08dc A0D9     		bls	.L73
+ 495:application/robot.c **** 
+ 1768              		.loc 1 495 18 view .LVU571
+ 1769 08de 9FED259A 		vldr.32	s18, .L154+36
+ 1770              	.LVL179:
+ 495:application/robot.c **** 
+ 1771              		.loc 1 495 18 view .LVU572
+ 1772 08e2 9DE7     		b	.L73
+ 1773              	.LVL180:
+ 1774              	.L131:
+ 499:application/robot.c ****     else                                             fric_a  = fric_tgt;
+ 1775              		.loc 1 499 10 is_stmt 1 view .LVU573
+ 499:application/robot.c ****     else                                             fric_a  = fric_tgt;
+ 1776              		.loc 1 499 32 is_stmt 0 view .LVU574
+ 1777 08e4 DFED287A 		vldr.32	s15, .L154+56
+ 1778 08e8 37EE677A 		vsub.f32	s14, s14, s15
+ 499:application/robot.c ****     else                                             fric_a  = fric_tgt;
+ 1779              		.loc 1 499 13 view .LVU575
+ 1780 08ec B4EEC97A 		vcmpe.f32	s14, s18
+ 1781 08f0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1782 08f4 03DD     		ble	.L132
+ 499:application/robot.c ****     else                                             fric_a  = fric_tgt;
+ 1783              		.loc 1 499 54 is_stmt 1 discriminator 1 view .LVU576
+ 499:application/robot.c ****     else                                             fric_a  = fric_tgt;
+ 1784              		.loc 1 499 61 is_stmt 0 discriminator 1 view .LVU577
+ 1785 08f6 234B     		ldr	r3, .L154+52
+ 1786 08f8 83ED007A 		vstr.32	s14, [r3]
+ 1787 08fc 9EE7     		b	.L76
+ 1788              	.L132:
+ 500:application/robot.c **** 
+ 1789              		.loc 1 500 54 is_stmt 1 view .LVU578
+ 500:application/robot.c **** 
+ 1790              		.loc 1 500 62 is_stmt 0 view .LVU579
+ 1791 08fe 214B     		ldr	r3, .L154+52
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 46
+
+
+ 1792 0900 83ED009A 		vstr.32	s18, [r3]
+ 1793 0904 9AE7     		b	.L76
+ 1794              	.L133:
+ 1795              	.LBB33:
+ 514:application/robot.c **** 
+ 1796              		.loc 1 514 9 is_stmt 1 view .LVU580
+ 1797              	.LVL181:
+ 516:application/robot.c ****         {
+ 1798              		.loc 1 516 9 view .LVU581
+ 516:application/robot.c ****         {
+ 1799              		.loc 1 516 24 is_stmt 0 view .LVU582
+ 1800 0906 1D4B     		ldr	r3, .L154+44
+ 1801 0908 DB89     		ldrh	r3, [r3, #14]
+ 1802 090a 1BB2     		sxth	r3, r3
+ 516:application/robot.c ****         {
+ 1803              		.loc 1 516 12 view .LVU583
+ 1804 090c B3F5967F 		cmp	r3, #300
+ 1805 0910 08DC     		bgt	.L115
+ 520:application/robot.c ****         {
+ 1806              		.loc 1 520 14 is_stmt 1 view .LVU584
+ 520:application/robot.c ****         {
+ 1807              		.loc 1 520 29 is_stmt 0 view .LVU585
+ 1808 0912 1A4B     		ldr	r3, .L154+44
+ 1809 0914 DB89     		ldrh	r3, [r3, #14]
+ 1810 0916 1BB2     		sxth	r3, r3
+ 520:application/robot.c ****         {
+ 1811              		.loc 1 520 17 view .LVU586
+ 1812 0918 13F5967F 		cmn	r3, #300
+ 1813 091c 12DA     		bge	.L116
+ 522:application/robot.c ****         }
+ 1814              		.loc 1 522 20 view .LVU587
+ 1815 091e 40F28F25 		movw	r5, #655
+ 1816 0922 00E0     		b	.L82
+ 1817              	.L115:
+ 518:application/robot.c ****         }
+ 1818              		.loc 1 518 20 view .LVU588
+ 1819 0924 1C4D     		ldr	r5, .L154+72
+ 1820              	.L82:
+ 1821              	.LVL182:
+ 529:application/robot.c ****         {
+ 1822              		.loc 1 529 9 is_stmt 1 view .LVU589
+ 529:application/robot.c ****         {
+ 1823              		.loc 1 529 24 is_stmt 0 view .LVU590
+ 1824 0926 154B     		ldr	r3, .L154+44
+ 1825 0928 5B8B     		ldrh	r3, [r3, #26]
+ 1826 092a 1BB2     		sxth	r3, r3
+ 529:application/robot.c ****         {
+ 1827              		.loc 1 529 12 view .LVU591
+ 1828 092c B3F5967F 		cmp	r3, #300
+ 1829 0930 0ADC     		bgt	.L117
+ 533:application/robot.c ****         {
+ 1830              		.loc 1 533 14 is_stmt 1 view .LVU592
+ 533:application/robot.c ****         {
+ 1831              		.loc 1 533 29 is_stmt 0 view .LVU593
+ 1832 0932 124B     		ldr	r3, .L154+44
+ 1833 0934 5B8B     		ldrh	r3, [r3, #26]
+ 1834 0936 1BB2     		sxth	r3, r3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 47
+
+
+ 533:application/robot.c ****         {
+ 1835              		.loc 1 533 17 view .LVU594
+ 1836 0938 13F5967F 		cmn	r3, #300
+ 1837 093c 06DA     		bge	.L118
+ 535:application/robot.c ****         }
+ 1838              		.loc 1 535 20 view .LVU595
+ 1839 093e 40F28F24 		movw	r4, #655
+ 1840 0942 9BE7     		b	.L81
+ 1841              	.LVL183:
+ 1842              	.L116:
+ 526:application/robot.c ****         }
+ 1843              		.loc 1 526 20 view .LVU596
+ 1844 0944 0025     		movs	r5, #0
+ 1845 0946 EEE7     		b	.L82
+ 1846              	.LVL184:
+ 1847              	.L117:
+ 531:application/robot.c ****         }
+ 1848              		.loc 1 531 20 view .LVU597
+ 1849 0948 134C     		ldr	r4, .L154+72
+ 1850 094a 97E7     		b	.L81
+ 1851              	.L118:
+ 539:application/robot.c ****         }
+ 1852              		.loc 1 539 20 view .LVU598
+ 1853 094c 0024     		movs	r4, #0
+ 1854 094e 95E7     		b	.L81
+ 1855              	.L155:
+ 1856              		.align	2
+ 1857              	.L154:
+ 1858 0950 00000000 		.word	s_wheel_i
+ 1859 0954 00000000 		.word	RC_Data
+ 1860 0958 00000000 		.word	s_out_ms.3
+ 1861 095c 00000000 		.word	RC_YawOutageCnt
+ 1862 0960 00000000 		.word	s_rpm_over.2
+ 1863 0964 00000000 		.word	RC_YawKill
+ 1864 0968 00000000 		.word	RC_YawKillCnt
+ 1865 096c 00000000 		.word	s_yaw_slew_kick
+ 1866 0970 00000000 		.word	volt_prev.1
+ 1867 0974 00000000 		.word	0
+ 1868 0978 00000000 		.word	RC_YawSpinOut
+ 1869 097c 00000000 		.word	dj_motor
+ 1870 0980 00004843 		.word	1128792064
+ 1871 0984 00000000 		.word	fric_a.0
+ 1872 0988 0AD7A33C 		.word	1017370378
+ 1873 098c 17B7D138 		.word	953267991
+ 1874 0990 00008046 		.word	1182793728
+ 1875 0994 00000000 		.word	RC_YawVoltOut
+ 1876 0998 71FDFFFF 		.word	-655
+ 1877              	.LBE33:
+ 1878              		.cfi_endproc
+ 1879              	.LFE146:
+ 1881              		.section	.bss.fric_a.0,"aw",%nobits
+ 1882              		.align	2
+ 1885              	fric_a.0:
+ 1886 0000 00000000 		.space	4
+ 1887              		.section	.bss.volt_prev.1,"aw",%nobits
+ 1888              		.align	2
+ 1891              	volt_prev.1:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 48
+
+
+ 1892 0000 00000000 		.space	4
+ 1893              		.section	.bss.s_rpm_over.2,"aw",%nobits
+ 1894              		.align	1
+ 1897              	s_rpm_over.2:
+ 1898 0000 0000     		.space	2
+ 1899              		.section	.bss.s_out_ms.3,"aw",%nobits
+ 1900              		.align	1
+ 1903              	s_out_ms.3:
+ 1904 0000 0000     		.space	2
+ 1905              		.section	.rodata.s_wheel_sign.4,"a"
+ 1906              		.align	2
+ 1909              	s_wheel_sign.4:
+ 1910 0000 0000803F 		.word	1065353216
+ 1911 0004 000080BF 		.word	-1082130432
+ 1912 0008 000080BF 		.word	-1082130432
+ 1913 000c 0000803F 		.word	1065353216
+ 1914              		.section	.bss.s_can2_frozen.5,"aw",%nobits
+ 1915              		.align	2
+ 1918              	s_can2_frozen.5:
+ 1919 0000 00000000 		.space	4
+ 1920              		.section	.bss.s_can2_last.6,"aw",%nobits
+ 1921              		.align	2
+ 1924              	s_can2_last.6:
+ 1925 0000 00000000 		.space	4
+ 1926              		.section	.bss.s_spin_prev.7,"aw",%nobits
+ 1929              	s_spin_prev.7:
+ 1930 0000 00       		.space	1
+ 1931              		.section	.bss.s_sw_cnt.8,"aw",%nobits
+ 1932              		.align	1
+ 1935              	s_sw_cnt.8:
+ 1936 0000 0000     		.space	2
+ 1937              		.section	.bss.s_sw_prev.9,"aw",%nobits
+ 1940              	s_sw_prev.9:
+ 1941 0000 00       		.space	1
+ 1942              		.global	RC_BuildTag
+ 1943              		.section	.data.RC_BuildTag,"aw"
+ 1944              		.align	2
+ 1947              	RC_BuildTag:
+ 1948 0000 58231711 		.word	286729048
+ 1949              		.global	RC_Can2RestartCnt
+ 1950              		.section	.bss.RC_Can2RestartCnt,"aw",%nobits
+ 1951              		.align	2
+ 1954              	RC_Can2RestartCnt:
+ 1955 0000 00000000 		.space	4
+ 1956              		.global	RC_Can2BusOffCnt
+ 1957              		.section	.bss.RC_Can2BusOffCnt,"aw",%nobits
+ 1958              		.align	2
+ 1961              	RC_Can2BusOffCnt:
+ 1962 0000 00000000 		.space	4
+ 1963              		.global	RC_Can2CCCR
+ 1964              		.section	.bss.RC_Can2CCCR,"aw",%nobits
+ 1965              		.align	2
+ 1968              	RC_Can2CCCR:
+ 1969 0000 00000000 		.space	4
+ 1970              		.global	RC_Can2PSR
+ 1971              		.section	.bss.RC_Can2PSR,"aw",%nobits
+ 1972              		.align	2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 49
+
+
+ 1975              	RC_Can2PSR:
+ 1976 0000 00000000 		.space	4
+ 1977              		.global	RC_YawOutageCnt
+ 1978              		.section	.bss.RC_YawOutageCnt,"aw",%nobits
+ 1979              		.align	2
+ 1982              	RC_YawOutageCnt:
+ 1983 0000 00000000 		.space	4
+ 1984              		.global	RC_Can2RECMax
+ 1985              		.section	.bss.RC_Can2RECMax,"aw",%nobits
+ 1986              		.align	2
+ 1989              	RC_Can2RECMax:
+ 1990 0000 00000000 		.space	4
+ 1991              		.global	RC_Can2TECMax
+ 1992              		.section	.bss.RC_Can2TECMax,"aw",%nobits
+ 1993              		.align	2
+ 1996              	RC_Can2TECMax:
+ 1997 0000 00000000 		.space	4
+ 1998              		.global	RC_Can2REC
+ 1999              		.section	.bss.RC_Can2REC,"aw",%nobits
+ 2000              		.align	2
+ 2003              	RC_Can2REC:
+ 2004 0000 00000000 		.space	4
+ 2005              		.global	RC_Can2TEC
+ 2006              		.section	.bss.RC_Can2TEC,"aw",%nobits
+ 2007              		.align	2
+ 2010              	RC_Can2TEC:
+ 2011 0000 00000000 		.space	4
+ 2012              		.global	RC_YawKillCnt
+ 2013              		.section	.bss.RC_YawKillCnt,"aw",%nobits
+ 2014              		.align	2
+ 2017              	RC_YawKillCnt:
+ 2018 0000 00000000 		.space	4
+ 2019              		.global	RC_YawKill
+ 2020              		.section	.bss.RC_YawKill,"aw",%nobits
+ 2023              	RC_YawKill:
+ 2024 0000 00       		.space	1
+ 2025              		.global	RC_YawSpdMax
+ 2026              		.section	.bss.RC_YawSpdMax,"aw",%nobits
+ 2027              		.align	2
+ 2030              	RC_YawSpdMax:
+ 2031 0000 00000000 		.space	4
+ 2032              		.global	RC_YawFbAgeMax
+ 2033              		.section	.bss.RC_YawFbAgeMax,"aw",%nobits
+ 2034              		.align	2
+ 2037              	RC_YawFbAgeMax:
+ 2038 0000 00000000 		.space	4
+ 2039              		.global	RC_ErrCnt
+ 2040              		.section	.bss.RC_ErrCnt,"aw",%nobits
+ 2041              		.align	2
+ 2044              	RC_ErrCnt:
+ 2045 0000 00000000 		.space	4
+ 2046              		.global	RC_GapMaxMs
+ 2047              		.section	.bss.RC_GapMaxMs,"aw",%nobits
+ 2048              		.align	2
+ 2051              	RC_GapMaxMs:
+ 2052 0000 00000000 		.space	4
+ 2053              		.global	RC_FrameCnt
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 50
+
+
+ 2054              		.section	.bss.RC_FrameCnt,"aw",%nobits
+ 2055              		.align	2
+ 2058              	RC_FrameCnt:
+ 2059 0000 00000000 		.space	4
+ 2060              		.global	RC_HoldRate
+ 2061              		.section	.bss.RC_HoldRate,"aw",%nobits
+ 2062              		.align	2
+ 2065              	RC_HoldRate:
+ 2066 0000 00000000 		.space	4
+ 2067              		.global	RC_HoldWz
+ 2068              		.section	.bss.RC_HoldWz,"aw",%nobits
+ 2069              		.align	2
+ 2072              	RC_HoldWz:
+ 2073 0000 00000000 		.space	4
+ 2074              		.global	RC_YawI
+ 2075              		.section	.bss.RC_YawI,"aw",%nobits
+ 2076              		.align	2
+ 2079              	RC_YawI:
+ 2080 0000 00000000 		.space	4
+ 2081              		.global	RC_YawVoltOut
+ 2082              		.section	.bss.RC_YawVoltOut,"aw",%nobits
+ 2083              		.align	2
+ 2086              	RC_YawVoltOut:
+ 2087 0000 00000000 		.space	4
+ 2088              		.global	RC_YawVolt
+ 2089              		.section	.bss.RC_YawVolt,"aw",%nobits
+ 2090              		.align	2
+ 2093              	RC_YawVolt:
+ 2094 0000 00000000 		.space	4
+ 2095              		.global	RC_YawRpmDes
+ 2096              		.section	.bss.RC_YawRpmDes,"aw",%nobits
+ 2097              		.align	2
+ 2100              	RC_YawRpmDes:
+ 2101 0000 00000000 		.space	4
+ 2102              		.global	RC_YawErr
+ 2103              		.section	.bss.RC_YawErr,"aw",%nobits
+ 2104              		.align	2
+ 2107              	RC_YawErr:
+ 2108 0000 00000000 		.space	4
+ 2109              		.global	RC_YawRef
+ 2110              		.section	.bss.RC_YawRef,"aw",%nobits
+ 2111              		.align	2
+ 2114              	RC_YawRef:
+ 2115 0000 00000000 		.space	4
+ 2116              		.section	.bss.rc_enable_since,"aw",%nobits
+ 2117              		.align	2
+ 2120              	rc_enable_since:
+ 2121 0000 00000000 		.space	4
+ 2122              		.global	RC_WheelOut
+ 2123              		.section	.bss.RC_WheelOut,"aw",%nobits
+ 2124              		.align	2
+ 2127              	RC_WheelOut:
+ 2128 0000 00000000 		.space	16
+ 2128      00000000 
+ 2128      00000000 
+ 2128      00000000 
+ 2129              		.text
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 51
+
+
+ 2130              	.Letext0:
+ 2131              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 2132              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 2133              		.file 4 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 2134              		.file 5 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h7xx.h"
+ 2135              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 2136              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_fdcan.h"
+ 2137              		.file 8 "application/rc_dbus.h"
+ 2138              		.file 9 "application/rc_state.h"
+ 2139              		.file 10 "modules/motor/DJ_Motor.h"
+ 2140              		.file 11 "modules/imu/ins.h"
+ 2141              		.file 12 "Core/Inc/fdcan.h"
+ 2142              		.file 13 "modules/chassis/mecanum.h"
+ 2143              		.file 14 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14
+ 2144              		.file 15 "bsp/bsp_can.h"
+ 2145              		.file 16 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 52
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 robot.c
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:20     .text.RC_Control_Task:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:26     .text.RC_Control_Task:00000000 RC_Control_Task
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:650    .text.RC_Control_Task:000002dc $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2010   .bss.RC_Can2TEC:00000000 RC_Can2TEC
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2003   .bss.RC_Can2REC:00000000 RC_Can2REC
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1996   .bss.RC_Can2TECMax:00000000 RC_Can2TECMax
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1989   .bss.RC_Can2RECMax:00000000 RC_Can2RECMax
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1975   .bss.RC_Can2PSR:00000000 RC_Can2PSR
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1968   .bss.RC_Can2CCCR:00000000 RC_Can2CCCR
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1947   .data.RC_BuildTag:00000000 RC_BuildTag
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1940   .bss.s_sw_prev.9:00000000 s_sw_prev.9
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1935   .bss.s_sw_cnt.8:00000000 s_sw_cnt.8
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1929   .bss.s_spin_prev.7:00000000 s_spin_prev.7
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2120   .bss.rc_enable_since:00000000 rc_enable_since
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1924   .bss.s_can2_last.6:00000000 s_can2_last.6
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1918   .bss.s_can2_frozen.5:00000000 s_can2_frozen.5
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1954   .bss.RC_Can2RestartCnt:00000000 RC_Can2RestartCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:684    .text.RC_Control_Task:00000354 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1284   .text.RC_Control_Task:00000658 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2127   .bss.RC_WheelOut:00000000 RC_WheelOut
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2037   .bss.RC_YawFbAgeMax:00000000 RC_YawFbAgeMax
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2030   .bss.RC_YawSpdMax:00000000 RC_YawSpdMax
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1903   .bss.s_out_ms.3:00000000 s_out_ms.3
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1897   .bss.s_rpm_over.2:00000000 s_rpm_over.2
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1909   .rodata.s_wheel_sign.4:00000000 s_wheel_sign.4
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1305   .text.RC_Control_Task:000006a0 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1858   .text.RC_Control_Task:00000950 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1982   .bss.RC_YawOutageCnt:00000000 RC_YawOutageCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2023   .bss.RC_YawKill:00000000 RC_YawKill
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2017   .bss.RC_YawKillCnt:00000000 RC_YawKillCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1891   .bss.volt_prev.1:00000000 volt_prev.1
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1885   .bss.fric_a.0:00000000 fric_a.0
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2086   .bss.RC_YawVoltOut:00000000 RC_YawVoltOut
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1882   .bss.fric_a.0:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1888   .bss.volt_prev.1:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1894   .bss.s_rpm_over.2:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1900   .bss.s_out_ms.3:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1906   .rodata.s_wheel_sign.4:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1915   .bss.s_can2_frozen.5:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1921   .bss.s_can2_last.6:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1930   .bss.s_spin_prev.7:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1932   .bss.s_sw_cnt.8:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1941   .bss.s_sw_prev.9:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1944   .data.RC_BuildTag:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1951   .bss.RC_Can2RestartCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1961   .bss.RC_Can2BusOffCnt:00000000 RC_Can2BusOffCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1958   .bss.RC_Can2BusOffCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1965   .bss.RC_Can2CCCR:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1972   .bss.RC_Can2PSR:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1979   .bss.RC_YawOutageCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1986   .bss.RC_Can2RECMax:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:1993   .bss.RC_Can2TECMax:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2000   .bss.RC_Can2REC:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2007   .bss.RC_Can2TEC:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2014   .bss.RC_YawKillCnt:00000000 $d
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 53
+
+
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2024   .bss.RC_YawKill:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2027   .bss.RC_YawSpdMax:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2034   .bss.RC_YawFbAgeMax:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2044   .bss.RC_ErrCnt:00000000 RC_ErrCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2041   .bss.RC_ErrCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2051   .bss.RC_GapMaxMs:00000000 RC_GapMaxMs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2048   .bss.RC_GapMaxMs:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2058   .bss.RC_FrameCnt:00000000 RC_FrameCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2055   .bss.RC_FrameCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2065   .bss.RC_HoldRate:00000000 RC_HoldRate
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2062   .bss.RC_HoldRate:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2072   .bss.RC_HoldWz:00000000 RC_HoldWz
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2069   .bss.RC_HoldWz:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2079   .bss.RC_YawI:00000000 RC_YawI
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2076   .bss.RC_YawI:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2083   .bss.RC_YawVoltOut:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2093   .bss.RC_YawVolt:00000000 RC_YawVolt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2090   .bss.RC_YawVolt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2100   .bss.RC_YawRpmDes:00000000 RC_YawRpmDes
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2097   .bss.RC_YawRpmDes:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2107   .bss.RC_YawErr:00000000 RC_YawErr
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2104   .bss.RC_YawErr:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2114   .bss.RC_YawRef:00000000 RC_YawRef
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2111   .bss.RC_YawRef:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2117   .bss.rc_enable_since:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s:2124   .bss.RC_WheelOut:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_GetTick
+RC_IsOnline
+RC_Yaw_Handover
+RC_GetOffsetAngle
+cosf
+sinf
+HAL_FDCAN_Stop
+FDCAN2_Start
+RC_Norm
+hfdcan2
+RC_Data
+INS_Ready
+INS_CalDone
+can_rx2_total
+gim6020
+Mecanum_SetSpinDeadbandBypass
+Mecanum_Mix
+Mecanum_Reset
+RC_Wheel_Reset
+RC_Yaw_Spin_Control
+wheel_abs
+wheel_clamp
+RC_Wheel_Speed_PI
+RC_WheelRef
+dj_wheel
+RC_WheelFault
+s_wheel_i
+RC_Yaw_Control
+RC_Pitch_Control
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccsLj9Hj.s 			page 54
+
+
+DJ3508_Send_I_Can2
+DJ6020_Send_V_Can2
+DJ3508_Send_Can1
+DJ6020_Send_Can1
+s_yaw_slew_kick
+RC_YawSpinOut
+dj_motor

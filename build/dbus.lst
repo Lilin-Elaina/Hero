@@ -1,0 +1,2201 @@
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"dbus.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "modules/remote/dbus.c"
+  19              		.section	.text.RC_StartReceive,"ax",%progbits
+  20              		.align	1
+  21              		.global	RC_StartReceive
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	RC_StartReceive:
+  27              	.LFB146:
+   1:modules/remote/dbus.c **** /**
+   2:modules/remote/dbus.c ****  * @file    dbus.c
+   3:modules/remote/dbus.c ****  * @brief   DBUS 接收（UART5 + DMA + IDLE）与 18 字节帧解析
+   4:modules/remote/dbus.c ****  * @note    2026-11-19 分层整理：以下内容从 remote/rc_dbus.c 原样搬迁，逻辑未改�
+   5:modules/remote/dbus.c ****  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
+   6:modules/remote/dbus.c ****  */
+   7:modules/remote/dbus.c **** #include "rc_dbus.h"
+   8:modules/remote/dbus.c **** #include "rc_state.h"
+   9:modules/remote/dbus.c **** #include "usart.h"
+  10:modules/remote/dbus.c **** #include "DJ_Motor.h"
+  11:modules/remote/dbus.c **** #include "mecanum.h"
+  12:modules/remote/dbus.c **** #include "ins.h"
+  13:modules/remote/dbus.c **** #include "fdcan.h"
+  14:modules/remote/dbus.c **** #include "bsp_can.h"
+  15:modules/remote/dbus.c **** #include <string.h>
+  16:modules/remote/dbus.c **** #include <math.h>
+  17:modules/remote/dbus.c **** 
+  18:modules/remote/dbus.c **** /**
+  19:modules/remote/dbus.c ****  * @file    rc_dbus.c
+  20:modules/remote/dbus.c ****  * @brief   DT7 + DR16 遥控器 DBUS 接收与解析
+  21:modules/remote/dbus.c ****  * @note    硬件：达妙 DM-MC-Board02 SBUS 口（官方例程走 UART5 / RX=PD2 AF8）
+  22:modules/remote/dbus.c ****  *          协议：100000bps, 8数据位+偶校验, 2停止位, 每帧18字节
+  23:modules/remote/dbus.c ****  */
+  24:modules/remote/dbus.c **** #include "rc_dbus.h"
+  25:modules/remote/dbus.c **** #include "usart.h"
+  26:modules/remote/dbus.c **** #include "DJ_Motor.h"
+  27:modules/remote/dbus.c **** #include "mecanum.h"
+  28:modules/remote/dbus.c **** #include "ins.h"
+  29:modules/remote/dbus.c **** #include "fdcan.h"
+  30:modules/remote/dbus.c **** #include "bsp_can.h"
+  31:modules/remote/dbus.c **** #include <string.h>
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 2
+
+
+  32:modules/remote/dbus.c **** #include <math.h>
+  33:modules/remote/dbus.c **** 
+  34:modules/remote/dbus.c **** RC_TypeDef RC_Data = {0};
+  35:modules/remote/dbus.c **** 
+  36:modules/remote/dbus.c **** /* DMA 接收缓冲：2 帧容量
+  37:modules/remote/dbus.c ****  *
+  38:modules/remote/dbus.c ****  * ★ 必须放在 DMA 可访问的内存里：STM32H7 的 DTCM(0x20000000) 只有 Cortex-M7
+  39:modules/remote/dbus.c ****  *   的 D-bus 能访问，DMA1/DMA2 往 DTCM 写会在第一个字节就报传输错误。
+  40:modules/remote/dbus.c ****  *   本工程 .data/.bss 都在 DTCMRAM，所以这里显式指定 .dma_buffer 段，
+  41:modules/remote/dbus.c ****  *   该段在 STM32H723xG_flash.ld 里被链接到 RAM_D1(0x24000000)。
+  42:modules/remote/dbus.c ****  *   32 字节对齐是为了将来若打开 D-Cache 仍能安全做 cache 维护。 */
+  43:modules/remote/dbus.c **** #if defined(__GNUC__)
+  44:modules/remote/dbus.c **** static uint8_t dbus_buf[DBUS_FRAME_LEN * 2]
+  45:modules/remote/dbus.c ****     __attribute__((section(".dma_buffer"), aligned(32)));
+  46:modules/remote/dbus.c **** #else
+  47:modules/remote/dbus.c **** static uint8_t dbus_buf[DBUS_FRAME_LEN * 2];
+  48:modules/remote/dbus.c **** #endif
+  49:modules/remote/dbus.c **** 
+  50:modules/remote/dbus.c **** void RC_StartReceive(void)
+  51:modules/remote/dbus.c **** {//启动dbus数据的idle dma接收中断
+  28              		.loc 1 51 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32 0000 10B5     		push	{r4, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 8
+  35              		.cfi_offset 4, -8
+  36              		.cfi_offset 14, -4
+  52:modules/remote/dbus.c ****     /* 上一帧若因溢出/噪声卡在 ORE，不清掉就再也收不到新数据 */
+  53:modules/remote/dbus.c ****     __HAL_UART_CLEAR_OREFLAG(&huart5);
+  37              		.loc 1 53 5 view .LVU1
+  38 0002 2A48     		ldr	r0, .L8
+  39 0004 0368     		ldr	r3, [r0]
+  40 0006 0822     		movs	r2, #8
+  41 0008 1A62     		str	r2, [r3, #32]
+  54:modules/remote/dbus.c **** 
+  55:modules/remote/dbus.c ****     /* DMA 普通模式，靠串口总线空闲（IDLE）判定一帧结束 */
+  56:modules/remote/dbus.c ****     if (HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf)) != HAL_OK)
+  42              		.loc 1 56 5 view .LVU2
+  43              		.loc 1 56 9 is_stmt 0 view .LVU3
+  44 000a 2422     		movs	r2, #36
+  45 000c 2849     		ldr	r1, .L8+4
+  46 000e FFF7FEFF 		bl	HAL_UARTEx_ReceiveToIdle_DMA
+  47              	.LVL0:
+  48              		.loc 1 56 8 discriminator 1 view .LVU4
+  49 0012 0028     		cmp	r0, #0
+  50 0014 3BD1     		bne	.L7
+  51              	.L2:
+  57:modules/remote/dbus.c ****     {
+  58:modules/remote/dbus.c ****         /* 启动失败（上一次接收还没拆干净）：强制中止后重试一次，
+  59:modules/remote/dbus.c ****          * 否则接收链会永久静默，表现为“遥控器完全没反应” */
+  60:modules/remote/dbus.c ****         HAL_UART_AbortReceive(&huart5);
+  61:modules/remote/dbus.c ****         (void)HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf));
+  62:modules/remote/dbus.c ****     }
+  63:modules/remote/dbus.c **** 
+  64:modules/remote/dbus.c ****     /* 关掉半传输中断，避免回调被提前触发一次 */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 3
+
+
+  65:modules/remote/dbus.c ****     if (huart5.hdmarx != NULL)
+  52              		.loc 1 65 5 is_stmt 1 view .LVU5
+  53              		.loc 1 65 15 is_stmt 0 view .LVU6
+  54 0016 254B     		ldr	r3, .L8
+  55 0018 D3F88030 		ldr	r3, [r3, #128]
+  56              		.loc 1 65 8 view .LVU7
+  57 001c 002B     		cmp	r3, #0
+  58 001e 44D0     		beq	.L1
+  66:modules/remote/dbus.c ****     {
+  67:modules/remote/dbus.c ****         __HAL_DMA_DISABLE_IT(huart5.hdmarx, DMA_IT_HT);
+  59              		.loc 1 67 9 is_stmt 1 view .LVU8
+  60 0020 1B68     		ldr	r3, [r3]
+  61 0022 2449     		ldr	r1, .L8+8
+  62 0024 244A     		ldr	r2, .L8+12
+  63 0026 9342     		cmp	r3, r2
+  64 0028 18BF     		it	ne
+  65 002a 8B42     		cmpne	r3, r1
+  66 002c 39D0     		beq	.L4
+  67              		.loc 1 67 9 is_stmt 0 discriminator 2 view .LVU9
+  68 002e 1832     		adds	r2, r2, #24
+  69 0030 9342     		cmp	r3, r2
+  70 0032 36D0     		beq	.L4
+  71              		.loc 1 67 9 discriminator 4 view .LVU10
+  72 0034 1832     		adds	r2, r2, #24
+  73 0036 9342     		cmp	r3, r2
+  74 0038 33D0     		beq	.L4
+  75              		.loc 1 67 9 discriminator 6 view .LVU11
+  76 003a 1832     		adds	r2, r2, #24
+  77 003c 9342     		cmp	r3, r2
+  78 003e 30D0     		beq	.L4
+  79              		.loc 1 67 9 discriminator 8 view .LVU12
+  80 0040 1832     		adds	r2, r2, #24
+  81 0042 9342     		cmp	r3, r2
+  82 0044 2DD0     		beq	.L4
+  83              		.loc 1 67 9 discriminator 10 view .LVU13
+  84 0046 1832     		adds	r2, r2, #24
+  85 0048 9342     		cmp	r3, r2
+  86 004a 2AD0     		beq	.L4
+  87              		.loc 1 67 9 discriminator 12 view .LVU14
+  88 004c 1832     		adds	r2, r2, #24
+  89 004e 9342     		cmp	r3, r2
+  90 0050 27D0     		beq	.L4
+  91              		.loc 1 67 9 discriminator 14 view .LVU15
+  92 0052 02F55672 		add	r2, r2, #856
+  93 0056 9342     		cmp	r3, r2
+  94 0058 23D0     		beq	.L4
+  95              		.loc 1 67 9 discriminator 16 view .LVU16
+  96 005a 1832     		adds	r2, r2, #24
+  97 005c 9342     		cmp	r3, r2
+  98 005e 20D0     		beq	.L4
+  99              		.loc 1 67 9 discriminator 18 view .LVU17
+ 100 0060 1832     		adds	r2, r2, #24
+ 101 0062 9342     		cmp	r3, r2
+ 102 0064 1DD0     		beq	.L4
+ 103              		.loc 1 67 9 discriminator 20 view .LVU18
+ 104 0066 1832     		adds	r2, r2, #24
+ 105 0068 9342     		cmp	r3, r2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 4
+
+
+ 106 006a 1AD0     		beq	.L4
+ 107              		.loc 1 67 9 discriminator 22 view .LVU19
+ 108 006c 1832     		adds	r2, r2, #24
+ 109 006e 9342     		cmp	r3, r2
+ 110 0070 17D0     		beq	.L4
+ 111              		.loc 1 67 9 discriminator 24 view .LVU20
+ 112 0072 1832     		adds	r2, r2, #24
+ 113 0074 9342     		cmp	r3, r2
+ 114 0076 14D0     		beq	.L4
+ 115              		.loc 1 67 9 discriminator 26 view .LVU21
+ 116 0078 1832     		adds	r2, r2, #24
+ 117 007a 9342     		cmp	r3, r2
+ 118 007c 11D0     		beq	.L4
+ 119              		.loc 1 67 9 discriminator 28 view .LVU22
+ 120 007e 1832     		adds	r2, r2, #24
+ 121 0080 9342     		cmp	r3, r2
+ 122 0082 0ED0     		beq	.L4
+ 123              		.loc 1 67 9 discriminator 30 view .LVU23
+ 124 0084 1A68     		ldr	r2, [r3]
+ 125 0086 22F00402 		bic	r2, r2, #4
+ 126 008a 1A60     		str	r2, [r3]
+  68:modules/remote/dbus.c ****     }
+  69:modules/remote/dbus.c **** }
+ 127              		.loc 1 69 1 view .LVU24
+ 128 008c 0DE0     		b	.L1
+ 129              	.L7:
+  60:modules/remote/dbus.c ****         (void)HAL_UARTEx_ReceiveToIdle_DMA(&huart5, dbus_buf, sizeof(dbus_buf));
+ 130              		.loc 1 60 9 is_stmt 1 view .LVU25
+ 131 008e 074C     		ldr	r4, .L8
+ 132 0090 2046     		mov	r0, r4
+ 133 0092 FFF7FEFF 		bl	HAL_UART_AbortReceive
+ 134              	.LVL1:
+  61:modules/remote/dbus.c ****     }
+ 135              		.loc 1 61 9 view .LVU26
+  61:modules/remote/dbus.c ****     }
+ 136              		.loc 1 61 15 is_stmt 0 view .LVU27
+ 137 0096 2422     		movs	r2, #36
+ 138 0098 0549     		ldr	r1, .L8+4
+ 139 009a 2046     		mov	r0, r4
+ 140 009c FFF7FEFF 		bl	HAL_UARTEx_ReceiveToIdle_DMA
+ 141              	.LVL2:
+ 142 00a0 B9E7     		b	.L2
+ 143              	.L4:
+  67:modules/remote/dbus.c ****     }
+ 144              		.loc 1 67 9 discriminator 29 view .LVU28
+ 145 00a2 1A68     		ldr	r2, [r3]
+ 146 00a4 22F00802 		bic	r2, r2, #8
+ 147 00a8 1A60     		str	r2, [r3]
+ 148              	.L1:
+ 149              		.loc 1 69 1 view .LVU29
+ 150 00aa 10BD     		pop	{r4, pc}
+ 151              	.L9:
+ 152              		.align	2
+ 153              	.L8:
+ 154 00ac 00000000 		.word	huart5
+ 155 00b0 00000000 		.word	dbus_buf
+ 156 00b4 10000240 		.word	1073872912
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 5
+
+
+ 157 00b8 28000240 		.word	1073872936
+ 158              		.cfi_endproc
+ 159              	.LFE146:
+ 161              		.section	.text.RC_Init,"ax",%progbits
+ 162              		.align	1
+ 163              		.global	RC_Init
+ 164              		.syntax unified
+ 165              		.thumb
+ 166              		.thumb_func
+ 168              	RC_Init:
+ 169              	.LFB147:
+  70:modules/remote/dbus.c **** 
+  71:modules/remote/dbus.c **** /*清除摇杆数据，在线状态，确定拨杆，开启接收*/
+  72:modules/remote/dbus.c **** void RC_Init(void)
+  73:modules/remote/dbus.c **** {
+ 170              		.loc 1 73 1 is_stmt 1 view -0
+ 171              		.cfi_startproc
+ 172              		@ args = 0, pretend = 0, frame = 0
+ 173              		@ frame_needed = 0, uses_anonymous_args = 0
+ 174 0000 10B5     		push	{r4, lr}
+ 175              	.LCFI1:
+ 176              		.cfi_def_cfa_offset 8
+ 177              		.cfi_offset 4, -8
+ 178              		.cfi_offset 14, -4
+  74:modules/remote/dbus.c ****     memset(&RC_Data, 0, sizeof(RC_Data));
+ 179              		.loc 1 74 5 view .LVU31
+ 180 0002 054C     		ldr	r4, .L12
+ 181 0004 3022     		movs	r2, #48
+ 182 0006 0021     		movs	r1, #0
+ 183 0008 2046     		mov	r0, r4
+ 184 000a FFF7FEFF 		bl	memset
+ 185              	.LVL3:
+  75:modules/remote/dbus.c ****     RC_Data.online = 0;
+ 186              		.loc 1 75 5 view .LVU32
+  76:modules/remote/dbus.c ****     RC_Data.sw_swap = 1u;
+ 187              		.loc 1 76 5 view .LVU33
+ 188              		.loc 1 76 21 is_stmt 0 view .LVU34
+ 189 000e 0123     		movs	r3, #1
+ 190 0010 2373     		strb	r3, [r4, #12]
+  77:modules/remote/dbus.c ****     RC_StartReceive();
+ 191              		.loc 1 77 5 is_stmt 1 view .LVU35
+ 192 0012 FFF7FEFF 		bl	RC_StartReceive
+ 193              	.LVL4:
+  78:modules/remote/dbus.c **** }
+ 194              		.loc 1 78 1 is_stmt 0 view .LVU36
+ 195 0016 10BD     		pop	{r4, pc}
+ 196              	.L13:
+ 197              		.align	2
+ 198              	.L12:
+ 199 0018 00000000 		.word	RC_Data
+ 200              		.cfi_endproc
+ 201              	.LFE147:
+ 203              		.section	.text.RC_SwitchAutoName,"ax",%progbits
+ 204              		.align	1
+ 205              		.global	RC_SwitchAutoName
+ 206              		.syntax unified
+ 207              		.thumb
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 6
+
+
+ 208              		.thumb_func
+ 210              	RC_SwitchAutoName:
+ 211              	.LFB148:
+  79:modules/remote/dbus.c **** 
+  80:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+  81:modules/remote/dbus.c **** /* 18 字节帧完整解析（与大疆官方 sbus_to_rc() 逐位一致）                */
+  82:modules/remote/dbus.c **** /*   byte0~5  : 4 路摇杆×11bit + 2 路拨杆×2bit                         */
+  83:modules/remote/dbus.c **** /*   byte6~13 : 鼠标 x/y/z + 左右键                                    */
+  84:modules/remote/dbus.c **** /*   byte14~15: 键盘按键位图                                           */
+  85:modules/remote/dbus.c **** /*   byte16~17: 左拨轮(11bit)                                          */
+  86:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+  87:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+  88:modules/remote/dbus.c **** /* 拨杆位域自动判定（确定性，不需人工判读）                              */
+  89:modules/remote/dbus.c **** /*   实测法：把 DT7 左拨杆停在非中位、右拨杆保持中位，持续 1 秒。        
+  90:modules/remote/dbus.c **** /*   这一秒内“稳定处于非中位”的那个位域 = 物理左拨杆 → 自动置 sw_swap
+  91:modules/remote/dbus.c **** /*   只在 sw_auto_window_ms 内开放，判定成功即永久锁定。                 */
+  92:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+  93:modules/remote/dbus.c **** #define RC_SW_AUTO_HOLD_MS      1000    /* 条件需连续保持多少毫秒 */
+  94:modules/remote/dbus.c **** #define RC_SW_AUTO_WINDOW_MS    3000    /* 上电后多久内允许自动判定 */
+  95:modules/remote/dbus.c **** 
+  96:modules/remote/dbus.c **** #define RC_OBS_NONE      0              /* 两个位域都在中位 */
+  97:modules/remote/dbus.c **** #define RC_OBS_LO_MOVED  1              /* 只有 bit4~5 离开中位 */
+  98:modules/remote/dbus.c **** #define RC_OBS_HI_MOVED  2              /* 只有 bit6~7 离开中位 */
+  99:modules/remote/dbus.c **** #define RC_OBS_INVALID   3              /* 两个都离开中位 → 本段不计 */
+ 100:modules/remote/dbus.c **** 
+ 101:modules/remote/dbus.c **** void RC_SwitchAutoName(void)
+ 102:modules/remote/dbus.c **** {
+ 212              		.loc 1 102 1 is_stmt 1 view -0
+ 213              		.cfi_startproc
+ 214              		@ args = 0, pretend = 0, frame = 0
+ 215              		@ frame_needed = 0, uses_anonymous_args = 0
+ 216 0000 10B5     		push	{r4, lr}
+ 217              	.LCFI2:
+ 218              		.cfi_def_cfa_offset 8
+ 219              		.cfi_offset 4, -8
+ 220              		.cfi_offset 14, -4
+ 103:modules/remote/dbus.c ****     uint32_t now = HAL_GetTick();
+ 221              		.loc 1 103 5 view .LVU38
+ 222              		.loc 1 103 20 is_stmt 0 view .LVU39
+ 223 0002 FFF7FEFF 		bl	HAL_GetTick
+ 224              	.LVL5:
+ 104:modules/remote/dbus.c **** 
+ 105:modules/remote/dbus.c ****     if (RC_Data.sw_auto_done)
+ 225              		.loc 1 105 5 is_stmt 1 view .LVU40
+ 226              		.loc 1 105 16 is_stmt 0 view .LVU41
+ 227 0006 374B     		ldr	r3, .L38
+ 228 0008 9A7E     		ldrb	r2, [r3, #26]	@ zero_extendqisi2
+ 229              		.loc 1 105 8 view .LVU42
+ 230 000a 002A     		cmp	r2, #0
+ 231 000c 67D1     		bne	.L14
+ 106:modules/remote/dbus.c ****     {
+ 107:modules/remote/dbus.c ****         return;                                     /* 已锁定，永不改写 */
+ 108:modules/remote/dbus.c ****     }
+ 109:modules/remote/dbus.c **** 
+ 110:modules/remote/dbus.c ****     /* 第一帧到达时开判定窗口（此前的上电时间不计入窗口） */
+ 111:modules/remote/dbus.c ****     if (RC_Data.sw_first_frame_ms == 0)
+ 232              		.loc 1 111 5 is_stmt 1 view .LVU43
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 7
+
+
+ 233              		.loc 1 111 16 is_stmt 0 view .LVU44
+ 234 000e 5B6A     		ldr	r3, [r3, #36]
+ 235              		.loc 1 111 8 view .LVU45
+ 236 0010 3BB9     		cbnz	r3, .L16
+ 112:modules/remote/dbus.c ****     {
+ 113:modules/remote/dbus.c ****         RC_Data.sw_first_frame_ms = now ? now : 1u;
+ 237              		.loc 1 113 9 is_stmt 1 view .LVU46
+ 238              		.loc 1 113 47 is_stmt 0 view .LVU47
+ 239 0012 70B3     		cbz	r0, .L27
+ 240              		.loc 1 113 47 discriminator 1 view .LVU48
+ 241 0014 0146     		mov	r1, r0
+ 242              	.L17:
+ 243              		.loc 1 113 35 discriminator 4 view .LVU49
+ 244 0016 334B     		ldr	r3, .L38
+ 245 0018 5962     		str	r1, [r3, #36]
+ 114:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms   = 0;
+ 246              		.loc 1 114 9 is_stmt 1 view .LVU50
+ 247              		.loc 1 114 35 is_stmt 0 view .LVU51
+ 248 001a 0021     		movs	r1, #0
+ 249 001c 1962     		str	r1, [r3, #32]
+ 115:modules/remote/dbus.c ****         RC_Data.sw_obs_last       = RC_OBS_NONE;
+ 250              		.loc 1 115 9 is_stmt 1 view .LVU52
+ 251              		.loc 1 115 35 is_stmt 0 view .LVU53
+ 252 001e 1977     		strb	r1, [r3, #28]
+ 116:modules/remote/dbus.c ****         RC_Data.sw_obs_hold       = 0;
+ 253              		.loc 1 116 9 is_stmt 1 view .LVU54
+ 254              		.loc 1 116 35 is_stmt 0 view .LVU55
+ 255 0020 5977     		strb	r1, [r3, #29]
+ 256              	.L16:
+ 117:modules/remote/dbus.c ****     }
+ 118:modules/remote/dbus.c **** 
+ 119:modules/remote/dbus.c ****     if ((now - RC_Data.sw_first_frame_ms) > RC_SW_AUTO_WINDOW_MS)
+ 257              		.loc 1 119 5 is_stmt 1 view .LVU56
+ 258              		.loc 1 119 23 is_stmt 0 view .LVU57
+ 259 0022 304B     		ldr	r3, .L38
+ 260 0024 5B6A     		ldr	r3, [r3, #36]
+ 261              		.loc 1 119 14 view .LVU58
+ 262 0026 C31A     		subs	r3, r0, r3
+ 263              		.loc 1 119 8 view .LVU59
+ 264 0028 40F6B831 		movw	r1, #3000
+ 265 002c 8B42     		cmp	r3, r1
+ 266 002e 56D8     		bhi	.L14
+ 120:modules/remote/dbus.c ****     {
+ 121:modules/remote/dbus.c ****         return;                                     /* 窗口已过 → 保持默认，永久放弃
+ 122:modules/remote/dbus.c ****     }
+ 123:modules/remote/dbus.c **** 
+ 124:modules/remote/dbus.c ****     /* 本帧观测：必须“恰好一个位域非中位”才有信息量 */
+ 125:modules/remote/dbus.c ****     uint8_t lo_mid = (RC_Data.sw_lo2 == RC_SW_MID) ? 1u : 0u;
+ 267              		.loc 1 125 5 is_stmt 1 view .LVU60
+ 268              		.loc 1 125 30 is_stmt 0 view .LVU61
+ 269 0030 2C4B     		ldr	r3, .L38
+ 270 0032 DB7A     		ldrb	r3, [r3, #11]	@ zero_extendqisi2
+ 271              		.loc 1 125 13 view .LVU62
+ 272 0034 032B     		cmp	r3, #3
+ 273 0036 1ED0     		beq	.L35
+ 274              		.loc 1 125 13 discriminator 2 view .LVU63
+ 275 0038 1346     		mov	r3, r2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 8
+
+
+ 276              	.L18:
+ 277              	.LVL6:
+ 126:modules/remote/dbus.c ****     uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
+ 278              		.loc 1 126 5 is_stmt 1 view .LVU64
+ 279              		.loc 1 126 30 is_stmt 0 view .LVU65
+ 280 003a 2A49     		ldr	r1, .L38
+ 281 003c 897A     		ldrb	r1, [r1, #10]	@ zero_extendqisi2
+ 282              		.loc 1 126 13 view .LVU66
+ 283 003e 0329     		cmp	r1, #3
+ 284 0040 1BD0     		beq	.L36
+ 285              		.loc 1 126 13 discriminator 2 view .LVU67
+ 286 0042 1146     		mov	r1, r2
+ 287              	.L19:
+ 288              	.LVL7:
+ 127:modules/remote/dbus.c ****     uint8_t obs;
+ 289              		.loc 1 127 5 is_stmt 1 view .LVU68
+ 128:modules/remote/dbus.c **** 
+ 129:modules/remote/dbus.c ****     if (lo_mid && hi_mid)        obs = RC_OBS_NONE;
+ 290              		.loc 1 129 5 view .LVU69
+ 291              		.loc 1 129 9 is_stmt 0 view .LVU70
+ 292 0044 03F0010E 		and	lr, r3, #1
+ 293              		.loc 1 129 16 view .LVU71
+ 294 0048 01F0010C 		and	ip, r1, #1
+ 295              		.loc 1 129 8 view .LVU72
+ 296 004c 13EA0C0F 		tst	r3, ip
+ 297 0050 15D1     		bne	.L30
+ 130:modules/remote/dbus.c ****     else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
+ 298              		.loc 1 130 10 is_stmt 1 view .LVU73
+ 299              		.loc 1 130 14 is_stmt 0 view .LVU74
+ 300 0052 C3F30003 		ubfx	r3, r3, #0, #1
+ 301              	.LVL8:
+ 302              		.loc 1 130 14 view .LVU75
+ 303 0056 83F00103 		eor	r3, r3, #1
+ 304              		.loc 1 130 13 view .LVU76
+ 305 005a 13EA0C0F 		tst	r3, ip
+ 306 005e 2FD1     		bne	.L31
+ 131:modules/remote/dbus.c ****     else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
+ 307              		.loc 1 131 10 is_stmt 1 view .LVU77
+ 308              		.loc 1 131 24 is_stmt 0 view .LVU78
+ 309 0060 C1F30001 		ubfx	r1, r1, #0, #1
+ 310              	.LVL9:
+ 311              		.loc 1 131 24 view .LVU79
+ 312 0064 81F00101 		eor	r1, r1, #1
+ 313              		.loc 1 131 13 view .LVU80
+ 314 0068 11EA0E0F 		tst	r1, lr
+ 315 006c 2AD0     		beq	.L32
+ 316              		.loc 1 131 38 discriminator 1 view .LVU81
+ 317 006e 0223     		movs	r3, #2
+ 318 0070 06E0     		b	.L20
+ 319              	.LVL10:
+ 320              	.L27:
+ 113:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms   = 0;
+ 321              		.loc 1 113 47 discriminator 2 view .LVU82
+ 322 0072 0121     		movs	r1, #1
+ 323 0074 CFE7     		b	.L17
+ 324              	.L35:
+ 125:modules/remote/dbus.c ****     uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 9
+
+
+ 325              		.loc 1 125 13 discriminator 1 view .LVU83
+ 326 0076 0123     		movs	r3, #1
+ 327 0078 DFE7     		b	.L18
+ 328              	.LVL11:
+ 329              	.L36:
+ 126:modules/remote/dbus.c ****     uint8_t obs;
+ 330              		.loc 1 126 13 discriminator 1 view .LVU84
+ 331 007a 0121     		movs	r1, #1
+ 332 007c E2E7     		b	.L19
+ 333              	.LVL12:
+ 334              	.L30:
+ 129:modules/remote/dbus.c ****     else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
+ 335              		.loc 1 129 38 discriminator 1 view .LVU85
+ 336 007e 1346     		mov	r3, r2
+ 337              	.LVL13:
+ 338              	.L20:
+ 132:modules/remote/dbus.c ****     else                         obs = RC_OBS_INVALID;
+ 133:modules/remote/dbus.c **** 
+ 134:modules/remote/dbus.c ****     if ((obs != RC_Data.sw_obs_last) || (obs == RC_OBS_NONE) || (obs == RC_OBS_INVALID))
+ 339              		.loc 1 134 5 is_stmt 1 view .LVU86
+ 340              		.loc 1 134 24 is_stmt 0 view .LVU87
+ 341 0080 1849     		ldr	r1, .L38
+ 342 0082 097F     		ldrb	r1, [r1, #28]	@ zero_extendqisi2
+ 343              		.loc 1 134 8 view .LVU88
+ 344 0084 9942     		cmp	r1, r3
+ 345 0086 1FD1     		bne	.L21
+ 346              		.loc 1 134 70 discriminator 1 view .LVU89
+ 347 0088 032B     		cmp	r3, #3
+ 348 008a 14BF     		ite	ne
+ 349 008c 0021     		movne	r1, #0
+ 350 008e 0121     		moveq	r1, #1
+ 351              		.loc 1 134 62 discriminator 1 view .LVU90
+ 352 0090 D3B1     		cbz	r3, .L21
+ 353 0092 C9B9     		cbnz	r1, .L21
+ 135:modules/remote/dbus.c ****     {
+ 136:modules/remote/dbus.c ****         /* 观测状态变了（或本段无信息量）→ 重新开始计时 */
+ 137:modules/remote/dbus.c ****         RC_Data.sw_obs_last     = obs;
+ 138:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ 139:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 140:modules/remote/dbus.c ****         return;
+ 141:modules/remote/dbus.c ****     }
+ 142:modules/remote/dbus.c **** 
+ 143:modules/remote/dbus.c ****     if (RC_Data.sw_obs_hold < 250u)
+ 354              		.loc 1 143 5 is_stmt 1 view .LVU91
+ 355              		.loc 1 143 16 is_stmt 0 view .LVU92
+ 356 0094 1349     		ldr	r1, .L38
+ 357 0096 497F     		ldrb	r1, [r1, #29]	@ zero_extendqisi2
+ 358              		.loc 1 143 8 view .LVU93
+ 359 0098 F929     		cmp	r1, #249
+ 360 009a 02D8     		bhi	.L25
+ 144:modules/remote/dbus.c ****     {
+ 145:modules/remote/dbus.c ****         RC_Data.sw_obs_hold++;
+ 361              		.loc 1 145 9 is_stmt 1 view .LVU94
+ 362              		.loc 1 145 28 is_stmt 0 view .LVU95
+ 363 009c 0131     		adds	r1, r1, #1
+ 364 009e 114C     		ldr	r4, .L38
+ 365 00a0 6177     		strb	r1, [r4, #29]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 10
+
+
+ 366              	.L25:
+ 146:modules/remote/dbus.c ****     }
+ 147:modules/remote/dbus.c **** 
+ 148:modules/remote/dbus.c ****     if (((RC_Data.sw_obs_start_ms != 0u) ? (now - RC_Data.sw_obs_start_ms)
+ 367              		.loc 1 148 5 is_stmt 1 view .LVU96
+ 368              		.loc 1 148 18 is_stmt 0 view .LVU97
+ 369 00a2 1049     		ldr	r1, .L38
+ 370 00a4 096A     		ldr	r1, [r1, #32]
+ 371              		.loc 1 148 8 view .LVU98
+ 372 00a6 D1B1     		cbz	r1, .L14
+ 373              		.loc 1 148 49 discriminator 1 view .LVU99
+ 374 00a8 401A     		subs	r0, r0, r1
+ 375              	.LVL14:
+ 149:modules/remote/dbus.c ****                                         : 0u) >= RC_SW_AUTO_HOLD_MS)
+ 376              		.loc 1 149 47 view .LVU100
+ 377 00aa B0F57A7F 		cmp	r0, #1000
+ 378 00ae 16D3     		bcc	.L14
+ 150:modules/remote/dbus.c ****     {
+ 151:modules/remote/dbus.c ****         /* 连续 1 秒只有一方离开中位 → 判定完成并永久锁定 */
+ 152:modules/remote/dbus.c ****         RC_Data.sw_auto_result = (obs == RC_OBS_HI_MOVED) ? 1u : 0u;
+ 379              		.loc 1 152 9 is_stmt 1 view .LVU101
+ 380              		.loc 1 152 32 is_stmt 0 view .LVU102
+ 381 00b0 022B     		cmp	r3, #2
+ 382 00b2 15D0     		beq	.L37
+ 383              	.L26:
+ 384              		.loc 1 152 32 discriminator 4 view .LVU103
+ 385 00b4 0B4B     		ldr	r3, .L38
+ 386              	.LVL15:
+ 387              		.loc 1 152 32 discriminator 4 view .LVU104
+ 388 00b6 DA76     		strb	r2, [r3, #27]
+ 153:modules/remote/dbus.c ****         RC_Data.sw_swap        = RC_Data.sw_auto_result;
+ 389              		.loc 1 153 9 is_stmt 1 view .LVU105
+ 390              		.loc 1 153 32 is_stmt 0 view .LVU106
+ 391 00b8 1A73     		strb	r2, [r3, #12]
+ 154:modules/remote/dbus.c ****         RC_Data.sw_auto_done   = 1u;
+ 392              		.loc 1 154 9 is_stmt 1 view .LVU107
+ 393              		.loc 1 154 32 is_stmt 0 view .LVU108
+ 394 00ba 0122     		movs	r2, #1
+ 395 00bc 9A76     		strb	r2, [r3, #26]
+ 396 00be 0EE0     		b	.L14
+ 397              	.LVL16:
+ 398              	.L31:
+ 130:modules/remote/dbus.c ****     else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
+ 399              		.loc 1 130 38 discriminator 1 view .LVU109
+ 400 00c0 0123     		movs	r3, #1
+ 401 00c2 DDE7     		b	.L20
+ 402              	.LVL17:
+ 403              	.L32:
+ 132:modules/remote/dbus.c **** 
+ 404              		.loc 1 132 38 view .LVU110
+ 405 00c4 0323     		movs	r3, #3
+ 406 00c6 DBE7     		b	.L20
+ 407              	.LVL18:
+ 408              	.L21:
+ 137:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ 409              		.loc 1 137 9 is_stmt 1 view .LVU111
+ 137:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 11
+
+
+ 410              		.loc 1 137 33 is_stmt 0 view .LVU112
+ 411 00c8 064A     		ldr	r2, .L38
+ 412 00ca 1377     		strb	r3, [r2, #28]
+ 138:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 413              		.loc 1 138 9 is_stmt 1 view .LVU113
+ 138:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 414              		.loc 1 138 33 is_stmt 0 view .LVU114
+ 415 00cc 0021     		movs	r1, #0
+ 416 00ce 5177     		strb	r1, [r2, #29]
+ 139:modules/remote/dbus.c ****         return;
+ 417              		.loc 1 139 9 is_stmt 1 view .LVU115
+ 139:modules/remote/dbus.c ****         return;
+ 418              		.loc 1 139 59 is_stmt 0 view .LVU116
+ 419 00d0 013B     		subs	r3, r3, #1
+ 420              	.LVL19:
+ 139:modules/remote/dbus.c ****         return;
+ 421              		.loc 1 139 59 view .LVU117
+ 422 00d2 DBB2     		uxtb	r3, r3
+ 139:modules/remote/dbus.c ****         return;
+ 423              		.loc 1 139 92 view .LVU118
+ 424 00d4 012B     		cmp	r3, #1
+ 425 00d6 00D9     		bls	.L24
+ 139:modules/remote/dbus.c ****         return;
+ 426              		.loc 1 139 92 discriminator 2 view .LVU119
+ 427 00d8 0846     		mov	r0, r1
+ 428              	.LVL20:
+ 429              	.L24:
+ 139:modules/remote/dbus.c ****         return;
+ 430              		.loc 1 139 33 discriminator 4 view .LVU120
+ 431 00da 024B     		ldr	r3, .L38
+ 432 00dc 1862     		str	r0, [r3, #32]
+ 140:modules/remote/dbus.c ****     }
+ 433              		.loc 1 140 9 is_stmt 1 view .LVU121
+ 434              	.LVL21:
+ 435              	.L14:
+ 155:modules/remote/dbus.c ****     }
+ 156:modules/remote/dbus.c **** }
+ 436              		.loc 1 156 1 is_stmt 0 view .LVU122
+ 437 00de 10BD     		pop	{r4, pc}
+ 438              	.LVL22:
+ 439              	.L37:
+ 152:modules/remote/dbus.c ****         RC_Data.sw_swap        = RC_Data.sw_auto_result;
+ 440              		.loc 1 152 32 discriminator 1 view .LVU123
+ 441 00e0 0122     		movs	r2, #1
+ 442 00e2 E7E7     		b	.L26
+ 443              	.L39:
+ 444              		.align	2
+ 445              	.L38:
+ 446 00e4 00000000 		.word	RC_Data
+ 447              		.cfi_endproc
+ 448              	.LFE148:
+ 450              		.section	.text.RC_Decode,"ax",%progbits
+ 451              		.align	1
+ 452              		.global	RC_Decode
+ 453              		.syntax unified
+ 454              		.thumb
+ 455              		.thumb_func
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 12
+
+
+ 457              	RC_Decode:
+ 458              	.LVL23:
+ 459              	.LFB149:
+ 157:modules/remote/dbus.c **** 
+ 158:modules/remote/dbus.c **** void RC_Decode(uint8_t *b)
+ 159:modules/remote/dbus.c **** {
+ 460              		.loc 1 159 1 is_stmt 1 view -0
+ 461              		.cfi_startproc
+ 462              		@ args = 0, pretend = 0, frame = 0
+ 463              		@ frame_needed = 0, uses_anonymous_args = 0
+ 464              		.loc 1 159 1 is_stmt 0 view .LVU125
+ 465 0000 38B5     		push	{r3, r4, r5, lr}
+ 466              	.LCFI3:
+ 467              		.cfi_def_cfa_offset 16
+ 468              		.cfi_offset 3, -16
+ 469              		.cfi_offset 4, -12
+ 470              		.cfi_offset 5, -8
+ 471              		.cfi_offset 14, -4
+ 472 0002 0446     		mov	r4, r0
+ 160:modules/remote/dbus.c ****     /* ---- 4 路摇杆 × 11bit，LSB 先 / 小端顺序打包 ---- */
+ 161:modules/remote/dbus.c ****     RC_Data.ch[0] = (uint16_t)(b[0]            | ((uint16_t)b[1] << 8))                 & 0x07FF;
+ 473              		.loc 1 161 5 is_stmt 1 view .LVU126
+ 474              		.loc 1 161 33 is_stmt 0 view .LVU127
+ 475 0004 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ 476              		.loc 1 161 62 view .LVU128
+ 477 0006 4278     		ldrb	r2, [r0, #1]	@ zero_extendqisi2
+ 478              		.loc 1 161 48 view .LVU129
+ 479 0008 43EA0223 		orr	r3, r3, r2, lsl #8
+ 480              		.loc 1 161 89 view .LVU130
+ 481 000c C3F30A03 		ubfx	r3, r3, #0, #11
+ 482              		.loc 1 161 19 view .LVU131
+ 483 0010 344D     		ldr	r5, .L45
+ 484 0012 2B80     		strh	r3, [r5]	@ movhi
+ 162:modules/remote/dbus.c ****     RC_Data.ch[1] = (uint16_t)((b[1] >> 3)     | ((uint16_t)b[2] << 5))                 & 0x07FF;
+ 485              		.loc 1 162 5 is_stmt 1 view .LVU132
+ 486              		.loc 1 162 34 is_stmt 0 view .LVU133
+ 487 0014 4278     		ldrb	r2, [r0, #1]	@ zero_extendqisi2
+ 488              		.loc 1 162 62 view .LVU134
+ 489 0016 8378     		ldrb	r3, [r0, #2]	@ zero_extendqisi2
+ 490              		.loc 1 162 48 view .LVU135
+ 491 0018 5B01     		lsls	r3, r3, #5
+ 492 001a 43EAD203 		orr	r3, r3, r2, lsr #3
+ 493              		.loc 1 162 89 view .LVU136
+ 494 001e C3F30A03 		ubfx	r3, r3, #0, #11
+ 495              		.loc 1 162 19 view .LVU137
+ 496 0022 6B80     		strh	r3, [r5, #2]	@ movhi
+ 163:modules/remote/dbus.c ****     RC_Data.ch[2] = (uint16_t)((b[2] >> 6)     | ((uint16_t)b[3] << 2) | ((uint16_t)b[4] << 10)) & 
+ 497              		.loc 1 163 5 is_stmt 1 view .LVU138
+ 498              		.loc 1 163 34 is_stmt 0 view .LVU139
+ 499 0024 8278     		ldrb	r2, [r0, #2]	@ zero_extendqisi2
+ 500              		.loc 1 163 62 view .LVU140
+ 501 0026 C378     		ldrb	r3, [r0, #3]	@ zero_extendqisi2
+ 502              		.loc 1 163 48 view .LVU141
+ 503 0028 9B00     		lsls	r3, r3, #2
+ 504 002a 43EA9213 		orr	r3, r3, r2, lsr #6
+ 505              		.loc 1 163 86 view .LVU142
+ 506 002e 0279     		ldrb	r2, [r0, #4]	@ zero_extendqisi2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 13
+
+
+ 507              		.loc 1 163 72 view .LVU143
+ 508 0030 43EA8223 		orr	r3, r3, r2, lsl #10
+ 509              		.loc 1 163 98 view .LVU144
+ 510 0034 C3F30A03 		ubfx	r3, r3, #0, #11
+ 511              		.loc 1 163 19 view .LVU145
+ 512 0038 AB80     		strh	r3, [r5, #4]	@ movhi
+ 164:modules/remote/dbus.c ****     RC_Data.ch[3] = (uint16_t)((b[4] >> 1)     | ((uint16_t)b[5] << 7))                 & 0x07FF;
+ 513              		.loc 1 164 5 is_stmt 1 view .LVU146
+ 514              		.loc 1 164 34 is_stmt 0 view .LVU147
+ 515 003a 0279     		ldrb	r2, [r0, #4]	@ zero_extendqisi2
+ 516              		.loc 1 164 62 view .LVU148
+ 517 003c 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
+ 518              		.loc 1 164 48 view .LVU149
+ 519 003e DB01     		lsls	r3, r3, #7
+ 520 0040 43EA5203 		orr	r3, r3, r2, lsr #1
+ 521              		.loc 1 164 89 view .LVU150
+ 522 0044 C3F30A03 		ubfx	r3, r3, #0, #11
+ 523              		.loc 1 164 19 view .LVU151
+ 524 0048 EB80     		strh	r3, [r5, #6]	@ movhi
+ 165:modules/remote/dbus.c **** 
+ 166:modules/remote/dbus.c ****     /* ---- 2 路拨杆，各 2bit，放在 b[5] 的高 4 位 ----
+ 167:modules/remote/dbus.c ****      * 与官方 RC_ctrl_t.s[] 的对应关系（位运算不动，命名靠 sw_swap 调）：
+ 168:modules/remote/dbus.c ****      *   sw_lo2 = (b[5]>>4)&0x03       = 官方 s[0]（bit4~5）
+ 169:modules/remote/dbus.c ****      *   sw_hi2 = ((b[5]>>4)&0x0C)>>2  = 官方 s[1]（bit6~7）
+ 170:modules/remote/dbus.c ****      * 官方 s[0]/s[1] 哪个是物理左拨杆有版本分歧，用 sw_swap 一次性量准
+ 171:modules/remote/dbus.c ****      * （见 rc_dbus.h 的 ★验证法，位运算本身不用动）*/
+ 172:modules/remote/dbus.c ****     RC_Data.sw_lo2 = RC_SW_BITS_LO(b[5]);
+ 525              		.loc 1 172 5 is_stmt 1 view .LVU152
+ 526              		.loc 1 172 22 is_stmt 0 view .LVU153
+ 527 004a 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
+ 528 004c C3F30113 		ubfx	r3, r3, #4, #2
+ 529              		.loc 1 172 20 view .LVU154
+ 530 0050 EB72     		strb	r3, [r5, #11]
+ 173:modules/remote/dbus.c ****     RC_Data.sw_hi2 = RC_SW_BITS_HI(b[5]);
+ 531              		.loc 1 173 5 is_stmt 1 view .LVU155
+ 532              		.loc 1 173 22 is_stmt 0 view .LVU156
+ 533 0052 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
+ 534 0054 9B09     		lsrs	r3, r3, #6
+ 535              		.loc 1 173 20 view .LVU157
+ 536 0056 AB72     		strb	r3, [r5, #10]
+ 174:modules/remote/dbus.c **** 
+ 175:modules/remote/dbus.c ****     /* ---- 拨杆位域自动判定：必须在下面的命名映射之前调用，判定结果当
+ 176:modules/remote/dbus.c ****      * 实测法（上电后 3 秒内做一次即可）：把左拨杆停在“上”或“下”�
+ 177:modules/remote/dbus.c ****      * 保持右拨杆在中位不动，持续约 1 秒 → sw_auto_done 变 1、sw_swap 自动定�
+ 178:modules/remote/dbus.c ****     RC_SwitchAutoName();
+ 537              		.loc 1 178 5 is_stmt 1 view .LVU158
+ 538 0058 FFF7FEFF 		bl	RC_SwitchAutoName
+ 539              	.LVL24:
+ 179:modules/remote/dbus.c **** 
+ 180:modules/remote/dbus.c ****     if (RC_Data.sw_swap)
+ 540              		.loc 1 180 5 view .LVU159
+ 541              		.loc 1 180 16 is_stmt 0 view .LVU160
+ 542 005c 2B7B     		ldrb	r3, [r5, #12]	@ zero_extendqisi2
+ 543              		.loc 1 180 8 view .LVU161
+ 544 005e 002B     		cmp	r3, #0
+ 545 0060 3AD0     		beq	.L41
+ 181:modules/remote/dbus.c ****     {
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 14
+
+
+ 182:modules/remote/dbus.c ****         RC_Data.s_left  = RC_Data.sw_hi2;
+ 546              		.loc 1 182 9 is_stmt 1 view .LVU162
+ 547              		.loc 1 182 34 is_stmt 0 view .LVU163
+ 548 0062 AA7A     		ldrb	r2, [r5, #10]	@ zero_extendqisi2
+ 549              		.loc 1 182 25 view .LVU164
+ 550 0064 2A72     		strb	r2, [r5, #8]
+ 183:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_lo2;
+ 551              		.loc 1 183 9 is_stmt 1 view .LVU165
+ 552              		.loc 1 183 34 is_stmt 0 view .LVU166
+ 553 0066 EA7A     		ldrb	r2, [r5, #11]	@ zero_extendqisi2
+ 554              		.loc 1 183 25 view .LVU167
+ 555 0068 6A72     		strb	r2, [r5, #9]
+ 556              	.L42:
+ 184:modules/remote/dbus.c ****     }
+ 185:modules/remote/dbus.c ****     else
+ 186:modules/remote/dbus.c ****     {
+ 187:modules/remote/dbus.c ****         RC_Data.s_left  = RC_Data.sw_lo2;
+ 188:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 189:modules/remote/dbus.c ****     }
+ 190:modules/remote/dbus.c **** 
+ 191:modules/remote/dbus.c ****     /* ---- 鼠标 + 键盘（完整解出，保证整帧 18 字节全覆盖）----
+ 192:modules/remote/dbus.c ****      * 控制层暂不使用，但解出后可在调试器里核验通信正确性 */
+ 193:modules/remote/dbus.c ****     RC_Data.mouse.x        = (int16_t)(b[6]  | ((uint16_t)b[7]  << 8));
+ 557              		.loc 1 193 5 is_stmt 1 view .LVU168
+ 558              		.loc 1 193 41 is_stmt 0 view .LVU169
+ 559 006a A379     		ldrb	r3, [r4, #6]	@ zero_extendqisi2
+ 560              		.loc 1 193 60 view .LVU170
+ 561 006c E279     		ldrb	r2, [r4, #7]	@ zero_extendqisi2
+ 562              		.loc 1 193 30 view .LVU171
+ 563 006e 43EA0223 		orr	r3, r3, r2, lsl #8
+ 564              		.loc 1 193 28 view .LVU172
+ 565 0072 1C4D     		ldr	r5, .L45
+ 566 0074 2B82     		strh	r3, [r5, #16]	@ movhi
+ 194:modules/remote/dbus.c ****     RC_Data.mouse.y        = (int16_t)(b[8]  | ((uint16_t)b[9]  << 8));
+ 567              		.loc 1 194 5 is_stmt 1 view .LVU173
+ 568              		.loc 1 194 41 is_stmt 0 view .LVU174
+ 569 0076 237A     		ldrb	r3, [r4, #8]	@ zero_extendqisi2
+ 570              		.loc 1 194 60 view .LVU175
+ 571 0078 627A     		ldrb	r2, [r4, #9]	@ zero_extendqisi2
+ 572              		.loc 1 194 30 view .LVU176
+ 573 007a 43EA0223 		orr	r3, r3, r2, lsl #8
+ 574              		.loc 1 194 28 view .LVU177
+ 575 007e 6B82     		strh	r3, [r5, #18]	@ movhi
+ 195:modules/remote/dbus.c ****     RC_Data.mouse.z        = (int16_t)((b[10] | ((uint16_t)b[11] << 8)) & 0x07FF); /* 官方未掩�
+ 576              		.loc 1 195 5 is_stmt 1 view .LVU178
+ 577              		.loc 1 195 42 is_stmt 0 view .LVU179
+ 578 0080 A37A     		ldrb	r3, [r4, #10]	@ zero_extendqisi2
+ 579              		.loc 1 195 61 view .LVU180
+ 580 0082 E27A     		ldrb	r2, [r4, #11]	@ zero_extendqisi2
+ 581              		.loc 1 195 30 view .LVU181
+ 582 0084 1202     		lsls	r2, r2, #8
+ 583 0086 12B2     		sxth	r2, r2
+ 584              		.loc 1 195 47 view .LVU182
+ 585 0088 1343     		orrs	r3, r3, r2
+ 586              		.loc 1 195 30 view .LVU183
+ 587 008a C3F30A03 		ubfx	r3, r3, #0, #11
+ 588              		.loc 1 195 28 view .LVU184
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 15
+
+
+ 589 008e AB82     		strh	r3, [r5, #20]	@ movhi
+ 196:modules/remote/dbus.c ****     RC_Data.mouse.press_l  = b[12];
+ 590              		.loc 1 196 5 is_stmt 1 view .LVU185
+ 591              		.loc 1 196 28 is_stmt 0 view .LVU186
+ 592 0090 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
+ 593 0092 AB75     		strb	r3, [r5, #22]
+ 197:modules/remote/dbus.c ****     RC_Data.mouse.press_r  = b[13];
+ 594              		.loc 1 197 5 is_stmt 1 view .LVU187
+ 595              		.loc 1 197 28 is_stmt 0 view .LVU188
+ 596 0094 637B     		ldrb	r3, [r4, #13]	@ zero_extendqisi2
+ 597 0096 EB75     		strb	r3, [r5, #23]
+ 198:modules/remote/dbus.c ****     RC_Data.key_v          = b[14];
+ 598              		.loc 1 198 5 is_stmt 1 view .LVU189
+ 599              		.loc 1 198 28 is_stmt 0 view .LVU190
+ 600 0098 A37B     		ldrb	r3, [r4, #14]	@ zero_extendqisi2
+ 601 009a 2B76     		strb	r3, [r5, #24]
+ 199:modules/remote/dbus.c ****     RC_Data.key_h          = b[15];
+ 602              		.loc 1 199 5 is_stmt 1 view .LVU191
+ 603              		.loc 1 199 28 is_stmt 0 view .LVU192
+ 604 009c E37B     		ldrb	r3, [r4, #15]	@ zero_extendqisi2
+ 605 009e 6B76     		strb	r3, [r5, #25]
+ 200:modules/remote/dbus.c **** 
+ 201:modules/remote/dbus.c ****     /* ---- 左拨轮：11bit。官方 sbus_to_rc 未对 wheel 掩码；
+ 202:modules/remote/dbus.c ****      * 此处 &0x07FF 为防御性加固——切掉 b[17] 高 5 位未定义脏位，
+ 203:modules/remote/dbus.c ****      * 合法帧恒等、异常帧不会把脏位当有效值 ---- */
+ 204:modules/remote/dbus.c ****     RC_Data.wheel = (uint16_t)((b[16] | ((uint16_t)b[17] << 8)) & 0x07FF);
+ 606              		.loc 1 204 5 is_stmt 1 view .LVU193
+ 607              		.loc 1 204 34 is_stmt 0 view .LVU194
+ 608 00a0 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
+ 609              		.loc 1 204 53 view .LVU195
+ 610 00a2 627C     		ldrb	r2, [r4, #17]	@ zero_extendqisi2
+ 611              		.loc 1 204 39 view .LVU196
+ 612 00a4 43EA0223 		orr	r3, r3, r2, lsl #8
+ 613              		.loc 1 204 21 view .LVU197
+ 614 00a8 C3F30A03 		ubfx	r3, r3, #0, #11
+ 615              		.loc 1 204 19 view .LVU198
+ 616 00ac EB81     		strh	r3, [r5, #14]	@ movhi
+ 617              	.LBB18:
+ 205:modules/remote/dbus.c **** 
+ 206:modules/remote/dbus.c ****     {
+ 207:modules/remote/dbus.c ****         uint32_t now = HAL_GetTick();
+ 618              		.loc 1 207 9 is_stmt 1 view .LVU199
+ 619              		.loc 1 207 24 is_stmt 0 view .LVU200
+ 620 00ae FFF7FEFF 		bl	HAL_GetTick
+ 621              	.LVL25:
+ 208:modules/remote/dbus.c **** 
+ 209:modules/remote/dbus.c ****         /* 两帧间隔统计：RC_GapMaxMs > 100 就是一次实打实的“准失联”，
+ 210:modules/remote/dbus.c ****          * 这比 online 标志可信——online 只看最后一帧距今，间隔大不大它不�
+ 211:modules/remote/dbus.c ****         if ((RC_Data.last_tick != 0u) && ((now - RC_Data.last_tick) > RC_GapMaxMs))
+ 622              		.loc 1 211 9 is_stmt 1 view .LVU201
+ 623              		.loc 1 211 21 is_stmt 0 view .LVU202
+ 624 00b2 AB6A     		ldr	r3, [r5, #40]
+ 625              		.loc 1 211 12 view .LVU203
+ 626 00b4 33B1     		cbz	r3, .L43
+ 627              		.loc 1 211 48 discriminator 1 view .LVU204
+ 628 00b6 C31A     		subs	r3, r0, r3
+ 629              		.loc 1 211 69 discriminator 1 view .LVU205
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 16
+
+
+ 630 00b8 0B4A     		ldr	r2, .L45+4
+ 631 00ba 1268     		ldr	r2, [r2]
+ 632              		.loc 1 211 39 discriminator 1 view .LVU206
+ 633 00bc 9342     		cmp	r3, r2
+ 634 00be 01D9     		bls	.L43
+ 212:modules/remote/dbus.c ****         {
+ 213:modules/remote/dbus.c ****             RC_GapMaxMs = now - RC_Data.last_tick;
+ 635              		.loc 1 213 13 is_stmt 1 view .LVU207
+ 636              		.loc 1 213 25 is_stmt 0 view .LVU208
+ 637 00c0 094A     		ldr	r2, .L45+4
+ 638 00c2 1360     		str	r3, [r2]
+ 639              	.L43:
+ 214:modules/remote/dbus.c ****         }
+ 215:modules/remote/dbus.c ****         RC_FrameCnt++;
+ 640              		.loc 1 215 9 is_stmt 1 view .LVU209
+ 641              		.loc 1 215 20 is_stmt 0 view .LVU210
+ 642 00c4 094A     		ldr	r2, .L45+8
+ 643 00c6 1368     		ldr	r3, [r2]
+ 644 00c8 0133     		adds	r3, r3, #1
+ 645 00ca 1360     		str	r3, [r2]
+ 216:modules/remote/dbus.c ****         RC_Data.last_tick = now;
+ 646              		.loc 1 216 9 is_stmt 1 view .LVU211
+ 647              		.loc 1 216 27 is_stmt 0 view .LVU212
+ 648 00cc 054B     		ldr	r3, .L45
+ 649 00ce 9862     		str	r0, [r3, #40]
+ 650              	.LBE18:
+ 217:modules/remote/dbus.c ****     }
+ 218:modules/remote/dbus.c ****     RC_Data.online = 1;
+ 651              		.loc 1 218 5 is_stmt 1 view .LVU213
+ 652              		.loc 1 218 20 is_stmt 0 view .LVU214
+ 653 00d0 0122     		movs	r2, #1
+ 654 00d2 83F82C20 		strb	r2, [r3, #44]
+ 219:modules/remote/dbus.c **** }
+ 655              		.loc 1 219 1 view .LVU215
+ 656 00d6 38BD     		pop	{r3, r4, r5, pc}
+ 657              	.LVL26:
+ 658              	.L41:
+ 187:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 659              		.loc 1 187 9 is_stmt 1 view .LVU216
+ 187:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 660              		.loc 1 187 34 is_stmt 0 view .LVU217
+ 661 00d8 024B     		ldr	r3, .L45
+ 662 00da DA7A     		ldrb	r2, [r3, #11]	@ zero_extendqisi2
+ 187:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 663              		.loc 1 187 25 view .LVU218
+ 664 00dc 1A72     		strb	r2, [r3, #8]
+ 188:modules/remote/dbus.c ****     }
+ 665              		.loc 1 188 9 is_stmt 1 view .LVU219
+ 188:modules/remote/dbus.c ****     }
+ 666              		.loc 1 188 34 is_stmt 0 view .LVU220
+ 667 00de 9A7A     		ldrb	r2, [r3, #10]	@ zero_extendqisi2
+ 188:modules/remote/dbus.c ****     }
+ 668              		.loc 1 188 25 view .LVU221
+ 669 00e0 5A72     		strb	r2, [r3, #9]
+ 670 00e2 C2E7     		b	.L42
+ 671              	.L46:
+ 672              		.align	2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 17
+
+
+ 673              	.L45:
+ 674 00e4 00000000 		.word	RC_Data
+ 675 00e8 00000000 		.word	RC_GapMaxMs
+ 676 00ec 00000000 		.word	RC_FrameCnt
+ 677              		.cfi_endproc
+ 678              	.LFE149:
+ 680              		.section	.text.RC_IsOnline,"ax",%progbits
+ 681              		.align	1
+ 682              		.global	RC_IsOnline
+ 683              		.syntax unified
+ 684              		.thumb
+ 685              		.thumb_func
+ 687              	RC_IsOnline:
+ 688              	.LVL27:
+ 689              	.LFB150:
+ 220:modules/remote/dbus.c **** 
+ 221:modules/remote/dbus.c **** uint8_t RC_IsOnline(uint32_t now_ms)
+ 222:modules/remote/dbus.c **** {
+ 690              		.loc 1 222 1 is_stmt 1 view -0
+ 691              		.cfi_startproc
+ 692              		@ args = 0, pretend = 0, frame = 0
+ 693              		@ frame_needed = 0, uses_anonymous_args = 0
+ 694              		@ link register save eliminated.
+ 223:modules/remote/dbus.c ****     if ((now_ms - RC_Data.last_tick) > RC_OFFLINE_MS)
+ 695              		.loc 1 223 5 view .LVU223
+ 696              		.loc 1 223 26 is_stmt 0 view .LVU224
+ 697 0000 064B     		ldr	r3, .L49
+ 698 0002 9B6A     		ldr	r3, [r3, #40]
+ 699              		.loc 1 223 17 view .LVU225
+ 700 0004 C01A     		subs	r0, r0, r3
+ 701              	.LVL28:
+ 702              		.loc 1 223 8 view .LVU226
+ 703 0006 6428     		cmp	r0, #100
+ 704 0008 03D9     		bls	.L48
+ 224:modules/remote/dbus.c ****         RC_Data.online = 0;
+ 705              		.loc 1 224 9 is_stmt 1 view .LVU227
+ 706              		.loc 1 224 24 is_stmt 0 view .LVU228
+ 707 000a 044B     		ldr	r3, .L49
+ 708 000c 0022     		movs	r2, #0
+ 709 000e 83F82C20 		strb	r2, [r3, #44]
+ 710              	.L48:
+ 225:modules/remote/dbus.c ****     return RC_Data.online;
+ 711              		.loc 1 225 5 is_stmt 1 view .LVU229
+ 226:modules/remote/dbus.c **** }
+ 712              		.loc 1 226 1 is_stmt 0 view .LVU230
+ 713 0012 024B     		ldr	r3, .L49
+ 714 0014 93F82C00 		ldrb	r0, [r3, #44]	@ zero_extendqisi2
+ 715 0018 7047     		bx	lr
+ 716              	.L50:
+ 717 001a 00BF     		.align	2
+ 718              	.L49:
+ 719 001c 00000000 		.word	RC_Data
+ 720              		.cfi_endproc
+ 721              	.LFE150:
+ 723              		.section	.text.RC_Norm,"ax",%progbits
+ 724              		.align	1
+ 725              		.global	RC_Norm
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 18
+
+
+ 726              		.syntax unified
+ 727              		.thumb
+ 728              		.thumb_func
+ 730              	RC_Norm:
+ 731              	.LVL29:
+ 732              	.LFB151:
+ 227:modules/remote/dbus.c **** 
+ 228:modules/remote/dbus.c **** /* 摇杆原始值 → -1.0 ~ +1.0（带死区） */
+ 229:modules/remote/dbus.c **** float RC_Norm(uint16_t ch)
+ 230:modules/remote/dbus.c **** {
+ 733              		.loc 1 230 1 is_stmt 1 view -0
+ 734              		.cfi_startproc
+ 735              		@ args = 0, pretend = 0, frame = 0
+ 736              		@ frame_needed = 0, uses_anonymous_args = 0
+ 737              		@ link register save eliminated.
+ 231:modules/remote/dbus.c ****     int32_t v = (int32_t)ch - RC_CH_MID;
+ 738              		.loc 1 231 5 view .LVU232
+ 739              		.loc 1 231 13 is_stmt 0 view .LVU233
+ 740 0000 A0F58062 		sub	r2, r0, #1024
+ 741              	.LVL30:
+ 232:modules/remote/dbus.c **** 
+ 233:modules/remote/dbus.c ****     if ((v > -RC_DEADBAND) && (v < RC_DEADBAND))
+ 742              		.loc 1 233 5 is_stmt 1 view .LVU234
+ 743              		.loc 1 233 28 is_stmt 0 view .LVU235
+ 744 0004 A0F2ED33 		subw	r3, r0, #1005
+ 745              		.loc 1 233 8 view .LVU236
+ 746 0008 262B     		cmp	r3, #38
+ 747 000a 22D9     		bls	.L55
+ 234:modules/remote/dbus.c ****         return 0.0f;
+ 235:modules/remote/dbus.c **** 
+ 236:modules/remote/dbus.c ****     v = (v > 0) ? (v - RC_DEADBAND) : (v + RC_DEADBAND);
+ 748              		.loc 1 236 5 is_stmt 1 view .LVU237
+ 749              		.loc 1 236 37 is_stmt 0 view .LVU238
+ 750 000c 002A     		cmp	r2, #0
+ 751 000e 13DD     		ble	.L53
+ 752              		.loc 1 236 37 discriminator 1 view .LVU239
+ 753 0010 A0F21443 		subw	r3, r0, #1044
+ 754 0014 07EE903A 		vmov	s15, r3	@ int
+ 755              	.L54:
+ 756              	.LVL31:
+ 237:modules/remote/dbus.c **** 
+ 238:modules/remote/dbus.c ****     float n = (float)v / (float)(RC_CH_MAX - RC_CH_MID);
+ 757              		.loc 1 238 5 is_stmt 1 view .LVU240
+ 758              		.loc 1 238 15 is_stmt 0 view .LVU241
+ 759 0018 F8EEE77A 		vcvt.f32.s32	s15, s15
+ 760              	.LVL32:
+ 761              		.loc 1 238 11 view .LVU242
+ 762 001c 9FED107A 		vldr.32	s14, .L60
+ 763 0020 87EE870A 		vdiv.f32	s0, s15, s14
+ 764              	.LVL33:
+ 239:modules/remote/dbus.c **** 
+ 240:modules/remote/dbus.c ****     if (n >  1.0f) n =  1.0f;
+ 765              		.loc 1 240 5 is_stmt 1 view .LVU243
+ 766              		.loc 1 240 8 is_stmt 0 view .LVU244
+ 767 0024 F7EE007A 		vmov.f32	s15, #1.0e+0
+ 768 0028 B4EEE70A 		vcmpe.f32	s0, s15
+ 769 002c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 19
+
+
+ 770 0030 07DD     		ble	.L58
+ 771              		.loc 1 240 22 discriminator 1 view .LVU245
+ 772 0032 B7EE000A 		vmov.f32	s0, #1.0e+0
+ 773              	.LVL34:
+ 774              		.loc 1 240 22 discriminator 1 view .LVU246
+ 775 0036 7047     		bx	lr
+ 776              	.LVL35:
+ 777              	.L53:
+ 236:modules/remote/dbus.c **** 
+ 778              		.loc 1 236 37 discriminator 2 view .LVU247
+ 779 0038 A0F57B73 		sub	r3, r0, #1004
+ 780 003c 07EE903A 		vmov	s15, r3	@ int
+ 781 0040 EAE7     		b	.L54
+ 782              	.LVL36:
+ 783              	.L58:
+ 241:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 784              		.loc 1 241 5 is_stmt 1 view .LVU248
+ 785              		.loc 1 241 8 is_stmt 0 view .LVU249
+ 786 0042 FFEE007A 		vmov.f32	s15, #-1.0e+0
+ 787 0046 B4EEE70A 		vcmpe.f32	s0, s15
+ 788 004a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 789 004e 03D4     		bmi	.L59
+ 790              	.LVL37:
+ 791              	.L51:
+ 242:modules/remote/dbus.c ****     return n;
+ 243:modules/remote/dbus.c **** }
+ 792              		.loc 1 243 1 view .LVU250
+ 793 0050 7047     		bx	lr
+ 794              	.LVL38:
+ 795              	.L55:
+ 234:modules/remote/dbus.c **** 
+ 796              		.loc 1 234 16 view .LVU251
+ 797 0052 9FED040A 		vldr.32	s0, .L60+4
+ 798 0056 7047     		bx	lr
+ 799              	.LVL39:
+ 800              	.L59:
+ 241:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 801              		.loc 1 241 22 discriminator 1 view .LVU252
+ 802 0058 BFEE000A 		vmov.f32	s0, #-1.0e+0
+ 803              	.LVL40:
+ 241:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 804              		.loc 1 241 22 discriminator 1 view .LVU253
+ 805 005c F8E7     		b	.L51
+ 806              	.L61:
+ 807 005e 00BF     		.align	2
+ 808              	.L60:
+ 809 0060 00002544 		.word	1143275520
+ 810 0064 00000000 		.word	0
+ 811              		.cfi_endproc
+ 812              	.LFE151:
+ 814              		.section	.text.HAL_UARTEx_RxEventCallback,"ax",%progbits
+ 815              		.align	1
+ 816              		.global	HAL_UARTEx_RxEventCallback
+ 817              		.syntax unified
+ 818              		.thumb
+ 819              		.thumb_func
+ 821              	HAL_UARTEx_RxEventCallback:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 20
+
+
+ 822              	.LVL41:
+ 823              	.LFB152:
+ 244:modules/remote/dbus.c **** /* ==================================================================
+ 245:modules/remote/dbus.c ****  *  云台 pitch 双环（6020 ID2，1 kHz 调用）
+ 246:modules/remote/dbus.c ****  *
+ 247:modules/remote/dbus.c ****  *  三个状态：0=未接管  1=回中  2=正常
+ 248:modules/remote/dbus.c ****  *  未接管时要求摇杆居中，且参考角永远从"当前位置"起步 → 不会瞬移、
+ 249:modules/remote/dbus.c ****  *  不会有劣弧、不会一拨使能就跟着摇杆飞。
+ 250:modules/remote/dbus.c ****  *
+ 251:modules/remote/dbus.c ****  *  采用位置环 + 速度环的双环控制，位置环输出目标速度，速度环输出电�
+ 252:modules/remote/dbus.c ****  * ================================================================== */
+ 253:modules/remote/dbus.c **** 
+ 254:modules/remote/dbus.c **** 
+ 255:modules/remote/dbus.c ****  /*求绝对值 */
+ 256:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+ 257:modules/remote/dbus.c **** /* UART 空闲中断回调：一帧收完由 HAL 调用                                */
+ 258:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+ 259:modules/remote/dbus.c **** void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
+ 260:modules/remote/dbus.c **** {
+ 824              		.loc 1 260 1 is_stmt 1 view -0
+ 825              		.cfi_startproc
+ 826              		@ args = 0, pretend = 0, frame = 0
+ 827              		@ frame_needed = 0, uses_anonymous_args = 0
+ 828              		.loc 1 260 1 is_stmt 0 view .LVU255
+ 829 0000 08B5     		push	{r3, lr}
+ 830              	.LCFI4:
+ 831              		.cfi_def_cfa_offset 8
+ 832              		.cfi_offset 3, -8
+ 833              		.cfi_offset 14, -4
+ 261:modules/remote/dbus.c ****     if (huart->Instance == UART5)
+ 834              		.loc 1 261 5 is_stmt 1 view .LVU256
+ 835              		.loc 1 261 14 is_stmt 0 view .LVU257
+ 836 0002 0268     		ldr	r2, [r0]
+ 837              		.loc 1 261 8 view .LVU258
+ 838 0004 114B     		ldr	r3, .L70
+ 839 0006 9A42     		cmp	r2, r3
+ 840 0008 00D0     		beq	.L68
+ 841              	.LVL42:
+ 842              	.L62:
+ 262:modules/remote/dbus.c ****     {
+ 263:modules/remote/dbus.c ****         /* 只有真正打开了 D-Cache 才需要做 cache 维护。
+ 264:modules/remote/dbus.c ****          * 本工程 D-Cache 关闭（SCB->CCR.DC=0），实测此处若无条件调用
+ 265:modules/remote/dbus.c ****          * SCB_InvalidateDCache_by_Addr() 会在第一帧到达时触发
+ 266:modules/remote/dbus.c ****          * HardFault（CFSR.IMPRECISERR），导致摇杆永远没反应。 */
+ 267:modules/remote/dbus.c ****         if ((SCB->CCR & SCB_CCR_DC_Msk) != 0U)
+ 268:modules/remote/dbus.c ****         {
+ 269:modules/remote/dbus.c ****             SCB_InvalidateDCache_by_Addr((uint32_t *)dbus_buf, sizeof(dbus_buf));
+ 270:modules/remote/dbus.c ****         }
+ 271:modules/remote/dbus.c **** 
+ 272:modules/remote/dbus.c ****         if (Size >= DBUS_FRAME_LEN)
+ 273:modules/remote/dbus.c ****         {
+ 274:modules/remote/dbus.c ****             /* 收到多帧时取最后一帧完整数据 */
+ 275:modules/remote/dbus.c ****             RC_Decode(&dbus_buf[Size - DBUS_FRAME_LEN]);
+ 276:modules/remote/dbus.c ****         }
+ 277:modules/remote/dbus.c **** 
+ 278:modules/remote/dbus.c ****         RC_StartReceive();   /* 普通模式，需要重新启动 */
+ 279:modules/remote/dbus.c ****     }
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 21
+
+
+ 280:modules/remote/dbus.c **** }
+ 843              		.loc 1 280 1 view .LVU259
+ 844 000a 08BD     		pop	{r3, pc}
+ 845              	.LVL43:
+ 846              	.L68:
+ 267:modules/remote/dbus.c ****         {
+ 847              		.loc 1 267 9 is_stmt 1 view .LVU260
+ 267:modules/remote/dbus.c ****         {
+ 848              		.loc 1 267 17 is_stmt 0 view .LVU261
+ 849 000c 104B     		ldr	r3, .L70+4
+ 850 000e 5B69     		ldr	r3, [r3, #20]
+ 267:modules/remote/dbus.c ****         {
+ 851              		.loc 1 267 12 view .LVU262
+ 852 0010 13F4803F 		tst	r3, #65536
+ 853 0014 0ED0     		beq	.L64
+ 269:modules/remote/dbus.c ****         }
+ 854              		.loc 1 269 13 is_stmt 1 view .LVU263
+ 855              	.LVL44:
+ 856              	.LBB19:
+ 857              	.LBI19:
+ 858              		.file 2 "Drivers/CMSIS/Include/cachel1_armv7.h"
+   1:Drivers/CMSIS/Include/cachel1_armv7.h **** /******************************************************************************
+   2:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @file     cachel1_armv7.h
+   3:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @brief    CMSIS Level 1 Cache API for Armv7-M and later
+   4:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @version  V1.0.3
+   5:Drivers/CMSIS/Include/cachel1_armv7.h ****  * @date     17. March 2023
+   6:Drivers/CMSIS/Include/cachel1_armv7.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cachel1_armv7.h **** /*
+   8:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Copyright (c) 2020-2021 Arm Limited. All rights reserved.
+   9:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  10:Drivers/CMSIS/Include/cachel1_armv7.h ****  * SPDX-License-Identifier: Apache-2.0
+  11:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  12:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Licensed under the Apache License, Version 2.0 (the License); you may
+  13:Drivers/CMSIS/Include/cachel1_armv7.h ****  * not use this file except in compliance with the License.
+  14:Drivers/CMSIS/Include/cachel1_armv7.h ****  * You may obtain a copy of the License at
+  15:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  16:Drivers/CMSIS/Include/cachel1_armv7.h ****  * www.apache.org/licenses/LICENSE-2.0
+  17:Drivers/CMSIS/Include/cachel1_armv7.h ****  *
+  18:Drivers/CMSIS/Include/cachel1_armv7.h ****  * Unless required by applicable law or agreed to in writing, software
+  19:Drivers/CMSIS/Include/cachel1_armv7.h ****  * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+  20:Drivers/CMSIS/Include/cachel1_armv7.h ****  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  21:Drivers/CMSIS/Include/cachel1_armv7.h ****  * See the License for the specific language governing permissions and
+  22:Drivers/CMSIS/Include/cachel1_armv7.h ****  * limitations under the License.
+  23:Drivers/CMSIS/Include/cachel1_armv7.h ****  */
+  24:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  25:Drivers/CMSIS/Include/cachel1_armv7.h **** #if   defined ( __ICCARM__ )
+  26:Drivers/CMSIS/Include/cachel1_armv7.h ****   #pragma system_include         /* treat file as system include file for MISRA check */
+  27:Drivers/CMSIS/Include/cachel1_armv7.h **** #elif defined (__clang__)
+  28:Drivers/CMSIS/Include/cachel1_armv7.h ****   #pragma clang system_header    /* treat file as system include file */
+  29:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  30:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  31:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef ARM_CACHEL1_ARMV7_H
+  32:Drivers/CMSIS/Include/cachel1_armv7.h **** #define ARM_CACHEL1_ARMV7_H
+  33:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  34:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  35:Drivers/CMSIS/Include/cachel1_armv7.h ****   \ingroup  CMSIS_Core_FunctionInterface
+  36:Drivers/CMSIS/Include/cachel1_armv7.h ****   \defgroup CMSIS_Core_CacheFunctions Cache Functions
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 22
+
+
+  37:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief    Functions that configure Instruction and Data cache.
+  38:Drivers/CMSIS/Include/cachel1_armv7.h ****   @{
+  39:Drivers/CMSIS/Include/cachel1_armv7.h ****  */
+  40:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  41:Drivers/CMSIS/Include/cachel1_armv7.h **** /* Cache Size ID Register Macros */
+  42:Drivers/CMSIS/Include/cachel1_armv7.h **** #define CCSIDR_WAYS(x)         (((x) & SCB_CCSIDR_ASSOCIATIVITY_Msk) >> SCB_CCSIDR_ASSOCIATIVITY_Po
+  43:Drivers/CMSIS/Include/cachel1_armv7.h **** #define CCSIDR_SETS(x)         (((x) & SCB_CCSIDR_NUMSETS_Msk      ) >> SCB_CCSIDR_NUMSETS_Pos     
+  44:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  45:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef __SCB_DCACHE_LINE_SIZE
+  46:Drivers/CMSIS/Include/cachel1_armv7.h **** #define __SCB_DCACHE_LINE_SIZE  32U /*!< Cortex-M7 cache line size is fixed to 32 bytes (8 words). 
+  47:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  48:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  49:Drivers/CMSIS/Include/cachel1_armv7.h **** #ifndef __SCB_ICACHE_LINE_SIZE
+  50:Drivers/CMSIS/Include/cachel1_armv7.h **** #define __SCB_ICACHE_LINE_SIZE  32U /*!< Cortex-M7 cache line size is fixed to 32 bytes (8 words). 
+  51:Drivers/CMSIS/Include/cachel1_armv7.h **** #endif
+  52:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  53:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  54:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Enable I-Cache
+  55:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns on I-Cache
+  56:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  57:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_EnableICache (void)
+  58:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  59:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  60:Drivers/CMSIS/Include/cachel1_armv7.h ****     if (SCB->CCR & SCB_CCR_IC_Msk) return;  /* return if ICache is already enabled */
+  61:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  62:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  63:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  64:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;                     /* invalidate I-Cache */
+  65:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  66:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  67:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR |=  (uint32_t)SCB_CCR_IC_Msk;  /* enable I-Cache */
+  68:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  69:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  70:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+  71:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+  72:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  73:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  74:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  75:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Disable I-Cache
+  76:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns off I-Cache
+  77:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  78:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_DisableICache (void)
+  79:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  80:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  81:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  82:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  83:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR &= ~(uint32_t)SCB_CCR_IC_Msk;  /* disable I-Cache */
+  84:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;                     /* invalidate I-Cache */
+  85:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  86:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+  87:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+  88:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+  89:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  90:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+  91:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+  92:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Invalidate I-Cache
+  93:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates I-Cache
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 23
+
+
+  94:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+  95:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateICache (void)
+  96:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+  97:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+  98:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+  99:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 100:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->ICIALLU = 0UL;
+ 101:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 102:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 103:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 104:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 105:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 106:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 107:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 108:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   I-Cache Invalidate by address
+ 109:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates I-Cache for the given address.
+ 110:Drivers/CMSIS/Include/cachel1_armv7.h ****            I-Cache is invalidated starting from a 32 byte aligned address in 32 byte granularity.
+ 111:Drivers/CMSIS/Include/cachel1_armv7.h ****            I-Cache memory blocks which are part of given address + given size are invalidated.
+ 112:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   addr    address
+ 113:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   isize   size of memory block (in number of bytes)
+ 114:Drivers/CMSIS/Include/cachel1_armv7.h **** */
+ 115:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateICache_by_Addr (volatile void *addr, int32_t isize)
+ 116:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 117:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__ICACHE_PRESENT) && (__ICACHE_PRESENT == 1U)
+ 118:Drivers/CMSIS/Include/cachel1_armv7.h ****     if ( isize > 0 ) {
+ 119:Drivers/CMSIS/Include/cachel1_armv7.h ****        int32_t op_size = isize + (((uint32_t)addr) & (__SCB_ICACHE_LINE_SIZE - 1U));
+ 120:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_ICACHE_LINE_SIZE - 1U) */;
+ 121:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 122:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 123:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 124:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 125:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->ICIMVAU = op_addr;             /* register accepts only 32byte aligned values, only bi
+ 126:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_addr += __SCB_ICACHE_LINE_SIZE;
+ 127:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_size -= __SCB_ICACHE_LINE_SIZE;
+ 128:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while ( op_size > 0 );
+ 129:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 130:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 131:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 132:Drivers/CMSIS/Include/cachel1_armv7.h ****     }
+ 133:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 134:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 135:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 136:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 137:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 138:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Enable D-Cache
+ 139:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns on D-Cache
+ 140:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 141:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_EnableDCache (void)
+ 142:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 143:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 144:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 145:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 146:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 147:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 148:Drivers/CMSIS/Include/cachel1_armv7.h ****     if (SCB->CCR & SCB_CCR_DC_Msk) return;  /* return if DCache is already enabled */
+ 149:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 150:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 24
+
+
+ 151:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 152:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 153:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 154:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 155:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* invalidate D-Cache */
+ 156:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 157:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 158:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 159:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 160:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCISW = (((sets << SCB_DCISW_SET_Pos) & SCB_DCISW_SET_Msk) |
+ 161:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCISW_WAY_Pos) & SCB_DCISW_WAY_Msk)  );
+ 162:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 163:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 164:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 165:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 166:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 167:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 168:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 169:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR |=  (uint32_t)SCB_CCR_DC_Msk;  /* enable D-Cache */
+ 170:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 171:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 172:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 173:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 174:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 175:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 176:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 177:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 178:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Disable D-Cache
+ 179:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Turns off D-Cache
+ 180:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 181:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_DisableDCache (void)
+ 182:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 183:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 184:Drivers/CMSIS/Include/cachel1_armv7.h ****     struct {
+ 185:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 186:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 187:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 188:Drivers/CMSIS/Include/cachel1_armv7.h ****     } locals
+ 189:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if ((defined(__GNUC__) || defined(__clang__)) && !defined(__OPTIMIZE__))
+ 190:Drivers/CMSIS/Include/cachel1_armv7.h ****        __ALIGNED(__SCB_DCACHE_LINE_SIZE)
+ 191:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 192:Drivers/CMSIS/Include/cachel1_armv7.h ****     ;
+ 193:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 194:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 195:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 196:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 197:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CCR &= ~(uint32_t)SCB_CCR_DC_Msk;  /* disable D-Cache */
+ 198:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 199:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 200:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if !defined(__OPTIMIZE__)
+ 201:Drivers/CMSIS/Include/cachel1_armv7.h ****       /*
+ 202:Drivers/CMSIS/Include/cachel1_armv7.h ****        * For the endless loop issue with no optimization builds.
+ 203:Drivers/CMSIS/Include/cachel1_armv7.h ****        * More details, see https://github.com/ARM-software/CMSIS_5/issues/620
+ 204:Drivers/CMSIS/Include/cachel1_armv7.h ****        *
+ 205:Drivers/CMSIS/Include/cachel1_armv7.h ****        * The issue only happens when local variables are in stack. If
+ 206:Drivers/CMSIS/Include/cachel1_armv7.h ****        * local variables are saved in general purpose register, then the function
+ 207:Drivers/CMSIS/Include/cachel1_armv7.h ****        * is OK.
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 25
+
+
+ 208:Drivers/CMSIS/Include/cachel1_armv7.h ****        *
+ 209:Drivers/CMSIS/Include/cachel1_armv7.h ****        * When local variables are in stack, after disabling the cache, flush the
+ 210:Drivers/CMSIS/Include/cachel1_armv7.h ****        * local variables cache line for data consistency.
+ 211:Drivers/CMSIS/Include/cachel1_armv7.h ****        */
+ 212:Drivers/CMSIS/Include/cachel1_armv7.h ****       /* Clean and invalidate the local variable cache. */
+ 213:Drivers/CMSIS/Include/cachel1_armv7.h ****     #if defined(__ICCARM__)
+ 214:Drivers/CMSIS/Include/cachel1_armv7.h ****     /* As we can't align the stack to the cache line size, invalidate each of the variables */
+ 215:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.sets;
+ 216:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.ways;
+ 217:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals.ccsidr;
+ 218:Drivers/CMSIS/Include/cachel1_armv7.h ****     #else
+ 219:Drivers/CMSIS/Include/cachel1_armv7.h ****       SCB->DCCIMVAC = (uint32_t)&locals;
+ 220:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 221:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 222:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 223:Drivers/CMSIS/Include/cachel1_armv7.h ****     #endif
+ 224:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 225:Drivers/CMSIS/Include/cachel1_armv7.h ****     locals.ccsidr = SCB->CCSIDR;
+ 226:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean & invalidate D-Cache */
+ 227:Drivers/CMSIS/Include/cachel1_armv7.h ****     locals.sets = (uint32_t)(CCSIDR_SETS(locals.ccsidr));
+ 228:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 229:Drivers/CMSIS/Include/cachel1_armv7.h ****       locals.ways = (uint32_t)(CCSIDR_WAYS(locals.ccsidr));
+ 230:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 231:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCISW = (((locals.sets << SCB_DCCISW_SET_Pos) & SCB_DCCISW_SET_Msk) |
+ 232:Drivers/CMSIS/Include/cachel1_armv7.h ****                        ((locals.ways << SCB_DCCISW_WAY_Pos) & SCB_DCCISW_WAY_Msk)  );
+ 233:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 234:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 235:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 236:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (locals.ways-- != 0U);
+ 237:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(locals.sets-- != 0U);
+ 238:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 239:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 240:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 241:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 242:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 243:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 244:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 245:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 246:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Invalidate D-Cache
+ 247:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates D-Cache
+ 248:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 249:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateDCache (void)
+ 250:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 251:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 252:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 253:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 254:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 255:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 256:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 257:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 258:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 259:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 260:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 261:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* invalidate D-Cache */
+ 262:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 263:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 264:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 26
+
+
+ 265:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 266:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCISW = (((sets << SCB_DCISW_SET_Pos) & SCB_DCISW_SET_Msk) |
+ 267:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCISW_WAY_Pos) & SCB_DCISW_WAY_Msk)  );
+ 268:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 269:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 270:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 271:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 272:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 273:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 274:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 275:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 276:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 277:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 278:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 279:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 280:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 281:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Clean D-Cache
+ 282:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Cleans D-Cache
+ 283:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 284:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_CleanDCache (void)
+ 285:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 286:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 287:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 288:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 289:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 290:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 291:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 292:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 293:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 294:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 295:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 296:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean D-Cache */
+ 297:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 298:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 299:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 300:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 301:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCSW = (((sets << SCB_DCCSW_SET_Pos) & SCB_DCCSW_SET_Msk) |
+ 302:Drivers/CMSIS/Include/cachel1_armv7.h ****                       ((ways << SCB_DCCSW_WAY_Pos) & SCB_DCCSW_WAY_Msk)  );
+ 303:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 304:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 305:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 306:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 307:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 308:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 309:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 310:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 311:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 312:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 313:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 314:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 315:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 316:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   Clean & Invalidate D-Cache
+ 317:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Cleans and Invalidates D-Cache
+ 318:Drivers/CMSIS/Include/cachel1_armv7.h ****   */
+ 319:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_CleanInvalidateDCache (void)
+ 320:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 321:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 27
+
+
+ 322:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ccsidr;
+ 323:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t sets;
+ 324:Drivers/CMSIS/Include/cachel1_armv7.h ****     uint32_t ways;
+ 325:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 326:Drivers/CMSIS/Include/cachel1_armv7.h ****     SCB->CSSELR = 0U;                       /* select Level 1 data cache */
+ 327:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 328:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 329:Drivers/CMSIS/Include/cachel1_armv7.h ****     ccsidr = SCB->CCSIDR;
+ 330:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 331:Drivers/CMSIS/Include/cachel1_armv7.h ****                                             /* clean & invalidate D-Cache */
+ 332:Drivers/CMSIS/Include/cachel1_armv7.h ****     sets = (uint32_t)(CCSIDR_SETS(ccsidr));
+ 333:Drivers/CMSIS/Include/cachel1_armv7.h ****     do {
+ 334:Drivers/CMSIS/Include/cachel1_armv7.h ****       ways = (uint32_t)(CCSIDR_WAYS(ccsidr));
+ 335:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 336:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCCISW = (((sets << SCB_DCCISW_SET_Pos) & SCB_DCCISW_SET_Msk) |
+ 337:Drivers/CMSIS/Include/cachel1_armv7.h ****                        ((ways << SCB_DCCISW_WAY_Pos) & SCB_DCCISW_WAY_Msk)  );
+ 338:Drivers/CMSIS/Include/cachel1_armv7.h ****         #if defined ( __CC_ARM )
+ 339:Drivers/CMSIS/Include/cachel1_armv7.h ****           __schedule_barrier();
+ 340:Drivers/CMSIS/Include/cachel1_armv7.h ****         #endif
+ 341:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while (ways-- != 0U);
+ 342:Drivers/CMSIS/Include/cachel1_armv7.h ****     } while(sets-- != 0U);
+ 343:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 344:Drivers/CMSIS/Include/cachel1_armv7.h ****     __DSB();
+ 345:Drivers/CMSIS/Include/cachel1_armv7.h ****     __ISB();
+ 346:Drivers/CMSIS/Include/cachel1_armv7.h ****   #endif
+ 347:Drivers/CMSIS/Include/cachel1_armv7.h **** }
+ 348:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 349:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 350:Drivers/CMSIS/Include/cachel1_armv7.h **** /**
+ 351:Drivers/CMSIS/Include/cachel1_armv7.h ****   \brief   D-Cache Invalidate by address
+ 352:Drivers/CMSIS/Include/cachel1_armv7.h ****   \details Invalidates D-Cache for the given address.
+ 353:Drivers/CMSIS/Include/cachel1_armv7.h ****            D-Cache is invalidated starting from a 32 byte aligned address in 32 byte granularity.
+ 354:Drivers/CMSIS/Include/cachel1_armv7.h ****            D-Cache memory blocks which are part of given address + given size are invalidated.
+ 355:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   addr    address
+ 356:Drivers/CMSIS/Include/cachel1_armv7.h ****   \param[in]   dsize   size of memory block (in number of bytes)
+ 357:Drivers/CMSIS/Include/cachel1_armv7.h **** */
+ 358:Drivers/CMSIS/Include/cachel1_armv7.h **** __STATIC_FORCEINLINE void SCB_InvalidateDCache_by_Addr (volatile void *addr, int32_t dsize)
+ 859              		.loc 2 358 27 view .LVU264
+ 860              	.LBB20:
+ 359:Drivers/CMSIS/Include/cachel1_armv7.h **** {
+ 360:Drivers/CMSIS/Include/cachel1_armv7.h ****   #if defined (__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+ 361:Drivers/CMSIS/Include/cachel1_armv7.h ****     if ( dsize > 0 ) {
+ 861              		.loc 2 361 5 view .LVU265
+ 862              	.LBB21:
+ 362:Drivers/CMSIS/Include/cachel1_armv7.h ****        int32_t op_size = dsize + (((uint32_t)addr) & (__SCB_DCACHE_LINE_SIZE - 1U));
+ 863              		.loc 2 362 8 view .LVU266
+ 864              		.loc 2 362 36 is_stmt 0 view .LVU267
+ 865 0016 0F4A     		ldr	r2, .L70+8
+ 866              	.LVL45:
+ 363:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_DCACHE_LINE_SIZE - 1U) */;
+ 867              		.loc 2 363 7 is_stmt 1 view .LVU268
+ 364:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 365:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 868              		.loc 2 365 7 view .LVU269
+ 869              	.LBB22:
+ 870              	.LBI22:
+ 871              		.file 3 "Drivers/CMSIS/Include/cmsis_gcc.h"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 28
+
+
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS compiler GCC header file
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V5.4.1
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     27. May 2021
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /*
+   8:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Copyright (c) 2009-2021 Arm Limited. All rights reserved.
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****  * SPDX-License-Identifier: Apache-2.0
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Licensed under the Apache License, Version 2.0 (the License); you may
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****  * not use this file except in compliance with the License.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****  * You may obtain a copy of the License at
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****  * www.apache.org/licenses/LICENSE-2.0
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****  *
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Unless required by applicable law or agreed to in writing, software
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****  * distributed under the License is distributed on an AS IS BASIS, WITHOUT
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****  * See the License for the specific language governing permissions and
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****  * limitations under the License.
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  24:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  25:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  26:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  27:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  28:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  29:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  30:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  31:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  32:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Fallback for __has_builtin */
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __has_builtin
+  36:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __has_builtin(x) (0)
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** /* CMSIS compiler specific defines */
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __ASM
+  41:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __ASM                                  __asm
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __INLINE
+  44:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __INLINE                               inline
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __STATIC_INLINE
+  47:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __STATIC_INLINE                        static inline
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  49:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __STATIC_FORCEINLINE
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __STATIC_FORCEINLINE                   __attribute__((always_inline)) static inline
+  51:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __NO_RETURN
+  53:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __NO_RETURN                            __attribute__((__noreturn__))
+  54:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  55:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __USED
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __USED                                 __attribute__((used))
+  57:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 29
+
+
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __WEAK
+  59:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __WEAK                                 __attribute__((weak))
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED
+  62:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED                               __attribute__((packed, aligned(1)))
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_STRUCT
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_STRUCT                        struct __attribute__((packed, aligned(1)))
+  66:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  67:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __PACKED_UNION
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __PACKED_UNION                         union __attribute__((packed, aligned(1)))
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32        /* deprecated */
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  72:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  73:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  74:Drivers/CMSIS/Include/cmsis_gcc.h ****   struct __attribute__((packed)) T_UINT32 { uint32_t v; };
+  75:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  76:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32(x)                  (((struct T_UINT32 *)(x))->v)
+  77:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  78:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_WRITE
+  79:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  80:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  81:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  82:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_WRITE { uint16_t v; };
+  83:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  84:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_WRITE(addr, val)    (void)((((struct T_UINT16_WRITE *)(void *)(addr))-
+  85:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  86:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT16_READ
+  87:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  88:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  89:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  90:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT16_READ { uint16_t v; };
+  91:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+  92:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT16_READ(addr)          (((const struct T_UINT16_READ *)(const void *)(add
+  93:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  94:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32_WRITE
+  95:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+  96:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+  97:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+  98:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT32_WRITE { uint32_t v; };
+  99:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+ 100:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32_WRITE(addr, val)    (void)((((struct T_UINT32_WRITE *)(void *)(addr))-
+ 101:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 102:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __UNALIGNED_UINT32_READ
+ 103:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic push
+ 104:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wpacked"
+ 105:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic ignored "-Wattributes"
+ 106:Drivers/CMSIS/Include/cmsis_gcc.h ****   __PACKED_STRUCT T_UINT32_READ { uint32_t v; };
+ 107:Drivers/CMSIS/Include/cmsis_gcc.h ****   #pragma GCC diagnostic pop
+ 108:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __UNALIGNED_UINT32_READ(addr)          (((const struct T_UINT32_READ *)(const void *)(add
+ 109:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 110:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __ALIGNED
+ 111:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __ALIGNED(x)                           __attribute__((aligned(x)))
+ 112:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 113:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __RESTRICT
+ 114:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __RESTRICT                             __restrict
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 30
+
+
+ 115:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 116:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef   __COMPILER_BARRIER
+ 117:Drivers/CMSIS/Include/cmsis_gcc.h ****   #define __COMPILER_BARRIER()                   __ASM volatile("":::"memory")
+ 118:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 119:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 120:Drivers/CMSIS/Include/cmsis_gcc.h **** /* #########################  Startup and Lowlevel Init  ######################## */
+ 121:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 122:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __PROGRAM_START
+ 123:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 124:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 125:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Initializes data and bss sections
+ 126:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details This default implementations initialized all data and additional bss
+ 127:Drivers/CMSIS/Include/cmsis_gcc.h ****            sections relying on .copy.table and .zero.table specified properly
+ 128:Drivers/CMSIS/Include/cmsis_gcc.h ****            in the used linker script.
+ 129:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 130:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 131:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE __NO_RETURN void __cmsis_start(void)
+ 132:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 133:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern void _start(void) __NO_RETURN;
+ 134:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 135:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ 136:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t const* src;
+ 137:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
+ 138:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
+ 139:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __copy_table_t;
+ 140:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 141:Drivers/CMSIS/Include/cmsis_gcc.h ****   typedef struct {
+ 142:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t* dest;
+ 143:Drivers/CMSIS/Include/cmsis_gcc.h ****     uint32_t  wlen;
+ 144:Drivers/CMSIS/Include/cmsis_gcc.h ****   } __zero_table_t;
+ 145:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 146:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __copy_table_t __copy_table_start__;
+ 147:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __copy_table_t __copy_table_end__;
+ 148:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __zero_table_t __zero_table_start__;
+ 149:Drivers/CMSIS/Include/cmsis_gcc.h ****   extern const __zero_table_t __zero_table_end__;
+ 150:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 151:Drivers/CMSIS/Include/cmsis_gcc.h ****   for (__copy_table_t const* pTable = &__copy_table_start__; pTable < &__copy_table_end__; ++pTable
+ 152:Drivers/CMSIS/Include/cmsis_gcc.h ****     for(uint32_t i=0u; i<pTable->wlen; ++i) {
+ 153:Drivers/CMSIS/Include/cmsis_gcc.h ****       pTable->dest[i] = pTable->src[i];
+ 154:Drivers/CMSIS/Include/cmsis_gcc.h ****     }
+ 155:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
+ 156:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 157:Drivers/CMSIS/Include/cmsis_gcc.h ****   for (__zero_table_t const* pTable = &__zero_table_start__; pTable < &__zero_table_end__; ++pTable
+ 158:Drivers/CMSIS/Include/cmsis_gcc.h ****     for(uint32_t i=0u; i<pTable->wlen; ++i) {
+ 159:Drivers/CMSIS/Include/cmsis_gcc.h ****       pTable->dest[i] = 0u;
+ 160:Drivers/CMSIS/Include/cmsis_gcc.h ****     }
+ 161:Drivers/CMSIS/Include/cmsis_gcc.h ****   }
+ 162:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 163:Drivers/CMSIS/Include/cmsis_gcc.h ****   _start();
+ 164:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 165:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 166:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __PROGRAM_START           __cmsis_start
+ 167:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 168:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 169:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __INITIAL_SP
+ 170:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __INITIAL_SP              __StackTop
+ 171:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 31
+
+
+ 172:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 173:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __STACK_LIMIT
+ 174:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __STACK_LIMIT             __StackLimit
+ 175:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 176:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 177:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __VECTOR_TABLE
+ 178:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __VECTOR_TABLE            __Vectors
+ 179:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 180:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 181:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __VECTOR_TABLE_ATTRIBUTE
+ 182:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __VECTOR_TABLE_ATTRIBUTE  __attribute__((used, section(".vectors")))
+ 183:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 184:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 185:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined (__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+ 186:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __STACK_SEAL
+ 187:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __STACK_SEAL              __StackSeal
+ 188:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 189:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 190:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __TZ_STACK_SEAL_SIZE
+ 191:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __TZ_STACK_SEAL_SIZE      8U
+ 192:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 193:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 194:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __TZ_STACK_SEAL_VALUE
+ 195:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __TZ_STACK_SEAL_VALUE     0xFEF5EDA5FEF5EDA5ULL
+ 196:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 197:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 198:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 199:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __TZ_set_STACKSEAL_S (uint32_t* stackTop) {
+ 200:Drivers/CMSIS/Include/cmsis_gcc.h ****   *((uint64_t *)stackTop) = __TZ_STACK_SEAL_VALUE;
+ 201:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 202:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 203:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 204:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 205:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ##########################  Core Instruction Access  ######################### */
+ 206:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \defgroup CMSIS_Core_InstructionInterface CMSIS Core Instruction Interface
+ 207:Drivers/CMSIS/Include/cmsis_gcc.h ****   Access to dedicated instructions
+ 208:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+ 209:Drivers/CMSIS/Include/cmsis_gcc.h **** */
+ 210:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 211:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Define macros for porting to both thumb1 and thumb2.
+ 212:Drivers/CMSIS/Include/cmsis_gcc.h ****  * For thumb1, use low register (r0-r7), specified by constraint "l"
+ 213:Drivers/CMSIS/Include/cmsis_gcc.h ****  * Otherwise, use general registers, specified by constraint "r" */
+ 214:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined (__thumb__) && !defined (__thumb2__)
+ 215:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_OUT_REG(r) "=l" (r)
+ 216:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_RW_REG(r) "+l" (r)
+ 217:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_USE_REG(r) "l" (r)
+ 218:Drivers/CMSIS/Include/cmsis_gcc.h **** #else
+ 219:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_OUT_REG(r) "=r" (r)
+ 220:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_RW_REG(r) "+r" (r)
+ 221:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_USE_REG(r) "r" (r)
+ 222:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+ 223:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 224:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 225:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   No Operation
+ 226:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details No Operation does nothing. This instruction can be used for code alignment purposes.
+ 227:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 228:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __NOP()                             __ASM volatile ("nop")
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 32
+
+
+ 229:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 230:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 231:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Wait For Interrupt
+ 232:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Wait For Interrupt is a hint instruction that suspends execution until one of a number o
+ 233:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 234:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __WFI()                             __ASM volatile ("wfi":::"memory")
+ 235:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 236:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 237:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 238:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Wait For Event
+ 239:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Wait For Event is a hint instruction that permits the processor to enter
+ 240:Drivers/CMSIS/Include/cmsis_gcc.h ****            a low-power state until one of a number of events occurs.
+ 241:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 242:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __WFE()                             __ASM volatile ("wfe":::"memory")
+ 243:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 244:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 245:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 246:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Send Event
+ 247:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Send Event is a hint instruction. It causes an event to be signaled to the CPU.
+ 248:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 249:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __SEV()                             __ASM volatile ("sev")
+ 250:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 251:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 252:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 253:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Instruction Synchronization Barrier
+ 254:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Instruction Synchronization Barrier flushes the pipeline in the processor,
+ 255:Drivers/CMSIS/Include/cmsis_gcc.h ****            so that all instructions following the ISB are fetched from cache or memory,
+ 256:Drivers/CMSIS/Include/cmsis_gcc.h ****            after the instruction has been completed.
+ 257:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 258:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __ISB(void)
+ 259:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("isb 0xF":::"memory");
+ 261:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 262:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 263:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ 264:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+ 265:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Data Synchronization Barrier
+ 266:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Acts as a special kind of Data Memory Barrier.
+ 267:Drivers/CMSIS/Include/cmsis_gcc.h ****            It completes when all explicit memory accesses before this instruction complete.
+ 268:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+ 269:Drivers/CMSIS/Include/cmsis_gcc.h **** __STATIC_FORCEINLINE void __DSB(void)
+ 872              		.loc 3 269 27 view .LVU270
+ 873              	.LBB23:
+ 270:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 271:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("dsb 0xF":::"memory");
+ 874              		.loc 3 271 3 view .LVU271
+ 875              		.syntax unified
+ 876              	@ 271 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 877 0018 BFF34F8F 		dsb 0xF
+ 878              	@ 0 "" 2
+ 879              		.thumb
+ 880              		.syntax unified
+ 881              	.LBE23:
+ 882              	.LBE22:
+ 362:Drivers/CMSIS/Include/cachel1_armv7.h ****       uint32_t op_addr = (uint32_t)addr /* & ~(__SCB_DCACHE_LINE_SIZE - 1U) */;
+ 883              		.loc 2 362 16 is_stmt 0 view .LVU272
+ 884 001c 2423     		movs	r3, #36
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 33
+
+
+ 885              	.LVL46:
+ 886              	.L65:
+ 366:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 367:Drivers/CMSIS/Include/cachel1_armv7.h ****       do {
+ 887              		.loc 2 367 7 is_stmt 1 view .LVU273
+ 368:Drivers/CMSIS/Include/cachel1_armv7.h ****         SCB->DCIMVAC = op_addr;             /* register accepts only 32byte aligned values, only bi
+ 888              		.loc 2 368 9 view .LVU274
+ 889              		.loc 2 368 22 is_stmt 0 view .LVU275
+ 890 001e 0C48     		ldr	r0, .L70+4
+ 891 0020 C0F85C22 		str	r2, [r0, #604]
+ 369:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_addr += __SCB_DCACHE_LINE_SIZE;
+ 892              		.loc 2 369 9 is_stmt 1 view .LVU276
+ 893              		.loc 2 369 17 is_stmt 0 view .LVU277
+ 894 0024 2032     		adds	r2, r2, #32
+ 895              	.LVL47:
+ 370:Drivers/CMSIS/Include/cachel1_armv7.h ****         op_size -= __SCB_DCACHE_LINE_SIZE;
+ 896              		.loc 2 370 9 is_stmt 1 view .LVU278
+ 897              		.loc 2 370 17 is_stmt 0 view .LVU279
+ 898 0026 203B     		subs	r3, r3, #32
+ 899              	.LVL48:
+ 371:Drivers/CMSIS/Include/cachel1_armv7.h ****       } while ( op_size > 0 );
+ 900              		.loc 2 371 25 is_stmt 1 discriminator 1 view .LVU280
+ 901 0028 002B     		cmp	r3, #0
+ 902 002a F8DC     		bgt	.L65
+ 372:Drivers/CMSIS/Include/cachel1_armv7.h **** 
+ 373:Drivers/CMSIS/Include/cachel1_armv7.h ****       __DSB();
+ 903              		.loc 2 373 7 view .LVU281
+ 904              	.LBB24:
+ 905              	.LBI24:
+ 269:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 906              		.loc 3 269 27 view .LVU282
+ 907              	.LBB25:
+ 908              		.loc 3 271 3 view .LVU283
+ 909              		.syntax unified
+ 910              	@ 271 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 911 002c BFF34F8F 		dsb 0xF
+ 912              	@ 0 "" 2
+ 913              		.thumb
+ 914              		.syntax unified
+ 915              	.LBE25:
+ 916              	.LBE24:
+ 374:Drivers/CMSIS/Include/cachel1_armv7.h ****       __ISB();
+ 917              		.loc 2 374 7 view .LVU284
+ 918              	.LBB26:
+ 919              	.LBI26:
+ 258:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+ 920              		.loc 3 258 27 view .LVU285
+ 921              	.LBB27:
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 922              		.loc 3 260 3 view .LVU286
+ 923              		.syntax unified
+ 924              	@ 260 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 925 0030 BFF36F8F 		isb 0xF
+ 926              	@ 0 "" 2
+ 927              	.LVL49:
+ 928              		.thumb
+ 929              		.syntax unified
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 34
+
+
+ 930              	.L64:
+ 260:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 931              		.loc 3 260 3 is_stmt 0 view .LVU287
+ 932              	.LBE27:
+ 933              	.LBE26:
+ 934              	.LBE21:
+ 935              	.LBE20:
+ 936              	.LBE19:
+ 272:modules/remote/dbus.c ****         {
+ 937              		.loc 1 272 9 is_stmt 1 view .LVU288
+ 272:modules/remote/dbus.c ****         {
+ 938              		.loc 1 272 12 is_stmt 0 view .LVU289
+ 939 0034 1129     		cmp	r1, #17
+ 940 0036 02D8     		bhi	.L69
+ 941              	.LVL50:
+ 942              	.L66:
+ 278:modules/remote/dbus.c ****     }
+ 943              		.loc 1 278 9 is_stmt 1 view .LVU290
+ 944 0038 FFF7FEFF 		bl	RC_StartReceive
+ 945              	.LVL51:
+ 946              		.loc 1 280 1 is_stmt 0 view .LVU291
+ 947 003c E5E7     		b	.L62
+ 948              	.LVL52:
+ 949              	.L69:
+ 275:modules/remote/dbus.c ****         }
+ 950              		.loc 1 275 13 is_stmt 1 view .LVU292
+ 275:modules/remote/dbus.c ****         }
+ 951              		.loc 1 275 38 is_stmt 0 view .LVU293
+ 952 003e 1239     		subs	r1, r1, #18
+ 953              	.LVL53:
+ 275:modules/remote/dbus.c ****         }
+ 954              		.loc 1 275 13 view .LVU294
+ 955 0040 0448     		ldr	r0, .L70+8
+ 956 0042 0844     		add	r0, r0, r1
+ 957 0044 FFF7FEFF 		bl	RC_Decode
+ 958              	.LVL54:
+ 959 0048 F6E7     		b	.L66
+ 960              	.L71:
+ 961 004a 00BF     		.align	2
+ 962              	.L70:
+ 963 004c 00500040 		.word	1073762304
+ 964 0050 00ED00E0 		.word	-536810240
+ 965 0054 00000000 		.word	dbus_buf
+ 966              		.cfi_endproc
+ 967              	.LFE152:
+ 969              		.section	.text.HAL_UART_ErrorCallback,"ax",%progbits
+ 970              		.align	1
+ 971              		.global	HAL_UART_ErrorCallback
+ 972              		.syntax unified
+ 973              		.thumb
+ 974              		.thumb_func
+ 976              	HAL_UART_ErrorCallback:
+ 977              	.LVL55:
+ 978              	.LFB153:
+ 281:modules/remote/dbus.c **** 
+ 282:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+ 283:modules/remote/dbus.c **** /* UART 错误回调（ORE/FE/NE/PE）                                        */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 35
+
+
+ 284:modules/remote/dbus.c **** /*   HAL 一旦报错就会把接收整个拆掉（关 IDLE/DMA），如果这里不重开，      
+ 285:modules/remote/dbus.c **** /*   接收链会永久静默 —— 这正是“摇杆怎么推都没反应”的典型死法之�
+ 286:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+ 287:modules/remote/dbus.c **** void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+ 288:modules/remote/dbus.c **** {
+ 979              		.loc 1 288 1 is_stmt 1 view -0
+ 980              		.cfi_startproc
+ 981              		@ args = 0, pretend = 0, frame = 0
+ 982              		@ frame_needed = 0, uses_anonymous_args = 0
+ 983              		.loc 1 288 1 is_stmt 0 view .LVU296
+ 984 0000 08B5     		push	{r3, lr}
+ 985              	.LCFI5:
+ 986              		.cfi_def_cfa_offset 8
+ 987              		.cfi_offset 3, -8
+ 988              		.cfi_offset 14, -4
+ 289:modules/remote/dbus.c ****     if (huart->Instance == UART5)
+ 989              		.loc 1 289 5 is_stmt 1 view .LVU297
+ 990              		.loc 1 289 14 is_stmt 0 view .LVU298
+ 991 0002 0268     		ldr	r2, [r0]
+ 992              		.loc 1 289 8 view .LVU299
+ 993 0004 0B4B     		ldr	r3, .L76
+ 994 0006 9A42     		cmp	r2, r3
+ 995 0008 00D0     		beq	.L75
+ 996              	.LVL56:
+ 997              	.L72:
+ 290:modules/remote/dbus.c ****     {
+ 291:modules/remote/dbus.c ****         RC_ErrCnt++;                      /* 每次错误回调 +1：ORE/FE/NE/PE 的直接证据 *
+ 292:modules/remote/dbus.c **** 
+ 293:modules/remote/dbus.c ****         __HAL_UART_CLEAR_OREFLAG(huart);
+ 294:modules/remote/dbus.c ****         __HAL_UART_CLEAR_FEFLAG(huart);
+ 295:modules/remote/dbus.c ****         __HAL_UART_CLEAR_NEFLAG(huart);
+ 296:modules/remote/dbus.c ****         __HAL_UART_CLEAR_PEFLAG(huart);
+ 297:modules/remote/dbus.c ****         RC_StartReceive();
+ 298:modules/remote/dbus.c ****     }
+ 299:modules/remote/dbus.c **** }
+ 998              		.loc 1 299 1 view .LVU300
+ 999 000a 08BD     		pop	{r3, pc}
+ 1000              	.LVL57:
+ 1001              	.L75:
+ 291:modules/remote/dbus.c **** 
+ 1002              		.loc 1 291 9 is_stmt 1 view .LVU301
+ 291:modules/remote/dbus.c **** 
+ 1003              		.loc 1 291 18 is_stmt 0 view .LVU302
+ 1004 000c 0A4A     		ldr	r2, .L76+4
+ 1005 000e 1368     		ldr	r3, [r2]
+ 1006 0010 0133     		adds	r3, r3, #1
+ 1007 0012 1360     		str	r3, [r2]
+ 293:modules/remote/dbus.c ****         __HAL_UART_CLEAR_FEFLAG(huart);
+ 1008              		.loc 1 293 9 is_stmt 1 view .LVU303
+ 1009 0014 0368     		ldr	r3, [r0]
+ 1010 0016 0822     		movs	r2, #8
+ 1011 0018 1A62     		str	r2, [r3, #32]
+ 294:modules/remote/dbus.c ****         __HAL_UART_CLEAR_NEFLAG(huart);
+ 1012              		.loc 1 294 9 view .LVU304
+ 1013 001a 0368     		ldr	r3, [r0]
+ 1014 001c 0222     		movs	r2, #2
+ 1015 001e 1A62     		str	r2, [r3, #32]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 36
+
+
+ 295:modules/remote/dbus.c ****         __HAL_UART_CLEAR_PEFLAG(huart);
+ 1016              		.loc 1 295 9 view .LVU305
+ 1017 0020 0368     		ldr	r3, [r0]
+ 1018 0022 0422     		movs	r2, #4
+ 1019 0024 1A62     		str	r2, [r3, #32]
+ 296:modules/remote/dbus.c ****         RC_StartReceive();
+ 1020              		.loc 1 296 9 view .LVU306
+ 1021 0026 0368     		ldr	r3, [r0]
+ 1022 0028 0122     		movs	r2, #1
+ 1023 002a 1A62     		str	r2, [r3, #32]
+ 297:modules/remote/dbus.c ****     }
+ 1024              		.loc 1 297 9 view .LVU307
+ 1025 002c FFF7FEFF 		bl	RC_StartReceive
+ 1026              	.LVL58:
+ 1027              		.loc 1 299 1 is_stmt 0 view .LVU308
+ 1028 0030 EBE7     		b	.L72
+ 1029              	.L77:
+ 1030 0032 00BF     		.align	2
+ 1031              	.L76:
+ 1032 0034 00500040 		.word	1073762304
+ 1033 0038 00000000 		.word	RC_ErrCnt
+ 1034              		.cfi_endproc
+ 1035              	.LFE153:
+ 1037              		.section	.dma_buffer,"aw"
+ 1038              		.align	5
+ 1041              	dbus_buf:
+ 1042 0000 00000000 		.space	36
+ 1042      00000000 
+ 1042      00000000 
+ 1042      00000000 
+ 1042      00000000 
+ 1043              		.global	RC_Data
+ 1044              		.section	.bss.RC_Data,"aw",%nobits
+ 1045              		.align	2
+ 1048              	RC_Data:
+ 1049 0000 00000000 		.space	48
+ 1049      00000000 
+ 1049      00000000 
+ 1049      00000000 
+ 1049      00000000 
+ 1050              		.text
+ 1051              	.Letext0:
+ 1052              		.file 4 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 1053              		.file 5 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 1054              		.file 6 "Drivers/CMSIS/Include/core_cm7.h"
+ 1055              		.file 7 "Drivers/CMSIS/Device/ST/STM32H7xx/Include/stm32h723xx.h"
+ 1056              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h"
+ 1057              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_dma.h"
+ 1058              		.file 10 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h"
+ 1059              		.file 11 "application/rc_dbus.h"
+ 1060              		.file 12 "Core/Inc/usart.h"
+ 1061              		.file 13 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14
+ 1062              		.file 14 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h"
+ 1063              		.file 15 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ 1064              		.file 16 "<built-in>"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s 			page 37
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 dbus.c
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:20     .text.RC_StartReceive:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:26     .text.RC_StartReceive:00000000 RC_StartReceive
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:154    .text.RC_StartReceive:000000ac $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:1041   .dma_buffer:00000000 dbus_buf
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:162    .text.RC_Init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:168    .text.RC_Init:00000000 RC_Init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:199    .text.RC_Init:00000018 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:1048   .bss.RC_Data:00000000 RC_Data
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:204    .text.RC_SwitchAutoName:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:210    .text.RC_SwitchAutoName:00000000 RC_SwitchAutoName
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:446    .text.RC_SwitchAutoName:000000e4 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:451    .text.RC_Decode:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:457    .text.RC_Decode:00000000 RC_Decode
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:674    .text.RC_Decode:000000e4 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:681    .text.RC_IsOnline:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:687    .text.RC_IsOnline:00000000 RC_IsOnline
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:719    .text.RC_IsOnline:0000001c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:724    .text.RC_Norm:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:730    .text.RC_Norm:00000000 RC_Norm
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:809    .text.RC_Norm:00000060 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:815    .text.HAL_UARTEx_RxEventCallback:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:821    .text.HAL_UARTEx_RxEventCallback:00000000 HAL_UARTEx_RxEventCallback
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:963    .text.HAL_UARTEx_RxEventCallback:0000004c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:970    .text.HAL_UART_ErrorCallback:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:976    .text.HAL_UART_ErrorCallback:00000000 HAL_UART_ErrorCallback
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:1032   .text.HAL_UART_ErrorCallback:00000034 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:1038   .dma_buffer:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccW2F1Wd.s:1045   .bss.RC_Data:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_UARTEx_ReceiveToIdle_DMA
+HAL_UART_AbortReceive
+huart5
+memset
+HAL_GetTick
+RC_GapMaxMs
+RC_FrameCnt
+RC_ErrCnt

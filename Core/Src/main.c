@@ -30,7 +30,7 @@
 #include "rc_dbus.h"
 #include "mecanum.h"
 #include "ins.h"
-#include "bsp.can.h"
+#include "bsp_can.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

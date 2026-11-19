@@ -1,0 +1,2521 @@
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 1
+
+
+   1              		.cpu cortex-m7
+   2              		.arch armv7e-m
+   3              		.fpu fpv5-d16
+   4              		.eabi_attribute 28, 1
+   5              		.eabi_attribute 20, 1
+   6              		.eabi_attribute 21, 1
+   7              		.eabi_attribute 23, 3
+   8              		.eabi_attribute 24, 1
+   9              		.eabi_attribute 25, 1
+  10              		.eabi_attribute 26, 1
+  11              		.eabi_attribute 30, 1
+  12              		.eabi_attribute 34, 1
+  13              		.eabi_attribute 18, 4
+  14              		.file	"gimbal.c"
+  15              		.text
+  16              	.Ltext0:
+  17              		.cfi_sections	.debug_frame
+  18              		.file 1 "application/gimbal/gimbal.c"
+  19              		.section	.text.pitch_abs,"ax",%progbits
+  20              		.align	1
+  21              		.syntax unified
+  22              		.thumb
+  23              		.thumb_func
+  25              	pitch_abs:
+  26              	.LVL0:
+  27              	.LFB146:
+   1:application/gimbal/gimbal.c **** /**
+   2:application/gimbal/gimbal.c ****  * @file    gimbal.c
+   3:application/gimbal/gimbal.c ****  * @brief   云台 pitch 双环 + yaw 车体系角度环 + 枪口夹角
+   4:application/gimbal/gimbal.c ****  * @note    2026-11-19 分层整理：以下内容从 remote/rc_dbus.c 原样搬迁，逻辑未改�
+   5:application/gimbal/gimbal.c ****  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
+   6:application/gimbal/gimbal.c ****  */
+   7:application/gimbal/gimbal.c **** #include "rc_dbus.h"
+   8:application/gimbal/gimbal.c **** #include "rc_state.h"
+   9:application/gimbal/gimbal.c **** #include "usart.h"
+  10:application/gimbal/gimbal.c **** #include "DJ_Motor.h"
+  11:application/gimbal/gimbal.c **** #include "mecanum.h"
+  12:application/gimbal/gimbal.c **** #include "ins.h"
+  13:application/gimbal/gimbal.c **** #include "fdcan.h"
+  14:application/gimbal/gimbal.c **** #include "bsp_can.h"
+  15:application/gimbal/gimbal.c **** #include <string.h>
+  16:application/gimbal/gimbal.c **** #include <math.h>
+  17:application/gimbal/gimbal.c **** 
+  18:application/gimbal/gimbal.c **** static float pitch_abs(float v)
+  19:application/gimbal/gimbal.c ****  {
+  28              		.loc 1 19 2 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  20:application/gimbal/gimbal.c ****      return (v < 0.0f) ? -v : v;
+  33              		.loc 1 20 6 view .LVU1
+  34              		.loc 1 20 29 is_stmt 0 view .LVU2
+  35 0000 B5EEC00A 		vcmpe.f32	s0, #0
+  36 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  37 0008 00D4     		bmi	.L5
+  38              	.LVL1:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 2
+
+
+  39              	.L2:
+  21:application/gimbal/gimbal.c ****  }
+  40              		.loc 1 21 2 view .LVU3
+  41 000a 7047     		bx	lr
+  42              	.LVL2:
+  43              	.L5:
+  20:application/gimbal/gimbal.c ****      return (v < 0.0f) ? -v : v;
+  44              		.loc 1 20 29 discriminator 1 view .LVU4
+  45 000c B1EE400A 		vneg.f32	s0, s0
+  46              	.LVL3:
+  20:application/gimbal/gimbal.c ****      return (v < 0.0f) ? -v : v;
+  47              		.loc 1 20 29 discriminator 1 view .LVU5
+  48 0010 FBE7     		b	.L2
+  49              		.cfi_endproc
+  50              	.LFE146:
+  52              		.section	.text.pitch_clamp,"ax",%progbits
+  53              		.align	1
+  54              		.syntax unified
+  55              		.thumb
+  56              		.thumb_func
+  58              	pitch_clamp:
+  59              	.LVL4:
+  60              	.LFB147:
+  22:application/gimbal/gimbal.c **** 
+  23:application/gimbal/gimbal.c **** /*对值进行范围限定*/
+  24:application/gimbal/gimbal.c **** static float pitch_clamp(float v, float lo, float hi)
+  25:application/gimbal/gimbal.c **** {
+  61              		.loc 1 25 1 is_stmt 1 view -0
+  62              		.cfi_startproc
+  63              		@ args = 0, pretend = 0, frame = 0
+  64              		@ frame_needed = 0, uses_anonymous_args = 0
+  65              		@ link register save eliminated.
+  66              		.loc 1 25 1 is_stmt 0 view .LVU7
+  67 0000 F0EE407A 		vmov.f32	s15, s0
+  68 0004 B0EE410A 		vmov.f32	s0, s2
+  69              	.LVL5:
+  26:application/gimbal/gimbal.c ****     if (v < lo) v = lo;
+  70              		.loc 1 26 5 is_stmt 1 view .LVU8
+  71              		.loc 1 26 8 is_stmt 0 view .LVU9
+  72 0008 F4EEE07A 		vcmpe.f32	s15, s1
+  73 000c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  74 0010 01D4     		bmi	.L7
+  75 0012 F0EE670A 		vmov.f32	s1, s15
+  76              	.LVL6:
+  77              	.L7:
+  27:application/gimbal/gimbal.c ****     if (v > hi) v = hi;
+  78              		.loc 1 27 5 is_stmt 1 view .LVU10
+  79              		.loc 1 27 8 is_stmt 0 view .LVU11
+  80 0016 F4EEC00A 		vcmpe.f32	s1, s0
+  81 001a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  82 001e 01DC     		bgt	.L8
+  83 0020 B0EE600A 		vmov.f32	s0, s1
+  84              	.L8:
+  85              	.LVL7:
+  28:application/gimbal/gimbal.c ****     return v;
+  86              		.loc 1 28 5 is_stmt 1 view .LVU12
+  29:application/gimbal/gimbal.c **** }
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 3
+
+
+  87              		.loc 1 29 1 is_stmt 0 view .LVU13
+  88 0024 7047     		bx	lr
+  89              		.cfi_endproc
+  90              	.LFE147:
+  92              		.section	.text.pitch_step,"ax",%progbits
+  93              		.align	1
+  94              		.syntax unified
+  95              		.thumb
+  96              		.thumb_func
+  98              	pitch_step:
+  99              	.LVL8:
+ 100              	.LFB148:
+  30:application/gimbal/gimbal.c **** 
+  31:application/gimbal/gimbal.c **** /* 把 cur 朝 tgt 限速推进一步（counts） */
+  32:application/gimbal/gimbal.c **** static float pitch_step(float cur, float tgt, float max_step)
+  33:application/gimbal/gimbal.c **** {
+ 101              		.loc 1 33 1 is_stmt 1 view -0
+ 102              		.cfi_startproc
+ 103              		@ args = 0, pretend = 0, frame = 0
+ 104              		@ frame_needed = 0, uses_anonymous_args = 0
+ 105              		@ link register save eliminated.
+  34:application/gimbal/gimbal.c ****     float d = tgt - cur;
+ 106              		.loc 1 34 5 view .LVU15
+ 107              		.loc 1 34 11 is_stmt 0 view .LVU16
+ 108 0000 70EEC00A 		vsub.f32	s1, s1, s0
+ 109              	.LVL9:
+  35:application/gimbal/gimbal.c **** 
+  36:application/gimbal/gimbal.c ****     if (d >  max_step) d =  max_step;
+ 110              		.loc 1 36 5 is_stmt 1 view .LVU17
+ 111              		.loc 1 36 8 is_stmt 0 view .LVU18
+ 112 0004 F4EEC10A 		vcmpe.f32	s1, s2
+ 113 0008 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 114 000c 01DD     		ble	.L10
+ 115              		.loc 1 36 26 discriminator 1 view .LVU19
+ 116 000e F0EE410A 		vmov.f32	s1, s2
+ 117              	.LVL10:
+ 118              	.L10:
+  37:application/gimbal/gimbal.c ****     if (d < -max_step) d = -max_step;
+ 119              		.loc 1 37 5 is_stmt 1 view .LVU20
+ 120              		.loc 1 37 13 is_stmt 0 view .LVU21
+ 121 0012 B1EE411A 		vneg.f32	s2, s2
+ 122              	.LVL11:
+ 123              		.loc 1 37 8 view .LVU22
+ 124 0016 B4EEE01A 		vcmpe.f32	s2, s1
+ 125 001a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 126 001e 01DC     		bgt	.L11
+ 127 0020 B0EE601A 		vmov.f32	s2, s1
+ 128              	.L11:
+ 129              	.LVL12:
+  38:application/gimbal/gimbal.c ****     return cur + d;
+ 130              		.loc 1 38 5 is_stmt 1 view .LVU23
+  39:application/gimbal/gimbal.c **** }
+ 131              		.loc 1 39 1 is_stmt 0 view .LVU24
+ 132 0024 31EE000A 		vadd.f32	s0, s2, s0
+ 133              	.LVL13:
+ 134              		.loc 1 39 1 view .LVU25
+ 135 0028 7047     		bx	lr
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 4
+
+
+ 136              		.cfi_endproc
+ 137              	.LFE148:
+ 139              		.section	.text.yaw_wrap,"ax",%progbits
+ 140              		.align	1
+ 141              		.syntax unified
+ 142              		.thumb
+ 143              		.thumb_func
+ 145              	yaw_wrap:
+ 146              	.LVL14:
+ 147              	.LFB150:
+  40:application/gimbal/gimbal.c **** /*通过位置与速度环对pitch电机进行控制*/
+  41:application/gimbal/gimbal.c **** /* 非 static：分层后由 application/robot.c 的 1 kHz 编排调用 */
+  42:application/gimbal/gimbal.c **** float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
+  43:application/gimbal/gimbal.c **** {
+  44:application/gimbal/gimbal.c ****     static float s_ref = 0.0f;          /* 参考角，连续量（counts） */
+  45:application/gimbal/gimbal.c ****     static float s_i   = 0.0f;          /* 速度环积分（电压单位）   */
+  46:application/gimbal/gimbal.c ****     static uint8_t  s_stage = 0;        /*状态*/
+  47:application/gimbal/gimbal.c ****     static uint8_t   s_homed   = 0;     /*是否回中*/
+  48:application/gimbal/gimbal.c ****     static uint32_t  s_home_since = 0;  /*回中时间判定基准*/
+  49:application/gimbal/gimbal.c ****     static float     s_stick_f = 0.0f;  /*滤波后的摇杆值*/
+  50:application/gimbal/gimbal.c ****     static float     s_v = 0.0f;        /*手控参考速度*/
+  51:application/gimbal/gimbal.c **** 
+  52:application/gimbal/gimbal.c **** 
+  53:application/gimbal/gimbal.c ****     const float lo = (float)(GM_PITCH_ANGLE_MIN + GM_PITCH_ANGLE_MARGIN);
+  54:application/gimbal/gimbal.c ****     const float hi = (float)(GM_PITCH_ANGLE_MAX - GM_PITCH_ANGLE_MARGIN);
+  55:application/gimbal/gimbal.c ****     const float home = (float)GM_PITCH_HOME_ANGLE;
+  56:application/gimbal/gimbal.c **** 
+  57:application/gimbal/gimbal.c ****  if (!GM_PITCH_CALIBRATED || !online || !armed)
+  58:application/gimbal/gimbal.c ****     {
+  59:application/gimbal/gimbal.c ****         s_stage = 0;
+  60:application/gimbal/gimbal.c ****         s_i     = 0.0f;
+  61:application/gimbal/gimbal.c ****     
+  62:application/gimbal/gimbal.c ****         return 0.0f;
+  63:application/gimbal/gimbal.c ****     }
+  64:application/gimbal/gimbal.c **** 
+  65:application/gimbal/gimbal.c ****     float cur = (float)gim_pitch.angle;
+  66:application/gimbal/gimbal.c ****     float rpm = GM_PITCH_RPM_SIGN * (float)gim_pitch.rpm;
+  67:application/gimbal/gimbal.c ****     float err, rpm_des, volt;
+  68:application/gimbal/gimbal.c **** 
+  69:application/gimbal/gimbal.c **** 
+  70:application/gimbal/gimbal.c ****  if ((HAL_GetTick() - gim_pitch.last_tick) > GM_FEEDBACK_TIMEOUT_MS ||
+  71:application/gimbal/gimbal.c ****         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
+  72:application/gimbal/gimbal.c ****         pitch_abs(rpm) > GM_RPM_LIMIT ||
+  73:application/gimbal/gimbal.c ****         cur < (float)GM_PITCH_ANGLE_MIN ||
+  74:application/gimbal/gimbal.c ****         cur > (float)GM_PITCH_ANGLE_MAX)
+  75:application/gimbal/gimbal.c ****     {
+  76:application/gimbal/gimbal.c ****         s_stage = 0;
+  77:application/gimbal/gimbal.c ****         s_i     = 0.0f;
+  78:application/gimbal/gimbal.c ****         return 0.0f;
+  79:application/gimbal/gimbal.c ****     }
+  80:application/gimbal/gimbal.c **** 
+  81:application/gimbal/gimbal.c ****      s_stick_f += (stick - s_stick_f) * 0.2f;
+  82:application/gimbal/gimbal.c **** 
+  83:application/gimbal/gimbal.c ****     /* ③ 接管条件：刚开始上电只看摇杆是否居中 */
+  84:application/gimbal/gimbal.c ****     if (s_stage == 0 && pitch_abs(stick) > GM_PITCH_STICK_DEAD)
+  85:application/gimbal/gimbal.c ****     {
+  86:application/gimbal/gimbal.c ****         return 0.0f;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 5
+
+
+  87:application/gimbal/gimbal.c ****     }
+  88:application/gimbal/gimbal.c ****     /* 本拍参考角的起点，供下面的参考速度前馈使用 */
+  89:application/gimbal/gimbal.c ****     const float s_ref_old = s_ref;
+  90:application/gimbal/gimbal.c **** 
+  91:application/gimbal/gimbal.c ****   /*此时遥控器在线，开始进行判断*/
+  92:application/gimbal/gimbal.c **** if(s_stage == 0)
+  93:application/gimbal/gimbal.c **** {
+  94:application/gimbal/gimbal.c ****     s_ref = cur;
+  95:application/gimbal/gimbal.c ****     s_i   = 0.0f;
+  96:application/gimbal/gimbal.c ****     s_v   = 0.0f;
+  97:application/gimbal/gimbal.c ****     s_home_since = HAL_GetTick() | 1u;     /* 接管时记一次起点，供回中计时用 */
+  98:application/gimbal/gimbal.c ****     s_stage = ( GM_PITCH_HOME_ENABLE && !s_homed) ? 1 : 2;
+  99:application/gimbal/gimbal.c ****     return 0.0f;
+ 100:application/gimbal/gimbal.c **** }
+ 101:application/gimbal/gimbal.c **** 
+ 102:application/gimbal/gimbal.c **** /*在线之后进行判断，若未回中，开始回中*/
+ 103:application/gimbal/gimbal.c **** if(s_stage == 1)
+ 104:application/gimbal/gimbal.c **** {
+ 105:application/gimbal/gimbal.c ****     s_v = 0.0f;
+ 106:application/gimbal/gimbal.c ****     /*若一直没符合下面置2的三个条件时触发*/
+ 107:application/gimbal/gimbal.c ****     if ((HAL_GetTick() - s_home_since) > GM_PITCH_HOME_TIMEOUT_MS)
+ 108:application/gimbal/gimbal.c ****     {
+ 109:application/gimbal/gimbal.c ****         /* 回中失败：就地按住，不反复顶、也不锁死，可控 */
+ 110:application/gimbal/gimbal.c ****         s_ref        = cur;
+ 111:application/gimbal/gimbal.c ****         s_i          = 0.0f;
+ 112:application/gimbal/gimbal.c ****         s_homed      = 1;
+ 113:application/gimbal/gimbal.c ****         s_stage      = 2;
+ 114:application/gimbal/gimbal.c ****         s_home_since = 0;
+ 115:application/gimbal/gimbal.c ****         return 0.0f;
+ 116:application/gimbal/gimbal.c ****     }
+ 117:application/gimbal/gimbal.c ****       s_ref = pitch_step(s_ref, home,GM_PITCH_HOME_RATE * 0.001f );
+ 118:application/gimbal/gimbal.c **** 
+ 119:application/gimbal/gimbal.c ****       if (pitch_abs(s_ref - home) <= 1.0f &&
+ 120:application/gimbal/gimbal.c ****           pitch_abs(rpm)        <  GM_PITCH_CATCH_RPM &&
+ 121:application/gimbal/gimbal.c ****           pitch_abs(cur - home) <= 60.0f)
+ 122:application/gimbal/gimbal.c ****     {
+ 123:application/gimbal/gimbal.c ****        s_ref  = home;
+ 124:application/gimbal/gimbal.c ****        s_homed = 1;
+ 125:application/gimbal/gimbal.c ****        s_stage = 2;
+ 126:application/gimbal/gimbal.c ****        s_home_since = 0;
+ 127:application/gimbal/gimbal.c ****     }
+ 128:application/gimbal/gimbal.c **** }
+ 129:application/gimbal/gimbal.c **** else
+ 130:application/gimbal/gimbal.c **** {
+ 131:application/gimbal/gimbal.c ****       float v_tgt = s_stick_f * GM_PITCH_MANUAL_RATE;
+ 132:application/gimbal/gimbal.c ****       float braking = (v_tgt * s_v < 0.0f)  ||
+ 133:application/gimbal/gimbal.c ****       (pitch_abs(v_tgt) < pitch_abs(s_v)) ;
+ 134:application/gimbal/gimbal.c **** 
+ 135:application/gimbal/gimbal.c ****       float a = (braking) ? GM_PITCH_DECEL : GM_PITCH_ACCEL;
+ 136:application/gimbal/gimbal.c ****       float dv = a * 0.001f;
+ 137:application/gimbal/gimbal.c **** 
+ 138:application/gimbal/gimbal.c ****       if(v_tgt > s_v + dv)      s_v += dv;
+ 139:application/gimbal/gimbal.c ****       else if(v_tgt < s_v - dv) s_v -= dv;
+ 140:application/gimbal/gimbal.c ****       else                      s_v = v_tgt;
+ 141:application/gimbal/gimbal.c **** 
+ 142:application/gimbal/gimbal.c **** 
+ 143:application/gimbal/gimbal.c ****       s_ref += s_v * 0.001f;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 6
+
+
+ 144:application/gimbal/gimbal.c **** 
+ 145:application/gimbal/gimbal.c **** 
+ 146:application/gimbal/gimbal.c **** }
+ 147:application/gimbal/gimbal.c **** 
+ 148:application/gimbal/gimbal.c **** if(s_ref < lo) s_ref = lo;
+ 149:application/gimbal/gimbal.c **** if(s_ref > hi) s_ref = hi;
+ 150:application/gimbal/gimbal.c **** 
+ 151:application/gimbal/gimbal.c ****     /* 参考速度前馈：参考角这一拍走了多少 → 折算成 rpm，直接叠加到 rpm_
+ 152:application/gimbal/gimbal.c ****      * 位置环只有 P，匀速跟踪时必然留下恒定滞后 err = RATE/(136.53*POS_KP)，
+ 153:application/gimbal/gimbal.c ****      * 这个非零误差会被速度环积分一路累积到 I_MAX；参考一停、积分却还�
+ 154:application/gimbal/gimbal.c ****      * 表现出来就是"冲过头 + 回调很慢"。加了前馈，跟踪误差归零，
+ 155:application/gimbal/gimbal.c ****      * 积分只负责扛重力那一点。
+ 156:application/gimbal/gimbal.c ****      * 136.53 = 8192/60，即 1 rpm 对应的 counts/s。 */
+ 157:application/gimbal/gimbal.c ****     {
+ 158:application/gimbal/gimbal.c ****         float v_ff = (s_ref - s_ref_old) * 1000.0f / 136.53f;   /* counts/s → rpm */
+ 159:application/gimbal/gimbal.c **** 
+ 160:application/gimbal/gimbal.c ****         err     = s_ref - cur;
+ 161:application/gimbal/gimbal.c ****         rpm_des = pitch_clamp(GM_PITCH_POS_KP * err + v_ff,
+ 162:application/gimbal/gimbal.c ****                               -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+ 163:application/gimbal/gimbal.c ****     }
+ 164:application/gimbal/gimbal.c **** 
+ 165:application/gimbal/gimbal.c **** 
+ 166:application/gimbal/gimbal.c **** err = rpm_des - rpm;
+ 167:application/gimbal/gimbal.c **** volt = GM_PITCH_SPD_KP * err + s_i + GM_PITCH_GRAV_FF;
+ 168:application/gimbal/gimbal.c **** 
+ 169:application/gimbal/gimbal.c **** if(pitch_abs(volt) < GM_PITCH_VOLT_MAX || (volt >= GM_PITCH_VOLT_MAX && err < 0.0f) || (volt <= -GM
+ 170:application/gimbal/gimbal.c **** {
+ 171:application/gimbal/gimbal.c **** s_i += GM_PITCH_SPD_KI * err * 0.001f;
+ 172:application/gimbal/gimbal.c **** s_i = pitch_clamp(s_i, -GM_PITCH_I_MAX,GM_PITCH_I_MAX);
+ 173:application/gimbal/gimbal.c **** }
+ 174:application/gimbal/gimbal.c **** 
+ 175:application/gimbal/gimbal.c **** volt = pitch_clamp(GM_PITCH_SPD_KP* err + s_i + GM_PITCH_GRAV_FF, -GM_PITCH_VOLT_MAX,GM_PITCH_VOLT_
+ 176:application/gimbal/gimbal.c **** 
+ 177:application/gimbal/gimbal.c ****     /* 软墙：距离边界 soft 以内，把"往外推"的力按比例衰减到 0，
+ 178:application/gimbal/gimbal.c ****        避免"出力/不出力"每毫秒硬切换导致的高频起振 */
+ 179:application/gimbal/gimbal.c ****     const float soft = 120.0f;
+ 180:application/gimbal/gimbal.c **** 
+ 181:application/gimbal/gimbal.c ****     if (cur <= lo)
+ 182:application/gimbal/gimbal.c ****     {
+ 183:application/gimbal/gimbal.c ****         /* 已经在墙外：只允许往回走的力 */
+ 184:application/gimbal/gimbal.c ****         if (volt < 0.0f) volt = 0.0f;
+ 185:application/gimbal/gimbal.c ****     }
+ 186:application/gimbal/gimbal.c ****     else if (cur >= hi)
+ 187:application/gimbal/gimbal.c ****     {
+ 188:application/gimbal/gimbal.c ****         if (volt > 0.0f) volt = 0.0f;
+ 189:application/gimbal/gimbal.c ****     }
+ 190:application/gimbal/gimbal.c ****     else if (cur < lo + soft && volt < 0.0f)
+ 191:application/gimbal/gimbal.c ****     {
+ 192:application/gimbal/gimbal.c ****         /* 靠近下限：往下推的力按比例减小，贴墙时正好为 0 */
+ 193:application/gimbal/gimbal.c ****         volt *= (cur - lo) / soft;
+ 194:application/gimbal/gimbal.c ****     }
+ 195:application/gimbal/gimbal.c ****     else if (cur > hi - soft && volt > 0.0f)
+ 196:application/gimbal/gimbal.c ****     {
+ 197:application/gimbal/gimbal.c ****         /* 靠近上限：往上推的力按比例减小 */
+ 198:application/gimbal/gimbal.c ****         volt *= (hi - cur) / soft;
+ 199:application/gimbal/gimbal.c ****     }
+ 200:application/gimbal/gimbal.c **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 7
+
+
+ 201:application/gimbal/gimbal.c **** return GM_PITCH_SIGN * volt;
+ 202:application/gimbal/gimbal.c **** 
+ 203:application/gimbal/gimbal.c **** }
+ 204:application/gimbal/gimbal.c **** /* ======================= 云台 yaw 角度闭环 ======================= */
+ 205:application/gimbal/gimbal.c **** /* 前三个原来是文件级 static；分层后 gimbal_spin.c 的交接函数也要读写，
+ 206:application/gimbal/gimbal.c ****  * 改为全局并由 rc_state.h 声明（只改存储类，类型/初值/语义不变） */
+ 207:application/gimbal/gimbal.c **** float   s_yaw_ref   = 0.0f;   /* 目标角（counts） */
+ 208:application/gimbal/gimbal.c **** float   s_yaw_i     = 0.0f;   /* 速度环积分（电压单位） */
+ 209:application/gimbal/gimbal.c **** uint8_t s_yaw_ready = 0u;
+ 210:application/gimbal/gimbal.c **** static float   s_psi_deg   = 0.0f;   /* 枪口世界航向角（度，陀螺积分） */
+ 211:application/gimbal/gimbal.c **** static float   s_psi_ref   = 0.0f;   /* 航向锁存基准（度） */
+ 212:application/gimbal/gimbal.c **** static float   s_hold_i    = 0.0f;   /* 稳向积分（deg/s），只在底盘带着转时累加 */
+ 213:application/gimbal/gimbal.c **** 
+ 214:application/gimbal/gimbal.c **** static float yaw_wrap(float d)
+ 215:application/gimbal/gimbal.c **** {
+ 148              		.loc 1 215 1 is_stmt 1 view -0
+ 149              		.cfi_startproc
+ 150              		@ args = 0, pretend = 0, frame = 0
+ 151              		@ frame_needed = 0, uses_anonymous_args = 0
+ 152              		@ link register save eliminated.
+ 216:application/gimbal/gimbal.c ****     while (d >  4096.0f) d -= 8192.0f;
+ 153              		.loc 1 216 5 view .LVU27
+ 154              		.loc 1 216 11 is_stmt 0 view .LVU28
+ 155 0000 03E0     		b	.L14
+ 156              	.L15:
+ 157              		.loc 1 216 26 is_stmt 1 discriminator 2 view .LVU29
+ 158              		.loc 1 216 28 is_stmt 0 discriminator 2 view .LVU30
+ 159 0002 DFED0C7A 		vldr.32	s15, .L18
+ 160 0006 30EE670A 		vsub.f32	s0, s0, s15
+ 161              	.LVL15:
+ 162              	.L14:
+ 163              		.loc 1 216 14 is_stmt 1 discriminator 1 view .LVU31
+ 164 000a DFED0B7A 		vldr.32	s15, .L18+4
+ 165 000e B4EEE70A 		vcmpe.f32	s0, s15
+ 166 0012 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 167 0016 F4DC     		bgt	.L15
+ 168 0018 03E0     		b	.L16
+ 169              	.L17:
+ 217:application/gimbal/gimbal.c ****     while (d < -4096.0f) d += 8192.0f;
+ 170              		.loc 1 217 26 discriminator 2 view .LVU32
+ 171              		.loc 1 217 28 is_stmt 0 discriminator 2 view .LVU33
+ 172 001a DFED067A 		vldr.32	s15, .L18
+ 173 001e 30EE270A 		vadd.f32	s0, s0, s15
+ 174              	.LVL16:
+ 175              	.L16:
+ 176              		.loc 1 217 14 is_stmt 1 discriminator 1 view .LVU34
+ 177 0022 DFED067A 		vldr.32	s15, .L18+8
+ 178 0026 B4EEE70A 		vcmpe.f32	s0, s15
+ 179 002a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 180 002e F4D4     		bmi	.L17
+ 218:application/gimbal/gimbal.c ****     return d;
+ 181              		.loc 1 218 5 view .LVU35
+ 219:application/gimbal/gimbal.c **** }
+ 182              		.loc 1 219 1 is_stmt 0 view .LVU36
+ 183 0030 7047     		bx	lr
+ 184              	.L19:
+ 185 0032 00BF     		.align	2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 8
+
+
+ 186              	.L18:
+ 187 0034 00000046 		.word	1174405120
+ 188 0038 00008045 		.word	1166016512
+ 189 003c 000080C5 		.word	-981467136
+ 190              		.cfi_endproc
+ 191              	.LFE150:
+ 193              		.section	.text.RC_Pitch_Control,"ax",%progbits
+ 194              		.align	1
+ 195              		.global	RC_Pitch_Control
+ 196              		.syntax unified
+ 197              		.thumb
+ 198              		.thumb_func
+ 200              	RC_Pitch_Control:
+ 201              	.LVL17:
+ 202              	.LFB149:
+  43:application/gimbal/gimbal.c ****     static float s_ref = 0.0f;          /* 参考角，连续量（counts） */
+ 203              		.loc 1 43 1 is_stmt 1 view -0
+ 204              		.cfi_startproc
+ 205              		@ args = 0, pretend = 0, frame = 0
+ 206              		@ frame_needed = 0, uses_anonymous_args = 0
+  43:application/gimbal/gimbal.c ****     static float s_ref = 0.0f;          /* 参考角，连续量（counts） */
+ 207              		.loc 1 43 1 is_stmt 0 view .LVU38
+ 208 0000 38B5     		push	{r3, r4, r5, lr}
+ 209              	.LCFI0:
+ 210              		.cfi_def_cfa_offset 16
+ 211              		.cfi_offset 3, -16
+ 212              		.cfi_offset 4, -12
+ 213              		.cfi_offset 5, -8
+ 214              		.cfi_offset 14, -4
+ 215 0002 2DED068B 		vpush.64	{d8, d9, d10}
+ 216              	.LCFI1:
+ 217              		.cfi_def_cfa_offset 40
+ 218              		.cfi_offset 80, -40
+ 219              		.cfi_offset 81, -36
+ 220              		.cfi_offset 82, -32
+ 221              		.cfi_offset 83, -28
+ 222              		.cfi_offset 84, -24
+ 223              		.cfi_offset 85, -20
+  44:application/gimbal/gimbal.c ****     static float s_i   = 0.0f;          /* 速度环积分（电压单位）   */
+ 224              		.loc 1 44 5 is_stmt 1 view .LVU39
+  45:application/gimbal/gimbal.c ****     static uint8_t  s_stage = 0;        /*状态*/
+ 225              		.loc 1 45 5 view .LVU40
+  46:application/gimbal/gimbal.c ****     static uint8_t   s_homed   = 0;     /*是否回中*/
+ 226              		.loc 1 46 5 view .LVU41
+  47:application/gimbal/gimbal.c ****     static uint32_t  s_home_since = 0;  /*回中时间判定基准*/
+ 227              		.loc 1 47 5 view .LVU42
+  48:application/gimbal/gimbal.c ****     static float     s_stick_f = 0.0f;  /*滤波后的摇杆值*/
+ 228              		.loc 1 48 5 view .LVU43
+  49:application/gimbal/gimbal.c ****     static float     s_v = 0.0f;        /*手控参考速度*/
+ 229              		.loc 1 49 5 view .LVU44
+  50:application/gimbal/gimbal.c **** 
+ 230              		.loc 1 50 5 view .LVU45
+  53:application/gimbal/gimbal.c ****     const float hi = (float)(GM_PITCH_ANGLE_MAX - GM_PITCH_ANGLE_MARGIN);
+ 231              		.loc 1 53 5 view .LVU46
+ 232              	.LVL18:
+  54:application/gimbal/gimbal.c ****     const float home = (float)GM_PITCH_HOME_ANGLE;
+ 233              		.loc 1 54 5 view .LVU47
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 9
+
+
+  55:application/gimbal/gimbal.c **** 
+ 234              		.loc 1 55 5 view .LVU48
+  57:application/gimbal/gimbal.c ****     {
+ 235              		.loc 1 57 2 view .LVU49
+  57:application/gimbal/gimbal.c ****     {
+ 236              		.loc 1 57 5 is_stmt 0 view .LVU50
+ 237 0006 0029     		cmp	r1, #0
+ 238 0008 18BF     		it	ne
+ 239 000a 0028     		cmpne	r0, #0
+ 240 000c 0AD1     		bne	.L21
+  59:application/gimbal/gimbal.c ****         s_i     = 0.0f;
+ 241              		.loc 1 59 9 is_stmt 1 view .LVU51
+  59:application/gimbal/gimbal.c ****         s_i     = 0.0f;
+ 242              		.loc 1 59 17 is_stmt 0 view .LVU52
+ 243 000e CC4B     		ldr	r3, .L76+8
+ 244 0010 0022     		movs	r2, #0
+ 245 0012 1A70     		strb	r2, [r3]
+  60:application/gimbal/gimbal.c ****     
+ 246              		.loc 1 60 9 is_stmt 1 view .LVU53
+  60:application/gimbal/gimbal.c ****     
+ 247              		.loc 1 60 17 is_stmt 0 view .LVU54
+ 248 0014 9FEDCB0A 		vldr.32	s0, .L76+12
+ 249              	.LVL19:
+  60:application/gimbal/gimbal.c ****     
+ 250              		.loc 1 60 17 view .LVU55
+ 251 0018 CB4B     		ldr	r3, .L76+16
+ 252 001a 83ED000A 		vstr.32	s0, [r3]
+  62:application/gimbal/gimbal.c ****     }
+ 253              		.loc 1 62 9 is_stmt 1 view .LVU56
+ 254              	.LVL20:
+ 255              	.L20:
+ 203:application/gimbal/gimbal.c **** /* ======================= 云台 yaw 角度闭环 ======================= */
+ 256              		.loc 1 203 1 is_stmt 0 view .LVU57
+ 257 001e BDEC068B 		vldm	sp!, {d8-d10}
+ 258              	.LCFI2:
+ 259              		.cfi_remember_state
+ 260              		.cfi_restore 84
+ 261              		.cfi_restore 85
+ 262              		.cfi_restore 82
+ 263              		.cfi_restore 83
+ 264              		.cfi_restore 80
+ 265              		.cfi_restore 81
+ 266              		.cfi_def_cfa_offset 16
+ 267 0022 38BD     		pop	{r3, r4, r5, pc}
+ 268              	.LVL21:
+ 269              	.L21:
+ 270              	.LCFI3:
+ 271              		.cfi_restore_state
+ 203:application/gimbal/gimbal.c **** /* ======================= 云台 yaw 角度闭环 ======================= */
+ 272              		.loc 1 203 1 view .LVU58
+ 273 0024 B0EE408A 		vmov.f32	s16, s0
+  65:application/gimbal/gimbal.c ****     float rpm = GM_PITCH_RPM_SIGN * (float)gim_pitch.rpm;
+ 274              		.loc 1 65 5 is_stmt 1 view .LVU59
+  65:application/gimbal/gimbal.c ****     float rpm = GM_PITCH_RPM_SIGN * (float)gim_pitch.rpm;
+ 275              		.loc 1 65 33 is_stmt 0 view .LVU60
+ 276 0028 C84C     		ldr	r4, .L76+20
+ 277 002a 2588     		ldrh	r5, [r4]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 10
+
+
+ 278 002c ADB2     		uxth	r5, r5
+  65:application/gimbal/gimbal.c ****     float rpm = GM_PITCH_RPM_SIGN * (float)gim_pitch.rpm;
+ 279              		.loc 1 65 11 view .LVU61
+ 280 002e 07EE905A 		vmov	s15, r5	@ int
+ 281 0032 B8EE67AA 		vcvt.f32.u32	s20, s15
+ 282              	.LVL22:
+  66:application/gimbal/gimbal.c ****     float err, rpm_des, volt;
+ 283              		.loc 1 66 5 is_stmt 1 view .LVU62
+  66:application/gimbal/gimbal.c ****     float err, rpm_des, volt;
+ 284              		.loc 1 66 53 is_stmt 0 view .LVU63
+ 285 0036 6388     		ldrh	r3, [r4, #2]
+ 286 0038 1BB2     		sxth	r3, r3
+  66:application/gimbal/gimbal.c ****     float err, rpm_des, volt;
+ 287              		.loc 1 66 11 view .LVU64
+ 288 003a 07EE903A 		vmov	s15, r3	@ int
+ 289 003e F8EEE78A 		vcvt.f32.s32	s17, s15
+ 290              	.LVL23:
+  67:application/gimbal/gimbal.c **** 
+ 291              		.loc 1 67 5 is_stmt 1 view .LVU65
+  70:application/gimbal/gimbal.c ****         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
+ 292              		.loc 1 70 2 view .LVU66
+  70:application/gimbal/gimbal.c ****         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
+ 293              		.loc 1 70 7 is_stmt 0 view .LVU67
+ 294 0042 FFF7FEFF 		bl	HAL_GetTick
+ 295              	.LVL24:
+  70:application/gimbal/gimbal.c ****         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
+ 296              		.loc 1 70 32 discriminator 1 view .LVU68
+ 297 0046 A368     		ldr	r3, [r4, #8]
+  70:application/gimbal/gimbal.c ****         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
+ 298              		.loc 1 70 21 discriminator 1 view .LVU69
+ 299 0048 C01A     		subs	r0, r0, r3
+  70:application/gimbal/gimbal.c ****         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
+ 300              		.loc 1 70 5 discriminator 1 view .LVU70
+ 301 004a 6428     		cmp	r0, #100
+ 302 004c 00F2F980 		bhi	.L23
+  71:application/gimbal/gimbal.c ****         pitch_abs(rpm) > GM_RPM_LIMIT ||
+ 303              		.loc 1 71 18 view .LVU71
+ 304 0050 A379     		ldrb	r3, [r4, #6]	@ zero_extendqisi2
+  70:application/gimbal/gimbal.c ****         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
+ 305              		.loc 1 70 69 discriminator 1 view .LVU72
+ 306 0052 412B     		cmp	r3, #65
+ 307 0054 00F2F580 		bhi	.L23
+  72:application/gimbal/gimbal.c ****         cur < (float)GM_PITCH_ANGLE_MIN ||
+ 308              		.loc 1 72 9 view .LVU73
+ 309 0058 B0EE680A 		vmov.f32	s0, s17
+ 310 005c FFF7FEFF 		bl	pitch_abs
+ 311              	.LVL25:
+ 312 0060 B0EE409A 		vmov.f32	s18, s0
+  71:application/gimbal/gimbal.c ****         pitch_abs(rpm) > GM_RPM_LIMIT ||
+ 313              		.loc 1 71 46 view .LVU74
+ 314 0064 DFEDBA7A 		vldr.32	s15, .L76+24
+ 315 0068 B4EEE70A 		vcmpe.f32	s0, s15
+ 316 006c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 317 0070 00F3E780 		bgt	.L23
+  72:application/gimbal/gimbal.c ****         cur < (float)GM_PITCH_ANGLE_MIN ||
+ 318              		.loc 1 72 39 view .LVU75
+ 319 0074 40F67953 		movw	r3, #3449
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 11
+
+
+ 320 0078 9D42     		cmp	r5, r3
+ 321 007a 40F2E280 		bls	.L23
+  73:application/gimbal/gimbal.c ****         cur > (float)GM_PITCH_ANGLE_MAX)
+ 322              		.loc 1 73 41 view .LVU76
+ 323 007e 41F2B623 		movw	r3, #4790
+ 324 0082 9D42     		cmp	r5, r3
+ 325 0084 00F2DD80 		bhi	.L23
+  81:application/gimbal/gimbal.c **** 
+ 326              		.loc 1 81 6 is_stmt 1 view .LVU77
+  81:application/gimbal/gimbal.c **** 
+ 327              		.loc 1 81 26 is_stmt 0 view .LVU78
+ 328 0088 B24B     		ldr	r3, .L76+28
+ 329 008a D3ED007A 		vldr.32	s15, [r3]
+ 330 008e 38EE677A 		vsub.f32	s14, s16, s15
+  81:application/gimbal/gimbal.c **** 
+ 331              		.loc 1 81 39 view .LVU79
+ 332 0092 DFEDB16A 		vldr.32	s13, .L76+32
+ 333 0096 27EE267A 		vmul.f32	s14, s14, s13
+  81:application/gimbal/gimbal.c **** 
+ 334              		.loc 1 81 16 view .LVU80
+ 335 009a 77EE879A 		vadd.f32	s19, s15, s14
+ 336 009e C3ED009A 		vstr.32	s19, [r3]
+  84:application/gimbal/gimbal.c ****     {
+ 337              		.loc 1 84 5 is_stmt 1 view .LVU81
+  84:application/gimbal/gimbal.c ****     {
+ 338              		.loc 1 84 17 is_stmt 0 view .LVU82
+ 339 00a2 A74B     		ldr	r3, .L76+8
+ 340 00a4 1C78     		ldrb	r4, [r3]	@ zero_extendqisi2
+  84:application/gimbal/gimbal.c ****     {
+ 341              		.loc 1 84 8 view .LVU83
+ 342 00a6 5CB9     		cbnz	r4, .L25
+  84:application/gimbal/gimbal.c ****     {
+ 343              		.loc 1 84 25 discriminator 1 view .LVU84
+ 344 00a8 B0EE480A 		vmov.f32	s0, s16
+ 345 00ac FFF7FEFF 		bl	pitch_abs
+ 346              	.LVL26:
+  84:application/gimbal/gimbal.c ****     {
+ 347              		.loc 1 84 22 discriminator 1 view .LVU85
+ 348 00b0 DFEDAA7A 		vldr.32	s15, .L76+36
+ 349 00b4 B4EEE70A 		vcmpe.f32	s0, s15
+ 350 00b8 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 351 00bc 00F3C481 		bgt	.L54
+ 352              	.L25:
+  89:application/gimbal/gimbal.c **** 
+ 353              		.loc 1 89 5 is_stmt 1 view .LVU86
+  89:application/gimbal/gimbal.c **** 
+ 354              		.loc 1 89 17 is_stmt 0 view .LVU87
+ 355 00c0 A74B     		ldr	r3, .L76+40
+ 356 00c2 93ED008A 		vldr.32	s16, [r3]
+ 357              	.LVL27:
+  92:application/gimbal/gimbal.c **** {
+ 358              		.loc 1 92 1 is_stmt 1 view .LVU88
+  92:application/gimbal/gimbal.c **** {
+ 359              		.loc 1 92 3 is_stmt 0 view .LVU89
+ 360 00c6 002C     		cmp	r4, #0
+ 361 00c8 00F0C480 		beq	.L72
+ 103:application/gimbal/gimbal.c **** {
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 12
+
+
+ 362              		.loc 1 103 1 is_stmt 1 view .LVU90
+ 103:application/gimbal/gimbal.c **** {
+ 363              		.loc 1 103 3 is_stmt 0 view .LVU91
+ 364 00cc 012C     		cmp	r4, #1
+ 365 00ce 00F0D980 		beq	.L73
+ 366              	.LBB2:
+ 131:application/gimbal/gimbal.c ****       float braking = (v_tgt * s_v < 0.0f)  ||
+ 367              		.loc 1 131 7 is_stmt 1 view .LVU92
+ 131:application/gimbal/gimbal.c ****       float braking = (v_tgt * s_v < 0.0f)  ||
+ 368              		.loc 1 131 13 is_stmt 0 view .LVU93
+ 369 00d2 DFEDA47A 		vldr.32	s15, .L76+44
+ 370 00d6 69EEA77A 		vmul.f32	s15, s19, s15
+ 371              	.LVL28:
+ 132:application/gimbal/gimbal.c ****       (pitch_abs(v_tgt) < pitch_abs(s_v)) ;
+ 372              		.loc 1 132 7 is_stmt 1 view .LVU94
+ 132:application/gimbal/gimbal.c ****       (pitch_abs(v_tgt) < pitch_abs(s_v)) ;
+ 373              		.loc 1 132 30 is_stmt 0 view .LVU95
+ 374 00da A34B     		ldr	r3, .L76+48
+ 375 00dc D3ED006A 		vldr.32	s13, [r3]
+ 135:application/gimbal/gimbal.c ****       float dv = a * 0.001f;
+ 376              		.loc 1 135 7 is_stmt 1 view .LVU96
+ 377              	.LVL29:
+ 136:application/gimbal/gimbal.c **** 
+ 378              		.loc 1 136 7 view .LVU97
+ 138:application/gimbal/gimbal.c ****       else if(v_tgt < s_v - dv) s_v -= dv;
+ 379              		.loc 1 138 7 view .LVU98
+ 138:application/gimbal/gimbal.c ****       else if(v_tgt < s_v - dv) s_v -= dv;
+ 380              		.loc 1 138 22 is_stmt 0 view .LVU99
+ 381 00e0 9FEDB47A 		vldr.32	s14, .L76+124
+ 382 00e4 36EE877A 		vadd.f32	s14, s13, s14
+ 138:application/gimbal/gimbal.c ****       else if(v_tgt < s_v - dv) s_v -= dv;
+ 383              		.loc 1 138 9 view .LVU100
+ 384 00e8 B4EEE77A 		vcmpe.f32	s14, s15
+ 385 00ec F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 386 00f0 40F16281 		bpl	.L69
+ 138:application/gimbal/gimbal.c ****       else if(v_tgt < s_v - dv) s_v -= dv;
+ 387              		.loc 1 138 33 is_stmt 1 discriminator 1 view .LVU101
+ 138:application/gimbal/gimbal.c ****       else if(v_tgt < s_v - dv) s_v -= dv;
+ 388              		.loc 1 138 37 is_stmt 0 discriminator 1 view .LVU102
+ 389 00f4 83ED007A 		vstr.32	s14, [r3]
+ 390              	.L36:
+ 143:application/gimbal/gimbal.c **** 
+ 391              		.loc 1 143 7 is_stmt 1 view .LVU103
+ 143:application/gimbal/gimbal.c **** 
+ 392              		.loc 1 143 20 is_stmt 0 view .LVU104
+ 393 00f8 9B4B     		ldr	r3, .L76+48
+ 394 00fa D3ED007A 		vldr.32	s15, [r3]
+ 395              	.LVL30:
+ 143:application/gimbal/gimbal.c **** 
+ 396              		.loc 1 143 20 view .LVU105
+ 397 00fe 9FED9B7A 		vldr.32	s14, .L76+52
+ 398 0102 67EE877A 		vmul.f32	s15, s15, s14
+ 143:application/gimbal/gimbal.c **** 
+ 399              		.loc 1 143 13 view .LVU106
+ 400 0106 77EE887A 		vadd.f32	s15, s15, s16
+ 401 010a 954B     		ldr	r3, .L76+40
+ 402 010c C3ED007A 		vstr.32	s15, [r3]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 13
+
+
+ 403              	.LVL31:
+ 404              	.L30:
+ 143:application/gimbal/gimbal.c **** 
+ 405              		.loc 1 143 13 view .LVU107
+ 406              	.LBE2:
+ 148:application/gimbal/gimbal.c **** if(s_ref > hi) s_ref = hi;
+ 407              		.loc 1 148 1 is_stmt 1 view .LVU108
+ 148:application/gimbal/gimbal.c **** if(s_ref > hi) s_ref = hi;
+ 408              		.loc 1 148 10 is_stmt 0 view .LVU109
+ 409 0110 934B     		ldr	r3, .L76+40
+ 410 0112 93ED007A 		vldr.32	s14, [r3]
+ 148:application/gimbal/gimbal.c **** if(s_ref > hi) s_ref = hi;
+ 411              		.loc 1 148 3 view .LVU110
+ 412 0116 DFED967A 		vldr.32	s15, .L76+56
+ 413 011a B4EEE77A 		vcmpe.f32	s14, s15
+ 414 011e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 415 0122 01D5     		bpl	.L39
+ 148:application/gimbal/gimbal.c **** if(s_ref > hi) s_ref = hi;
+ 416              		.loc 1 148 16 is_stmt 1 discriminator 1 view .LVU111
+ 148:application/gimbal/gimbal.c **** if(s_ref > hi) s_ref = hi;
+ 417              		.loc 1 148 22 is_stmt 0 discriminator 1 view .LVU112
+ 418 0124 C3ED007A 		vstr.32	s15, [r3]
+ 419              	.L39:
+ 149:application/gimbal/gimbal.c **** 
+ 420              		.loc 1 149 1 is_stmt 1 view .LVU113
+ 149:application/gimbal/gimbal.c **** 
+ 421              		.loc 1 149 10 is_stmt 0 view .LVU114
+ 422 0128 8D4B     		ldr	r3, .L76+40
+ 423 012a 93ED007A 		vldr.32	s14, [r3]
+ 149:application/gimbal/gimbal.c **** 
+ 424              		.loc 1 149 3 view .LVU115
+ 425 012e DFED917A 		vldr.32	s15, .L76+60
+ 426 0132 B4EEE77A 		vcmpe.f32	s14, s15
+ 427 0136 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 428 013a 01DD     		ble	.L41
+ 149:application/gimbal/gimbal.c **** 
+ 429              		.loc 1 149 16 is_stmt 1 discriminator 1 view .LVU116
+ 149:application/gimbal/gimbal.c **** 
+ 430              		.loc 1 149 22 is_stmt 0 discriminator 1 view .LVU117
+ 431 013c C3ED007A 		vstr.32	s15, [r3]
+ 432              	.L41:
+ 433              	.LBB3:
+ 158:application/gimbal/gimbal.c **** 
+ 434              		.loc 1 158 9 is_stmt 1 view .LVU118
+ 158:application/gimbal/gimbal.c **** 
+ 435              		.loc 1 158 29 is_stmt 0 view .LVU119
+ 436 0140 874B     		ldr	r3, .L76+40
+ 437 0142 93ED007A 		vldr.32	s14, [r3]
+ 438 0146 37EE488A 		vsub.f32	s16, s14, s16
+ 439              	.LVL32:
+ 158:application/gimbal/gimbal.c **** 
+ 440              		.loc 1 158 42 view .LVU120
+ 441 014a DFED8B7A 		vldr.32	s15, .L76+64
+ 442 014e 28EE278A 		vmul.f32	s16, s16, s15
+ 158:application/gimbal/gimbal.c **** 
+ 443              		.loc 1 158 15 view .LVU121
+ 444 0152 DFED8A7A 		vldr.32	s15, .L76+68
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 14
+
+
+ 445 0156 88EE276A 		vdiv.f32	s12, s16, s15
+ 446              	.LVL33:
+ 160:application/gimbal/gimbal.c ****         rpm_des = pitch_clamp(GM_PITCH_POS_KP * err + v_ff,
+ 447              		.loc 1 160 9 is_stmt 1 view .LVU122
+ 160:application/gimbal/gimbal.c ****         rpm_des = pitch_clamp(GM_PITCH_POS_KP * err + v_ff,
+ 448              		.loc 1 160 17 is_stmt 0 view .LVU123
+ 449 015a 37EE4A7A 		vsub.f32	s14, s14, s20
+ 450              	.LVL34:
+ 161:application/gimbal/gimbal.c ****                               -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+ 451              		.loc 1 161 9 is_stmt 1 view .LVU124
+ 161:application/gimbal/gimbal.c ****                               -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+ 452              		.loc 1 161 47 is_stmt 0 view .LVU125
+ 453 015e B7EEC77A 		vcvt.f64.f32	d7, s14
+ 454              	.LVL35:
+ 161:application/gimbal/gimbal.c ****                               -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+ 455              		.loc 1 161 53 view .LVU126
+ 456 0162 B7EEC66A 		vcvt.f64.f32	d6, s12
+ 457              	.LVL36:
+ 161:application/gimbal/gimbal.c ****                               -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+ 458              		.loc 1 161 53 view .LVU127
+ 459 0166 9FED745B 		vldr.64	d5, .L76
+ 460 016a 07EE056B 		vmla.f64	d6, d7, d5
+ 161:application/gimbal/gimbal.c ****                               -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+ 461              		.loc 1 161 19 view .LVU128
+ 462 016e 9FED841A 		vldr.32	s2, .L76+72
+ 463 0172 DFED840A 		vldr.32	s1, .L76+76
+ 464 0176 B7EEC60B 		vcvt.f32.f64	s0, d6
+ 465 017a FFF7FEFF 		bl	pitch_clamp
+ 466              	.LVL37:
+ 161:application/gimbal/gimbal.c ****                               -GM_PITCH_RPM_MAX, GM_PITCH_RPM_MAX);
+ 467              		.loc 1 161 19 view .LVU129
+ 468              	.LBE3:
+ 166:application/gimbal/gimbal.c **** volt = GM_PITCH_SPD_KP * err + s_i + GM_PITCH_GRAV_FF;
+ 469              		.loc 1 166 1 is_stmt 1 view .LVU130
+ 166:application/gimbal/gimbal.c **** volt = GM_PITCH_SPD_KP * err + s_i + GM_PITCH_GRAV_FF;
+ 470              		.loc 1 166 5 is_stmt 0 view .LVU131
+ 471 017e 30EE688A 		vsub.f32	s16, s0, s17
+ 472              	.LVL38:
+ 167:application/gimbal/gimbal.c **** 
+ 473              		.loc 1 167 1 is_stmt 1 view .LVU132
+ 167:application/gimbal/gimbal.c **** 
+ 474              		.loc 1 167 24 is_stmt 0 view .LVU133
+ 475 0182 DFED818A 		vldr.32	s17, .L76+80
+ 476              	.LVL39:
+ 167:application/gimbal/gimbal.c **** 
+ 477              		.loc 1 167 24 view .LVU134
+ 478 0186 68EE288A 		vmul.f32	s17, s16, s17
+ 167:application/gimbal/gimbal.c **** 
+ 479              		.loc 1 167 30 view .LVU135
+ 480 018a 6F4B     		ldr	r3, .L76+16
+ 481 018c 93ED009A 		vldr.32	s18, [r3]
+ 482 0190 78EE899A 		vadd.f32	s19, s17, s18
+ 167:application/gimbal/gimbal.c **** 
+ 483              		.loc 1 167 6 view .LVU136
+ 484 0194 DFED7D7A 		vldr.32	s15, .L76+84
+ 485 0198 79EEA79A 		vadd.f32	s19, s19, s15
+ 486              	.LVL40:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 15
+
+
+ 169:application/gimbal/gimbal.c **** {
+ 487              		.loc 1 169 1 is_stmt 1 view .LVU137
+ 169:application/gimbal/gimbal.c **** {
+ 488              		.loc 1 169 4 is_stmt 0 view .LVU138
+ 489 019c B0EE690A 		vmov.f32	s0, s19
+ 490              	.LVL41:
+ 169:application/gimbal/gimbal.c **** {
+ 491              		.loc 1 169 4 view .LVU139
+ 492 01a0 FFF7FEFF 		bl	pitch_abs
+ 493              	.LVL42:
+ 169:application/gimbal/gimbal.c **** {
+ 494              		.loc 1 169 3 discriminator 1 view .LVU140
+ 495 01a4 DFED7A7A 		vldr.32	s15, .L76+88
+ 496 01a8 F4EEC07A 		vcmpe.f32	s15, s0
+ 497 01ac F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 498 01b0 15DC     		bgt	.L43
+ 169:application/gimbal/gimbal.c **** {
+ 499              		.loc 1 169 40 discriminator 1 view .LVU141
+ 500 01b2 F4EEE79A 		vcmpe.f32	s19, s15
+ 501 01b6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 502 01ba 04DB     		blt	.L44
+ 169:application/gimbal/gimbal.c **** {
+ 503              		.loc 1 169 70 discriminator 2 view .LVU142
+ 504 01bc B5EEC08A 		vcmpe.f32	s16, #0
+ 505 01c0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 506 01c4 0BD4     		bmi	.L43
+ 507              	.L44:
+ 169:application/gimbal/gimbal.c **** {
+ 508              		.loc 1 169 85 discriminator 4 view .LVU143
+ 509 01c6 DFED737A 		vldr.32	s15, .L76+92
+ 510 01ca F4EEE79A 		vcmpe.f32	s19, s15
+ 511 01ce F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 512 01d2 19D8     		bhi	.L46
+ 169:application/gimbal/gimbal.c **** {
+ 513              		.loc 1 169 116 discriminator 5 view .LVU144
+ 514 01d4 B5EEC08A 		vcmpe.f32	s16, #0
+ 515 01d8 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 516 01dc 14DD     		ble	.L46
+ 517              	.L43:
+ 171:application/gimbal/gimbal.c **** s_i = pitch_clamp(s_i, -GM_PITCH_I_MAX,GM_PITCH_I_MAX);
+ 518              		.loc 1 171 1 is_stmt 1 view .LVU145
+ 171:application/gimbal/gimbal.c **** s_i = pitch_clamp(s_i, -GM_PITCH_I_MAX,GM_PITCH_I_MAX);
+ 519              		.loc 1 171 24 is_stmt 0 view .LVU146
+ 520 01de DFED6E7A 		vldr.32	s15, .L76+96
+ 521 01e2 28EE278A 		vmul.f32	s16, s16, s15
+ 522              	.LVL43:
+ 171:application/gimbal/gimbal.c **** s_i = pitch_clamp(s_i, -GM_PITCH_I_MAX,GM_PITCH_I_MAX);
+ 523              		.loc 1 171 30 view .LVU147
+ 524 01e6 DFED617A 		vldr.32	s15, .L76+52
+ 525 01ea 28EE278A 		vmul.f32	s16, s16, s15
+ 171:application/gimbal/gimbal.c **** s_i = pitch_clamp(s_i, -GM_PITCH_I_MAX,GM_PITCH_I_MAX);
+ 526              		.loc 1 171 5 view .LVU148
+ 527 01ee 39EE080A 		vadd.f32	s0, s18, s16
+ 528 01f2 554C     		ldr	r4, .L76+16
+ 529 01f4 84ED000A 		vstr.32	s0, [r4]
+ 172:application/gimbal/gimbal.c **** }
+ 530              		.loc 1 172 1 is_stmt 1 view .LVU149
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 16
+
+
+ 172:application/gimbal/gimbal.c **** }
+ 531              		.loc 1 172 7 is_stmt 0 view .LVU150
+ 532 01f8 9FED681A 		vldr.32	s2, .L76+100
+ 533 01fc DFED680A 		vldr.32	s1, .L76+104
+ 534 0200 FFF7FEFF 		bl	pitch_clamp
+ 535              	.LVL44:
+ 172:application/gimbal/gimbal.c **** }
+ 536              		.loc 1 172 5 discriminator 1 view .LVU151
+ 537 0204 84ED000A 		vstr.32	s0, [r4]
+ 538              	.L46:
+ 175:application/gimbal/gimbal.c **** 
+ 539              		.loc 1 175 1 is_stmt 1 view .LVU152
+ 175:application/gimbal/gimbal.c **** 
+ 540              		.loc 1 175 41 is_stmt 0 view .LVU153
+ 541 0208 4F4B     		ldr	r3, .L76+16
+ 542 020a D3ED007A 		vldr.32	s15, [r3]
+ 543 020e 78EEA78A 		vadd.f32	s17, s17, s15
+ 175:application/gimbal/gimbal.c **** 
+ 544              		.loc 1 175 8 view .LVU154
+ 545 0212 9FED5F1A 		vldr.32	s2, .L76+88
+ 546 0216 DFED5F0A 		vldr.32	s1, .L76+92
+ 547 021a 9FED5C0A 		vldr.32	s0, .L76+84
+ 548 021e 38EE800A 		vadd.f32	s0, s17, s0
+ 549 0222 FFF7FEFF 		bl	pitch_clamp
+ 550              	.LVL45:
+ 179:application/gimbal/gimbal.c **** 
+ 551              		.loc 1 179 5 is_stmt 1 view .LVU155
+ 181:application/gimbal/gimbal.c ****     {
+ 552              		.loc 1 181 5 view .LVU156
+ 181:application/gimbal/gimbal.c ****     {
+ 553              		.loc 1 181 8 is_stmt 0 view .LVU157
+ 554 0226 40F6A253 		movw	r3, #3490
+ 555 022a 9D42     		cmp	r5, r3
+ 556 022c 00F2D580 		bhi	.L49
+ 184:application/gimbal/gimbal.c ****     }
+ 557              		.loc 1 184 9 is_stmt 1 view .LVU158
+ 184:application/gimbal/gimbal.c ****     }
+ 558              		.loc 1 184 12 is_stmt 0 view .LVU159
+ 559 0230 B5EEC00A 		vcmpe.f32	s0, #0
+ 560 0234 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 561 0238 7FF5F1AE 		bpl	.L20
+ 184:application/gimbal/gimbal.c ****     }
+ 562              		.loc 1 184 31 discriminator 1 view .LVU160
+ 563 023c 9FED410A 		vldr.32	s0, .L76+12
+ 564              	.LVL46:
+ 184:application/gimbal/gimbal.c ****     }
+ 565              		.loc 1 184 31 discriminator 1 view .LVU161
+ 566 0240 EDE6     		b	.L20
+ 567              	.LVL47:
+ 568              	.L23:
+  76:application/gimbal/gimbal.c ****         s_i     = 0.0f;
+ 569              		.loc 1 76 9 is_stmt 1 view .LVU162
+  76:application/gimbal/gimbal.c ****         s_i     = 0.0f;
+ 570              		.loc 1 76 17 is_stmt 0 view .LVU163
+ 571 0242 3F4B     		ldr	r3, .L76+8
+ 572 0244 0022     		movs	r2, #0
+ 573 0246 1A70     		strb	r2, [r3]
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 17
+
+
+  77:application/gimbal/gimbal.c ****         return 0.0f;
+ 574              		.loc 1 77 9 is_stmt 1 view .LVU164
+  77:application/gimbal/gimbal.c ****         return 0.0f;
+ 575              		.loc 1 77 17 is_stmt 0 view .LVU165
+ 576 0248 9FED3E0A 		vldr.32	s0, .L76+12
+ 577 024c 3E4B     		ldr	r3, .L76+16
+ 578 024e 83ED000A 		vstr.32	s0, [r3]
+  78:application/gimbal/gimbal.c ****     }
+ 579              		.loc 1 78 9 is_stmt 1 view .LVU166
+  78:application/gimbal/gimbal.c ****     }
+ 580              		.loc 1 78 16 is_stmt 0 view .LVU167
+ 581 0252 E4E6     		b	.L20
+ 582              	.LVL48:
+ 583              	.L72:
+  94:application/gimbal/gimbal.c ****     s_i   = 0.0f;
+ 584              		.loc 1 94 5 is_stmt 1 view .LVU168
+  94:application/gimbal/gimbal.c ****     s_i   = 0.0f;
+ 585              		.loc 1 94 11 is_stmt 0 view .LVU169
+ 586 0254 83ED00AA 		vstr.32	s20, [r3]
+  95:application/gimbal/gimbal.c ****     s_v   = 0.0f;
+ 587              		.loc 1 95 5 is_stmt 1 view .LVU170
+  95:application/gimbal/gimbal.c ****     s_v   = 0.0f;
+ 588              		.loc 1 95 11 is_stmt 0 view .LVU171
+ 589 0258 0023     		movs	r3, #0
+ 590 025a 3B4A     		ldr	r2, .L76+16
+ 591 025c 1360     		str	r3, [r2]	@ float
+  96:application/gimbal/gimbal.c ****     s_home_since = HAL_GetTick() | 1u;     /* 接管时记一次起点，供回中计时用 */
+ 592              		.loc 1 96 5 is_stmt 1 view .LVU172
+  96:application/gimbal/gimbal.c ****     s_home_since = HAL_GetTick() | 1u;     /* 接管时记一次起点，供回中计时用 */
+ 593              		.loc 1 96 11 is_stmt 0 view .LVU173
+ 594 025e 424A     		ldr	r2, .L76+48
+ 595 0260 1360     		str	r3, [r2]	@ float
+  97:application/gimbal/gimbal.c ****     s_stage = ( GM_PITCH_HOME_ENABLE && !s_homed) ? 1 : 2;
+ 596              		.loc 1 97 5 is_stmt 1 view .LVU174
+  97:application/gimbal/gimbal.c ****     s_stage = ( GM_PITCH_HOME_ENABLE && !s_homed) ? 1 : 2;
+ 597              		.loc 1 97 20 is_stmt 0 view .LVU175
+ 598 0262 FFF7FEFF 		bl	HAL_GetTick
+ 599              	.LVL49:
+  97:application/gimbal/gimbal.c ****     s_stage = ( GM_PITCH_HOME_ENABLE && !s_homed) ? 1 : 2;
+ 600              		.loc 1 97 34 discriminator 1 view .LVU176
+ 601 0266 40F00100 		orr	r0, r0, #1
+  97:application/gimbal/gimbal.c ****     s_stage = ( GM_PITCH_HOME_ENABLE && !s_homed) ? 1 : 2;
+ 602              		.loc 1 97 18 discriminator 1 view .LVU177
+ 603 026a 4E4A     		ldr	r2, .L76+108
+ 604 026c 1060     		str	r0, [r2]
+  98:application/gimbal/gimbal.c ****     return 0.0f;
+ 605              		.loc 1 98 5 is_stmt 1 view .LVU178
+  98:application/gimbal/gimbal.c ****     return 0.0f;
+ 606              		.loc 1 98 38 is_stmt 0 view .LVU179
+ 607 026e 4E4B     		ldr	r3, .L76+112
+ 608 0270 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  98:application/gimbal/gimbal.c ****     return 0.0f;
+ 609              		.loc 1 98 13 view .LVU180
+ 610 0272 2BB9     		cbnz	r3, .L55
+  98:application/gimbal/gimbal.c ****     return 0.0f;
+ 611              		.loc 1 98 13 discriminator 1 view .LVU181
+ 612 0274 0122     		movs	r2, #1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 18
+
+
+ 613              	.L27:
+  98:application/gimbal/gimbal.c ****     return 0.0f;
+ 614              		.loc 1 98 13 discriminator 4 view .LVU182
+ 615 0276 324B     		ldr	r3, .L76+8
+ 616 0278 1A70     		strb	r2, [r3]
+  99:application/gimbal/gimbal.c **** }
+ 617              		.loc 1 99 5 is_stmt 1 view .LVU183
+  99:application/gimbal/gimbal.c **** }
+ 618              		.loc 1 99 12 is_stmt 0 view .LVU184
+ 619 027a 9FED320A 		vldr.32	s0, .L76+12
+ 620 027e CEE6     		b	.L20
+ 621              	.L55:
+  98:application/gimbal/gimbal.c ****     return 0.0f;
+ 622              		.loc 1 98 13 discriminator 2 view .LVU185
+ 623 0280 0222     		movs	r2, #2
+ 624 0282 F8E7     		b	.L27
+ 625              	.L73:
+ 105:application/gimbal/gimbal.c ****     /*若一直没符合下面置2的三个条件时触发*/
+ 626              		.loc 1 105 5 is_stmt 1 view .LVU186
+ 105:application/gimbal/gimbal.c ****     /*若一直没符合下面置2的三个条件时触发*/
+ 627              		.loc 1 105 9 is_stmt 0 view .LVU187
+ 628 0284 384B     		ldr	r3, .L76+48
+ 629 0286 0022     		movs	r2, #0
+ 630 0288 1A60     		str	r2, [r3]	@ float
+ 107:application/gimbal/gimbal.c ****     {
+ 631              		.loc 1 107 5 is_stmt 1 view .LVU188
+ 107:application/gimbal/gimbal.c ****     {
+ 632              		.loc 1 107 10 is_stmt 0 view .LVU189
+ 633 028a FFF7FEFF 		bl	HAL_GetTick
+ 634              	.LVL50:
+ 107:application/gimbal/gimbal.c ****     {
+ 635              		.loc 1 107 24 discriminator 1 view .LVU190
+ 636 028e 454B     		ldr	r3, .L76+108
+ 637 0290 1B68     		ldr	r3, [r3]
+ 638 0292 C31A     		subs	r3, r0, r3
+ 107:application/gimbal/gimbal.c ****     {
+ 639              		.loc 1 107 8 discriminator 1 view .LVU191
+ 640 0294 40F6B832 		movw	r2, #3000
+ 641 0298 9342     		cmp	r3, r2
+ 642 029a 38D8     		bhi	.L74
+ 117:application/gimbal/gimbal.c **** 
+ 643              		.loc 1 117 7 is_stmt 1 view .LVU192
+ 117:application/gimbal/gimbal.c **** 
+ 644              		.loc 1 117 15 is_stmt 0 view .LVU193
+ 645 029c DFED439A 		vldr.32	s19, .L76+116
+ 646 02a0 2F4C     		ldr	r4, .L76+40
+ 647 02a2 B6EE001A 		vmov.f32	s2, #5.0e-1
+ 648 02a6 F0EE690A 		vmov.f32	s1, s19
+ 649 02aa 94ED000A 		vldr.32	s0, [r4]
+ 650 02ae FFF7FEFF 		bl	pitch_step
+ 651              	.LVL51:
+ 117:application/gimbal/gimbal.c **** 
+ 652              		.loc 1 117 13 discriminator 1 view .LVU194
+ 653 02b2 84ED000A 		vstr.32	s0, [r4]
+ 119:application/gimbal/gimbal.c ****           pitch_abs(rpm)        <  GM_PITCH_CATCH_RPM &&
+ 654              		.loc 1 119 7 is_stmt 1 view .LVU195
+ 119:application/gimbal/gimbal.c ****           pitch_abs(rpm)        <  GM_PITCH_CATCH_RPM &&
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 19
+
+
+ 655              		.loc 1 119 11 is_stmt 0 view .LVU196
+ 656 02b6 30EE690A 		vsub.f32	s0, s0, s19
+ 657 02ba FFF7FEFF 		bl	pitch_abs
+ 658              	.LVL52:
+ 119:application/gimbal/gimbal.c ****           pitch_abs(rpm)        <  GM_PITCH_CATCH_RPM &&
+ 659              		.loc 1 119 10 discriminator 1 view .LVU197
+ 660 02be F7EE007A 		vmov.f32	s15, #1.0e+0
+ 661 02c2 F4EEC07A 		vcmpe.f32	s15, s0
+ 662 02c6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 663 02ca FFF621AF 		blt	.L30
+ 119:application/gimbal/gimbal.c ****           pitch_abs(rpm)        <  GM_PITCH_CATCH_RPM &&
+ 664              		.loc 1 119 43 discriminator 1 view .LVU198
+ 665 02ce DFED387A 		vldr.32	s15, .L76+120
+ 666 02d2 B4EEE79A 		vcmpe.f32	s18, s15
+ 667 02d6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 668 02da 7FF519AF 		bpl	.L30
+ 121:application/gimbal/gimbal.c ****     {
+ 669              		.loc 1 121 11 view .LVU199
+ 670 02de 3AEE690A 		vsub.f32	s0, s20, s19
+ 671 02e2 FFF7FEFF 		bl	pitch_abs
+ 672              	.LVL53:
+ 120:application/gimbal/gimbal.c ****           pitch_abs(cur - home) <= 60.0f)
+ 673              		.loc 1 120 55 view .LVU200
+ 674 02e6 DFED327A 		vldr.32	s15, .L76+120
+ 675 02ea F4EEC07A 		vcmpe.f32	s15, s0
+ 676 02ee F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 677 02f2 FFF60DAF 		blt	.L30
+ 123:application/gimbal/gimbal.c ****        s_homed = 1;
+ 678              		.loc 1 123 8 is_stmt 1 view .LVU201
+ 123:application/gimbal/gimbal.c ****        s_homed = 1;
+ 679              		.loc 1 123 15 is_stmt 0 view .LVU202
+ 680 02f6 C4ED009A 		vstr.32	s19, [r4]
+ 124:application/gimbal/gimbal.c ****        s_stage = 2;
+ 681              		.loc 1 124 8 is_stmt 1 view .LVU203
+ 124:application/gimbal/gimbal.c ****        s_stage = 2;
+ 682              		.loc 1 124 16 is_stmt 0 view .LVU204
+ 683 02fa 2B4B     		ldr	r3, .L76+112
+ 684 02fc 0122     		movs	r2, #1
+ 685 02fe 1A70     		strb	r2, [r3]
+ 125:application/gimbal/gimbal.c ****        s_home_since = 0;
+ 686              		.loc 1 125 8 is_stmt 1 view .LVU205
+ 125:application/gimbal/gimbal.c ****        s_home_since = 0;
+ 687              		.loc 1 125 16 is_stmt 0 view .LVU206
+ 688 0300 0F4B     		ldr	r3, .L76+8
+ 689 0302 0222     		movs	r2, #2
+ 690 0304 1A70     		strb	r2, [r3]
+ 126:application/gimbal/gimbal.c ****     }
+ 691              		.loc 1 126 8 is_stmt 1 view .LVU207
+ 126:application/gimbal/gimbal.c ****     }
+ 692              		.loc 1 126 21 is_stmt 0 view .LVU208
+ 693 0306 274B     		ldr	r3, .L76+108
+ 694 0308 0022     		movs	r2, #0
+ 695 030a 1A60     		str	r2, [r3]
+ 696 030c 00E7     		b	.L30
+ 697              	.L74:
+ 110:application/gimbal/gimbal.c ****         s_i          = 0.0f;
+ 698              		.loc 1 110 9 is_stmt 1 view .LVU209
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 20
+
+
+ 110:application/gimbal/gimbal.c ****         s_i          = 0.0f;
+ 699              		.loc 1 110 22 is_stmt 0 view .LVU210
+ 700 030e 144B     		ldr	r3, .L76+40
+ 701 0310 83ED00AA 		vstr.32	s20, [r3]
+ 111:application/gimbal/gimbal.c ****         s_homed      = 1;
+ 702              		.loc 1 111 9 is_stmt 1 view .LVU211
+ 111:application/gimbal/gimbal.c ****         s_homed      = 1;
+ 703              		.loc 1 111 22 is_stmt 0 view .LVU212
+ 704 0314 9FED0B0A 		vldr.32	s0, .L76+12
+ 705 0318 0B4B     		ldr	r3, .L76+16
+ 706 031a 83ED000A 		vstr.32	s0, [r3]
+ 112:application/gimbal/gimbal.c ****         s_stage      = 2;
+ 707              		.loc 1 112 9 is_stmt 1 view .LVU213
+ 112:application/gimbal/gimbal.c ****         s_stage      = 2;
+ 708              		.loc 1 112 22 is_stmt 0 view .LVU214
+ 709 031e 224B     		ldr	r3, .L76+112
+ 710 0320 0122     		movs	r2, #1
+ 711 0322 1A70     		strb	r2, [r3]
+ 113:application/gimbal/gimbal.c ****         s_home_since = 0;
+ 712              		.loc 1 113 9 is_stmt 1 view .LVU215
+ 113:application/gimbal/gimbal.c ****         s_home_since = 0;
+ 713              		.loc 1 113 22 is_stmt 0 view .LVU216
+ 714 0324 064B     		ldr	r3, .L76+8
+ 715 0326 0222     		movs	r2, #2
+ 716 0328 1A70     		strb	r2, [r3]
+ 114:application/gimbal/gimbal.c ****         return 0.0f;
+ 717              		.loc 1 114 9 is_stmt 1 view .LVU217
+ 114:application/gimbal/gimbal.c ****         return 0.0f;
+ 718              		.loc 1 114 22 is_stmt 0 view .LVU218
+ 719 032a 1E4B     		ldr	r3, .L76+108
+ 720 032c 0022     		movs	r2, #0
+ 721 032e 1A60     		str	r2, [r3]
+ 115:application/gimbal/gimbal.c ****     }
+ 722              		.loc 1 115 9 is_stmt 1 view .LVU219
+ 115:application/gimbal/gimbal.c ****     }
+ 723              		.loc 1 115 16 is_stmt 0 view .LVU220
+ 724 0330 75E6     		b	.L20
+ 725              	.L77:
+ 726 0332 00BFAFF3 		.align	3
+ 726      0080
+ 727              	.L76:
+ 728 0338 C3F5285C 		.word	1546188227
+ 729 033c 8FC2C53F 		.word	1069925007
+ 730 0340 00000000 		.word	s_stage.6
+ 731 0344 00000000 		.word	0
+ 732 0348 00000000 		.word	s_i.5
+ 733 034c 00000000 		.word	gim_pitch
+ 734 0350 0000FA43 		.word	1140457472
+ 735 0354 00000000 		.word	s_stick_f.4
+ 736 0358 CDCC4C3E 		.word	1045220557
+ 737 035c CDCCCC3D 		.word	1036831949
+ 738 0360 00000000 		.word	s_ref.3
+ 739 0364 0000E144 		.word	1155596288
+ 740 0368 00000000 		.word	s_v.2
+ 741 036c 6F12833A 		.word	981668463
+ 742 0370 00205A45 		.word	1163534336
+ 743 0374 00709445 		.word	1167355904
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 21
+
+
+ 744 0378 00007A44 		.word	1148846080
+ 745 037c AE870843 		.word	1124632494
+ 746 0380 00004843 		.word	1128792064
+ 747 0384 000048C3 		.word	-1018691584
+ 748 0388 0000D242 		.word	1121058816
+ 749 038c 00401C45 		.word	1159479296
+ 750 0390 00A08C46 		.word	1183621120
+ 751 0394 00A08CC6 		.word	-963862528
+ 752 0398 00009B43 		.word	1134231552
+ 753 039c 00401C46 		.word	1176256512
+ 754 03a0 00401CC6 		.word	-971227136
+ 755 03a4 00000000 		.word	s_home_since.1
+ 756 03a8 00000000 		.word	s_homed.0
+ 757 03ac 00208045 		.word	1166024704
+ 758 03b0 00007042 		.word	1114636288
+ 759 03b4 01004041 		.word	1094713345
+ 760              	.LVL54:
+ 761              	.L69:
+ 762              	.LBB4:
+ 139:application/gimbal/gimbal.c ****       else                      s_v = v_tgt;
+ 763              		.loc 1 139 12 is_stmt 1 view .LVU221
+ 139:application/gimbal/gimbal.c ****       else                      s_v = v_tgt;
+ 764              		.loc 1 139 27 is_stmt 0 view .LVU222
+ 765 03b8 1FED027A 		vldr.32	s14, .L76+124
+ 766 03bc 76EEC76A 		vsub.f32	s13, s13, s14
+ 139:application/gimbal/gimbal.c ****       else                      s_v = v_tgt;
+ 767              		.loc 1 139 14 view .LVU223
+ 768 03c0 F4EEE76A 		vcmpe.f32	s13, s15
+ 769 03c4 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 770 03c8 03DD     		ble	.L70
+ 139:application/gimbal/gimbal.c ****       else                      s_v = v_tgt;
+ 771              		.loc 1 139 33 is_stmt 1 discriminator 1 view .LVU224
+ 139:application/gimbal/gimbal.c ****       else                      s_v = v_tgt;
+ 772              		.loc 1 139 37 is_stmt 0 discriminator 1 view .LVU225
+ 773 03ca 214B     		ldr	r3, .L78
+ 774 03cc C3ED006A 		vstr.32	s13, [r3]
+ 775 03d0 92E6     		b	.L36
+ 776              	.L70:
+ 140:application/gimbal/gimbal.c **** 
+ 777              		.loc 1 140 33 is_stmt 1 view .LVU226
+ 140:application/gimbal/gimbal.c **** 
+ 778              		.loc 1 140 37 is_stmt 0 view .LVU227
+ 779 03d2 1F4B     		ldr	r3, .L78
+ 780 03d4 C3ED007A 		vstr.32	s15, [r3]
+ 781 03d8 8EE6     		b	.L36
+ 782              	.LVL55:
+ 783              	.L49:
+ 140:application/gimbal/gimbal.c **** 
+ 784              		.loc 1 140 37 view .LVU228
+ 785              	.LBE4:
+ 186:application/gimbal/gimbal.c ****     {
+ 786              		.loc 1 186 10 is_stmt 1 view .LVU229
+ 186:application/gimbal/gimbal.c ****     {
+ 787              		.loc 1 186 13 is_stmt 0 view .LVU230
+ 788 03da 41F28D23 		movw	r3, #4749
+ 789 03de 9D42     		cmp	r5, r3
+ 790 03e0 08D9     		bls	.L50
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 22
+
+
+ 188:application/gimbal/gimbal.c ****     }
+ 791              		.loc 1 188 9 is_stmt 1 view .LVU231
+ 188:application/gimbal/gimbal.c ****     }
+ 792              		.loc 1 188 12 is_stmt 0 view .LVU232
+ 793 03e2 B5EEC00A 		vcmpe.f32	s0, #0
+ 794 03e6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 795 03ea 7FF718AE 		ble	.L20
+ 188:application/gimbal/gimbal.c ****     }
+ 796              		.loc 1 188 31 discriminator 1 view .LVU233
+ 797 03ee 9FED190A 		vldr.32	s0, .L78+4
+ 798              	.LVL56:
+ 188:application/gimbal/gimbal.c ****     }
+ 799              		.loc 1 188 31 discriminator 1 view .LVU234
+ 800 03f2 14E6     		b	.L20
+ 801              	.LVL57:
+ 802              	.L50:
+ 190:application/gimbal/gimbal.c ****     {
+ 803              		.loc 1 190 10 is_stmt 1 view .LVU235
+ 190:application/gimbal/gimbal.c ****     {
+ 804              		.loc 1 190 13 is_stmt 0 view .LVU236
+ 805 03f4 40F61963 		movw	r3, #3609
+ 806 03f8 9D42     		cmp	r5, r3
+ 807 03fa 04D8     		bhi	.L51
+ 190:application/gimbal/gimbal.c ****     {
+ 808              		.loc 1 190 30 discriminator 1 view .LVU237
+ 809 03fc B5EEC00A 		vcmpe.f32	s0, #0
+ 810 0400 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 811 0404 15D4     		bmi	.L75
+ 812              	.L51:
+ 195:application/gimbal/gimbal.c ****     {
+ 813              		.loc 1 195 10 is_stmt 1 view .LVU238
+ 195:application/gimbal/gimbal.c ****     {
+ 814              		.loc 1 195 13 is_stmt 0 view .LVU239
+ 815 0406 41F21623 		movw	r3, #4630
+ 816 040a 9D42     		cmp	r5, r3
+ 817 040c 7FF607AE 		bls	.L20
+ 195:application/gimbal/gimbal.c ****     {
+ 818              		.loc 1 195 30 discriminator 1 view .LVU240
+ 819 0410 B5EEC00A 		vcmpe.f32	s0, #0
+ 820 0414 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 821 0418 7FF701AE 		ble	.L20
+ 198:application/gimbal/gimbal.c ****     }
+ 822              		.loc 1 198 9 is_stmt 1 view .LVU241
+ 198:application/gimbal/gimbal.c ****     }
+ 823              		.loc 1 198 21 is_stmt 0 view .LVU242
+ 824 041c DFED0E7A 		vldr.32	s15, .L78+8
+ 825 0420 77EECA7A 		vsub.f32	s15, s15, s20
+ 198:application/gimbal/gimbal.c ****     }
+ 826              		.loc 1 198 28 view .LVU243
+ 827 0424 DFED0D6A 		vldr.32	s13, .L78+12
+ 828 0428 87EEA67A 		vdiv.f32	s14, s15, s13
+ 198:application/gimbal/gimbal.c ****     }
+ 829              		.loc 1 198 14 view .LVU244
+ 830 042c 20EE070A 		vmul.f32	s0, s0, s14
+ 831              	.LVL58:
+ 198:application/gimbal/gimbal.c ****     }
+ 832              		.loc 1 198 14 view .LVU245
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 23
+
+
+ 833 0430 F5E5     		b	.L20
+ 834              	.L75:
+ 193:application/gimbal/gimbal.c ****     }
+ 835              		.loc 1 193 9 is_stmt 1 view .LVU246
+ 193:application/gimbal/gimbal.c ****     }
+ 836              		.loc 1 193 22 is_stmt 0 view .LVU247
+ 837 0432 DFED0B7A 		vldr.32	s15, .L78+16
+ 838 0436 7AEE677A 		vsub.f32	s15, s20, s15
+ 193:application/gimbal/gimbal.c ****     }
+ 839              		.loc 1 193 28 view .LVU248
+ 840 043a DFED086A 		vldr.32	s13, .L78+12
+ 841 043e 87EEA67A 		vdiv.f32	s14, s15, s13
+ 193:application/gimbal/gimbal.c ****     }
+ 842              		.loc 1 193 14 view .LVU249
+ 843 0442 20EE070A 		vmul.f32	s0, s0, s14
+ 844              	.LVL59:
+ 193:application/gimbal/gimbal.c ****     }
+ 845              		.loc 1 193 14 view .LVU250
+ 846 0446 EAE5     		b	.L20
+ 847              	.LVL60:
+ 848              	.L54:
+  86:application/gimbal/gimbal.c ****     }
+ 849              		.loc 1 86 16 view .LVU251
+ 850 0448 9FED020A 		vldr.32	s0, .L78+4
+ 851 044c E7E5     		b	.L20
+ 852              	.L79:
+ 853 044e 00BF     		.align	2
+ 854              	.L78:
+ 855 0450 00000000 		.word	s_v.2
+ 856 0454 00000000 		.word	0
+ 857 0458 00709445 		.word	1167355904
+ 858 045c 0000F042 		.word	1123024896
+ 859 0460 00205A45 		.word	1163534336
+ 860              		.cfi_endproc
+ 861              	.LFE149:
+ 863              		.section	.text.RC_GetOffsetAngle,"ax",%progbits
+ 864              		.align	1
+ 865              		.global	RC_GetOffsetAngle
+ 866              		.syntax unified
+ 867              		.thumb
+ 868              		.thumb_func
+ 870              	RC_GetOffsetAngle:
+ 871              	.LFB151:
+ 220:application/gimbal/gimbal.c **** 
+ 221:application/gimbal/gimbal.c **** /* 枪口相对车头的夹角 α（度，-180 ~ +180）
+ 222:application/gimbal/gimbal.c ****  * 逆时针（俯视）为正，即 α>0 表示枪口偏向车头左侧 */
+ 223:application/gimbal/gimbal.c **** volatile float RC_GunAngle = 0.0f;
+ 224:application/gimbal/gimbal.c **** 
+ 225:application/gimbal/gimbal.c **** float RC_GetOffsetAngle(void)
+ 226:application/gimbal/gimbal.c **** {
+ 872              		.loc 1 226 1 is_stmt 1 view -0
+ 873              		.cfi_startproc
+ 874              		@ args = 0, pretend = 0, frame = 0
+ 875              		@ frame_needed = 0, uses_anonymous_args = 0
+ 876 0000 08B5     		push	{r3, lr}
+ 877              	.LCFI4:
+ 878              		.cfi_def_cfa_offset 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 24
+
+
+ 879              		.cfi_offset 3, -8
+ 880              		.cfi_offset 14, -4
+ 227:application/gimbal/gimbal.c ****     float d = yaw_wrap((float)gim6020.angle - GM_YAW_ALIGN_COUNT);
+ 881              		.loc 1 227 5 view .LVU253
+ 882              		.loc 1 227 38 is_stmt 0 view .LVU254
+ 883 0002 0C4B     		ldr	r3, .L82
+ 884 0004 1B88     		ldrh	r3, [r3]
+ 885 0006 9BB2     		uxth	r3, r3
+ 886 0008 00EE103A 		vmov	s0, r3	@ int
+ 887              		.loc 1 227 24 view .LVU255
+ 888 000c B8EE400A 		vcvt.f32.u32	s0, s0
+ 889              		.loc 1 227 15 view .LVU256
+ 890 0010 DFED097A 		vldr.32	s15, .L82+4
+ 891 0014 30EE670A 		vsub.f32	s0, s0, s15
+ 892 0018 FFF7FEFF 		bl	yaw_wrap
+ 893              	.LVL61:
+ 228:application/gimbal/gimbal.c ****     d = d * 360.0f / 8192.0f;          /* counts → 度 */
+ 894              		.loc 1 228 5 is_stmt 1 view .LVU257
+ 895              		.loc 1 228 11 is_stmt 0 view .LVU258
+ 896 001c DFED077A 		vldr.32	s15, .L82+8
+ 897 0020 20EE270A 		vmul.f32	s0, s0, s15
+ 898              	.LVL62:
+ 899              		.loc 1 228 7 view .LVU259
+ 900 0024 DFED067A 		vldr.32	s15, .L82+12
+ 901 0028 20EE270A 		vmul.f32	s0, s0, s15
+ 902              	.LVL63:
+ 229:application/gimbal/gimbal.c ****     RC_GunAngle = d;
+ 903              		.loc 1 229 5 is_stmt 1 view .LVU260
+ 904              		.loc 1 229 17 is_stmt 0 view .LVU261
+ 905 002c 054B     		ldr	r3, .L82+16
+ 906 002e 83ED000A 		vstr.32	s0, [r3]
+ 230:application/gimbal/gimbal.c ****     return d;
+ 907              		.loc 1 230 5 is_stmt 1 view .LVU262
+ 231:application/gimbal/gimbal.c **** }
+ 908              		.loc 1 231 1 is_stmt 0 view .LVU263
+ 909 0032 08BD     		pop	{r3, pc}
+ 910              	.L83:
+ 911              		.align	2
+ 912              	.L82:
+ 913 0034 00000000 		.word	gim6020
+ 914 0038 0000C842 		.word	1120403456
+ 915 003c 0000B443 		.word	1135869952
+ 916 0040 00000039 		.word	956301312
+ 917 0044 00000000 		.word	RC_GunAngle
+ 918              		.cfi_endproc
+ 919              	.LFE151:
+ 921              		.section	.text.RC_Yaw_Control,"ax",%progbits
+ 922              		.align	1
+ 923              		.global	RC_Yaw_Control
+ 924              		.syntax unified
+ 925              		.thumb
+ 926              		.thumb_func
+ 928              	RC_Yaw_Control:
+ 929              	.LVL64:
+ 930              	.LFB152:
+ 232:application/gimbal/gimbal.c **** float RC_Yaw_Control(uint8_t online, float stick)
+ 233:application/gimbal/gimbal.c **** {
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 25
+
+
+ 931              		.loc 1 233 1 is_stmt 1 view -0
+ 932              		.cfi_startproc
+ 933              		@ args = 0, pretend = 0, frame = 0
+ 934              		@ frame_needed = 0, uses_anonymous_args = 0
+ 935              		.loc 1 233 1 is_stmt 0 view .LVU265
+ 936 0000 38B5     		push	{r3, r4, r5, lr}
+ 937              	.LCFI5:
+ 938              		.cfi_def_cfa_offset 16
+ 939              		.cfi_offset 3, -16
+ 940              		.cfi_offset 4, -12
+ 941              		.cfi_offset 5, -8
+ 942              		.cfi_offset 14, -4
+ 943 0002 2DED048B 		vpush.64	{d8, d9}
+ 944              	.LCFI6:
+ 945              		.cfi_def_cfa_offset 32
+ 946              		.cfi_offset 80, -32
+ 947              		.cfi_offset 81, -28
+ 948              		.cfi_offset 82, -24
+ 949              		.cfi_offset 83, -20
+ 950 0006 0446     		mov	r4, r0
+ 951 0008 F0EE408A 		vmov.f32	s17, s0
+ 234:application/gimbal/gimbal.c ****     const float cur = (float)gim6020.angle;
+ 952              		.loc 1 234 5 is_stmt 1 view .LVU266
+ 953              		.loc 1 234 37 is_stmt 0 view .LVU267
+ 954 000c 9E4D     		ldr	r5, .L129
+ 955 000e 2B88     		ldrh	r3, [r5]
+ 956 0010 9BB2     		uxth	r3, r3
+ 957              		.loc 1 234 17 view .LVU268
+ 958 0012 07EE903A 		vmov	s15, r3	@ int
+ 959 0016 B8EE678A 		vcvt.f32.u32	s16, s15
+ 960              	.LVL65:
+ 235:application/gimbal/gimbal.c ****     /* 反馈超时等同离线：目标/积分/接管状态一起清，恢复后按当时的实际
+ 236:application/gimbal/gimbal.c ****      * （否则会拿最后一帧的旧角度当目标，恢复瞬间被拽一下） */
+ 237:application/gimbal/gimbal.c ****     const uint8_t fresh = ((HAL_GetTick() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u
+ 961              		.loc 1 237 5 is_stmt 1 view .LVU269
+ 962              		.loc 1 237 29 is_stmt 0 view .LVU270
+ 963 001a FFF7FEFF 		bl	HAL_GetTick
+ 964              	.LVL66:
+ 965              		.loc 1 237 52 discriminator 1 view .LVU271
+ 966 001e AB68     		ldr	r3, [r5, #8]
+ 967              		.loc 1 237 43 discriminator 1 view .LVU272
+ 968 0020 C31A     		subs	r3, r0, r3
+ 969              		.loc 1 237 19 discriminator 1 view .LVU273
+ 970 0022 642B     		cmp	r3, #100
+ 971 0024 77D8     		bhi	.L110
+ 972 0026 0122     		movs	r2, #1
+ 973              	.L85:
+ 974              	.LVL67:
+ 238:application/gimbal/gimbal.c ****     float d_ref, err, rpm_d, err_v, volt;
+ 975              		.loc 1 238 5 is_stmt 1 view .LVU274
+ 239:application/gimbal/gimbal.c ****     float hold_rate = 0.0f;      /* 稳向折算的关节角速度（deg/s），0=未介入 */
+ 976              		.loc 1 239 5 view .LVU275
+ 240:application/gimbal/gimbal.c **** 
+ 241:application/gimbal/gimbal.c ****     if ((online == 0u) || (fresh == 0u) || (s_yaw_ready == 0u)) {
+ 977              		.loc 1 241 5 view .LVU276
+ 978              		.loc 1 241 34 is_stmt 0 view .LVU277
+ 979 0028 82F00103 		eor	r3, r2, #1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 26
+
+
+ 980              		.loc 1 241 24 view .LVU278
+ 981 002c 002C     		cmp	r4, #0
+ 982 002e 08BF     		it	eq
+ 983 0030 43F00103 		orreq	r3, r3, #1
+ 984              		.loc 1 241 8 view .LVU279
+ 985 0034 002B     		cmp	r3, #0
+ 986 0036 70D1     		bne	.L86
+ 987              		.loc 1 241 57 discriminator 1 view .LVU280
+ 988 0038 944B     		ldr	r3, .L129+4
+ 989 003a 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 990              		.loc 1 241 41 discriminator 1 view .LVU281
+ 991 003c 002B     		cmp	r3, #0
+ 992 003e 6CD0     		beq	.L86
+ 242:application/gimbal/gimbal.c ****         s_yaw_ref   = cur;
+ 243:application/gimbal/gimbal.c ****         s_yaw_i     = 0.0f;
+ 244:application/gimbal/gimbal.c ****         s_yaw_ready = (uint8_t)((online != 0u) && (fresh != 0u));
+ 245:application/gimbal/gimbal.c ****         s_psi_deg   = 0.0f;          /* 航向是相对量，离线时整段作废，恢复后重�
+ 246:application/gimbal/gimbal.c ****         s_psi_ref   = 0.0f;
+ 247:application/gimbal/gimbal.c ****         s_hold_i    = 0.0f;
+ 248:application/gimbal/gimbal.c ****         RC_YawRef    = s_yaw_ref;
+ 249:application/gimbal/gimbal.c ****         RC_YawErr    = 0.0f;
+ 250:application/gimbal/gimbal.c ****         RC_YawRpmDes = 0.0f;
+ 251:application/gimbal/gimbal.c ****         RC_YawVolt   = 0.0f;
+ 252:application/gimbal/gimbal.c ****         RC_YawI      = s_yaw_i;
+ 253:application/gimbal/gimbal.c ****         return 0.0f;
+ 254:application/gimbal/gimbal.c ****     }
+ 255:application/gimbal/gimbal.c **** 
+ 256:application/gimbal/gimbal.c ****     /* ① 摇杆 → 目标角增量（松杆保持），沿用原开环手感 */
+ 257:application/gimbal/gimbal.c ****     d_ref      = GM6020_SIGN * GM_YAW_STICK_RATE * stick * 0.001f;
+ 993              		.loc 1 257 5 is_stmt 1 view .LVU282
+ 994              		.loc 1 257 50 is_stmt 0 view .LVU283
+ 995 0040 DFED937A 		vldr.32	s15, .L129+8
+ 996 0044 28EEA70A 		vmul.f32	s0, s17, s15
+ 997              		.loc 1 257 16 view .LVU284
+ 998 0048 DFED927A 		vldr.32	s15, .L129+12
+ 999 004c 20EE270A 		vmul.f32	s0, s0, s15
+ 1000              	.LVL68:
+ 258:application/gimbal/gimbal.c ****     s_yaw_ref += d_ref;
+ 1001              		.loc 1 258 5 is_stmt 1 view .LVU285
+ 1002              		.loc 1 258 15 is_stmt 0 view .LVU286
+ 1003 0050 914B     		ldr	r3, .L129+16
+ 1004 0052 93ED007A 		vldr.32	s14, [r3]
+ 1005 0056 30EE077A 		vadd.f32	s14, s0, s14
+ 1006 005a 83ED007A 		vstr.32	s14, [r3]
+ 259:application/gimbal/gimbal.c **** 
+ 260:application/gimbal/gimbal.c ****     /* ①.2 松杆就不攒积分
+ 261:application/gimbal/gimbal.c ****      * 云台 yaw 是水平轴，没有重力要顶；松杆后位置环的 P 项足够把角度按
+ 262:application/gimbal/gimbal.c ****      * 积分只在"主动推杆"时有用，松杆还留着它，就会慢慢把枪口顶偏再弹
+ 263:application/gimbal/gimbal.c ****     if (d_ref == 0.0f) {
+ 1007              		.loc 1 263 5 is_stmt 1 view .LVU287
+ 1008              		.loc 1 263 8 is_stmt 0 view .LVU288
+ 1009 005e B5EE400A 		vcmp.f32	s0, #0
+ 1010 0062 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1011 0066 02D1     		bne	.L89
+ 264:application/gimbal/gimbal.c ****         s_yaw_i = 0.0f;
+ 1012              		.loc 1 264 9 is_stmt 1 view .LVU289
+ 1013              		.loc 1 264 17 is_stmt 0 view .LVU290
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 27
+
+
+ 1014 0068 8C4B     		ldr	r3, .L129+20
+ 1015 006a 0022     		movs	r2, #0
+ 1016              	.LVL69:
+ 1017              		.loc 1 264 17 view .LVU291
+ 1018 006c 1A60     		str	r2, [r3]	@ float
+ 1019              	.L89:
+ 1020              	.LBB5:
+ 265:application/gimbal/gimbal.c ****     }
+ 266:application/gimbal/gimbal.c **** 
+ 267:application/gimbal/gimbal.c ****     /* ①.5 世界稳向 —— 2026-11-13 第四次修订：速度 P + 积分
+ 268:application/gimbal/gimbal.c ****      * 只有比例时残差 = ω/(1+K)：K=2 也还剩 33%，转 5 s 就丢掉 1/3 的角度，
+ 269:application/gimbal/gimbal.c ****      * "保持世界朝向"永远做不干净。这里在**枪口角速度**上串一个积分
+ 270:application/gimbal/gimbal.c ****      * （对象是 ω 不是角度，不构成第二个积分器，不会像上次那样自激）�
+ 271:application/gimbal/gimbal.c ****      * 稳态把残差压到 0；条件积分 + 限幅，防止长时间旋转把积分灌满。 */
+ 272:application/gimbal/gimbal.c ****     {
+ 273:application/gimbal/gimbal.c ****         float wz_ms  = GM_YAW_HOLD_SIGN * -(float)INS_Gyro[0] * 57.2957795f;  /* 枪口世界角速
+ 1021              		.loc 1 273 9 is_stmt 1 view .LVU292
+ 1022              		.loc 1 273 59 is_stmt 0 view .LVU293
+ 1023 006e 8C4B     		ldr	r3, .L129+24
+ 1024 0070 D3ED006A 		vldr.32	s13, [r3]
+ 1025              		.loc 1 273 15 view .LVU294
+ 1026 0074 DFED8B7A 		vldr.32	s15, .L129+28
+ 1027 0078 66EEE76A 		vnmul.f32	s13, s13, s15
+ 1028              	.LVL70:
+ 274:application/gimbal/gimbal.c ****         float wz_cmd = d_ref * 1000.0f / GM_YAW_COUNT_PER_DEG;               /* 操作手要的关�
+ 1029              		.loc 1 274 9 is_stmt 1 view .LVU295
+ 1030              		.loc 1 274 30 is_stmt 0 view .LVU296
+ 1031 007c DFED8A7A 		vldr.32	s15, .L129+32
+ 1032 0080 20EE279A 		vmul.f32	s18, s0, s15
+ 1033              		.loc 1 274 15 view .LVU297
+ 1034 0084 9FED896A 		vldr.32	s12, .L129+36
+ 1035 0088 C9EE067A 		vdiv.f32	s15, s18, s12
+ 1036              	.LVL71:
+ 275:application/gimbal/gimbal.c ****         /* ★误差取"实测 − 指令"，而不是"实测 − 0"，也不再靠 d_ref==0 开门
+ 276:application/gimbal/gimbal.c ****          *   遥控器零点只要偏 3 个 count，d_ref 就不为 0，原来的门控会让稳向
+ 277:application/gimbal/gimbal.c ****          *   表现就是"稳一下就被带走"。现在给杆时 wz_err 自动扣掉操作手那�
+ 278:application/gimbal/gimbal.c ****          *   稳向只补"底盘带出来的"转速，推杆不会变粘。 */
+ 279:application/gimbal/gimbal.c ****         float wz_err = wz_ms - wz_cmd;
+ 1037              		.loc 1 279 9 is_stmt 1 view .LVU298
+ 1038              		.loc 1 279 15 is_stmt 0 view .LVU299
+ 1039 008c 76EEE77A 		vsub.f32	s15, s13, s15
+ 1040              	.LVL72:
+ 280:application/gimbal/gimbal.c **** 
+ 281:application/gimbal/gimbal.c ****         if ((wz_err > GM_YAW_HOLD_DEAD) || (wz_err < -GM_YAW_HOLD_DEAD)) {
+ 1041              		.loc 1 281 9 is_stmt 1 view .LVU300
+ 1042              		.loc 1 281 12 is_stmt 0 view .LVU301
+ 1043 0090 B7EE086A 		vmov.f32	s12, #1.5e+0
+ 1044              	.LVL73:
+ 1045              		.loc 1 281 12 view .LVU302
+ 1046 0094 F4EEC67A 		vcmpe.f32	s15, s12
+ 1047 0098 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1048 009c 07DC     		bgt	.L90
+ 1049              		.loc 1 281 41 discriminator 1 view .LVU303
+ 1050 009e BFEE086A 		vmov.f32	s12, #-1.5e+0
+ 1051 00a2 F4EEC67A 		vcmpe.f32	s15, s12
+ 1052 00a6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1053 00aa 40F1C180 		bpl	.L127
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 28
+
+
+ 1054              	.L90:
+ 1055              	.LBB6:
+ 282:application/gimbal/gimbal.c ****             float rate = -(GM_YAW_HOLD_K * wz_err + s_hold_i);   /* deg/s */
+ 1056              		.loc 1 282 13 is_stmt 1 view .LVU304
+ 1057              		.loc 1 282 42 is_stmt 0 view .LVU305
+ 1058 00ae 77EEA77A 		vadd.f32	s15, s15, s15
+ 1059              	.LVL74:
+ 1060              		.loc 1 282 51 view .LVU306
+ 1061 00b2 7F4B     		ldr	r3, .L129+40
+ 1062 00b4 D3ED005A 		vldr.32	s11, [r3]
+ 1063 00b8 37EEA56A 		vadd.f32	s12, s15, s11
+ 1064              		.loc 1 282 19 view .LVU307
+ 1065 00bc F1EE469A 		vneg.f32	s19, s12
+ 1066              	.LVL75:
+ 283:application/gimbal/gimbal.c **** 
+ 284:application/gimbal/gimbal.c ****             if (rate > GM_YAW_HOLD_RATE_MAX) {
+ 1067              		.loc 1 284 13 is_stmt 1 view .LVU308
+ 1068              		.loc 1 284 16 is_stmt 0 view .LVU309
+ 1069 00c0 9FED7C5A 		vldr.32	s10, .L129+44
+ 1070 00c4 B4EEC56A 		vcmpe.f32	s12, s10
+ 1071 00c8 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1072 00cc 4FD4     		bmi	.L111
+ 285:application/gimbal/gimbal.c ****                 rate = GM_YAW_HOLD_RATE_MAX;
+ 286:application/gimbal/gimbal.c ****             } else if (rate < -GM_YAW_HOLD_RATE_MAX) {
+ 1073              		.loc 1 286 20 is_stmt 1 view .LVU310
+ 1074              		.loc 1 286 23 is_stmt 0 view .LVU311
+ 1075 00ce 9FED7A5A 		vldr.32	s10, .L129+48
+ 1076 00d2 B4EEC56A 		vcmpe.f32	s12, s10
+ 1077 00d6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1078 00da 00F3A680 		bgt	.L112
+ 287:application/gimbal/gimbal.c ****                 rate = -GM_YAW_HOLD_RATE_MAX;
+ 288:application/gimbal/gimbal.c ****             } else {
+ 289:application/gimbal/gimbal.c ****                 s_hold_i += GM_YAW_HOLD_KI * wz_err * 0.001f;    /* 只在未饱和时积分 */
+ 1079              		.loc 1 289 17 is_stmt 1 view .LVU312
+ 1080              		.loc 1 289 53 is_stmt 0 view .LVU313
+ 1081 00de 9FED6D6A 		vldr.32	s12, .L129+12
+ 1082 00e2 67EE867A 		vmul.f32	s15, s15, s12
+ 1083              		.loc 1 289 26 view .LVU314
+ 1084 00e6 75EEA75A 		vadd.f32	s11, s11, s15
+ 1085 00ea C3ED005A 		vstr.32	s11, [r3]
+ 290:application/gimbal/gimbal.c ****                 if (s_hold_i >  GM_YAW_HOLD_RATE_MAX) s_hold_i =  GM_YAW_HOLD_RATE_MAX;
+ 1086              		.loc 1 290 17 is_stmt 1 view .LVU315
+ 1087              		.loc 1 290 20 is_stmt 0 view .LVU316
+ 1088 00ee F4EEC55A 		vcmpe.f32	s11, s10
+ 1089 00f2 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1090 00f6 01DD     		ble	.L94
+ 1091              		.loc 1 290 55 is_stmt 1 discriminator 1 view .LVU317
+ 1092              		.loc 1 290 64 is_stmt 0 discriminator 1 view .LVU318
+ 1093 00f8 83ED005A 		vstr.32	s10, [r3]
+ 1094              	.L94:
+ 291:application/gimbal/gimbal.c ****                 if (s_hold_i < -GM_YAW_HOLD_RATE_MAX) s_hold_i = -GM_YAW_HOLD_RATE_MAX;
+ 1095              		.loc 1 291 17 is_stmt 1 view .LVU319
+ 1096              		.loc 1 291 30 is_stmt 0 view .LVU320
+ 1097 00fc 6C4B     		ldr	r3, .L129+40
+ 1098 00fe 93ED006A 		vldr.32	s12, [r3]
+ 1099              		.loc 1 291 20 view .LVU321
+ 1100 0102 DFED6C7A 		vldr.32	s15, .L129+44
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 29
+
+
+ 1101 0106 B4EEE76A 		vcmpe.f32	s12, s15
+ 1102 010a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1103 010e 30D5     		bpl	.L93
+ 1104              		.loc 1 291 55 is_stmt 1 discriminator 1 view .LVU322
+ 1105              		.loc 1 291 64 is_stmt 0 discriminator 1 view .LVU323
+ 1106 0110 C3ED007A 		vstr.32	s15, [r3]
+ 1107 0114 2DE0     		b	.L93
+ 1108              	.LVL76:
+ 1109              	.L110:
+ 1110              		.loc 1 291 64 discriminator 1 view .LVU324
+ 1111              	.LBE6:
+ 1112              	.LBE5:
+ 237:application/gimbal/gimbal.c ****     float d_ref, err, rpm_d, err_v, volt;
+ 1113              		.loc 1 237 19 discriminator 2 view .LVU325
+ 1114 0116 0022     		movs	r2, #0
+ 1115 0118 86E7     		b	.L85
+ 1116              	.LVL77:
+ 1117              	.L86:
+ 242:application/gimbal/gimbal.c ****         s_yaw_i     = 0.0f;
+ 1118              		.loc 1 242 9 is_stmt 1 view .LVU326
+ 242:application/gimbal/gimbal.c ****         s_yaw_i     = 0.0f;
+ 1119              		.loc 1 242 21 is_stmt 0 view .LVU327
+ 1120 011a 5F4B     		ldr	r3, .L129+16
+ 1121 011c 83ED008A 		vstr.32	s16, [r3]
+ 243:application/gimbal/gimbal.c ****         s_yaw_ready = (uint8_t)((online != 0u) && (fresh != 0u));
+ 1122              		.loc 1 243 9 is_stmt 1 view .LVU328
+ 243:application/gimbal/gimbal.c ****         s_yaw_ready = (uint8_t)((online != 0u) && (fresh != 0u));
+ 1123              		.loc 1 243 21 is_stmt 0 view .LVU329
+ 1124 0120 9FED660A 		vldr.32	s0, .L129+52
+ 1125 0124 5D4B     		ldr	r3, .L129+20
+ 1126 0126 83ED000A 		vstr.32	s0, [r3]
+ 244:application/gimbal/gimbal.c ****         s_psi_deg   = 0.0f;          /* 航向是相对量，离线时整段作废，恢复后重�
+ 1127              		.loc 1 244 9 is_stmt 1 view .LVU330
+ 244:application/gimbal/gimbal.c ****         s_psi_deg   = 0.0f;          /* 航向是相对量，离线时整段作废，恢复后重�
+ 1128              		.loc 1 244 48 is_stmt 0 view .LVU331
+ 1129 012a 002C     		cmp	r4, #0
+ 1130 012c 0CBF     		ite	eq
+ 1131 012e 0022     		moveq	r2, #0
+ 1132 0130 02F00102 		andne	r2, r2, #1
+ 1133              	.LVL78:
+ 244:application/gimbal/gimbal.c ****         s_psi_deg   = 0.0f;          /* 航向是相对量，离线时整段作废，恢复后重�
+ 1134              		.loc 1 244 21 view .LVU332
+ 1135 0134 554B     		ldr	r3, .L129+4
+ 1136 0136 1A70     		strb	r2, [r3]
+ 245:application/gimbal/gimbal.c ****         s_psi_ref   = 0.0f;
+ 1137              		.loc 1 245 9 is_stmt 1 view .LVU333
+ 245:application/gimbal/gimbal.c ****         s_psi_ref   = 0.0f;
+ 1138              		.loc 1 245 21 is_stmt 0 view .LVU334
+ 1139 0138 614B     		ldr	r3, .L129+56
+ 1140 013a 83ED000A 		vstr.32	s0, [r3]
+ 246:application/gimbal/gimbal.c ****         s_hold_i    = 0.0f;
+ 1141              		.loc 1 246 9 is_stmt 1 view .LVU335
+ 246:application/gimbal/gimbal.c ****         s_hold_i    = 0.0f;
+ 1142              		.loc 1 246 21 is_stmt 0 view .LVU336
+ 1143 013e 614B     		ldr	r3, .L129+60
+ 1144 0140 83ED000A 		vstr.32	s0, [r3]
+ 247:application/gimbal/gimbal.c ****         RC_YawRef    = s_yaw_ref;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 30
+
+
+ 1145              		.loc 1 247 9 is_stmt 1 view .LVU337
+ 247:application/gimbal/gimbal.c ****         RC_YawRef    = s_yaw_ref;
+ 1146              		.loc 1 247 21 is_stmt 0 view .LVU338
+ 1147 0144 5A4B     		ldr	r3, .L129+40
+ 1148 0146 83ED000A 		vstr.32	s0, [r3]
+ 248:application/gimbal/gimbal.c ****         RC_YawErr    = 0.0f;
+ 1149              		.loc 1 248 9 is_stmt 1 view .LVU339
+ 248:application/gimbal/gimbal.c ****         RC_YawErr    = 0.0f;
+ 1150              		.loc 1 248 22 is_stmt 0 view .LVU340
+ 1151 014a 5F4B     		ldr	r3, .L129+64
+ 1152 014c 83ED008A 		vstr.32	s16, [r3]
+ 249:application/gimbal/gimbal.c ****         RC_YawRpmDes = 0.0f;
+ 1153              		.loc 1 249 9 is_stmt 1 view .LVU341
+ 249:application/gimbal/gimbal.c ****         RC_YawRpmDes = 0.0f;
+ 1154              		.loc 1 249 22 is_stmt 0 view .LVU342
+ 1155 0150 5E4B     		ldr	r3, .L129+68
+ 1156 0152 83ED000A 		vstr.32	s0, [r3]
+ 250:application/gimbal/gimbal.c ****         RC_YawVolt   = 0.0f;
+ 1157              		.loc 1 250 9 is_stmt 1 view .LVU343
+ 250:application/gimbal/gimbal.c ****         RC_YawVolt   = 0.0f;
+ 1158              		.loc 1 250 22 is_stmt 0 view .LVU344
+ 1159 0156 5E4B     		ldr	r3, .L129+72
+ 1160 0158 83ED000A 		vstr.32	s0, [r3]
+ 251:application/gimbal/gimbal.c ****         RC_YawI      = s_yaw_i;
+ 1161              		.loc 1 251 9 is_stmt 1 view .LVU345
+ 251:application/gimbal/gimbal.c ****         RC_YawI      = s_yaw_i;
+ 1162              		.loc 1 251 22 is_stmt 0 view .LVU346
+ 1163 015c 5D4B     		ldr	r3, .L129+76
+ 1164 015e 83ED000A 		vstr.32	s0, [r3]
+ 252:application/gimbal/gimbal.c ****         return 0.0f;
+ 1165              		.loc 1 252 9 is_stmt 1 view .LVU347
+ 252:application/gimbal/gimbal.c ****         return 0.0f;
+ 1166              		.loc 1 252 22 is_stmt 0 view .LVU348
+ 1167 0162 5D4B     		ldr	r3, .L129+80
+ 1168 0164 83ED000A 		vstr.32	s0, [r3]
+ 253:application/gimbal/gimbal.c ****     }
+ 1169              		.loc 1 253 9 is_stmt 1 view .LVU349
+ 1170              	.LVL79:
+ 1171              	.L84:
+ 292:application/gimbal/gimbal.c ****             }
+ 293:application/gimbal/gimbal.c **** 
+ 294:application/gimbal/gimbal.c ****             s_yaw_ref += rate * GM_YAW_COUNT_PER_DEG * 0.001f;
+ 295:application/gimbal/gimbal.c ****             hold_rate  = rate;     /* ★同时作为速度前馈：只挪目标角、不加转速�
+ 296:application/gimbal/gimbal.c ****                                     *   位置环要靠"误差"才生得出转速，稳态滞后 = 
+ 297:application/gimbal/gimbal.c ****                                     *   转起来就跟不上目标 → 枪口还是被底盘拖着
+ 298:application/gimbal/gimbal.c ****             RC_HoldWz   = wz_ms;
+ 299:application/gimbal/gimbal.c ****             RC_HoldRate = rate;
+ 300:application/gimbal/gimbal.c ****         } else {
+ 301:application/gimbal/gimbal.c ****             s_hold_i = 0.0f;   /* 不转就清积分，免得残留偏置让关节自己慢慢爬 *
+ 302:application/gimbal/gimbal.c ****         }
+ 303:application/gimbal/gimbal.c ****     }
+ 304:application/gimbal/gimbal.c **** 
+ 305:application/gimbal/gimbal.c ****     s_yaw_ref  = cur + yaw_wrap(s_yaw_ref - cur);   /* 折到 ±4096，防绕圈 */
+ 306:application/gimbal/gimbal.c **** 
+ 307:application/gimbal/gimbal.c ****     /* ② 位置 P + 速度前馈 */
+ 308:application/gimbal/gimbal.c ****     err   = yaw_wrap(s_yaw_ref - cur);
+ 309:application/gimbal/gimbal.c **** 
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 31
+
+
+ 310:application/gimbal/gimbal.c ****     /* ②.5 到位清零积分
+ 311:application/gimbal/gimbal.c ****      * 现象：快转到位、定住 1~2 s 后又小幅度回摆一下。
+ 312:application/gimbal/gimbal.c ****      * 原因：到位瞬间速度环还留着正向积分，位置环慢慢把角度拽回来，
+ 313:application/gimbal/gimbal.c ****      *       积分一点点卸，卸完才不动 —— 那一下回摆就是它在卸。
+ 314:application/gimbal/gimbal.c ****      * 做法：位置误差和转速都小到"已经到位"时，直接把积分清掉。 */
+ 315:application/gimbal/gimbal.c ****     if ((err < GM_YAW_ARRIVE_CNT) && (err > -GM_YAW_ARRIVE_CNT) &&
+ 316:application/gimbal/gimbal.c ****         (gim6020.rpm < GM_YAW_ARRIVE_RPM) && (gim6020.rpm > -GM_YAW_ARRIVE_RPM)) {
+ 317:application/gimbal/gimbal.c ****         s_yaw_i = 0.0f;
+ 318:application/gimbal/gimbal.c ****     }
+ 319:application/gimbal/gimbal.c **** 
+ 320:application/gimbal/gimbal.c ****     {
+ 321:application/gimbal/gimbal.c ****         /* D 项单独限幅：不封顶的话 250 rpm × 0.6 = 150 rpm，占满 RPM_MAX 的 60%，
+ 322:application/gimbal/gimbal.c ****          * 减速段 D 项一直满舵，冲过目标再被拉回 —— 就是"来回拟合"的根
+ 323:application/gimbal/gimbal.c ****         float d_term = -GM_YAW_POS_DIR * GM_YAW_ANG_KD * (float)gim6020.rpm;
+ 324:application/gimbal/gimbal.c **** 
+ 325:application/gimbal/gimbal.c ****         if (d_term >  GM_YAW_ANG_D_MAX) d_term =  GM_YAW_ANG_D_MAX;
+ 326:application/gimbal/gimbal.c ****         if (d_term < -GM_YAW_ANG_D_MAX) d_term = -GM_YAW_ANG_D_MAX;
+ 327:application/gimbal/gimbal.c **** 
+ 328:application/gimbal/gimbal.c ****         rpm_d = GM_YAW_POS_DIR * GM_YAW_ANG_KP * err
+ 329:application/gimbal/gimbal.c ****               + d_ref * 1000.0f / 136.53f
+ 330:application/gimbal/gimbal.c ****               + hold_rate * (1.0f / 6.0f)   /* deg/s → rpm：稳向的速度前馈 */
+ 331:application/gimbal/gimbal.c ****               + d_term;
+ 332:application/gimbal/gimbal.c ****     }
+ 333:application/gimbal/gimbal.c ****     if (rpm_d >  GM_YAW_RPM_MAX) rpm_d =  GM_YAW_RPM_MAX;
+ 334:application/gimbal/gimbal.c ****     if (rpm_d < -GM_YAW_RPM_MAX) rpm_d = -GM_YAW_RPM_MAX;
+ 335:application/gimbal/gimbal.c **** 
+ 336:application/gimbal/gimbal.c ****     /* ③ 速度 PI（条件积分 + 限幅） */
+ 337:application/gimbal/gimbal.c ****     err_v = rpm_d - (float)gim6020.rpm;
+ 338:application/gimbal/gimbal.c ****     volt  = GM_YAW_SPD_KP * err_v + s_yaw_i;
+ 339:application/gimbal/gimbal.c **** 
+ 340:application/gimbal/gimbal.c ****     if ((volt < GM_YAW_VOLT_MAX) && (volt > -GM_YAW_VOLT_MAX)) {
+ 341:application/gimbal/gimbal.c ****         s_yaw_i += GM_YAW_SPD_KI * err_v * 0.001f;
+ 342:application/gimbal/gimbal.c ****         if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+ 343:application/gimbal/gimbal.c ****         if (s_yaw_i < -GM_YAW_I_MAX) s_yaw_i = -GM_YAW_I_MAX;
+ 344:application/gimbal/gimbal.c ****     }
+ 345:application/gimbal/gimbal.c ****     volt = GM_YAW_SPD_KP * err_v + s_yaw_i;
+ 346:application/gimbal/gimbal.c **** 
+ 347:application/gimbal/gimbal.c ****     if (volt >  GM_YAW_VOLT_MAX) volt =  GM_YAW_VOLT_MAX;
+ 348:application/gimbal/gimbal.c ****     if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;
+ 349:application/gimbal/gimbal.c **** 
+ 350:application/gimbal/gimbal.c ****     /* 调试镜像 */
+ 351:application/gimbal/gimbal.c ****     RC_YawRef    = s_yaw_ref;
+ 352:application/gimbal/gimbal.c ****     RC_YawErr    = err;
+ 353:application/gimbal/gimbal.c ****     RC_YawRpmDes = rpm_d;
+ 354:application/gimbal/gimbal.c ****     RC_YawVolt   = volt;
+ 355:application/gimbal/gimbal.c ****     RC_YawI      = s_yaw_i;
+ 356:application/gimbal/gimbal.c **** 
+ 357:application/gimbal/gimbal.c ****     return volt;
+ 358:application/gimbal/gimbal.c **** }
+ 1172              		.loc 1 358 1 is_stmt 0 view .LVU350
+ 1173 0168 BDEC048B 		vldm	sp!, {d8-d9}
+ 1174              	.LCFI7:
+ 1175              		.cfi_remember_state
+ 1176              		.cfi_restore 82
+ 1177              		.cfi_restore 83
+ 1178              		.cfi_restore 80
+ 1179              		.cfi_restore 81
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 32
+
+
+ 1180              		.cfi_def_cfa_offset 16
+ 1181              	.LVL80:
+ 1182              		.loc 1 358 1 view .LVU351
+ 1183 016c 38BD     		pop	{r3, r4, r5, pc}
+ 1184              	.LVL81:
+ 1185              	.L111:
+ 1186              	.LCFI8:
+ 1187              		.cfi_restore_state
+ 1188              	.LBB9:
+ 1189              	.LBB7:
+ 285:application/gimbal/gimbal.c ****             } else if (rate < -GM_YAW_HOLD_RATE_MAX) {
+ 1190              		.loc 1 285 22 view .LVU352
+ 1191 016e DFED529A 		vldr.32	s19, .L129+48
+ 1192              	.LVL82:
+ 1193              	.L93:
+ 294:application/gimbal/gimbal.c ****             hold_rate  = rate;     /* ★同时作为速度前馈：只挪目标角、不加转速�
+ 1194              		.loc 1 294 13 is_stmt 1 view .LVU353
+ 294:application/gimbal/gimbal.c ****             hold_rate  = rate;     /* ★同时作为速度前馈：只挪目标角、不加转速�
+ 1195              		.loc 1 294 31 is_stmt 0 view .LVU354
+ 1196 0172 DFED4E7A 		vldr.32	s15, .L129+36
+ 1197              	.LVL83:
+ 294:application/gimbal/gimbal.c ****             hold_rate  = rate;     /* ★同时作为速度前馈：只挪目标角、不加转速�
+ 1198              		.loc 1 294 31 view .LVU355
+ 1199 0176 69EEA77A 		vmul.f32	s15, s19, s15
+ 1200              	.LVL84:
+ 294:application/gimbal/gimbal.c ****             hold_rate  = rate;     /* ★同时作为速度前馈：只挪目标角、不加转速�
+ 1201              		.loc 1 294 54 view .LVU356
+ 1202 017a 9FED466A 		vldr.32	s12, .L129+12
+ 1203 017e 67EE867A 		vmul.f32	s15, s15, s12
+ 294:application/gimbal/gimbal.c ****             hold_rate  = rate;     /* ★同时作为速度前馈：只挪目标角、不加转速�
+ 1204              		.loc 1 294 23 view .LVU357
+ 1205 0182 37EE277A 		vadd.f32	s14, s14, s15
+ 1206 0186 444B     		ldr	r3, .L129+16
+ 1207 0188 83ED007A 		vstr.32	s14, [r3]
+ 295:application/gimbal/gimbal.c ****                                     *   位置环要靠"误差"才生得出转速，稳态滞后 = 
+ 1208              		.loc 1 295 13 is_stmt 1 view .LVU358
+ 1209              	.LVL85:
+ 298:application/gimbal/gimbal.c ****             RC_HoldRate = rate;
+ 1210              		.loc 1 298 13 view .LVU359
+ 298:application/gimbal/gimbal.c ****             RC_HoldRate = rate;
+ 1211              		.loc 1 298 25 is_stmt 0 view .LVU360
+ 1212 018c 534B     		ldr	r3, .L129+84
+ 1213 018e C3ED006A 		vstr.32	s13, [r3]
+ 299:application/gimbal/gimbal.c ****         } else {
+ 1214              		.loc 1 299 13 is_stmt 1 view .LVU361
+ 299:application/gimbal/gimbal.c ****         } else {
+ 1215              		.loc 1 299 25 is_stmt 0 view .LVU362
+ 1216 0192 534B     		ldr	r3, .L129+88
+ 1217 0194 C3ED009A 		vstr.32	s19, [r3]
+ 1218              	.LVL86:
+ 1219              	.L97:
+ 299:application/gimbal/gimbal.c ****         } else {
+ 1220              		.loc 1 299 25 view .LVU363
+ 1221              	.LBE7:
+ 1222              	.LBE9:
+ 305:application/gimbal/gimbal.c **** 
+ 1223              		.loc 1 305 5 is_stmt 1 view .LVU364
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 33
+
+
+ 305:application/gimbal/gimbal.c **** 
+ 1224              		.loc 1 305 24 is_stmt 0 view .LVU365
+ 1225 0198 3F4C     		ldr	r4, .L129+16
+ 1226 019a 94ED000A 		vldr.32	s0, [r4]
+ 1227              	.LVL87:
+ 305:application/gimbal/gimbal.c **** 
+ 1228              		.loc 1 305 24 view .LVU366
+ 1229 019e 30EE480A 		vsub.f32	s0, s0, s16
+ 1230 01a2 FFF7FEFF 		bl	yaw_wrap
+ 1231              	.LVL88:
+ 305:application/gimbal/gimbal.c **** 
+ 1232              		.loc 1 305 22 discriminator 1 view .LVU367
+ 1233 01a6 70EE088A 		vadd.f32	s17, s0, s16
+ 1234              	.LVL89:
+ 305:application/gimbal/gimbal.c **** 
+ 1235              		.loc 1 305 16 discriminator 1 view .LVU368
+ 1236 01aa C4ED008A 		vstr.32	s17, [r4]
+ 308:application/gimbal/gimbal.c **** 
+ 1237              		.loc 1 308 5 is_stmt 1 view .LVU369
+ 308:application/gimbal/gimbal.c **** 
+ 1238              		.loc 1 308 13 is_stmt 0 view .LVU370
+ 1239 01ae 38EEC80A 		vsub.f32	s0, s17, s16
+ 1240 01b2 FFF7FEFF 		bl	yaw_wrap
+ 1241              	.LVL90:
+ 1242 01b6 F0EE406A 		vmov.f32	s13, s0
+ 1243              	.LVL91:
+ 315:application/gimbal/gimbal.c ****         (gim6020.rpm < GM_YAW_ARRIVE_RPM) && (gim6020.rpm > -GM_YAW_ARRIVE_RPM)) {
+ 1244              		.loc 1 315 5 is_stmt 1 view .LVU371
+ 315:application/gimbal/gimbal.c ****         (gim6020.rpm < GM_YAW_ARRIVE_RPM) && (gim6020.rpm > -GM_YAW_ARRIVE_RPM)) {
+ 1245              		.loc 1 315 8 is_stmt 0 view .LVU372
+ 1246 01ba F3EE0E7A 		vmov.f32	s15, #3.0e+1
+ 1247 01be B4EEE70A 		vcmpe.f32	s0, s15
+ 1248 01c2 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1249 01c6 14D5     		bpl	.L98
+ 315:application/gimbal/gimbal.c ****         (gim6020.rpm < GM_YAW_ARRIVE_RPM) && (gim6020.rpm > -GM_YAW_ARRIVE_RPM)) {
+ 1250              		.loc 1 315 35 discriminator 1 view .LVU373
+ 1251 01c8 FBEE0E7A 		vmov.f32	s15, #-3.0e+1
+ 1252 01cc B4EEE70A 		vcmpe.f32	s0, s15
+ 1253 01d0 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1254 01d4 0DDD     		ble	.L98
+ 316:application/gimbal/gimbal.c ****         s_yaw_i = 0.0f;
+ 1255              		.loc 1 316 17 view .LVU374
+ 1256 01d6 2C4B     		ldr	r3, .L129
+ 1257 01d8 5B88     		ldrh	r3, [r3, #2]
+ 1258 01da 1BB2     		sxth	r3, r3
+ 315:application/gimbal/gimbal.c ****         (gim6020.rpm < GM_YAW_ARRIVE_RPM) && (gim6020.rpm > -GM_YAW_ARRIVE_RPM)) {
+ 1259              		.loc 1 315 65 discriminator 2 view .LVU375
+ 1260 01dc 0E2B     		cmp	r3, #14
+ 1261 01de 08DC     		bgt	.L98
+ 316:application/gimbal/gimbal.c ****         s_yaw_i = 0.0f;
+ 1262              		.loc 1 316 54 view .LVU376
+ 1263 01e0 294B     		ldr	r3, .L129
+ 1264 01e2 5B88     		ldrh	r3, [r3, #2]
+ 1265 01e4 1BB2     		sxth	r3, r3
+ 316:application/gimbal/gimbal.c ****         s_yaw_i = 0.0f;
+ 1266              		.loc 1 316 43 view .LVU377
+ 1267 01e6 13F10E0F 		cmn	r3, #14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 34
+
+
+ 1268 01ea 02DB     		blt	.L98
+ 317:application/gimbal/gimbal.c ****     }
+ 1269              		.loc 1 317 9 is_stmt 1 view .LVU378
+ 317:application/gimbal/gimbal.c ****     }
+ 1270              		.loc 1 317 17 is_stmt 0 view .LVU379
+ 1271 01ec 2B4B     		ldr	r3, .L129+20
+ 1272 01ee 0022     		movs	r2, #0
+ 1273 01f0 1A60     		str	r2, [r3]	@ float
+ 1274              	.L98:
+ 1275              	.LBB10:
+ 323:application/gimbal/gimbal.c **** 
+ 1276              		.loc 1 323 9 is_stmt 1 view .LVU380
+ 323:application/gimbal/gimbal.c **** 
+ 1277              		.loc 1 323 72 is_stmt 0 view .LVU381
+ 1278 01f2 254B     		ldr	r3, .L129
+ 1279 01f4 5B88     		ldrh	r3, [r3, #2]
+ 1280 01f6 1BB2     		sxth	r3, r3
+ 1281 01f8 07EE103A 		vmov	s14, r3	@ int
+ 323:application/gimbal/gimbal.c **** 
+ 1282              		.loc 1 323 58 view .LVU382
+ 1283 01fc B8EEC77A 		vcvt.f32.s32	s14, s14
+ 323:application/gimbal/gimbal.c **** 
+ 1284              		.loc 1 323 15 view .LVU383
+ 1285 0200 DFED387A 		vldr.32	s15, .L129+92
+ 1286 0204 27EE277A 		vmul.f32	s14, s14, s15
+ 1287              	.LVL92:
+ 325:application/gimbal/gimbal.c ****         if (d_term < -GM_YAW_ANG_D_MAX) d_term = -GM_YAW_ANG_D_MAX;
+ 1288              		.loc 1 325 9 is_stmt 1 view .LVU384
+ 325:application/gimbal/gimbal.c ****         if (d_term < -GM_YAW_ANG_D_MAX) d_term = -GM_YAW_ANG_D_MAX;
+ 1289              		.loc 1 325 12 is_stmt 0 view .LVU385
+ 1290 0208 DFED377A 		vldr.32	s15, .L129+96
+ 1291 020c B4EEE77A 		vcmpe.f32	s14, s15
+ 1292 0210 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1293 0214 12DC     		bgt	.L113
+ 326:application/gimbal/gimbal.c **** 
+ 1294              		.loc 1 326 9 is_stmt 1 view .LVU386
+ 326:application/gimbal/gimbal.c **** 
+ 1295              		.loc 1 326 12 is_stmt 0 view .LVU387
+ 1296 0216 DFED357A 		vldr.32	s15, .L129+100
+ 1297 021a B4EEE77A 		vcmpe.f32	s14, s15
+ 1298 021e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1299 0222 0DD5     		bpl	.L101
+ 326:application/gimbal/gimbal.c **** 
+ 1300              		.loc 1 326 48 discriminator 1 view .LVU388
+ 1301 0224 9FED317A 		vldr.32	s14, .L129+100
+ 1302              	.LVL93:
+ 326:application/gimbal/gimbal.c **** 
+ 1303              		.loc 1 326 48 discriminator 1 view .LVU389
+ 1304 0228 0AE0     		b	.L101
+ 1305              	.LVL94:
+ 1306              	.L112:
+ 326:application/gimbal/gimbal.c **** 
+ 1307              		.loc 1 326 48 discriminator 1 view .LVU390
+ 1308              	.LBE10:
+ 1309              	.LBB11:
+ 1310              	.LBB8:
+ 287:application/gimbal/gimbal.c ****             } else {
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 35
+
+
+ 1311              		.loc 1 287 22 view .LVU391
+ 1312 022a DFED229A 		vldr.32	s19, .L129+44
+ 1313              	.LVL95:
+ 287:application/gimbal/gimbal.c ****             } else {
+ 1314              		.loc 1 287 22 view .LVU392
+ 1315 022e A0E7     		b	.L93
+ 1316              	.LVL96:
+ 1317              	.L127:
+ 287:application/gimbal/gimbal.c ****             } else {
+ 1318              		.loc 1 287 22 view .LVU393
+ 1319              	.LBE8:
+ 301:application/gimbal/gimbal.c ****         }
+ 1320              		.loc 1 301 13 is_stmt 1 view .LVU394
+ 301:application/gimbal/gimbal.c ****         }
+ 1321              		.loc 1 301 22 is_stmt 0 view .LVU395
+ 1322 0230 DFED229A 		vldr.32	s19, .L129+52
+ 1323 0234 1E4B     		ldr	r3, .L129+40
+ 1324 0236 C3ED009A 		vstr.32	s19, [r3]
+ 1325 023a ADE7     		b	.L97
+ 1326              	.LVL97:
+ 1327              	.L113:
+ 301:application/gimbal/gimbal.c ****         }
+ 1328              		.loc 1 301 22 view .LVU396
+ 1329              	.LBE11:
+ 1330              	.LBB12:
+ 325:application/gimbal/gimbal.c ****         if (d_term < -GM_YAW_ANG_D_MAX) d_term = -GM_YAW_ANG_D_MAX;
+ 1331              		.loc 1 325 48 discriminator 1 view .LVU397
+ 1332 023c 9FED2A7A 		vldr.32	s14, .L129+96
+ 1333              	.LVL98:
+ 1334              	.L101:
+ 328:application/gimbal/gimbal.c ****               + d_ref * 1000.0f / 136.53f
+ 1335              		.loc 1 328 9 is_stmt 1 view .LVU398
+ 328:application/gimbal/gimbal.c ****               + d_ref * 1000.0f / 136.53f
+ 1336              		.loc 1 328 48 is_stmt 0 view .LVU399
+ 1337 0240 DFED2B7A 		vldr.32	s15, .L129+104
+ 1338 0244 66EEA77A 		vmul.f32	s15, s13, s15
+ 329:application/gimbal/gimbal.c ****               + hold_rate * (1.0f / 6.0f)   /* deg/s → rpm：稳向的速度前馈 */
+ 1339              		.loc 1 329 33 view .LVU400
+ 1340 0248 DFED2A5A 		vldr.32	s11, .L129+108
+ 1341 024c 89EE256A 		vdiv.f32	s12, s18, s11
+ 329:application/gimbal/gimbal.c ****               + hold_rate * (1.0f / 6.0f)   /* deg/s → rpm：稳向的速度前馈 */
+ 1342              		.loc 1 329 15 view .LVU401
+ 1343 0250 77EE867A 		vadd.f32	s15, s15, s12
+ 330:application/gimbal/gimbal.c ****               + d_term;
+ 1344              		.loc 1 330 27 view .LVU402
+ 1345 0254 9FED286A 		vldr.32	s12, .L129+112
+ 1346 0258 69EE869A 		vmul.f32	s19, s19, s12
+ 1347              	.LVL99:
+ 330:application/gimbal/gimbal.c ****               + d_term;
+ 1348              		.loc 1 330 15 view .LVU403
+ 1349 025c 77EEA97A 		vadd.f32	s15, s15, s19
+ 328:application/gimbal/gimbal.c ****               + d_ref * 1000.0f / 136.53f
+ 1350              		.loc 1 328 15 view .LVU404
+ 1351 0260 77EE877A 		vadd.f32	s15, s15, s14
+ 1352              	.LVL100:
+ 328:application/gimbal/gimbal.c ****               + d_ref * 1000.0f / 136.53f
+ 1353              		.loc 1 328 15 view .LVU405
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 36
+
+
+ 1354              	.LBE12:
+ 333:application/gimbal/gimbal.c ****     if (rpm_d < -GM_YAW_RPM_MAX) rpm_d = -GM_YAW_RPM_MAX;
+ 1355              		.loc 1 333 5 is_stmt 1 view .LVU406
+ 333:application/gimbal/gimbal.c ****     if (rpm_d < -GM_YAW_RPM_MAX) rpm_d = -GM_YAW_RPM_MAX;
+ 1356              		.loc 1 333 8 is_stmt 0 view .LVU407
+ 1357 0264 9FED267A 		vldr.32	s14, .L129+120
+ 1358              	.LVL101:
+ 333:application/gimbal/gimbal.c ****     if (rpm_d < -GM_YAW_RPM_MAX) rpm_d = -GM_YAW_RPM_MAX;
+ 1359              		.loc 1 333 8 view .LVU408
+ 1360 0268 F4EEC77A 		vcmpe.f32	s15, s14
+ 1361 026c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1362 0270 48DC     		bgt	.L115
+ 334:application/gimbal/gimbal.c **** 
+ 1363              		.loc 1 334 5 is_stmt 1 view .LVU409
+ 334:application/gimbal/gimbal.c **** 
+ 1364              		.loc 1 334 8 is_stmt 0 view .LVU410
+ 1365 0272 9FED227A 		vldr.32	s14, .L129+116
+ 1366 0276 F4EEC77A 		vcmpe.f32	s15, s14
+ 1367 027a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1368 027e 43D5     		bpl	.L102
+ 334:application/gimbal/gimbal.c **** 
+ 1369              		.loc 1 334 40 discriminator 1 view .LVU411
+ 1370 0280 DFED1E7A 		vldr.32	s15, .L129+116
+ 1371              	.LVL102:
+ 334:application/gimbal/gimbal.c **** 
+ 1372              		.loc 1 334 40 discriminator 1 view .LVU412
+ 1373 0284 40E0     		b	.L102
+ 1374              	.L130:
+ 1375 0286 00BF     		.align	2
+ 1376              	.L129:
+ 1377 0288 00000000 		.word	gim6020
+ 1378 028c 00000000 		.word	s_yaw_ready
+ 1379 0290 00409CC5 		.word	-979615744
+ 1380 0294 6F12833A 		.word	981668463
+ 1381 0298 00000000 		.word	s_yaw_ref
+ 1382 029c 00000000 		.word	s_yaw_i
+ 1383 02a0 00000000 		.word	INS_Gyro
+ 1384 02a4 E12E6542 		.word	1113927393
+ 1385 02a8 00007A44 		.word	1148846080
+ 1386 02ac 610BB641 		.word	1102449505
+ 1387 02b0 00000000 		.word	s_hold_i
+ 1388 02b4 000096C3 		.word	-1013579776
+ 1389 02b8 00009643 		.word	1133903872
+ 1390 02bc 00000000 		.word	0
+ 1391 02c0 00000000 		.word	s_psi_deg
+ 1392 02c4 00000000 		.word	s_psi_ref
+ 1393 02c8 00000000 		.word	RC_YawRef
+ 1394 02cc 00000000 		.word	RC_YawErr
+ 1395 02d0 00000000 		.word	RC_YawRpmDes
+ 1396 02d4 00000000 		.word	RC_YawVolt
+ 1397 02d8 00000000 		.word	RC_YawI
+ 1398 02dc 00000000 		.word	RC_HoldWz
+ 1399 02e0 00000000 		.word	RC_HoldRate
+ 1400 02e4 CDCC4CBE 		.word	-1102263091
+ 1401 02e8 00002042 		.word	1109393408
+ 1402 02ec 000020C2 		.word	-1038090240
+ 1403 02f0 8FC2F53D 		.word	1039516303
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 37
+
+
+ 1404 02f4 AE870843 		.word	1124632494
+ 1405 02f8 ABAA2A3E 		.word	1042983595
+ 1406 02fc 00007AC3 		.word	-1015414784
+ 1407 0300 00007A43 		.word	1132068864
+ 1408              	.LVL103:
+ 1409              	.L115:
+ 333:application/gimbal/gimbal.c ****     if (rpm_d < -GM_YAW_RPM_MAX) rpm_d = -GM_YAW_RPM_MAX;
+ 1410              		.loc 1 333 40 discriminator 1 view .LVU413
+ 1411 0304 5FED027A 		vldr.32	s15, .L129+120
+ 1412              	.LVL104:
+ 1413              	.L102:
+ 337:application/gimbal/gimbal.c ****     volt  = GM_YAW_SPD_KP * err_v + s_yaw_i;
+ 1414              		.loc 1 337 5 is_stmt 1 view .LVU414
+ 337:application/gimbal/gimbal.c ****     volt  = GM_YAW_SPD_KP * err_v + s_yaw_i;
+ 1415              		.loc 1 337 35 is_stmt 0 view .LVU415
+ 1416 0308 344B     		ldr	r3, .L131
+ 1417 030a 5B88     		ldrh	r3, [r3, #2]
+ 1418 030c 1BB2     		sxth	r3, r3
+ 1419 030e 07EE103A 		vmov	s14, r3	@ int
+ 337:application/gimbal/gimbal.c ****     volt  = GM_YAW_SPD_KP * err_v + s_yaw_i;
+ 1420              		.loc 1 337 21 view .LVU416
+ 1421 0312 B8EEC77A 		vcvt.f32.s32	s14, s14
+ 337:application/gimbal/gimbal.c ****     volt  = GM_YAW_SPD_KP * err_v + s_yaw_i;
+ 1422              		.loc 1 337 11 view .LVU417
+ 1423 0316 37EEC77A 		vsub.f32	s14, s15, s14
+ 1424              	.LVL105:
+ 338:application/gimbal/gimbal.c **** 
+ 1425              		.loc 1 338 5 is_stmt 1 view .LVU418
+ 338:application/gimbal/gimbal.c **** 
+ 1426              		.loc 1 338 27 is_stmt 0 view .LVU419
+ 1427 031a 9FED310A 		vldr.32	s0, .L131+4
+ 1428              	.LVL106:
+ 338:application/gimbal/gimbal.c **** 
+ 1429              		.loc 1 338 27 view .LVU420
+ 1430 031e 27EE000A 		vmul.f32	s0, s14, s0
+ 338:application/gimbal/gimbal.c **** 
+ 1431              		.loc 1 338 35 view .LVU421
+ 1432 0322 304B     		ldr	r3, .L131+8
+ 1433 0324 93ED006A 		vldr.32	s12, [r3]
+ 338:application/gimbal/gimbal.c **** 
+ 1434              		.loc 1 338 11 view .LVU422
+ 1435 0328 70EE065A 		vadd.f32	s11, s0, s12
+ 1436              	.LVL107:
+ 340:application/gimbal/gimbal.c ****         s_yaw_i += GM_YAW_SPD_KI * err_v * 0.001f;
+ 1437              		.loc 1 340 5 is_stmt 1 view .LVU423
+ 340:application/gimbal/gimbal.c ****         s_yaw_i += GM_YAW_SPD_KI * err_v * 0.001f;
+ 1438              		.loc 1 340 8 is_stmt 0 view .LVU424
+ 1439 032c 9FED2E5A 		vldr.32	s10, .L131+12
+ 1440 0330 F4EEC55A 		vcmpe.f32	s11, s10
+ 1441 0334 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1442 0338 27D5     		bpl	.L103
+ 340:application/gimbal/gimbal.c ****         s_yaw_i += GM_YAW_SPD_KI * err_v * 0.001f;
+ 1443              		.loc 1 340 34 discriminator 1 view .LVU425
+ 1444 033a 9FED2C5A 		vldr.32	s10, .L131+16
+ 1445 033e F4EEC55A 		vcmpe.f32	s11, s10
+ 1446 0342 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1447 0346 20DD     		ble	.L103
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 38
+
+
+ 341:application/gimbal/gimbal.c ****         if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+ 1448              		.loc 1 341 9 is_stmt 1 view .LVU426
+ 341:application/gimbal/gimbal.c ****         if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+ 1449              		.loc 1 341 34 is_stmt 0 view .LVU427
+ 1450 0348 DFED295A 		vldr.32	s11, .L131+20
+ 1451              	.LVL108:
+ 341:application/gimbal/gimbal.c ****         if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+ 1452              		.loc 1 341 34 view .LVU428
+ 1453 034c 27EE257A 		vmul.f32	s14, s14, s11
+ 1454              	.LVL109:
+ 341:application/gimbal/gimbal.c ****         if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+ 1455              		.loc 1 341 42 view .LVU429
+ 1456 0350 DFED285A 		vldr.32	s11, .L131+24
+ 1457              	.LVL110:
+ 341:application/gimbal/gimbal.c ****         if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+ 1458              		.loc 1 341 42 view .LVU430
+ 1459 0354 27EE257A 		vmul.f32	s14, s14, s11
+ 341:application/gimbal/gimbal.c ****         if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+ 1460              		.loc 1 341 17 view .LVU431
+ 1461 0358 36EE076A 		vadd.f32	s12, s12, s14
+ 1462              	.LVL111:
+ 341:application/gimbal/gimbal.c ****         if (s_yaw_i >  GM_YAW_I_MAX) s_yaw_i =  GM_YAW_I_MAX;
+ 1463              		.loc 1 341 17 view .LVU432
+ 1464 035c 83ED006A 		vstr.32	s12, [r3]
+ 1465              	.LVL112:
+ 342:application/gimbal/gimbal.c ****         if (s_yaw_i < -GM_YAW_I_MAX) s_yaw_i = -GM_YAW_I_MAX;
+ 1466              		.loc 1 342 9 is_stmt 1 view .LVU433
+ 342:application/gimbal/gimbal.c ****         if (s_yaw_i < -GM_YAW_I_MAX) s_yaw_i = -GM_YAW_I_MAX;
+ 1467              		.loc 1 342 12 is_stmt 0 view .LVU434
+ 1468 0360 9FED257A 		vldr.32	s14, .L131+28
+ 1469 0364 B4EEC76A 		vcmpe.f32	s12, s14
+ 1470 0368 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1471 036c 01DD     		ble	.L106
+ 342:application/gimbal/gimbal.c ****         if (s_yaw_i < -GM_YAW_I_MAX) s_yaw_i = -GM_YAW_I_MAX;
+ 1472              		.loc 1 342 38 is_stmt 1 discriminator 1 view .LVU435
+ 342:application/gimbal/gimbal.c ****         if (s_yaw_i < -GM_YAW_I_MAX) s_yaw_i = -GM_YAW_I_MAX;
+ 1473              		.loc 1 342 46 is_stmt 0 discriminator 1 view .LVU436
+ 1474 036e 83ED007A 		vstr.32	s14, [r3]
+ 1475              	.L106:
+ 343:application/gimbal/gimbal.c ****     }
+ 1476              		.loc 1 343 9 is_stmt 1 view .LVU437
+ 343:application/gimbal/gimbal.c ****     }
+ 1477              		.loc 1 343 21 is_stmt 0 view .LVU438
+ 1478 0372 1C4B     		ldr	r3, .L131+8
+ 1479 0374 93ED006A 		vldr.32	s12, [r3]
+ 343:application/gimbal/gimbal.c ****     }
+ 1480              		.loc 1 343 12 view .LVU439
+ 1481 0378 9FED207A 		vldr.32	s14, .L131+32
+ 1482 037c B4EEC76A 		vcmpe.f32	s12, s14
+ 1483 0380 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1484 0384 01D5     		bpl	.L103
+ 343:application/gimbal/gimbal.c ****     }
+ 1485              		.loc 1 343 38 is_stmt 1 discriminator 1 view .LVU440
+ 343:application/gimbal/gimbal.c ****     }
+ 1486              		.loc 1 343 46 is_stmt 0 discriminator 1 view .LVU441
+ 1487 0386 83ED007A 		vstr.32	s14, [r3]
+ 1488              	.LVL113:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 39
+
+
+ 1489              	.L103:
+ 345:application/gimbal/gimbal.c **** 
+ 1490              		.loc 1 345 5 is_stmt 1 view .LVU442
+ 345:application/gimbal/gimbal.c **** 
+ 1491              		.loc 1 345 34 is_stmt 0 view .LVU443
+ 1492 038a 164B     		ldr	r3, .L131+8
+ 1493 038c 93ED007A 		vldr.32	s14, [r3]
+ 345:application/gimbal/gimbal.c **** 
+ 1494              		.loc 1 345 10 view .LVU444
+ 1495 0390 30EE070A 		vadd.f32	s0, s0, s14
+ 1496              	.LVL114:
+ 347:application/gimbal/gimbal.c ****     if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;
+ 1497              		.loc 1 347 5 is_stmt 1 view .LVU445
+ 347:application/gimbal/gimbal.c ****     if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;
+ 1498              		.loc 1 347 8 is_stmt 0 view .LVU446
+ 1499 0394 9FED146A 		vldr.32	s12, .L131+12
+ 1500 0398 B4EEC60A 		vcmpe.f32	s0, s12
+ 1501 039c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1502 03a0 09DC     		bgt	.L117
+ 348:application/gimbal/gimbal.c **** 
+ 1503              		.loc 1 348 5 is_stmt 1 view .LVU447
+ 348:application/gimbal/gimbal.c **** 
+ 1504              		.loc 1 348 8 is_stmt 0 view .LVU448
+ 1505 03a2 9FED126A 		vldr.32	s12, .L131+16
+ 1506 03a6 B4EEC60A 		vcmpe.f32	s0, s12
+ 1507 03aa F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1508 03ae 04D5     		bpl	.L109
+ 348:application/gimbal/gimbal.c **** 
+ 1509              		.loc 1 348 39 discriminator 1 view .LVU449
+ 1510 03b0 9FED0E0A 		vldr.32	s0, .L131+16
+ 1511              	.LVL115:
+ 348:application/gimbal/gimbal.c **** 
+ 1512              		.loc 1 348 39 discriminator 1 view .LVU450
+ 1513 03b4 01E0     		b	.L109
+ 1514              	.LVL116:
+ 1515              	.L117:
+ 347:application/gimbal/gimbal.c ****     if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;
+ 1516              		.loc 1 347 39 discriminator 1 view .LVU451
+ 1517 03b6 9FED0C0A 		vldr.32	s0, .L131+12
+ 1518              	.LVL117:
+ 1519              	.L109:
+ 351:application/gimbal/gimbal.c ****     RC_YawErr    = err;
+ 1520              		.loc 1 351 5 is_stmt 1 view .LVU452
+ 351:application/gimbal/gimbal.c ****     RC_YawErr    = err;
+ 1521              		.loc 1 351 18 is_stmt 0 view .LVU453
+ 1522 03ba 114B     		ldr	r3, .L131+36
+ 1523 03bc C3ED008A 		vstr.32	s17, [r3]
+ 352:application/gimbal/gimbal.c ****     RC_YawRpmDes = rpm_d;
+ 1524              		.loc 1 352 5 is_stmt 1 view .LVU454
+ 352:application/gimbal/gimbal.c ****     RC_YawRpmDes = rpm_d;
+ 1525              		.loc 1 352 18 is_stmt 0 view .LVU455
+ 1526 03c0 104B     		ldr	r3, .L131+40
+ 1527 03c2 C3ED006A 		vstr.32	s13, [r3]
+ 353:application/gimbal/gimbal.c ****     RC_YawVolt   = volt;
+ 1528              		.loc 1 353 5 is_stmt 1 view .LVU456
+ 353:application/gimbal/gimbal.c ****     RC_YawVolt   = volt;
+ 1529              		.loc 1 353 18 is_stmt 0 view .LVU457
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 40
+
+
+ 1530 03c6 104B     		ldr	r3, .L131+44
+ 1531 03c8 C3ED007A 		vstr.32	s15, [r3]
+ 354:application/gimbal/gimbal.c ****     RC_YawI      = s_yaw_i;
+ 1532              		.loc 1 354 5 is_stmt 1 view .LVU458
+ 354:application/gimbal/gimbal.c ****     RC_YawI      = s_yaw_i;
+ 1533              		.loc 1 354 18 is_stmt 0 view .LVU459
+ 1534 03cc 0F4B     		ldr	r3, .L131+48
+ 1535 03ce 83ED000A 		vstr.32	s0, [r3]
+ 355:application/gimbal/gimbal.c **** 
+ 1536              		.loc 1 355 5 is_stmt 1 view .LVU460
+ 355:application/gimbal/gimbal.c **** 
+ 1537              		.loc 1 355 18 is_stmt 0 view .LVU461
+ 1538 03d2 0F4B     		ldr	r3, .L131+52
+ 1539 03d4 83ED007A 		vstr.32	s14, [r3]
+ 357:application/gimbal/gimbal.c **** }
+ 1540              		.loc 1 357 5 is_stmt 1 view .LVU462
+ 357:application/gimbal/gimbal.c **** }
+ 1541              		.loc 1 357 12 is_stmt 0 view .LVU463
+ 1542 03d8 C6E6     		b	.L84
+ 1543              	.L132:
+ 1544 03da 00BF     		.align	2
+ 1545              	.L131:
+ 1546 03dc 00000000 		.word	gim6020
+ 1547 03e0 00009643 		.word	1133903872
+ 1548 03e4 00000000 		.word	s_yaw_i
+ 1549 03e8 00A08C46 		.word	1183621120
+ 1550 03ec 00A08CC6 		.word	-963862528
+ 1551 03f0 00000000 		.word	0
+ 1552 03f4 6F12833A 		.word	981668463
+ 1553 03f8 0000FA45 		.word	1174011904
+ 1554 03fc 0000FAC5 		.word	-973471744
+ 1555 0400 00000000 		.word	RC_YawRef
+ 1556 0404 00000000 		.word	RC_YawErr
+ 1557 0408 00000000 		.word	RC_YawRpmDes
+ 1558 040c 00000000 		.word	RC_YawVolt
+ 1559 0410 00000000 		.word	RC_YawI
+ 1560              		.cfi_endproc
+ 1561              	.LFE152:
+ 1563              		.section	.bss.s_homed.0,"aw",%nobits
+ 1566              	s_homed.0:
+ 1567 0000 00       		.space	1
+ 1568              		.section	.bss.s_home_since.1,"aw",%nobits
+ 1569              		.align	2
+ 1572              	s_home_since.1:
+ 1573 0000 00000000 		.space	4
+ 1574              		.section	.bss.s_v.2,"aw",%nobits
+ 1575              		.align	2
+ 1578              	s_v.2:
+ 1579 0000 00000000 		.space	4
+ 1580              		.section	.bss.s_ref.3,"aw",%nobits
+ 1581              		.align	2
+ 1584              	s_ref.3:
+ 1585 0000 00000000 		.space	4
+ 1586              		.section	.bss.s_stick_f.4,"aw",%nobits
+ 1587              		.align	2
+ 1590              	s_stick_f.4:
+ 1591 0000 00000000 		.space	4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 41
+
+
+ 1592              		.section	.bss.s_i.5,"aw",%nobits
+ 1593              		.align	2
+ 1596              	s_i.5:
+ 1597 0000 00000000 		.space	4
+ 1598              		.section	.bss.s_stage.6,"aw",%nobits
+ 1601              	s_stage.6:
+ 1602 0000 00       		.space	1
+ 1603              		.global	RC_GunAngle
+ 1604              		.section	.bss.RC_GunAngle,"aw",%nobits
+ 1605              		.align	2
+ 1608              	RC_GunAngle:
+ 1609 0000 00000000 		.space	4
+ 1610              		.section	.bss.s_hold_i,"aw",%nobits
+ 1611              		.align	2
+ 1614              	s_hold_i:
+ 1615 0000 00000000 		.space	4
+ 1616              		.section	.bss.s_psi_ref,"aw",%nobits
+ 1617              		.align	2
+ 1620              	s_psi_ref:
+ 1621 0000 00000000 		.space	4
+ 1622              		.section	.bss.s_psi_deg,"aw",%nobits
+ 1623              		.align	2
+ 1626              	s_psi_deg:
+ 1627 0000 00000000 		.space	4
+ 1628              		.global	s_yaw_ready
+ 1629              		.section	.bss.s_yaw_ready,"aw",%nobits
+ 1632              	s_yaw_ready:
+ 1633 0000 00       		.space	1
+ 1634              		.global	s_yaw_i
+ 1635              		.section	.bss.s_yaw_i,"aw",%nobits
+ 1636              		.align	2
+ 1639              	s_yaw_i:
+ 1640 0000 00000000 		.space	4
+ 1641              		.global	s_yaw_ref
+ 1642              		.section	.bss.s_yaw_ref,"aw",%nobits
+ 1643              		.align	2
+ 1646              	s_yaw_ref:
+ 1647 0000 00000000 		.space	4
+ 1648              		.text
+ 1649              	.Letext0:
+ 1650              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 1651              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
+ 1652              		.file 4 "application/rc_dbus.h"
+ 1653              		.file 5 "application/rc_state.h"
+ 1654              		.file 6 "modules/motor/DJ_Motor.h"
+ 1655              		.file 7 "modules/imu/ins.h"
+ 1656              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 42
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 gimbal.c
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:20     .text.pitch_abs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:25     .text.pitch_abs:00000000 pitch_abs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:53     .text.pitch_clamp:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:58     .text.pitch_clamp:00000000 pitch_clamp
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:93     .text.pitch_step:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:98     .text.pitch_step:00000000 pitch_step
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:140    .text.yaw_wrap:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:145    .text.yaw_wrap:00000000 yaw_wrap
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:187    .text.yaw_wrap:00000034 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:194    .text.RC_Pitch_Control:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:200    .text.RC_Pitch_Control:00000000 RC_Pitch_Control
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:728    .text.RC_Pitch_Control:00000338 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1601   .bss.s_stage.6:00000000 s_stage.6
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1596   .bss.s_i.5:00000000 s_i.5
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1590   .bss.s_stick_f.4:00000000 s_stick_f.4
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1584   .bss.s_ref.3:00000000 s_ref.3
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1578   .bss.s_v.2:00000000 s_v.2
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1572   .bss.s_home_since.1:00000000 s_home_since.1
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1566   .bss.s_homed.0:00000000 s_homed.0
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:765    .text.RC_Pitch_Control:000003b8 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:855    .text.RC_Pitch_Control:00000450 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:864    .text.RC_GetOffsetAngle:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:870    .text.RC_GetOffsetAngle:00000000 RC_GetOffsetAngle
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:913    .text.RC_GetOffsetAngle:00000034 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1608   .bss.RC_GunAngle:00000000 RC_GunAngle
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:922    .text.RC_Yaw_Control:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:928    .text.RC_Yaw_Control:00000000 RC_Yaw_Control
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1377   .text.RC_Yaw_Control:00000288 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1632   .bss.s_yaw_ready:00000000 s_yaw_ready
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1646   .bss.s_yaw_ref:00000000 s_yaw_ref
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1639   .bss.s_yaw_i:00000000 s_yaw_i
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1614   .bss.s_hold_i:00000000 s_hold_i
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1626   .bss.s_psi_deg:00000000 s_psi_deg
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1620   .bss.s_psi_ref:00000000 s_psi_ref
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1411   .text.RC_Yaw_Control:00000304 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1546   .text.RC_Yaw_Control:000003dc $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1567   .bss.s_homed.0:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1569   .bss.s_home_since.1:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1575   .bss.s_v.2:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1581   .bss.s_ref.3:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1587   .bss.s_stick_f.4:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1593   .bss.s_i.5:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1602   .bss.s_stage.6:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1605   .bss.RC_GunAngle:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1611   .bss.s_hold_i:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1617   .bss.s_psi_ref:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1623   .bss.s_psi_deg:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1633   .bss.s_yaw_ready:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1636   .bss.s_yaw_i:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s:1643   .bss.s_yaw_ref:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_GetTick
+gim_pitch
+gim6020
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccSsVFzg.s 			page 43
+
+
+INS_Gyro
+RC_YawRef
+RC_YawErr
+RC_YawRpmDes
+RC_YawVolt
+RC_YawI
+RC_HoldWz
+RC_HoldRate

@@ -1,5 +1,5 @@
-build/mecanum.o: modules/mecanum.c modules/mecanum.h Core/Inc/main.h \
- Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h \
+build/mecanum.o: modules/chassis/mecanum.c modules/chassis/mecanum.h \
+ Core/Inc/main.h Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h \
  Core/Inc/stm32h7xx_hal_conf.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_def.h \
@@ -30,7 +30,7 @@ build/mecanum.o: modules/mecanum.c modules/mecanum.h Core/Inc/main.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi_ex.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h
-modules/mecanum.h:
+modules/chassis/mecanum.h:
 Core/Inc/main.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
 Core/Inc/stm32h7xx_hal_conf.h:

@@ -1,4 +1,4 @@
-﻿#ifndef __RC_DBUS_H
+#ifndef __RC_DBUS_H
 #define __RC_DBUS_H     
 /*控制各电机，解码，的宏定义以及函数声明*/
 #include "main.h"
@@ -136,6 +136,7 @@ extern volatile float RC_HoldRate;    /* 稳向补偿角速度 deg/s */
 extern volatile float RC_SpinYaw;     /* 世界航向实测 deg（多圈连续） */
 extern volatile float RC_SpinWch;     /* 底盘角速度实测 deg/s */
 extern volatile float RC_SpinErr;     /* 航向误差 deg（±180 内） */
+extern volatile float RC_YawSpinOut;  /* 小陀螺环斜坡+限幅之后真正发出去的电压 */
 void RC_Yaw_Handover(void);           /* 模式切换时交接两个 yaw 控制器的状态 */
 
 /* ---- 掉线 / yaw 断电取证镜像（2026-11-17 排查“yaw 无阻力”加）----
@@ -363,5 +364,16 @@ float RC_Norm(uint16_t ch);          /* 归一化函数，摇杆 → -1.0~+1.0�
 
 /* 每个控制周期调用一次：解码后的摇杆 →3508 的电流指令 */
 void RC_Control_Task(void);
+
+/* ---- 分层后跨文件调用的入口（实现分别在 application/chassis、application/gimbal） ---- */
+float wheel_abs(float x);                                          /* chassis.c  */
+float wheel_clamp(float v, float lo, float hi);                    /* chassis.c  */
+void  RC_Wheel_Reset(void);                                        /* chassis.c  */
+float RC_Wheel_Speed_PI(uint8_t id, float ref, float rpm, float limit); /* chassis.c  */
+float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick);     /* gimbal.c   */
+float RC_GetOffsetAngle(void);                                     /* gimbal.c   */
+float RC_Yaw_Control(uint8_t online, float stick);                 /* gimbal.c   */
+float RC_Yaw_Spin_Control(uint8_t online, float stick);            /* gimbal_spin.c */
+void  RC_Yaw_Handover(void);                                       /* gimbal_spin.c */
 
 #endif

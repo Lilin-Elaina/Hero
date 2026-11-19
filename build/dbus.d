@@ -1,4 +1,4 @@
-build/bsp.can.o: bsp/bsp.can.c Core/Inc/main.h \
+build/dbus.o: modules/remote/dbus.c application/rc_dbus.h Core/Inc/main.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h \
  Core/Inc/stm32h7xx_hal_conf.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_rcc.h \
@@ -29,8 +29,11 @@ build/bsp.can.o: bsp/bsp.can.c Core/Inc/main.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi_ex.h \
  Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h \
- Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h bsp/bsp.can.h \
- Core/Inc/fdcan.h Core/Inc/main.h
+ Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h \
+ application/rc_state.h Core/Inc/usart.h Core/Inc/main.h \
+ modules/motor/DJ_Motor.h modules/chassis/mecanum.h modules/imu/ins.h \
+ Core/Inc/fdcan.h bsp/bsp_can.h
+application/rc_dbus.h:
 Core/Inc/main.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h:
 Core/Inc/stm32h7xx_hal_conf.h:
@@ -66,6 +69,11 @@ Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi_ex.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart.h:
 Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_uart_ex.h:
-bsp/bsp.can.h:
-Core/Inc/fdcan.h:
+application/rc_state.h:
+Core/Inc/usart.h:
 Core/Inc/main.h:
+modules/motor/DJ_Motor.h:
+modules/chassis/mecanum.h:
+modules/imu/ins.h:
+Core/Inc/fdcan.h:
+bsp/bsp_can.h:
