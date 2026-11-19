@@ -5,6 +5,7 @@
  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
  */
 #include "rc_dbus.h"
+#include "bsp_time.h"
 #include "rc_state.h"
 #include "usart.h"
 #include "DJ_Motor.h"
@@ -38,7 +39,7 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
 {
     const float cur = (float)gim6020.angle;
     const float alpha_deg = RC_GetOffsetAngle();   /* 枪口相对车头，度（关节角） */
-    const uint8_t fresh = ((HAL_GetTick() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
+    const uint8_t fresh = ((BSP_Now() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
     float aim, e, w_chassis, rpm_d, err_v, volt;
 
     if ((online == 0u) || (fresh == 0u) || (s_spin_ready == 0u) || (INS_AhrsReady == 0u)) {

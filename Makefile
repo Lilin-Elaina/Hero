@@ -70,6 +70,7 @@ Core/Src/fdcan.c \
 bsp/bsp_can.c \
 bsp/bsp_uart.c \
 bsp/bsp_spi.c \
+bsp/bsp_time.c \
 modules/motor/DJ_Motor.c \
 modules/chassis/mecanum.c \
 modules/imu/ins.c \

@@ -5,6 +5,7 @@
  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
  */
 #include "rc_dbus.h"
+#include "bsp_time.h"
 #include "rc_state.h"
 #include "usart.h"
 #include "DJ_Motor.h"
@@ -67,7 +68,7 @@ float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
     float err, rpm_des, volt;
 
 
- if ((HAL_GetTick() - gim_pitch.last_tick) > GM_FEEDBACK_TIMEOUT_MS ||
+ if ((BSP_Now() - gim_pitch.last_tick) > GM_FEEDBACK_TIMEOUT_MS ||
         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
         pitch_abs(rpm) > GM_RPM_LIMIT ||
         cur < (float)GM_PITCH_ANGLE_MIN ||
@@ -94,7 +95,7 @@ if(s_stage == 0)
     s_ref = cur;
     s_i   = 0.0f;
     s_v   = 0.0f;
-    s_home_since = HAL_GetTick() | 1u;     /* 接管时记一次起点，供回中计时用 */
+    s_home_since = BSP_Now() | 1u;     /* 接管时记一次起点，供回中计时用 */
     s_stage = ( GM_PITCH_HOME_ENABLE && !s_homed) ? 1 : 2;
     return 0.0f;
 }
@@ -104,7 +105,7 @@ if(s_stage == 1)
 {
     s_v = 0.0f;
     /*若一直没符合下面置2的三个条件时触发*/
-    if ((HAL_GetTick() - s_home_since) > GM_PITCH_HOME_TIMEOUT_MS)
+    if ((BSP_Now() - s_home_since) > GM_PITCH_HOME_TIMEOUT_MS)
     {
         /* 回中失败：就地按住，不反复顶、也不锁死，可控 */
         s_ref        = cur;
@@ -234,7 +235,7 @@ float RC_Yaw_Control(uint8_t online, float stick)
     const float cur = (float)gim6020.angle;
     /* 反馈超时等同离线：目标/积分/接管状态一起清，恢复后按当时的实际角重新接管
      * （否则会拿最后一帧的旧角度当目标，恢复瞬间被拽一下） */
-    const uint8_t fresh = ((HAL_GetTick() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
+    const uint8_t fresh = ((BSP_Now() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
     float d_ref, err, rpm_d, err_v, volt;
     float hold_rate = 0.0f;      /* 稳向折算的关节角速度（deg/s），0=未介入 */
 

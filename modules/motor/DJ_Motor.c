@@ -1,4 +1,5 @@
 #include "DJ_Motor.h"
+#include "bsp_time.h"
 #include "main.h"
 #include "bsp_can.h"
 #include "fdcan.h"
@@ -148,7 +149,7 @@ static void DJ_Motor_OnRx(uint8_t bus, uint32_t id, const uint8_t *d, uint8_t le
         st->rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
         st->current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
         st->temp      = d[6];
-        st->last_tick = HAL_GetTick();
+        st->last_tick = BSP_Now();
     }
     else if (id == 0x205u)                                    /* GM6020 ID1 = yaw */
     {
@@ -175,7 +176,7 @@ static void DJ_Motor_OnRx(uint8_t bus, uint32_t id, const uint8_t *d, uint8_t le
             gim6020.rpm       = rpm205;
             gim6020.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
             gim6020.temp      = d[6];
-            gim6020.last_tick = HAL_GetTick();
+            gim6020.last_tick = BSP_Now();
         }
     }
     else if (id == 0x206u)                                    /* GM6020 ID2 = pitch */
@@ -184,7 +185,7 @@ static void DJ_Motor_OnRx(uint8_t bus, uint32_t id, const uint8_t *d, uint8_t le
         gim_pitch.rpm       = (int16_t)(((uint16_t)d[2] << 8) | d[3]);
         gim_pitch.current   = (int16_t)(((uint16_t)d[4] << 8) | d[5]);
         gim_pitch.temp      = d[6];
-        gim_pitch.last_tick = HAL_GetTick();
+        gim_pitch.last_tick = BSP_Now();
     }
 }
 

@@ -5,6 +5,7 @@
  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
  */
 #include "rc_dbus.h"
+#include "bsp_time.h"
 #include "rc_state.h"
 #include "usart.h"
 #include "DJ_Motor.h"
@@ -93,7 +94,7 @@ void RC_Init(void)
 
 void RC_SwitchAutoName(void)
 {
-    uint32_t now = HAL_GetTick();
+    uint32_t now = BSP_Now();
 
     if (RC_Data.sw_auto_done)
     {
@@ -197,7 +198,7 @@ void RC_Decode(const uint8_t *b)
     RC_Data.wheel = (uint16_t)((b[16] | ((uint16_t)b[17] << 8)) & 0x07FF);
 
     {
-        uint32_t now = HAL_GetTick();
+        uint32_t now = BSP_Now();
 
         /* 两帧间隔统计：RC_GapMaxMs > 100 就是一次实打实的“准失联”，
          * 这比 online 标志可信——online 只看最后一帧距今，间隔大不大它不会记。 */

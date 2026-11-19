@@ -10,6 +10,7 @@
   */
 
 #include "ins.h"
+#include "bsp_time.h"
 #include "main.h"
 #include "bsp_spi.h"
 #include <string.h>
@@ -357,11 +358,11 @@ static void ins_acc_init(void)
 
     /* 上电默认 I2C 模式：CS 拉高再拉低，产生上升沿后切到 SPI */
     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
-    HAL_Delay(2);
+    BSP_DelayMs(2);
 
     /* 第一次读多半读到 0xFF/0x00（正在切模式），读两次更稳 */
     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
-    HAL_Delay(1);
+    BSP_DelayMs(1);
     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
     INS_AccId = id;
 
@@ -371,11 +372,11 @@ static void ins_acc_init(void)
     }
 
     ins_write(DEV_ACC, ACC_SOFTRESET, BMI_SOFTRESET_VAL);
-    HAL_Delay(50);
+    BSP_DelayMs(50);
 
     /* 复位后要重新建立 SPI 通信 */
     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
-    HAL_Delay(1);
+    BSP_DelayMs(1);
     ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
     INS_AccId = id;
 
@@ -385,12 +386,12 @@ static void ins_acc_init(void)
     }
 
     ins_write(DEV_ACC, ACC_PWR_CTRL, 0x04u);   /* 打开加速度计 */
-    HAL_Delay(5);
+    BSP_DelayMs(5);
     ins_write(DEV_ACC, ACC_PWR_CONF, 0x00u);   /* active 模式 */
 
     ins_write(DEV_ACC, ACC_CONF,  0xACu);      /* 正常模式 / 1600Hz / 带宽 = ODR/2 */
     ins_write(DEV_ACC, ACC_RANGE, 0x01u);      /* ±6g */
-    HAL_Delay(10);
+    BSP_DelayMs(10);
 }
 
 static void ins_gyro_init(void)
@@ -398,7 +399,7 @@ static void ins_gyro_init(void)
     uint8_t id = 0;
 
     BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
-    HAL_Delay(2);
+    BSP_DelayMs(2);
 
     ins_read(DEV_GYRO, GYRO_CHIP_ID, &id, 1);
     INS_GyroId = id;
@@ -409,7 +410,7 @@ static void ins_gyro_init(void)
     }
 
     ins_write(DEV_GYRO, GYRO_SOFTRESET, BMI_SOFTRESET_VAL);
-    HAL_Delay(30);
+    BSP_DelayMs(30);
 
     ins_read(DEV_GYRO, GYRO_CHIP_ID, &id, 1);
     INS_GyroId = id;
@@ -422,7 +423,7 @@ static void ins_gyro_init(void)
     ins_write(DEV_GYRO, GYRO_RANGE,     0x00u);  /* ±2000 dps */
     ins_write(DEV_GYRO, GYRO_BANDWIDTH, 0x02u);  /* 1000Hz ODR / 116Hz 滤波 */
     ins_write(DEV_GYRO, GYRO_LPM1,      0x00u);  /* 正常模式 */
-    HAL_Delay(5);
+    BSP_DelayMs(5);
 }
 
 void INS_Init(void)
@@ -448,7 +449,7 @@ void INS_Init(void)
     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
     BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
     /* ins_gpio_init();   临时停用：验证 PC0/PC3 是否与 CAN2 收发器共用引脚 */
-    HAL_Delay(10);
+    BSP_DelayMs(10);
 
     ins_detect_skip();          /* 先量出 SPI 哑字节个数，再按它初始化 */
     ins_acc_init();

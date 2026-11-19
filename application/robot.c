@@ -5,6 +5,7 @@
  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
  */
 #include "rc_dbus.h"
+#include "bsp_time.h"
 #include "rc_state.h"
 #include "usart.h"
 #include "DJ_Motor.h"
@@ -66,7 +67,7 @@ volatile uint32_t RC_BuildTag = 0x11172359u;   /* 0x…59 = 2026-11-19 分层版
 /* ------------------------------------------------------------------ */
 void RC_Control_Task(void)
 {     /*通信在线判断*/
-    uint32_t now = HAL_GetTick();
+    uint32_t now = BSP_Now();
 
     uint8_t online = RC_IsOnline(now);
 
@@ -313,7 +314,7 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
         raw[i] = 0;
         RC_WheelRef[i] = 0.0f;      /* 断使能/故障时不残留上一拍目标值 */
         
-        if((HAL_GetTick() - dj_wheel[i].last_tick) > RC_WHEEL_FEEDBACK_MS)
+        if((BSP_Now() - dj_wheel[i].last_tick) > RC_WHEEL_FEEDBACK_MS)
          {
                 fault_mask |= (uint8_t)(1u << i);
          }
@@ -495,8 +496,8 @@ static const float s_wheel_sign[MECANUM_WHEEL_NUM] ={
 
     if (dj_motor[1].temp > FRIC_TEMP_LIMIT || dj_motor[2].temp > FRIC_TEMP_LIMIT)
         fric_tgt = 0.0f;
-    if ((HAL_GetTick() - dj_motor[1].last_tick) > FRIC_TIMEOUT_MS ||
-        (HAL_GetTick() - dj_motor[2].last_tick) > FRIC_TIMEOUT_MS)
+    if ((BSP_Now() - dj_motor[1].last_tick) > FRIC_TIMEOUT_MS ||
+        (BSP_Now() - dj_motor[2].last_tick) > FRIC_TIMEOUT_MS)
         fric_tgt = 0.0f;
 
     static float fric_a = 0.0f;
