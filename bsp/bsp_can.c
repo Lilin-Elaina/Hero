@@ -72,10 +72,7 @@ void HAL_FDCAN_ErrorStatusCallback(FDCAN_HandleTypeDef *hfdcan, uint32_t ErrorSt
 }
 
 /* ------------------------------------------------------------------
- * 统一发送：把“帧头怎么填”这件事收在 bsp 层，modules 只管 id + 8 字节负载。
- * 帧头各字段与原来 modules/DJ_Motor.c 里手写的一致（标准帧/数据帧/8 字节/
- * 不切波特率/FD 关闭/无 TX 事件），所以字节与总线时序完全不变。
- * 本工程只有 8 字节报文，所以数据长度不传参、直接写死。
+ * 统一用此函数发送can报文
  * ------------------------------------------------------------------ */
 HAL_StatusTypeDef BSP_CAN_Send(uint8_t bus, uint32_t id, const uint8_t *data)
 {

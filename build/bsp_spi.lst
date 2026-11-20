@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
   37              		.cfi_offset 6, -8
   38              		.cfi_offset 14, -4
   39 0002 88B0     		sub	sp, sp, #32
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s 			page 2
 
 
   40              	.LCFI1:
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
   87 004c FFF7FEFF 		bl	HAL_GPIO_WritePin
   88              	.LVL0:
   27:bsp/bsp_spi.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s 			page 3
 
 
   28:bsp/bsp_spi.c ****     g.Pin   = BSP_IMU_CS_ACC | BSP_IMU_CS_GYRO;
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
  134              		.align	1
  135              		.global	BSP_IMU_Cs
  136              		.syntax unified
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s 			page 4
 
 
  137              		.thumb
@@ -186,7 +186,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
  140              	BSP_IMU_Cs:
  141              	.LVL4:
  142              	.LFB147:
-  38:bsp/bsp_spi.c **** 
+  38:bsp/bsp_spi.c **** /*imu片选，第一个参数选择设备，第二个为电平高低*/
   39:bsp/bsp_spi.c **** void BSP_IMU_Cs(uint8_t dev, uint8_t low)
   40:bsp/bsp_spi.c **** {
  143              		.loc 1 40 1 is_stmt 1 view -0
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
  183 001c 00080258 		.word	1476528128
  184              		.cfi_endproc
  185              	.LFE147:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s 			page 5
 
 
  187              		.section	.text.BSP_IMU_Transfer,"ax",%progbits
@@ -250,7 +250,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
  194              	BSP_IMU_Transfer:
  195              	.LVL11:
  196              	.LFB148:
-  45:bsp/bsp_spi.c **** 
+  45:bsp/bsp_spi.c **** /*收发，用于读寄存器*/
   46:bsp/bsp_spi.c **** uint8_t BSP_IMU_Transfer(const uint8_t *tx, uint8_t *rx, uint16_t n)
   47:bsp/bsp_spi.c **** {
  197              		.loc 1 47 1 is_stmt 1 view -0
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
  237              	.LCFI7:
  238              		.cfi_restore_state
   48:bsp/bsp_spi.c ****     return (HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)tx, rx, n, 50) == HAL_OK) ? 1u : 0u;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s 			page 6
 
 
  239              		.loc 1 48 87 discriminator 2 view .LVU48
@@ -319,7 +319,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
  256              	BSP_IMU_Send:
  257              	.LVL16:
  258              	.LFB149:
-  50:bsp/bsp_spi.c **** 
+  50:bsp/bsp_spi.c **** /*写寄存器*/
   51:bsp/bsp_spi.c **** uint8_t BSP_IMU_Send(const uint8_t *tx, uint16_t n)
   52:bsp/bsp_spi.c **** {
  259              		.loc 1 52 1 is_stmt 1 view -0
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
  289 0014 0020     		movs	r0, #0
  290 0016 FCE7     		b	.L18
  291              	.L22:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s 			page 7
 
 
  292              		.align	2
@@ -377,23 +377,23 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz
  306              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h"
  307              		.file 9 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal.h"
  308              		.file 10 "Core/Inc/spi.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s 			page 8
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 bsp_spi.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:20     .text.BSP_IMU_Init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:26     .text.BSP_IMU_Init:00000000 BSP_IMU_Init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:128    .text.BSP_IMU_Init:00000080 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:134    .text.BSP_IMU_Cs:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:140    .text.BSP_IMU_Cs:00000000 BSP_IMU_Cs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:183    .text.BSP_IMU_Cs:0000001c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:188    .text.BSP_IMU_Transfer:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:194    .text.BSP_IMU_Transfer:00000000 BSP_IMU_Transfer
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:245    .text.BSP_IMU_Transfer:00000020 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:250    .text.BSP_IMU_Send:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:256    .text.BSP_IMU_Send:00000000 BSP_IMU_Send
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccz56ojE.s:294    .text.BSP_IMU_Send:00000018 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:20     .text.BSP_IMU_Init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:26     .text.BSP_IMU_Init:00000000 BSP_IMU_Init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:128    .text.BSP_IMU_Init:00000080 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:134    .text.BSP_IMU_Cs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:140    .text.BSP_IMU_Cs:00000000 BSP_IMU_Cs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:183    .text.BSP_IMU_Cs:0000001c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:188    .text.BSP_IMU_Transfer:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:194    .text.BSP_IMU_Transfer:00000000 BSP_IMU_Transfer
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:245    .text.BSP_IMU_Transfer:00000020 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:250    .text.BSP_IMU_Send:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:256    .text.BSP_IMU_Send:00000000 BSP_IMU_Send
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccRZ6OXR.s:294    .text.BSP_IMU_Send:00000018 $d
 
 UNDEFINED SYMBOLS
 HAL_GPIO_WritePin

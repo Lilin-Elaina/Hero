@@ -8,6 +8,7 @@
 #define BSP_UART_DBUS_FRAME_LEN   18u
 
 /* 收满一帧时回调：data 指向 bsp 内部 DMA 缓冲，长度固定 18，回调里要用就当场拷走。 */
+/*声明接收此函数类型的地址变量名*/
 typedef void (*BSP_UART_RxHandler)(const uint8_t *data, uint16_t len);
 
 /* 注册解析函数（在启动之前调用；bsp 不认识遥控器，只负责把帧送上来） */

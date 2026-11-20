@@ -30,7 +30,8 @@ void BSP_UART_DBusRegisterRx(BSP_UART_RxHandler handler)
 {
     s_dbus_rx = handler;
 }
-
+//callback
+/*该函数形参为指向无参无返回值的函数的指针*/
 void BSP_UART_DBusRegisterError(void (*cb)(void))
 {
     s_dbus_err = cb;
@@ -85,8 +86,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 
 /* ------------------------------------------------------------------ */
 /* UART 错误回调（ORE/FE/NE/PE）                                        */
-/*   HAL 一旦报错就会把接收整个拆掉（关 IDLE/DMA），如果这里不重开，      */
-/*   接收链会永久静默 —— 这正是“摇杆怎么推都没反应”的典型死法之一。      */
+/* 重开uart                                                                      */
 /* ------------------------------------------------------------------ */
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {

@@ -35,19 +35,19 @@ void BSP_IMU_Init(void)
     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC2, SYSCFG_SWITCH_PC2_CLOSE);
     HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC3, SYSCFG_SWITCH_PC3_CLOSE);
 }
-
+/*imu片选，第一个参数选择设备，第二个为电平高低*/
 void BSP_IMU_Cs(uint8_t dev, uint8_t low)
 {
     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
 
     HAL_GPIO_WritePin(BSP_IMU_CS_PORT, pin, low ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }
-
+/*收发，用于读寄存器*/
 uint8_t BSP_IMU_Transfer(const uint8_t *tx, uint8_t *rx, uint16_t n)
 {
     return (HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)tx, rx, n, 50) == HAL_OK) ? 1u : 0u;
 }
-
+/*写寄存器*/
 uint8_t BSP_IMU_Send(const uint8_t *tx, uint16_t n)
 {
     return (HAL_SPI_Transmit(&hspi2, (uint8_t *)tx, n, 20) == HAL_OK) ? 1u : 0u;

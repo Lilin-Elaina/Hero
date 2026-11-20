@@ -3,6 +3,17 @@
 #include "main.h"
 #include "bsp_can.h"
 #include "fdcan.h"
+
+/* 把 32 位中间值夹到 [lo, hi]，再转成 int16_t 打包。
+ * 形参用 int32_t 是刻意的：若写成 int16_t，超量程的值在调用时就已经被截断
+ * （例 40000 → -25536），clamp 看到的是错的数，会连符号一起放过去。 */
+static inline int16_t clamp_i16(int32_t v, int32_t lo, int32_t hi)
+{
+    if (v > hi) { v = hi; }
+    if (v < lo) { v = lo; }
+    return (int16_t)v;
+}
+
 /*
  *@brief :发送控制底盘电机的电流报文（）
  */
@@ -13,14 +24,7 @@ HAL_StatusTypeDef DJ3508_Send_I_Can2(int16_t ID1_I, int16_t ID2_I, int16_t ID3_I
     /*限流处理*/
       for(uint8_t i = 0; i < 4; i++) 
     {
-        if(I_Raw[i] > 16384)
-        { 
-            I_Raw[i] = 16384;
-        } 
-        else if (I_Raw[i] < -16384)
-        {
-            I_Raw[i] = -16384;
-        }
+        I_Raw[i] = clamp_i16(I_Raw[i], -16384, 16384);
     }
 
      uint8_t  TxData[8] = {0};
@@ -40,24 +44,9 @@ HAL_StatusTypeDef DJ6020_Send_V_Can2(int16_t ID1_V, int16_t ID2_V)
 {
    
      uint8_t  TxData[8] = {0};
-     
-     if(ID1_V > 25000) 
-    {
-        ID1_V = 25000;
-    }
-     if(ID1_V < -25000)
-    {
-        ID1_V = -25000;
-    }   
-   
-     if(ID2_V > 25000)
-    {
-        ID2_V = 25000;
-    }
-     if(ID2_V < -25000)
-    {
-        ID2_V = -25000;
-    }
+
+     ID1_V = clamp_i16(ID1_V, -25000, 25000);
+     ID2_V = clamp_i16(ID2_V, -25000, 25000);
 
     TxData[0] = (uint8_t)((ID1_V >> 8 ) & 0xFF);
     TxData[1] = (uint8_t)(ID1_V & 0xFF);
@@ -78,14 +67,7 @@ HAL_StatusTypeDef DJ3508_Send_Can1(int16_t ID2_I, int16_t ID3_I)
     
       for(int8_t i = 0; i < 2; i++)
        {
-          if(I_Raw[i] > 16384)
-         {
-            I_Raw[i] = 16384;
-         }
-          if(I_Raw[i] < -16384)
-         {
-            I_Raw[i] = -16384;
-         }
+          I_Raw[i] = clamp_i16(I_Raw[i], -16384, 16384);
        }
 
             TxData[2] = (uint8_t)((I_Raw[0] >> 8)& 0xFF);
@@ -102,14 +84,7 @@ HAL_StatusTypeDef DJ6020_Send_Can1(int16_t ID2_V)
 
      uint8_t  TxData[8] = {0};
 
-     if(ID2_V > 25000)
-    {
-        ID2_V = 25000;
-    }
-     if(ID2_V < -25000)
-    {
-        ID2_V = -25000;
-    }
+     ID2_V = clamp_i16(ID2_V, -25000, 25000);
 
     TxData[2] = (uint8_t)((ID2_V >> 8 ) & 0xFF);
     TxData[3] = (uint8_t)(ID2_V & 0xFF);
