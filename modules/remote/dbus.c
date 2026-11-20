@@ -14,10 +14,7 @@
 
 RC_TypeDef RC_Data = {0};
 
-/* UART/DMA 细节已下沉到 bsp/bsp_uart.c（2026-11-19 P2c）：
- *   - DMA 缓冲、IDLE 判定、错误重开、D-Cache 维护都在 bsp；
- *   - 这里只注册“收到一帧怎么办”。
- * 名字保留 RC_StartReceive，是为了让外部重启接收的调用点不变。 */
+/* 启动串口接收 */
 void RC_StartReceive(void)
 {
     BSP_UART_DBusStart();
@@ -151,13 +148,13 @@ void RC_Decode(const uint8_t *b)
 
     if (RC_Data.sw_swap)
     {
-        RC_Data.s_left  = RC_Data.sw_hi2;
-        RC_Data.s_right = RC_Data.sw_lo2;
+        RC_Data.S_Left  = RC_Data.sw_hi2;
+        RC_Data.S_Right = RC_Data.sw_lo2;
     }
     else
     {
-        RC_Data.s_left  = RC_Data.sw_lo2;
-        RC_Data.s_right = RC_Data.sw_hi2;
+        RC_Data.S_Left  = RC_Data.sw_lo2;
+        RC_Data.S_Right = RC_Data.sw_hi2;
     }
 
     /* ---- 鼠标 + 键盘（完整解出，保证整帧 18 字节全覆盖）----

@@ -188,7 +188,7 @@ extern volatile uint32_t RC_EnableMs;      /* 计时中已等了多少 ms */
 /* ---- 云台 yaw 角度闭环（2026-11-13 实测标定后启用）----
  *  实测：逆时针（俯视）= gim6020.angle 增大 = gim6020.rpm 为正
  *        INS_Gyro[0] 在同一转动下为负 ⇒ ω_yaw = -INS_Gyro[0]
- *  信号流：摇杆 → 目标角 s_ref → 位置P → 目标转速 → 速度PI → 电压
+ *  信号流：摇杆 → 目标角 S_Ref → 位置P → 目标转速 → 速度PI → 电压
  */
 #define GM_YAW_POS_DIR      1.0f         /* 角度误差→转速：正 rpm 使 angle 增大 */
 #define GM_YAW_STICK_RATE   5000.0f      /* 满杆目标角速度 counts/s ≈ 220°/s */
@@ -220,7 +220,7 @@ extern volatile float RC_GunAngle;       /* 调试镜像：当前 α（度，-18
 /* ==============================================================================
  * 云台pitch:位置P + 速度PI环 ->转矩电压
  * 
- * 信号流:摇杆——参考角s_ref——位置p（角度差——目标转速）
+ * 信号流:摇杆——参考角S_Ref——位置p（角度差——目标转速）
  *                -速度pi——0x1FF
  * 
  * 量纲（8192 counts/圈 = 360）
@@ -258,10 +258,10 @@ extern volatile float RC_GunAngle;       /* 调试镜像：当前 α（度，-18
 #define GM_PITCH_SPD_KP        105.0f             /*速度p    volt/rpm*/
 #define GM_PITCH_SPD_KI        310.0f             /*速度i    volt/（rpm*s）*/
 #define GM_PITCH_I_MAX          10000.0f            /*积分限幅（电压单位）
-                                                    * 静止时 volt = s_i（速度环 P 项贡献为 0），
+                                                    * 静止时 volt = S_I（速度环 P 项贡献为 0），
                                                     * 所以要 > 顶住重力所需的电压 */
 #define GM_PITCH_GRAV_FF        2500.0f             /*重力前馈（电压码）：顶住云台自重的常量电压
-                                                    * 标定法：FF=0 静止读 s_i 稳态值，原样（含符号）填进来 */
+                                                    * 标定法：FF=0 静止读 S_I 稳态值，原样（含符号）填进来 */
 #define GM_PITCH_VOLT_MAX       18000.0f           /*总输出限幅*/
 #define GM_PITCH_TEMP_LIMIT     65                 /*温控值*/
 #define GM_PITCH_HOME_ENABLE    1 
@@ -291,12 +291,12 @@ extern volatile float RC_GunAngle;       /* 调试镜像：当前 α（度，-18
  *        s[0] = (b[5]>>4) & 0x03        → bit4~5
  *        s[1] = ((b[5]>>4) & 0x0C) >> 2 → bit6~7
  *  习惯上 s[0] 叫左拨杆、s[1] 叫右拨杆，但不同出处/遥控器批次偶有对调。
- *  本工程默认(sw_swap=0)：s_left = bit4~5(=s[0])，s_right = bit6~7(=s[1])。
+ *  本工程默认(sw_swap=0)：S_Left = bit4~5(=s[0])，S_Right = bit6~7(=s[1])。
  *  ★ 一次性验证法（本工程 D-Cache 未开，调试器读到的就是真值）：
  *      1) 静止时看 RC_Data.sw_hi2 / sw_lo2，都应是 3(中位)；
  *      2) 拨 DT7 左边那个拨杆，看 sw_hi2 还是 sw_lo2 在 1↔3 跳；
  *      3) 若跳的是 sw_hi2(bit6~7)，说明你这台是“左拨杆在高 2 位”，
- *         把 RC_Data.sw_swap 置 1，s_left/s_right 会自动对上；
+ *         把 RC_Data.sw_swap 置 1，S_Left/S_Right 会自动对上；
  *         若跳的是 sw_lo2(bit4~5)，保持 0（默认即正确）。
  *      sw_swap 一定好就固定，位运算本身不用动。
  * ================================================================== */

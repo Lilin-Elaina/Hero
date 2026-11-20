@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 /* 小陀螺：世界航向目标 + 底盘转速前馈，输出 6020 电压指令。
- * 内部维护 s_spin_ref / s_spin_i / s_spin_ready。 */
+ * 内部维护 S_Spin_Ref / S_Spin_I / S_Spin_Ready。 */
 float RC_Yaw_Spin_Control(uint8_t online, float stick);
 
 /* 模式切换时调用：把两条环的内部状态都复位，

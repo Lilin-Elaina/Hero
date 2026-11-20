@@ -16,15 +16,15 @@ extern "C" {
 #include <stdint.h>
 
 /* 定义在 application/gimbal/gimbal.c —— yaw 车体系角度环 */
-extern float   s_yaw_ref;      /* 目标角（counts） */
-extern float   s_yaw_i;        /* 速度环积分（电压单位） */
-extern uint8_t s_yaw_ready;    /* 目标角初始化完成标志 */
+extern float   S_Yaw_Ref;      /* 目标角（counts） */
+extern float   S_Yaw_I;        /* 速度环积分（电压单位） */
+extern uint8_t S_Yaw_Ready;    /* 目标角初始化完成标志 */
 
 /* 定义在 application/gimbal/gimbal_spin.c —— 交接后要求把输出斜坡清零 */
-extern uint8_t s_yaw_slew_kick;
+extern uint8_t S_Yaw_Slew_Kick;
 
 /* 定义在 application/chassis/chassis.c —— 四轮速度环积分（失速兜底要清零） */
-extern float s_wheel_i[];
+extern float S_Wheel_I[];
 
 #ifdef __cplusplus
 }

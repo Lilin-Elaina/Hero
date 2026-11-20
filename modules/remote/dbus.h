@@ -39,11 +39,11 @@ typedef struct
 typedef struct
 {
     uint16_t ch[4];       /* 4 路摇杆：364~1684，中值1024 */
-    uint8_t  s_left;      /* 物理左拨杆：1=上 2=下 3=中（受 sw_swap 影响） */
-    uint8_t  s_right;     /* 物理右拨杆：1=上 2=下 3=中（受 sw_swap 影响） */
+    uint8_t  S_Left;      /* 物理左拨杆：1=上 2=下 3=中（受 sw_swap 影响） */
+    uint8_t  S_Right;     /* 物理右拨杆：1=上 2=下 3=中（受 sw_swap 影响） */
     uint8_t  sw_hi2;      /* 原始位域 b[5] bit6~7 = 官方 s[1] */
     uint8_t  sw_lo2;      /* 原始位域 b[5] bit4~5 = 官方 s[0] */
-    uint8_t  sw_swap;     /* ★命名开关：0=默认(s_left取bit4~5=官方s[0]) 1=互换 */
+    uint8_t  sw_swap;     /* ★命名开关：0=默认(S_Left取bit4~5=官方s[0]) 1=互换 */
     uint16_t wheel;       /* 左拨轮(11bit)。官方 wheel 未掩码；此处 &0x07FF 为防御性加固 */
     RC_Mouse_t mouse;     /* 鼠标 x/y/z + 左右键 */
     uint8_t  key_v;       /* 键盘按键位图(纵向) = b[14] */

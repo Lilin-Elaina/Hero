@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
   30:modules/remote/dbus.c **** }
   31:modules/remote/dbus.c **** 
   32:modules/remote/dbus.c **** /* UART 错误计数：bsp 出错时回调，计数变量仍在本工程 diag 区（application/rob
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 2
 
 
   33:modules/remote/dbus.c **** static void DBUS_OnError(void)
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
   77              		.thumb
   78              		.thumb_func
   80              	RC_Init:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 3
 
 
   81              	.LFB149:
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  125              		.section	.text.RC_SwitchAutoName,"ax",%progbits
  126              		.align	1
  127              		.global	RC_SwitchAutoName
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 4
 
 
  128              		.syntax unified
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
   77:modules/remote/dbus.c ****     }
   78:modules/remote/dbus.c **** 
   79:modules/remote/dbus.c ****     /* 第一帧到达时开判定窗口（此前的上电时间不计入窗口） */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 5
 
 
   80:modules/remote/dbus.c ****     if (RC_Data.sw_first_frame_ms == 0)
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  193              		.loc 1 94 13 view .LVU41
  194 0034 032B     		cmp	r3, #3
  195 0036 1ED0     		beq	.L31
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 6
 
 
  196              		.loc 1 94 13 discriminator 2 view .LVU42
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  243              		.loc 1 82 47 discriminator 2 view .LVU61
  244 0072 0121     		movs	r1, #1
  245 0074 CFE7     		b	.L13
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 7
 
 
  246              	.L31:
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  283              		.loc 1 114 9 is_stmt 1 view .LVU73
  284              		.loc 1 114 28 is_stmt 0 view .LVU74
  285 009c 0131     		adds	r1, r1, #1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 8
 
 
  286 009e 114C     		ldr	r4, .L34
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  329              	.LVL18:
  330              	.L17:
  106:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 9
 
 
  331              		.loc 1 106 9 is_stmt 1 view .LVU90
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  373              		.align	1
  374              		.global	RC_Decode
  375              		.syntax unified
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 10
 
 
  376              		.thumb
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  424              		.loc 1 132 48 view .LVU120
  425 0028 9B00     		lsls	r3, r3, #2
  426 002a 43EA9213 		orr	r3, r3, r2, lsr #6
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 11
 
 
  427              		.loc 1 132 86 view .LVU121
@@ -658,18 +658,18 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  464 005c 2B7B     		ldrb	r3, [r5, #12]	@ zero_extendqisi2
  465              		.loc 1 149 8 view .LVU140
  466 005e 002B     		cmp	r3, #0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 12
 
 
  467 0060 3AD0     		beq	.L37
  150:modules/remote/dbus.c ****     {
- 151:modules/remote/dbus.c ****         RC_Data.s_left  = RC_Data.sw_hi2;
+ 151:modules/remote/dbus.c ****         RC_Data.S_Left  = RC_Data.sw_hi2;
  468              		.loc 1 151 9 is_stmt 1 view .LVU141
  469              		.loc 1 151 34 is_stmt 0 view .LVU142
  470 0062 AA7A     		ldrb	r2, [r5, #10]	@ zero_extendqisi2
  471              		.loc 1 151 25 view .LVU143
  472 0064 2A72     		strb	r2, [r5, #8]
- 152:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_lo2;
+ 152:modules/remote/dbus.c ****         RC_Data.S_Right = RC_Data.sw_lo2;
  473              		.loc 1 152 9 is_stmt 1 view .LVU144
  474              		.loc 1 152 34 is_stmt 0 view .LVU145
  475 0066 EA7A     		ldrb	r2, [r5, #11]	@ zero_extendqisi2
@@ -679,8 +679,8 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  153:modules/remote/dbus.c ****     }
  154:modules/remote/dbus.c ****     else
  155:modules/remote/dbus.c ****     {
- 156:modules/remote/dbus.c ****         RC_Data.s_left  = RC_Data.sw_lo2;
- 157:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 156:modules/remote/dbus.c ****         RC_Data.S_Left  = RC_Data.sw_lo2;
+ 157:modules/remote/dbus.c ****         RC_Data.S_Right = RC_Data.sw_hi2;
  158:modules/remote/dbus.c ****     }
  159:modules/remote/dbus.c **** 
  160:modules/remote/dbus.c ****     /* ---- 鼠标 + 键盘（完整解出，保证整帧 18 字节全覆盖）----
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  506              		.loc 1 164 47 view .LVU161
  507 0088 1343     		orrs	r3, r3, r2
  508              		.loc 1 164 30 view .LVU162
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 13
 
 
  509 008a C3F30A03 		ubfx	r3, r3, #0, #11
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  180:modules/remote/dbus.c ****         if ((RC_Data.last_tick != 0u) && ((now - RC_Data.last_tick) > RC_GapMaxMs))
  548              		.loc 1 180 9 is_stmt 1 view .LVU184
  549              		.loc 1 180 21 is_stmt 0 view .LVU185
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 14
 
 
  550 00b2 AB6A     		ldr	r3, [r5, #40]
@@ -824,13 +824,13 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  582 00d6 38BD     		pop	{r3, r4, r5, pc}
  583              	.LVL26:
  584              	.L37:
- 156:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 156:modules/remote/dbus.c ****         RC_Data.S_Right = RC_Data.sw_hi2;
  585              		.loc 1 156 9 is_stmt 1 view .LVU199
- 156:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 156:modules/remote/dbus.c ****         RC_Data.S_Right = RC_Data.sw_hi2;
  586              		.loc 1 156 34 is_stmt 0 view .LVU200
  587 00d8 024B     		ldr	r3, .L41
  588 00da DA7A     		ldrb	r2, [r3, #11]	@ zero_extendqisi2
- 156:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 156:modules/remote/dbus.c ****         RC_Data.S_Right = RC_Data.sw_hi2;
  589              		.loc 1 156 25 view .LVU201
  590 00dc 1A72     		strb	r2, [r3, #8]
  157:modules/remote/dbus.c ****     }
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  157:modules/remote/dbus.c ****     }
  592              		.loc 1 157 34 is_stmt 0 view .LVU203
  593 00de 9A7A     		ldrb	r2, [r3, #10]	@ zero_extendqisi2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 15
 
 
  157:modules/remote/dbus.c ****     }
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  644              		.thumb_func
  646              	RC_IsOnline:
  647              	.LVL29:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 16
 
 
  648              	.LFB152:
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  693              		.cfi_startproc
  694              		@ args = 0, pretend = 0, frame = 0
  695              		@ frame_needed = 0, uses_anonymous_args = 0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 17
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 17
 
 
  696              		@ link register save eliminated.
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  739 003c 07EE903A 		vmov	s15, r3	@ int
  740 0040 EAE7     		b	.L57
  741              	.LVL38:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 18
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 18
 
 
  742              	.L61:
@@ -1075,35 +1075,35 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccP
  786              		.file 6 "bsp/bsp_time.h"
  787              		.file 7 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  788              		.file 8 "<built-in>"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s 			page 19
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s 			page 19
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 dbus.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:20     .text.DBUS_OnError:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:25     .text.DBUS_OnError:00000000 DBUS_OnError
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:43     .text.DBUS_OnError:0000000c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:48     .text.RC_StartReceive:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:54     .text.RC_StartReceive:00000000 RC_StartReceive
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:74     .text.RC_Init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:80     .text.RC_Init:00000000 RC_Init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:119    .text.RC_Init:00000024 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:778    .bss.RC_Data:00000000 RC_Data
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:612    .text.DBUS_OnRx:00000000 DBUS_OnRx
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:126    .text.RC_SwitchAutoName:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:132    .text.RC_SwitchAutoName:00000000 RC_SwitchAutoName
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:368    .text.RC_SwitchAutoName:000000e4 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:373    .text.RC_Decode:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:379    .text.RC_Decode:00000000 RC_Decode
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:600    .text.RC_Decode:000000e4 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:607    .text.DBUS_OnRx:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:640    .text.RC_IsOnline:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:646    .text.RC_IsOnline:00000000 RC_IsOnline
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:678    .text.RC_IsOnline:0000001c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:683    .text.RC_Norm:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:689    .text.RC_Norm:00000000 RC_Norm
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:768    .text.RC_Norm:00000060 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccPakM5R.s:775    .bss.RC_Data:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:20     .text.DBUS_OnError:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:25     .text.DBUS_OnError:00000000 DBUS_OnError
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:43     .text.DBUS_OnError:0000000c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:48     .text.RC_StartReceive:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:54     .text.RC_StartReceive:00000000 RC_StartReceive
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:74     .text.RC_Init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:80     .text.RC_Init:00000000 RC_Init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:119    .text.RC_Init:00000024 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:778    .bss.RC_Data:00000000 RC_Data
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:612    .text.DBUS_OnRx:00000000 DBUS_OnRx
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:126    .text.RC_SwitchAutoName:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:132    .text.RC_SwitchAutoName:00000000 RC_SwitchAutoName
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:368    .text.RC_SwitchAutoName:000000e4 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:373    .text.RC_Decode:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:379    .text.RC_Decode:00000000 RC_Decode
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:600    .text.RC_Decode:000000e4 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:607    .text.DBUS_OnRx:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:640    .text.RC_IsOnline:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:646    .text.RC_IsOnline:00000000 RC_IsOnline
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:678    .text.RC_IsOnline:0000001c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:683    .text.RC_Norm:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:689    .text.RC_Norm:00000000 RC_Norm
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:768    .text.RC_Norm:00000060 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccBjCuZD.s:775    .bss.RC_Data:00000000 $d
 
 UNDEFINED SYMBOLS
 RC_ErrCnt

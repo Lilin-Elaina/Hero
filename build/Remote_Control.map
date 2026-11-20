@@ -2630,7 +2630,7 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .rodata.MECANUM_DIR
                 0x0800ad3c       0x30 build/mecanum.o
                 0x0800ad3c                MECANUM_DIR
- .rodata.s_wheel_sign
+ .rodata.S_Wheel_Sign
                 0x0800ad6c       0x10 build/robot.o
  .rodata.asinf.str1.4
                 0x0800ad7c        0x1 D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+dp/hard\libm.a(libm_a-wf_asin.o)
@@ -2711,10 +2711,10 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .data.SystemCoreClock
                 0x2000000c        0x4 build/system_stm32h7xx.o
                 0x2000000c                SystemCoreClock
- .data.s_skip_acc
+ .data.S_Skip_Acc
                 0x20000010        0x1 build/ins.o
  *fill*         0x20000011        0x3 
- .data.s_q0     0x20000014        0x4 build/ins.o
+ .data.S_Q0     0x20000014        0x4 build/ins.o
  .data.RC_BuildTag
                 0x20000018        0x4 build/robot.o
                 0x20000018                RC_BuildTag
@@ -2752,11 +2752,11 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
                 0x2000019c                hfdcan2
  .bss.hfdcan1   0x2000023c       0xa0 build/fdcan.o
                 0x2000023c                hfdcan1
- .bss.s_rx_handler
+ .bss.S_Rx_Handler
                 0x200002dc        0xc build/bsp_can.o
- .bss.s_dbus_err
+ .bss.S_Dbus_Err
                 0x200002e8        0x4 build/bsp_uart.o
- .bss.s_dbus_rx
+ .bss.S_Dbus_Rx
                 0x200002ec        0x4 build/bsp_uart.o
  .bss.can_rx_205_bad_rpm
                 0x200002f0        0x2 build/DJ_Motor.o
@@ -2777,21 +2777,21 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
                 0x2000035c                gim_pitch
  .bss.gim6020   0x20000368        0xc build/DJ_Motor.o
                 0x20000368                gim6020
- .bss.s_spin_db_bypass
+ .bss.S_Spin_Db_Bypass
                 0x20000374        0x1 build/mecanum.o
  *fill*         0x20000375        0x3 
  .bss.mec_prev  0x20000378       0x10 build/mecanum.o
- .bss.s_skip_gyro
+ .bss.S_Skip_Gyro
                 0x20000388        0x1 build/ins.o
  *fill*         0x20000389        0x1 
- .bss.s_ahrs_cnt
+ .bss.S_Ahrs_Cnt
                 0x2000038a        0x2 build/ins.o
- .bss.s_ezi     0x2000038c        0x4 build/ins.o
- .bss.s_eyi     0x20000390        0x4 build/ins.o
- .bss.s_exi     0x20000394        0x4 build/ins.o
- .bss.s_q3      0x20000398        0x4 build/ins.o
- .bss.s_q2      0x2000039c        0x4 build/ins.o
- .bss.s_q1      0x200003a0        0x4 build/ins.o
+ .bss.S_Ezi     0x2000038c        0x4 build/ins.o
+ .bss.S_Eyi     0x20000390        0x4 build/ins.o
+ .bss.S_Exi     0x20000394        0x4 build/ins.o
+ .bss.S_Q3      0x20000398        0x4 build/ins.o
+ .bss.S_Q2      0x2000039c        0x4 build/ins.o
+ .bss.S_Q1      0x200003a0        0x4 build/ins.o
  .bss.INS_AhrsReady
                 0x200003a4        0x1 build/ins.o
                 0x200003a4                INS_AhrsReady
@@ -2808,9 +2808,9 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .bss.INS_WorldYawRate
                 0x200003b4        0x4 build/ins.o
                 0x200003b4                INS_WorldYawRate
- .bss.s_inited  0x200003b8        0x1 build/ins.o
+ .bss.S_Inited  0x200003b8        0x1 build/ins.o
  *fill*         0x200003b9        0x3 
- .bss.s_sum     0x200003bc        0xc build/ins.o
+ .bss.S_Sum     0x200003bc        0xc build/ins.o
  .bss.INS_GyroDump
                 0x200003c8       0x10 build/ins.o
                 0x200003c8                INS_GyroDump
@@ -2854,34 +2854,34 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  *fill*         0x20000426        0x2 
  .bss.RC_Data   0x20000428       0x30 build/dbus.o
                 0x20000428                RC_Data
- .bss.s_rpm_over.0
+ .bss.S_Rpm_Over.0
                 0x20000458        0x2 build/robot.o
- .bss.s_out_ms.1
+ .bss.S_Out_Ms.1
                 0x2000045a        0x2 build/robot.o
- .bss.s_can2_seen.2
+ .bss.S_Can2_Seen.2
                 0x2000045c        0x1 build/robot.o
  *fill*         0x2000045d        0x3 
- .bss.s_en_since.3
+ .bss.S_En_Since.3
                 0x20000460        0x4 build/robot.o
- .bss.s_en_state.4
+ .bss.S_En_State.4
                 0x20000464        0x1 build/robot.o
- .bss.s_spin_prev.5
+ .bss.S_Spin_Prev.5
                 0x20000465        0x1 build/robot.o
- .bss.s_sw_cnt.6
+ .bss.S_Sw_Cnt.6
                 0x20000466        0x2 build/robot.o
- .bss.s_sw_prev.7
+ .bss.S_Sw_Prev.7
                 0x20000468        0x1 build/robot.o
  *fill*         0x20000469        0x3 
- .bss.s_wheel_lost
+ .bss.S_Wheel_Lost
                 0x2000046c        0x4 build/robot.o
- .bss.s_wheel_ok
+ .bss.S_Wheel_Ok
                 0x20000470        0x8 build/robot.o
- .bss.s_wheel_seen
+ .bss.S_Wheel_Seen
                 0x20000478       0x10 build/robot.o
- .bss.s_wheel_miss
+ .bss.S_Wheel_Miss
                 0x20000488        0x8 build/robot.o
- .bss.s_fric_a  0x20000490        0x4 build/robot.o
- .bss.s_yaw_volt_prev
+ .bss.S_Fric_A  0x20000490        0x4 build/robot.o
+ .bss.S_Yaw_Volt_Prev
                 0x20000494        0x4 build/robot.o
  .bss.RC_Can2RestartCnt
                 0x20000498        0x4 build/robot.o
@@ -2965,42 +2965,42 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .bss.RC_WheelRef
                 0x2000050c       0x10 build/chassis.o
                 0x2000050c                RC_WheelRef
- .bss.s_wheel_i
+ .bss.S_Wheel_I
                 0x2000051c       0x10 build/chassis.o
-                0x2000051c                s_wheel_i
+                0x2000051c                S_Wheel_I
  .bss.RC_WheelFault
                 0x2000052c        0x1 build/chassis.o
                 0x2000052c                RC_WheelFault
- .bss.s_homed.0
+ .bss.S_Homed.0
                 0x2000052d        0x1 build/gimbal.o
  *fill*         0x2000052e        0x2 
- .bss.s_home_since.1
+ .bss.S_Home_Since.1
                 0x20000530        0x4 build/gimbal.o
- .bss.s_v.2     0x20000534        0x4 build/gimbal.o
- .bss.s_ref.3   0x20000538        0x4 build/gimbal.o
- .bss.s_stick_f.4
+ .bss.S_V.2     0x20000534        0x4 build/gimbal.o
+ .bss.S_Ref.3   0x20000538        0x4 build/gimbal.o
+ .bss.S_Stick_F.4
                 0x2000053c        0x4 build/gimbal.o
- .bss.s_i.5     0x20000540        0x4 build/gimbal.o
- .bss.s_stage.6
+ .bss.S_I.5     0x20000540        0x4 build/gimbal.o
+ .bss.S_Stage.6
                 0x20000544        0x1 build/gimbal.o
  *fill*         0x20000545        0x3 
  .bss.RC_GunAngle
                 0x20000548        0x4 build/gimbal.o
                 0x20000548                RC_GunAngle
- .bss.s_hold_i  0x2000054c        0x4 build/gimbal.o
- .bss.s_psi_ref
+ .bss.S_Hold_I  0x2000054c        0x4 build/gimbal.o
+ .bss.S_Psi_Ref
                 0x20000550        0x4 build/gimbal.o
- .bss.s_psi_deg
+ .bss.S_Psi_Deg
                 0x20000554        0x4 build/gimbal.o
- .bss.s_yaw_ready
+ .bss.S_Yaw_Ready
                 0x20000558        0x1 build/gimbal.o
-                0x20000558                s_yaw_ready
+                0x20000558                S_Yaw_Ready
  *fill*         0x20000559        0x3 
- .bss.s_yaw_i   0x2000055c        0x4 build/gimbal.o
-                0x2000055c                s_yaw_i
- .bss.s_yaw_ref
+ .bss.S_Yaw_I   0x2000055c        0x4 build/gimbal.o
+                0x2000055c                S_Yaw_I
+ .bss.S_Yaw_Ref
                 0x20000560        0x4 build/gimbal.o
-                0x20000560                s_yaw_ref
+                0x20000560                S_Yaw_Ref
  .bss.RC_YawSpinOut
                 0x20000564        0x4 build/gimbal_spin.o
                 0x20000564                RC_YawSpinOut
@@ -3013,17 +3013,17 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .bss.RC_SpinYaw
                 0x20000570        0x4 build/gimbal_spin.o
                 0x20000570                RC_SpinYaw
- .bss.s_yaw_slew_kick
+ .bss.S_Yaw_Slew_Kick
                 0x20000574        0x1 build/gimbal_spin.o
-                0x20000574                s_yaw_slew_kick
+                0x20000574                S_Yaw_Slew_Kick
  *fill*         0x20000575        0x1 
- .bss.s_spin_bad
+ .bss.S_Spin_Bad
                 0x20000576        0x2 build/gimbal_spin.o
- .bss.s_spin_ready
+ .bss.S_Spin_Ready
                 0x20000578        0x1 build/gimbal_spin.o
  *fill*         0x20000579        0x3 
- .bss.s_spin_i  0x2000057c        0x4 build/gimbal_spin.o
- .bss.s_spin_ref
+ .bss.S_Spin_I  0x2000057c        0x4 build/gimbal_spin.o
+ .bss.S_Spin_Ref
                 0x20000580        0x4 build/gimbal_spin.o
  .bss.hspi2     0x20000584       0x88 build/spi.o
                 0x20000584                hspi2
@@ -3464,41 +3464,41 @@ LOAD D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-non
  .debug_line    0x00017711     0x27b3 build/stm32h7xx_hal_spi.o
  .debug_line    0x00019ec4       0x74 build/startup_stm32h723xx.o
 
-.debug_str      0x00000000     0x743f
- .debug_str     0x00000000     0x743f build/main.o
+.debug_str      0x00000000     0x7447
+ .debug_str     0x00000000     0x7447 build/main.o
                                 0x866 (size before relaxing)
- .debug_str     0x0000743f      0xd36 build/stm32h7xx_it.o
- .debug_str     0x0000743f      0x3de build/stm32h7xx_hal_msp.o
- .debug_str     0x0000743f     0x1034 build/stm32h7xx_hal_cortex.o
- .debug_str     0x0000743f      0x9a7 build/stm32h7xx_hal_rcc.o
- .debug_str     0x0000743f      0xee9 build/stm32h7xx_hal_rcc_ex.o
- .debug_str     0x0000743f      0x6c2 build/stm32h7xx_hal_gpio.o
- .debug_str     0x0000743f      0x945 build/stm32h7xx_hal_dma.o
- .debug_str     0x0000743f      0x9a7 build/stm32h7xx_hal_pwr_ex.o
- .debug_str     0x0000743f     0x1588 build/stm32h7xx_hal.o
- .debug_str     0x0000743f     0x1d97 build/stm32h7xx_hal_fdcan.o
- .debug_str     0x0000743f     0x149f build/stm32h7xx_hal_uart.o
- .debug_str     0x0000743f      0xb93 build/stm32h7xx_hal_uart_ex.o
- .debug_str     0x0000743f      0x6cf build/system_stm32h7xx.o
- .debug_str     0x0000743f      0x4bb build/gpio.o
- .debug_str     0x0000743f      0xbe0 build/dma.o
- .debug_str     0x0000743f     0x16ae build/usart.o
- .debug_str     0x0000743f     0x121a build/fdcan.o
- .debug_str     0x0000743f      0x99a build/bsp_can.o
- .debug_str     0x0000743f      0xa62 build/bsp_uart.o
- .debug_str     0x0000743f      0xb18 build/bsp_spi.o
- .debug_str     0x0000743f      0x1c4 build/bsp_time.o
- .debug_str     0x0000743f      0x393 build/DJ_Motor.o
- .debug_str     0x0000743f      0x25c build/mecanum.o
- .debug_str     0x0000743f      0x424 build/ins.o
- .debug_str     0x0000743f      0x3d1 build/dbus.o
- .debug_str     0x0000743f      0xd12 build/robot.o
- .debug_str     0x0000743f      0x20d build/chassis.o
- .debug_str     0x0000743f      0x3da build/gimbal.o
- .debug_str     0x0000743f      0x389 build/gimbal_spin.o
- .debug_str     0x0000743f      0xad4 build/spi.o
- .debug_str     0x0000743f      0xdc0 build/stm32h7xx_hal_spi.o
- .debug_str     0x0000743f       0x6c build/startup_stm32h723xx.o
+ .debug_str     0x00007447      0xd36 build/stm32h7xx_it.o
+ .debug_str     0x00007447      0x3de build/stm32h7xx_hal_msp.o
+ .debug_str     0x00007447     0x1034 build/stm32h7xx_hal_cortex.o
+ .debug_str     0x00007447      0x9a7 build/stm32h7xx_hal_rcc.o
+ .debug_str     0x00007447      0xee9 build/stm32h7xx_hal_rcc_ex.o
+ .debug_str     0x00007447      0x6c2 build/stm32h7xx_hal_gpio.o
+ .debug_str     0x00007447      0x945 build/stm32h7xx_hal_dma.o
+ .debug_str     0x00007447      0x9a7 build/stm32h7xx_hal_pwr_ex.o
+ .debug_str     0x00007447     0x1588 build/stm32h7xx_hal.o
+ .debug_str     0x00007447     0x1d97 build/stm32h7xx_hal_fdcan.o
+ .debug_str     0x00007447     0x149f build/stm32h7xx_hal_uart.o
+ .debug_str     0x00007447      0xb93 build/stm32h7xx_hal_uart_ex.o
+ .debug_str     0x00007447      0x6cf build/system_stm32h7xx.o
+ .debug_str     0x00007447      0x4bb build/gpio.o
+ .debug_str     0x00007447      0xbe0 build/dma.o
+ .debug_str     0x00007447     0x16ae build/usart.o
+ .debug_str     0x00007447     0x121a build/fdcan.o
+ .debug_str     0x00007447      0x99a build/bsp_can.o
+ .debug_str     0x00007447      0xa62 build/bsp_uart.o
+ .debug_str     0x00007447      0xb18 build/bsp_spi.o
+ .debug_str     0x00007447      0x1c4 build/bsp_time.o
+ .debug_str     0x00007447      0x393 build/DJ_Motor.o
+ .debug_str     0x00007447      0x25c build/mecanum.o
+ .debug_str     0x00007447      0x424 build/ins.o
+ .debug_str     0x00007447      0x3d1 build/dbus.o
+ .debug_str     0x00007447      0xd12 build/robot.o
+ .debug_str     0x00007447      0x20d build/chassis.o
+ .debug_str     0x00007447      0x3da build/gimbal.o
+ .debug_str     0x00007447      0x389 build/gimbal_spin.o
+ .debug_str     0x00007447      0xad4 build/spi.o
+ .debug_str     0x00007447      0xdc0 build/stm32h7xx_hal_spi.o
+ .debug_str     0x00007447       0x6c build/startup_stm32h723xx.o
 
 .debug_frame    0x00000000     0x35a4
  .debug_frame   0x00000000       0x80 build/main.o
@@ -4463,6 +4463,16 @@ SPI5_IRQHandler                                   build/startup_stm32h723xx.o
 SPI6_IRQHandler                                   build/startup_stm32h723xx.o
 SVC_Handler                                       build/stm32h7xx_it.o
 SWPMI1_IRQHandler                                 build/startup_stm32h723xx.o
+S_Wheel_I                                         build/chassis.o
+                                                  build/robot.o
+S_Yaw_I                                           build/gimbal.o
+                                                  build/gimbal_spin.o
+S_Yaw_Ready                                       build/gimbal.o
+                                                  build/gimbal_spin.o
+S_Yaw_Ref                                         build/gimbal.o
+                                                  build/gimbal_spin.o
+S_Yaw_Slew_Kick                                   build/gimbal_spin.o
+                                                  build/robot.o
 SysTick_Handler                                   build/stm32h7xx_it.o
 SystemClock_Config                                build/main.o
 SystemCoreClock                                   build/system_stm32h7xx.o
@@ -4789,16 +4799,6 @@ nanf                                              D:/STM32CUBE/STM32CubeCLT_1.22
                                                   D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+dp/hard\libm.a(libm_a-wf_asin.o)
 pFlash                                            build/stm32h7xx_hal_flash.o
                                                   build/stm32h7xx_hal_flash_ex.o
-s_wheel_i                                         build/chassis.o
-                                                  build/robot.o
-s_yaw_i                                           build/gimbal.o
-                                                  build/gimbal_spin.o
-s_yaw_ready                                       build/gimbal.o
-                                                  build/gimbal_spin.o
-s_yaw_ref                                         build/gimbal.o
-                                                  build/gimbal_spin.o
-s_yaw_slew_kick                                   build/gimbal_spin.o
-                                                  build/robot.o
 sinf                                              D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+dp/hard\libm.a(libm_a-sinf.o)
                                                   build/robot.o
 software_init_hook                                D:/STM32CUBE/STM32CubeCLT_1.22.0/GNU-tools-for-STM32/bin/../lib/gcc/arm-none-eabi/14.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+dp/hard/crt0.o

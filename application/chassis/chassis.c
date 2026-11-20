@@ -18,7 +18,7 @@
  volatile uint8_t RC_WheelFault = 0; /*轮子故障标志位，1表示有轮子故障，0表示正常*/
 
 /* 三层共享（robot.c 的失速兜底要清零积分）——只改存储类，语义不变 */
-float s_wheel_i[MECANUM_WHEEL_NUM];
+float S_Wheel_I[MECANUM_WHEEL_NUM];
 
 /* 目标轮速镜像（只给调试器看，控制里不读） */
 float RC_WheelRef[4] = {0.0f};
@@ -41,7 +41,7 @@ void RC_Wheel_Reset()
 
      for(i = 0; i < MECANUM_WHEEL_NUM; i++)
      {
-         s_wheel_i[i] = 0.0f;
+         S_Wheel_I[i] = 0.0f;
      }
 }
 
@@ -51,15 +51,15 @@ float RC_Wheel_Speed_PI(uint8_t id, float ref , float rpm, float limit)
 {
     float err  = ref - rpm;
     float a_ff = RC_WHEEL_FF_A_PER_RPM * ref;
-    float a    = a_ff + RC_WHEEL_SPD_KP * err + s_wheel_i[id];
+    float a    = a_ff + RC_WHEEL_SPD_KP * err + S_Wheel_I[id];
 
     if(wheel_abs(a) < limit || (a >= limit && err < 0.0f) || (a <= -limit && err > 0.0f))
     {
-        s_wheel_i[id] += RC_WHEEL_SPD_KI * err * RC_WHEEL_SPD_DT_S;
-        s_wheel_i[id] = wheel_clamp(s_wheel_i[id], -RC_WHEEL_I_MAX, RC_WHEEL_I_MAX);
+        S_Wheel_I[id] += RC_WHEEL_SPD_KI * err * RC_WHEEL_SPD_DT_S;
+        S_Wheel_I[id] = wheel_clamp(S_Wheel_I[id], -RC_WHEEL_I_MAX, RC_WHEEL_I_MAX);
     }
 
-    a = a_ff + RC_WHEEL_SPD_KP * err + s_wheel_i[id];
+    a = a_ff + RC_WHEEL_SPD_KP * err + S_Wheel_I[id];
     
     return wheel_clamp(a, -limit, limit);
 

@@ -62,11 +62,11 @@ static float mec_abs(float x)
 /* ------------------------------------------------------------------ */
 /* 自转通道死区旁路：跟随/小陀螺的自转指令是闭环算出来的，本来就很小，
  * 再被归一化死区（0.02）吃掉就等于"指令发了、车不动"。 */
-static uint8_t s_spin_db_bypass = 0u;
+static uint8_t S_Spin_Db_Bypass = 0u;
 
 void Mecanum_SetSpinDeadbandBypass(uint8_t on)
 {
-    s_spin_db_bypass = (on != 0u) ? 1u : 0u;
+    S_Spin_Db_Bypass = (on != 0u) ? 1u : 0u;
 }
 
 uint8_t Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
@@ -100,7 +100,7 @@ uint8_t Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
     if (mec_abs(fwd)    < MEC_DEADBAND_NORM) fwd    = 0.0f;
     if (mec_abs(strafe) < MEC_DEADBAND_NORM) strafe = 0.0f;
     /* 自转：跟随/小陀螺下旁路，否则 3.1° 内指令全被清零 → 起转门槛 + 一顿一顿 */
-    if ((s_spin_db_bypass == 0u) && (mec_abs(spin) < MEC_DEADBAND_NORM)) spin = 0.0f;
+    if ((S_Spin_Db_Bypass == 0u) && (mec_abs(spin) < MEC_DEADBAND_NORM)) spin = 0.0f;
 
     vx = fwd    * MEC_MAX_LINEAR;
     vy = strafe * MEC_MAX_LINEAR * MEC_STRAFE_RATIO;

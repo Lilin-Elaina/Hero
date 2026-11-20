@@ -16,12 +16,12 @@
 #include <math.h>
 
 /* 小陀螺专用环的状态（与 yaw 环互不共享，靠 RC_Yaw_Handover 交接）
- * s_yaw_slew_kick 原先 static，分层后 robot.c 要读，改全局并由 rc_state.h 声明 */
-static float   s_spin_ref   = 0.0f;  /* 世界航向目标 deg（多圈连续） */
-static float   s_spin_i     = 0.0f;  /* 速度环积分（电压单位） */
-static uint8_t s_spin_ready = 0u;
-static uint16_t s_spin_bad  = 0u;   /* 失控计数（WorldYawRate 长时间超限） */
-uint8_t  s_yaw_slew_kick = 0u;  /* 交接后把输出斜坡清零的标志 */
+ * S_Yaw_Slew_Kick 原先 static，分层后 robot.c 要读，改全局并由 rc_state.h 声明 */
+static float   S_Spin_Ref   = 0.0f;  /* 世界航向目标 deg（多圈连续） */
+static float   S_Spin_I     = 0.0f;  /* 速度环积分（电压单位） */
+static uint8_t S_Spin_Ready = 0u;
+static uint16_t S_Spin_Bad  = 0u;   /* 失控计数（WorldYawRate 长时间超限） */
+uint8_t  S_Yaw_Slew_Kick = 0u;  /* 交接后把输出斜坡清零的标志 */
 volatile float RC_SpinYaw = 0.0f;
 volatile float RC_SpinWch = 0.0f;
 volatile float RC_SpinErr = 0.0f;
@@ -41,10 +41,10 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
     const uint8_t fresh = ((BSP_Now() - gim6020.last_tick) <= GM_FEEDBACK_TIMEOUT_MS) ? 1u : 0u;
     float aim, e, w_chassis, rpm_d, err_v, volt;
 
-    if ((online == 0u) || (fresh == 0u) || (s_spin_ready == 0u) || (INS_AhrsReady == 0u)) {
-        s_spin_ref   = (float)INS_WorldYaw;
-        s_spin_i     = 0.0f;
-        s_spin_ready = (uint8_t)((online != 0u) && (fresh != 0u) && (INS_AhrsReady != 0u));
+    if ((online == 0u) || (fresh == 0u) || (S_Spin_Ready == 0u) || (INS_AhrsReady == 0u)) {
+        S_Spin_Ref   = (float)INS_WorldYaw;
+        S_Spin_I     = 0.0f;
+        S_Spin_Ready = (uint8_t)((online != 0u) && (fresh != 0u) && (INS_AhrsReady != 0u));
         RC_SpinYaw   = (float)INS_WorldYaw;
         RC_SpinWch   = 0.0f;
         RC_SpinErr   = 0.0f;
@@ -52,16 +52,16 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
         RC_YawErr    = 0.0f;
         RC_YawRpmDes = 0.0f;
         RC_YawVolt   = 0.0f;
-        RC_YawI      = s_spin_i;
+        RC_YawI      = S_Spin_I;
         return 0.0f;
     }
 
     /* ① 摇杆 → 世界目标角速度；松杆后目标保持（不回中、不回弹） */
     aim = GM6020_SIGN * SPIN_YAW_AIM_RATE * stick;      /* deg/s */
-    s_spin_ref += aim * 0.001f;
+    S_Spin_Ref += aim * 0.001f;
 
     /* ② 世界航向误差，折到 ±180（INS_WorldYaw 是连续量） */
-    e = s_spin_ref - (float)INS_WorldYaw;
+    e = S_Spin_Ref - (float)INS_WorldYaw;
     while (e >  180.0f) e -= 360.0f;
     while (e < -180.0f) e += 360.0f;
 
@@ -72,17 +72,17 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
      * （符号/方向接反），收油并把目标拉回当前航向，绝不让它一直疯转。
      * 正常工况下 ω_world 被钉在 0 附近，不可能触发。 */
     if ((INS_WorldYawRate > 800.0f) || (INS_WorldYawRate < -800.0f)) {
-        if (s_spin_bad < 300u) s_spin_bad++;
-        if (s_spin_bad >= 300u) {
-            s_spin_ref = (float)INS_WorldYaw;
-            s_spin_i   = 0.0f;
-            s_spin_bad = 0u;
+        if (S_Spin_Bad < 300u) S_Spin_Bad++;
+        if (S_Spin_Bad >= 300u) {
+            S_Spin_Ref = (float)INS_WorldYaw;
+            S_Spin_I   = 0.0f;
+            S_Spin_Bad = 0u;
             RC_SpinWch = w_chassis;
             RC_YawVolt = 0.0f;
             return 0.0f;
         }
     } else {
-        s_spin_bad = 0u;
+        S_Spin_Bad = 0u;
     }
 
 #if (SPIN_YAW_USE_JOINT_POS)
@@ -92,7 +92,7 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
      * 底盘转速前馈 −ω_c/6 保证边转边跟得住。 */
     {
         float psi_c = (float)INS_WorldYaw - alpha_deg;   /* 车体世界航向 */
-        float a_err = (s_spin_ref - psi_c) - alpha_deg;  /* 关节角误差（deg） */
+        float a_err = (S_Spin_Ref - psi_c) - alpha_deg;  /* 关节角误差（deg） */
 
         rpm_d = GM_YAW_ANG_KP * (a_err * 22.7556f) - w_chassis * (1.0f / 6.0f);
     }
@@ -115,7 +115,7 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
      * 只靠 P 拿，就要 3133/300 ≈ 10 rpm 的稳态速度误差，
      * 折算到航向上就是几十度——这就是"一段时间后被带偏"的来历。 */
     err_v = rpm_d - (float)gim6020.rpm;
-    volt  = SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + s_spin_i;
+    volt  = SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + S_Spin_I;
 
     /* 抗饱和：按**上一拍实发**的电压回算，而不是"请求值没超限就积分"。
      * 200/拍的斜坡要 90 ms 才拉到 18000，这期间请求值一直"没超限"，
@@ -123,12 +123,12 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
      * 回算项必须带 dt（KAW 单位 1/s），否则等于放大 1/dt 倍。 */
     {
         float v_raw = volt;
-        s_spin_i += (SPIN_YAW_KI * err_v
+        S_Spin_I += (SPIN_YAW_KI * err_v
                    + SPIN_YAW_KAW * (RC_YawSpinOut - v_raw)) * 0.001f;
-        if (s_spin_i >  SPIN_YAW_I_MAX) s_spin_i =  SPIN_YAW_I_MAX;
-        if (s_spin_i < -SPIN_YAW_I_MAX) s_spin_i = -SPIN_YAW_I_MAX;
+        if (S_Spin_I >  SPIN_YAW_I_MAX) S_Spin_I =  SPIN_YAW_I_MAX;
+        if (S_Spin_I < -SPIN_YAW_I_MAX) S_Spin_I = -SPIN_YAW_I_MAX;
     }
-    volt = SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + s_spin_i;
+    volt = SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + S_Spin_I;
 
     if (volt >  GM_YAW_VOLT_MAX) volt =  GM_YAW_VOLT_MAX;
     if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;
@@ -137,11 +137,11 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
     RC_SpinYaw   = (float)INS_WorldYaw;
     RC_SpinWch   = w_chassis;
     RC_SpinErr   = e;
-    RC_YawRef    = s_spin_ref;      /* 注意：小陀螺下这里是"世界目标角 deg"，不是 counts */
+    RC_YawRef    = S_Spin_Ref;      /* 注意：小陀螺下这里是"世界目标角 deg"，不是 counts */
     RC_YawErr    = e;
     RC_YawRpmDes = rpm_d;
     RC_YawVolt   = volt;
-    RC_YawI      = s_spin_i;
+    RC_YawI      = S_Spin_I;
 
     return volt;
 }
@@ -150,15 +150,15 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
  * 免得接手的一方拿着几秒前的旧目标把枪口拽一下。 */
 void RC_Yaw_Handover(void)
 {
-    s_yaw_ref    = (float)gim6020.angle;
-    s_yaw_i      = 0.0f;
-    s_yaw_ready  = 0u;          /* 下一拍 RC_Yaw_Control 自己按实际角重新接管 */
+    S_Yaw_Ref    = (float)gim6020.angle;
+    S_Yaw_I      = 0.0f;
+    S_Yaw_Ready  = 0u;          /* 下一拍 RC_Yaw_Control 自己按实际角重新接管 */
 
-    s_spin_ref   = (float)INS_WorldYaw;
-    s_spin_i     = 0.0f;
-    s_spin_ready = 0u;
+    S_Spin_Ref   = (float)INS_WorldYaw;
+    S_Spin_I     = 0.0f;
+    S_Spin_Ready = 0u;
 
     /* 输出斜坡也要清：上一模式可能正卡在一个大电压的斜坡上，直接交接等于把
      * 那段扭矩原封不动递给新的环 —— 表现为切模式瞬间"拽一下"。 */
-    s_yaw_slew_kick = 1u;
+    S_Yaw_Slew_Kick = 1u;
 }

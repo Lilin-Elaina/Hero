@@ -78,8 +78,8 @@ volatile float    INS_Bias[3];
 volatile uint8_t  INS_AccDump[16];
 volatile uint8_t  INS_GyroDump[16];
 
-static float s_sum[3];      /* 标定累加 */
-static uint8_t s_inited;
+static float S_Sum[3];      /* 标定累加 */
+static uint8_t S_Inited;
 
 /* ======================= Mahony 姿态解算 =======================
  * 目的：拿到「世界垂直轴」上的角速度。板子竖直绑在枪架上，体轴 x 指上，
@@ -105,9 +105,9 @@ volatile float   INS_RollDeg;
 volatile float   INS_PitchDeg;
 volatile uint8_t INS_AhrsReady;
 
-static float    s_q0 = 1.0f, s_q1 = 0.0f, s_q2 = 0.0f, s_q3 = 0.0f;
-static float    s_exi, s_eyi, s_ezi;
-static uint16_t s_ahrs_cnt;
+static float    S_Q0 = 1.0f, S_Q1 = 0.0f, S_Q2 = 0.0f, S_Q3 = 0.0f;
+static float    S_Exi, S_Eyi, S_Ezi;
+static uint16_t S_Ahrs_Cnt;
 
 static void ins_ahrs_step(float gx, float gy, float gz, float ax, float ay, float az)
 {
@@ -125,14 +125,14 @@ static void ins_ahrs_step(float gx, float gy, float gz, float ax, float ay, floa
     ay /= norm;
     az /= norm;
 
-    q0q0 = s_q0 * s_q0;
-    q0q1 = s_q0 * s_q1;
-    q0q2 = s_q0 * s_q2;
-    q1q1 = s_q1 * s_q1;
-    q1q3 = s_q1 * s_q3;
-    q2q2 = s_q2 * s_q2;
-    q2q3 = s_q2 * s_q3;
-    q3q3 = s_q3 * s_q3;
+    q0q0 = S_Q0 * S_Q0;
+    q0q1 = S_Q0 * S_Q1;
+    q0q2 = S_Q0 * S_Q2;
+    q1q1 = S_Q1 * S_Q1;
+    q1q3 = S_Q1 * S_Q3;
+    q2q2 = S_Q2 * S_Q2;
+    q2q3 = S_Q2 * S_Q3;
+    q3q3 = S_Q3 * S_Q3;
 
     /* 估计的重力方向（世界“上”在体轴系） */
     vx = 2.0f * (q1q3 - q0q2);
@@ -150,44 +150,44 @@ static void ins_ahrs_step(float gx, float gy, float gz, float ax, float ay, floa
         kp *= 0.1f;
     }
 
-    s_exi += ex * (MAHONY_KI * MAHONY_DT);
-    s_eyi += ey * (MAHONY_KI * MAHONY_DT);
-    s_ezi += ez * (MAHONY_KI * MAHONY_DT);
+    S_Exi += ex * (MAHONY_KI * MAHONY_DT);
+    S_Eyi += ey * (MAHONY_KI * MAHONY_DT);
+    S_Ezi += ez * (MAHONY_KI * MAHONY_DT);
 
-    gx += kp * ex + s_exi;
-    gy += kp * ey + s_eyi;
-    gz += kp * ez + s_ezi;
+    gx += kp * ex + S_Exi;
+    gy += kp * ey + S_Eyi;
+    gz += kp * ez + S_Ezi;
 
     /* 四元数积分 */
-    t0 = s_q0;
-    t1 = s_q1;
-    t2 = s_q2;
-    t3 = s_q3;
-    s_q0 += (-t1 * gx - t2 * gy - t3 * gz) * MAHONY_HALFT;
-    s_q1 += ( t0 * gx + t2 * gz - t3 * gy) * MAHONY_HALFT;
-    s_q2 += ( t0 * gy - t1 * gz + t3 * gx) * MAHONY_HALFT;
-    s_q3 += ( t0 * gz + t1 * gy - t2 * gx) * MAHONY_HALFT;
+    t0 = S_Q0;
+    t1 = S_Q1;
+    t2 = S_Q2;
+    t3 = S_Q3;
+    S_Q0 += (-t1 * gx - t2 * gy - t3 * gz) * MAHONY_HALFT;
+    S_Q1 += ( t0 * gx + t2 * gz - t3 * gy) * MAHONY_HALFT;
+    S_Q2 += ( t0 * gy - t1 * gz + t3 * gx) * MAHONY_HALFT;
+    S_Q3 += ( t0 * gz + t1 * gy - t2 * gx) * MAHONY_HALFT;
 
     /* 归一化 */
-    norm = sqrtf(s_q0 * s_q0 + s_q1 * s_q1 + s_q2 * s_q2 + s_q3 * s_q3);
+    norm = sqrtf(S_Q0 * S_Q0 + S_Q1 * S_Q1 + S_Q2 * S_Q2 + S_Q3 * S_Q3);
     if (norm < 1e-6f) {
-        s_q0 = 1.0f; s_q1 = 0.0f; s_q2 = 0.0f; s_q3 = 0.0f;
+        S_Q0 = 1.0f; S_Q1 = 0.0f; S_Q2 = 0.0f; S_Q3 = 0.0f;
         return;
     }
-    s_q0 /= norm;
-    s_q1 /= norm;
-    s_q2 /= norm;
-    s_q3 /= norm;
+    S_Q0 /= norm;
+    S_Q1 /= norm;
+    S_Q2 /= norm;
+    S_Q3 /= norm;
 
     /* 用更新后的姿态重算竖直轴，把实测角速度投影上去（倾斜补偿的核心） */
-    q0q0 = s_q0 * s_q0;
-    q0q1 = s_q0 * s_q1;
-    q0q2 = s_q0 * s_q2;
-    q1q1 = s_q1 * s_q1;
-    q1q3 = s_q1 * s_q3;
-    q2q2 = s_q2 * s_q2;
-    q2q3 = s_q2 * s_q3;
-    q3q3 = s_q3 * s_q3;
+    q0q0 = S_Q0 * S_Q0;
+    q0q1 = S_Q0 * S_Q1;
+    q0q2 = S_Q0 * S_Q2;
+    q1q1 = S_Q1 * S_Q1;
+    q1q3 = S_Q1 * S_Q3;
+    q2q2 = S_Q2 * S_Q2;
+    q2q3 = S_Q2 * S_Q3;
+    q3q3 = S_Q3 * S_Q3;
     vx = 2.0f * (q1q3 - q0q2);
     vy = 2.0f * (q0q1 + q2q3);
     vz = q0q0 - q1q1 - q2q2 + q3q3;
@@ -195,9 +195,9 @@ static void ins_ahrs_step(float gx, float gy, float gz, float ax, float ay, floa
     /* 负号是为了和既有约定 ω_yaw = -INS_Gyro[0] 对齐（静止水平时两者相等） */
     INS_WorldYawRate = INS_WORLD_YAW_SIGN * (gx_r * vx + gy_r * vy + gz_r * vz) * 57.2957795f;
 
-    if (s_ahrs_cnt < MAHONY_WARMUP) {
-        s_ahrs_cnt++;
-        if (s_ahrs_cnt == MAHONY_WARMUP) {
+    if (S_Ahrs_Cnt < MAHONY_WARMUP) {
+        S_Ahrs_Cnt++;
+        if (S_Ahrs_Cnt == MAHONY_WARMUP) {
             INS_AhrsReady = 1u;
         }
         return;                     /* 收敛期内只跑姿态，不发布积分 */
@@ -224,8 +224,8 @@ static void ins_cs(uint8_t dev, uint8_t low)
  *   原先 acc=2 / gyro=1，读回 ID = 0x23 / 0x22，且读 0x00~0x0F 时
  *   数据整体错后一个寄存器（陀螺的 0x02~0x07 数据出现在 dump[1..6]），
  *   说明多丢了 1 个字节。默认改成 acc=1 / gyro=0，上电再自动确认。 */
-static uint8_t s_skip_acc  = 1u;
-static uint8_t s_skip_gyro = 0u;
+static uint8_t S_Skip_Acc  = 1u;
+static uint8_t S_Skip_Gyro = 0u;
 
 /**
   * @brief  用指定的哑字节数读 1 个寄存器（探测/校验用）
@@ -247,13 +247,13 @@ static uint8_t ins_read_at(uint8_t dev, uint8_t skip, uint8_t reg)
 
 /**
   * @brief  读寄存器（自动处理 SPI 的「空字节」）
-  * @note   哑字节个数取 s_skip_acc / s_skip_gyro（见上方说明）
+  * @note   哑字节个数取 S_Skip_Acc / S_Skip_Gyro（见上方说明）
   */
 static uint8_t ins_read(uint8_t dev, uint8_t reg, uint8_t *buf, uint16_t len)
 {
     uint8_t  tx[24];
     uint8_t  rx[24];
-    uint16_t skip = (dev == DEV_ACC) ? s_skip_acc : s_skip_gyro;
+    uint16_t skip = (dev == DEV_ACC) ? S_Skip_Acc : S_Skip_Gyro;
     uint16_t n    = (uint16_t)(1u + skip + len);
     uint16_t i;
 
@@ -325,19 +325,19 @@ static void ins_detect_skip(void)
         INS_GyroDump[k] = ins_read_at(DEV_GYRO, k, GYRO_CHIP_ID);
     }
 
-    s_skip_acc  = 0xFFu;
-    s_skip_gyro = 0xFFu;
+    S_Skip_Acc  = 0xFFu;
+    S_Skip_Gyro = 0xFFu;
 
     for (k = 0; k < 3u; k++) {
-        if ((INS_AccDump[k]  == ACC_CHIP_ID_VAL)  && (s_skip_acc  == 0xFFu)) s_skip_acc  = k;
-        if ((INS_GyroDump[k] == GYRO_CHIP_ID_VAL) && (s_skip_gyro == 0xFFu)) s_skip_gyro = k;
+        if ((INS_AccDump[k]  == ACC_CHIP_ID_VAL)  && (S_Skip_Acc  == 0xFFu)) S_Skip_Acc  = k;
+        if ((INS_GyroDump[k] == GYRO_CHIP_ID_VAL) && (S_Skip_Gyro == 0xFFu)) S_Skip_Gyro = k;
     }
 
-    if (s_skip_acc  == 0xFFu) s_skip_acc  = 1u;
-    if (s_skip_gyro == 0xFFu) s_skip_gyro = 0u;
+    if (S_Skip_Acc  == 0xFFu) S_Skip_Acc  = 1u;
+    if (S_Skip_Gyro == 0xFFu) S_Skip_Gyro = 0u;
 
-    INS_AccDump[3]  = s_skip_acc;
-    INS_GyroDump[3] = s_skip_gyro;
+    INS_AccDump[3]  = S_Skip_Acc;
+    INS_GyroDump[3] = S_Skip_Gyro;
 }
 
 /**
@@ -437,13 +437,13 @@ void INS_Init(void)
     INS_CalCnt  = 0;
     INS_Sample  = 0;
     INS_Err     = 0;
-    s_inited    = 0;
+    S_Inited    = 0;
 
     for (i = 0; i < 3; i++) {
         INS_Bias[i]  = 0.0f;
         INS_Gyro[i]  = 0.0f;
         INS_Acc[i]   = 0.0f;
-        s_sum[i]     = 0.0f;
+        S_Sum[i]     = 0.0f;
     }
 
     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
@@ -459,7 +459,7 @@ void INS_Init(void)
     /* 两个 ID 都对上才算就绪 */
     if ((INS_Err & 0x01u) == 0u) {
         INS_Ready = 1;
-        s_inited  = 1;
+        S_Inited  = 1;
     }
 }
 
@@ -467,7 +467,7 @@ void INS_ResetBias(void)
 {
     uint8_t i;
     for (i = 0; i < 3; i++) {
-        s_sum[i]    = 0.0f;
+        S_Sum[i]    = 0.0f;
         INS_Bias[i] = 0.0f;
         INS_Gyro[i] = 0.0f;
     }
@@ -484,7 +484,7 @@ void INS_Task(void)
     float    g[3];
     float    max_dps = 0.0f;
 
-    if (s_inited == 0u || INS_Ready == 0u) {
+    if (S_Inited == 0u || INS_Ready == 0u) {
         return;
     }
 
@@ -508,7 +508,7 @@ void INS_Task(void)
     /* ---- 零偏标定 ---- */
     if (INS_CalDone == 0u) {
         for (i = 0; i < 3; i++) {
-            s_sum[i] += g[i];
+            S_Sum[i] += g[i];
             INS_Gyro[i] = 0.0f;
         }
         INS_CalCnt++;
@@ -517,7 +517,7 @@ void INS_Task(void)
         if (max_dps > (INS_CAL_MAX_DPS * 0.0174532925f)) {
             INS_Err |= 0x02u;
             for (i = 0; i < 3; i++) {
-                s_sum[i] = 0.0f;
+                S_Sum[i] = 0.0f;
             }
             INS_CalCnt = 0;
             return;
@@ -525,7 +525,7 @@ void INS_Task(void)
 
         if (INS_CalCnt >= INS_CAL_SAMPLES) {
             for (i = 0; i < 3; i++) {
-                INS_Bias[i] = s_sum[i] / (float)INS_CAL_SAMPLES;
+                INS_Bias[i] = S_Sum[i] / (float)INS_CAL_SAMPLES;
             }
             INS_CalDone = 1;
         }

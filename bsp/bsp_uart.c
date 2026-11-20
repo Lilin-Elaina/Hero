@@ -23,18 +23,18 @@ static uint8_t dbus_buf[BSP_UART_DBUS_FRAME_LEN * 2]
 static uint8_t dbus_buf[BSP_UART_DBUS_FRAME_LEN * 2];
 #endif
 
-static BSP_UART_RxHandler s_dbus_rx   = 0;   /* 模块层注册的解析函数 */
-static void (*s_dbus_err)(void)       = 0;   /* 模块层注册的错误计数钩子 */
+static BSP_UART_RxHandler S_Dbus_Rx   = 0;   /* 模块层注册的解析函数 */
+static void (*S_Dbus_Err)(void)       = 0;   /* 模块层注册的错误计数钩子 */
 
 void BSP_UART_DBusRegisterRx(BSP_UART_RxHandler handler)
 {
-    s_dbus_rx = handler;
+    S_Dbus_Rx = handler;
 }
 //callback
 /*该函数形参为指向无参无返回值的函数的指针*/
 void BSP_UART_DBusRegisterError(void (*cb)(void))
 {
-    s_dbus_err = cb;
+    S_Dbus_Err = cb;
 }
 
 void BSP_UART_DBusStart(void)
@@ -74,10 +74,10 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
             SCB_InvalidateDCache_by_Addr((uint32_t *)dbus_buf, sizeof(dbus_buf));
         }
 
-        if ((Size >= BSP_UART_DBUS_FRAME_LEN) && (s_dbus_rx != 0))
+        if ((Size >= BSP_UART_DBUS_FRAME_LEN) && (S_Dbus_Rx != 0))
         {
             /* 收到多帧时取最后一帧完整数据 */
-            s_dbus_rx(&dbus_buf[Size - BSP_UART_DBUS_FRAME_LEN], BSP_UART_DBUS_FRAME_LEN);
+            S_Dbus_Rx(&dbus_buf[Size - BSP_UART_DBUS_FRAME_LEN], BSP_UART_DBUS_FRAME_LEN);
         }
 
         BSP_UART_DBusStart();   /* 普通模式，需要重新启动 */
@@ -92,9 +92,9 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == UART5)
     {
-        if (s_dbus_err != 0)
+        if (S_Dbus_Err != 0)
         {
-            s_dbus_err();                 /* 模块层自己记数（RC_ErrCnt） */
+            S_Dbus_Err();                 /* 模块层自己记数（RC_ErrCnt） */
         }
 
         __HAL_UART_CLEAR_OREFLAG(huart);

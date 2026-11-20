@@ -102,13 +102,13 @@ void BSP_CAN_Stop(uint8_t bus)
  * ------------------------------------------------------------------ */
 
 
-static BSP_CAN_RxHandler s_rx_handler[3] = {0};   /* [1]=CAN1，[2]=CAN2 */
+static BSP_CAN_RxHandler S_Rx_Handler[3] = {0};   /* [1]=CAN1，[2]=CAN2 */
 
 void BSP_CAN_RegisterRx(uint8_t bus, BSP_CAN_RxHandler handler)
 {
     if ((bus >= 1u) && (bus <= 2u))
     {
-        s_rx_handler[bus] = handler;
+        S_Rx_Handler[bus] = handler;
     }
 }
 
@@ -130,9 +130,9 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
             continue;
         }
 
-        if (s_rx_handler[bus] != 0)
+        if (S_Rx_Handler[bus] != 0)
         {
-            s_rx_handler[bus](bus, rx.Identifier, d);
+            S_Rx_Handler[bus](bus, rx.Identifier, d);
         }
     }
 }

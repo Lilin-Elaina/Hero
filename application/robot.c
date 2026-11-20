@@ -62,11 +62,11 @@ volatile uint32_t RC_Can2RestartCnt = 0;  /* RX 活性看门狗触发的 Stop+St
 /* 阶段函数的文件级状态（原先是函数内 static，提取后语义完全等价）      */
 /* ------------------------------------------------------------------ */
 /* 每轮电流指令的极性：D 之后的车体四个轮子 */
-static const float s_wheel_sign[MECANUM_WHEEL_NUM] = {
+static const float S_Wheel_Sign[MECANUM_WHEEL_NUM] = {
     MOTOR_POL_ID1, MOTOR_POL_ID2, MOTOR_POL_ID3, MOTOR_POL_ID4};
 
-static float s_yaw_volt_prev = 0.0f;   /* yaw 电压斜坡状态 */
-static float s_fric_a        = 0.0f;   /* 摩擦轮电流斜坡状态 */
+static float S_Yaw_Volt_Prev = 0.0f;   /* yaw 电压斜坡状态 */
+static float S_Fric_A        = 0.0f;   /* 摩擦轮电流斜坡状态 */
 
 /* 1 kHz 控制拆成四段：底盘 → 云台 → 摩擦轮，顺序与拆分前逐拍一致 */
 static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mode,
@@ -113,9 +113,9 @@ void RC_Control_Task(void)
 
 #if (RC_ENABLE_SW_POS != 0)
   #if (RC_ENABLE_USE_LEFT)
-    #define RC_ARM_SW   (RC_Data.s_left)
+    #define RC_ARM_SW   (RC_Data.S_Left)
   #else
-    #define RC_ARM_SW   (RC_Data.s_right)
+    #define RC_ARM_SW   (RC_Data.S_Right)
   #endif
 #else
   #define RC_ARM_SW     1
@@ -129,19 +129,19 @@ void RC_Control_Task(void)
     uint8_t follow_on = 0u;
     uint8_t spin_mode = 0u;
 #else
-    static uint8_t  s_sw_prev = 0u;
-    static uint16_t s_sw_cnt  = 0u;
+    static uint8_t  S_Sw_Prev = 0u;
+    static uint16_t S_Sw_Cnt  = 0u;
 
     uint8_t sw_now = (uint8_t)RC_ARM_SW;
 
-    if (sw_now == s_sw_prev) {
-        if (s_sw_cnt < 60u) s_sw_cnt++;
+    if (sw_now == S_Sw_Prev) {
+        if (S_Sw_Cnt < 60u) S_Sw_Cnt++;
     } else {
-        s_sw_prev = sw_now;
-        s_sw_cnt  = 0u;
+        S_Sw_Prev = sw_now;
+        S_Sw_Cnt  = 0u;
     }
 
-    uint8_t sw_ok = (s_sw_cnt >= 40u);
+    uint8_t sw_ok = (S_Sw_Cnt >= 40u);
 
     uint8_t armed     = 0u;
     uint8_t follow_on = 0u;
@@ -167,10 +167,10 @@ void RC_Control_Task(void)
 
     /* 模式切换 → 两个 yaw 控制器交接状态（避免拿旧目标把枪口拽一下） */
     {
-        static uint8_t s_spin_prev = 0u;
+        static uint8_t S_Spin_Prev = 0u;
 
-        if (spin_mode != s_spin_prev) {
-            s_spin_prev = spin_mode;
+        if (spin_mode != S_Spin_Prev) {
+            S_Spin_Prev = spin_mode;
             RC_Yaw_Handover();
         }
     }
@@ -183,31 +183,31 @@ void RC_Control_Task(void)
      *   于是电机先拿满指令、下一拍才被门挡住 → 手感是“点一下、停 100ms、再上电”。
      * 现在改成显式三态机，等待期一定输出 0，且等待期内只要条件掉一次就重新计时。 */
     {
-        static uint8_t  s_en_state = RC_EN_WAIT;
-        static uint32_t s_en_since = 0u;
+        static uint8_t  S_En_State = RC_EN_WAIT;
+        static uint32_t S_En_Since = 0u;
 
         const uint8_t req = (uint8_t)((online != 0u) && (armed != 0u));
 
         if (req == 0u)
         {
-            s_en_state = RC_EN_WAIT;        /* 条件不成立：立即撤销，并清计时 */
-            s_en_since = 0u;
+            S_En_State = RC_EN_WAIT;        /* 条件不成立：立即撤销，并清计时 */
+            S_En_Since = 0u;
             enabled    = 0u;
         }
         else
         {
-            switch (s_en_state)
+            switch (S_En_State)
             {
             case RC_EN_WAIT:
-                s_en_state = RC_EN_ARMING;  /* 刚满足：开始计时，当拍仍不给力 */
-                s_en_since = now;
+                S_En_State = RC_EN_ARMING;  /* 刚满足：开始计时，当拍仍不给力 */
+                S_En_Since = now;
                 enabled    = 0u;
                 break;
 
             case RC_EN_ARMING:
-                if ((now - s_en_since) >= RC_ENABLE_DELAY_MS)
+                if ((now - S_En_Since) >= RC_ENABLE_DELAY_MS)
                 {
-                    s_en_state = RC_EN_READY;
+                    S_En_State = RC_EN_READY;
                     enabled    = 1u;
                 }
                 else
@@ -223,8 +223,8 @@ void RC_Control_Task(void)
             }
         }
 
-        RC_EnableState = s_en_state;        /* 调试镜像：0=等待 1=计时中 2=已使能 */
-        RC_EnableMs    = (s_en_state == RC_EN_ARMING) ? (now - s_en_since) : 0u;
+        RC_EnableState = S_En_State;        /* 调试镜像：0=等待 1=计时中 2=已使能 */
+        RC_EnableMs    = (S_En_State == RC_EN_ARMING) ? (now - S_En_Since) : 0u;
     }
 
     /* ---- CAN2 RX 活性看门狗（2026-11-18 加，2026-11-19 改判据）----
@@ -256,14 +256,14 @@ void RC_Control_Task(void)
             }
         }
 
-        static uint8_t s_can2_seen = 0u;   /* 上电后是否见过 CAN2 帧 */
+        static uint8_t S_Can2_Seen = 0u;   /* 上电后是否见过 CAN2 帧 */
 
         if (last_rx != 0u)
         {
-            s_can2_seen = 1u;
+            S_Can2_Seen = 1u;
         }
 
-        if ((s_can2_seen != 0u) && (enabled != 0u))
+        if ((S_Can2_Seen != 0u) && (enabled != 0u))
         {
             int32_t age = (int32_t)(now - last_rx);   /* 距最近一帧的毫秒数 */
 
@@ -399,7 +399,7 @@ void RC_Control_Task(void)
     fric_l = 0;
     fric_r = 0;
 #endif
-    s_yaw_volt_prev = volt;     /* ★ 记下本拍输出，下一拍才能继续爬（斜坡状态在阶段 3） */
+    S_Yaw_Volt_Prev = volt;     /* ★ 记下本拍输出，下一拍才能继续爬（斜坡状态在阶段 3） */
     RC_YawVoltOut = volt;       /* 斜坡之后的真实发送值（RC_YawVolt 是斜坡之前） */
 
     /* ⑥ 发送：CAN2 = 底盘四轮 + yaw；CAN1 = 摩擦轮 + pitch */
@@ -425,10 +425,10 @@ void RC_Control_Task(void)
  * 现在：连续 RC_WHEEL_FAULT_MISS 拍没有新帧才判失联，恢复也要连续
  * RC_WHEEL_FAULT_CLEAR 拍好帧（滞回），避免在临界点上反复抖。
  * 判成失联就整车停车（故障轮断电 + 其余三轮反向制动），不再“少一条腿满力跑”。 */
-static uint16_t s_wheel_miss[MECANUM_WHEEL_NUM];
-static uint32_t s_wheel_seen[MECANUM_WHEEL_NUM];
-static uint16_t s_wheel_ok[MECANUM_WHEEL_NUM];
-static uint8_t  s_wheel_lost[MECANUM_WHEEL_NUM];
+static uint16_t S_Wheel_Miss[MECANUM_WHEEL_NUM];
+static uint32_t S_Wheel_Seen[MECANUM_WHEEL_NUM];
+static uint16_t S_Wheel_Ok[MECANUM_WHEEL_NUM];
+static uint8_t  S_Wheel_Lost[MECANUM_WHEEL_NUM];
 
 static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mode,
                           int16_t *raw)
@@ -443,34 +443,34 @@ static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mod
         RC_WheelRef[i] = 0.0f;      /* 断使能/故障时不残留上一拍目标值 */
 
         /* 连续丢帧计数 + 滞回恢复 */
-        if (dj_wheel[i].last_tick != s_wheel_seen[i])
+        if (dj_wheel[i].last_tick != S_Wheel_Seen[i])
         {
-            s_wheel_seen[i] = dj_wheel[i].last_tick;
-            s_wheel_miss[i] = 0u;
-            if (s_wheel_ok[i] < 0xFFFFu)
+            S_Wheel_Seen[i] = dj_wheel[i].last_tick;
+            S_Wheel_Miss[i] = 0u;
+            if (S_Wheel_Ok[i] < 0xFFFFu)
             {
-                s_wheel_ok[i]++;
+                S_Wheel_Ok[i]++;
             }
-            if (s_wheel_ok[i] >= RC_WHEEL_FAULT_CLEAR)
+            if (S_Wheel_Ok[i] >= RC_WHEEL_FAULT_CLEAR)
             {
-                s_wheel_lost[i] = 0u;       /* 连续 CLEAR 拍好帧才恢复 */
+                S_Wheel_Lost[i] = 0u;       /* 连续 CLEAR 拍好帧才恢复 */
             }
         }
         else
         {
-            s_wheel_ok[i] = 0u;
-            if (s_wheel_miss[i] < 0xFFFFu)
+            S_Wheel_Ok[i] = 0u;
+            if (S_Wheel_Miss[i] < 0xFFFFu)
             {
-                s_wheel_miss[i]++;
+                S_Wheel_Miss[i]++;
             }
-            if ((s_wheel_miss[i] >= RC_WHEEL_FAULT_MISS) ||
+            if ((S_Wheel_Miss[i] >= RC_WHEEL_FAULT_MISS) ||
                 ((BSP_Now() - dj_wheel[i].last_tick) > RC_WHEEL_FEEDBACK_MS))
             {
-                s_wheel_lost[i] = 1u;
+                S_Wheel_Lost[i] = 1u;
             }
         }
 
-        if (s_wheel_lost[i] != 0u)
+        if (S_Wheel_Lost[i] != 0u)
         {
             lost_mask |= (uint8_t)(1u << i);
         }
@@ -538,7 +538,7 @@ static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mod
           float rpm = (float)dj_wheel[i].rpm;
           float a;
 
-          s_wheel_i[i]   = 0.0f;
+          S_Wheel_I[i]   = 0.0f;
           RC_WheelRef[i] = 0.0f;
 
           /* 故障轮：反馈已停更，它的 rpm 是最后一帧的旧值，
@@ -572,12 +572,12 @@ static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mod
      {
        if(RC_WHEEL_FAULT_ISOLATE == 1 && (fault_mask & (uint8_t)(1u << i)))
        {
-          s_wheel_i[i] = 0.0f;
+          S_Wheel_I[i] = 0.0f;
           raw[i] = 0;
           continue;
        }
 
-      float  ref = s_wheel_sign[i] * RC_WheelOut[i] * RC_WHEEL_RPM_MAX;
+      float  ref = S_Wheel_Sign[i] * RC_WheelOut[i] * RC_WHEEL_RPM_MAX;
       float  a;
 
       RC_WheelRef[i] = ref;      /* 调试镜像：该轮目标转速 */
@@ -586,7 +586,7 @@ static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mod
         a = RC_Wheel_Speed_PI(i, ref, dj_wheel[i].rpm, max_a);
       #else 
         (void)ref;
-        a = s_wheel_sign[i] * RC_WheelOut[i] * max_a;
+        a = S_Wheel_Sign[i] * RC_WheelOut[i] * max_a;
       #endif
 
       if(a > RC_ABS_CURRENT_A) a = RC_ABS_CURRENT_A;
@@ -630,29 +630,29 @@ static void RC_Yaw_Step(uint32_t now, uint8_t online, uint8_t spin_mode, float *
         /* 断流集数：故障是间歇性的，Ozone 不一定守得住现场；
          * 事后读 RC_YawOutageCnt 就知道断过几次（配合 RC_YawFbAgeMax 看最长一次多久） */
         {
-            static uint16_t s_out_ms = 0u;
+            static uint16_t S_Out_Ms = 0u;
 
             if (fb_age > GM_FEEDBACK_TIMEOUT_MS) {
-                if (s_out_ms == 0u) RC_YawOutageCnt++;
-                if (s_out_ms < 60000u) s_out_ms++;
+                if (S_Out_Ms == 0u) RC_YawOutageCnt++;
+                if (S_Out_Ms < 60000u) S_Out_Ms++;
             } else {
-                s_out_ms = 0u;
+                S_Out_Ms = 0u;
             }
         }
 
         /* ② 超速兜底（带去抖）：
          *    旧版单帧就断：0x205 里混进一帧别的节点的帧（|rpm| 几千）→ 每拍断电 →
-         *    电压钉 0（“枪口无阻力”）+ s_yaw_volt_prev 清零 → 斜坡从零重爬 → 整车抽搐。
+         *    电压钉 0（“枪口无阻力”）+ S_Yaw_Volt_Prev 清零 → 斜坡从零重爬 → 整车抽搐。
          *    现在：假帧在 DJ_Motor.c 已整帧丢弃（|rpm|>600）；这里再要求连续
          *    GM_RPM_KICK_MS(10ms) 都超限才认“真超速”，安全性不降。 */
-        static uint16_t s_rpm_over = 0u;
+        static uint16_t S_Rpm_Over = 0u;
 
         if (rpm_abs > GM_RPM_LIMIT) {
-            if (s_rpm_over < 60000u) s_rpm_over++;
+            if (S_Rpm_Over < 60000u) S_Rpm_Over++;
         } else {
-            s_rpm_over = 0u;
+            S_Rpm_Over = 0u;
         }
-        if (s_rpm_over >= GM_RPM_KICK_MS)        { yaw_kill = 1u; kill_reason = 3u; }
+        if (S_Rpm_Over >= GM_RPM_KICK_MS)        { yaw_kill = 1u; kill_reason = 3u; }
     }
 
     RC_YawKill = (yaw_kill != 0u) ? kill_reason : 0u;
@@ -661,16 +661,16 @@ static void RC_Yaw_Step(uint32_t now, uint8_t online, uint8_t spin_mode, float *
     /* ④ 斜坡：每拍最多变 GM_VOLT_SLEW，避免扭矩冲击
      *    故障时不能走斜坡——否则上一拍 18000，这一拍只是 17800，
      *    要 90 ms 才掉到 0，等于故障期间还在给扭矩。直接把斜坡状态也清掉。 */
-    if (s_yaw_slew_kick != 0u) {
-        s_yaw_slew_kick = 0u;
-        s_yaw_volt_prev = 0.0f;       /* 交接后从 0 重新爬，不吃上一模式的旧斜坡 */
+    if (S_Yaw_Slew_Kick != 0u) {
+        S_Yaw_Slew_Kick = 0u;
+        S_Yaw_Volt_Prev = 0.0f;       /* 交接后从 0 重新爬，不吃上一模式的旧斜坡 */
     }
     if (yaw_kill != 0u) {
         v      = 0.0f;
-        s_yaw_volt_prev = 0.0f;       /* 恢复时从 0 重新往上爬 */
+        S_Yaw_Volt_Prev = 0.0f;       /* 恢复时从 0 重新往上爬 */
     } else {
-        if (v > s_yaw_volt_prev + GM_VOLT_SLEW) v = s_yaw_volt_prev + GM_VOLT_SLEW;
-        if (v < s_yaw_volt_prev - GM_VOLT_SLEW) v = s_yaw_volt_prev - GM_VOLT_SLEW;
+        if (v > S_Yaw_Volt_Prev + GM_VOLT_SLEW) v = S_Yaw_Volt_Prev + GM_VOLT_SLEW;
+        if (v < S_Yaw_Volt_Prev - GM_VOLT_SLEW) v = S_Yaw_Volt_Prev - GM_VOLT_SLEW;
     }
     RC_YawSpinOut = v;       /* 实发电压（斜坡之后），小陀螺环的积分回算用它 */
 
@@ -684,9 +684,9 @@ static void RC_Fric_Step(uint8_t online, int16_t *out_l, int16_t *out_r)
 {
     /* ⑧ 摩擦轮：左拨杆上 → 3508 ID2/ID3 反向同电流 */
 #if (FRIC_ENABLE_USE_LEFT)
-    uint8_t fric_sw = (RC_Data.s_left  == FRIC_ENABLE_SW);
+    uint8_t fric_sw = (RC_Data.S_Left  == FRIC_ENABLE_SW);
 #else
-    uint8_t fric_sw = (RC_Data.s_right == FRIC_ENABLE_SW);
+    uint8_t fric_sw = (RC_Data.S_Right == FRIC_ENABLE_SW);
 #endif
 
     float fric_tgt = (online && fric_sw) ? FRIC_CURRENT_A : 0.0f;
@@ -697,9 +697,9 @@ static void RC_Fric_Step(uint8_t online, int16_t *out_l, int16_t *out_r)
         (BSP_Now() - dj_motor[2].last_tick) > FRIC_TIMEOUT_MS)
         fric_tgt = 0.0f;
 
-    if      (fric_tgt > s_fric_a + FRIC_RAMP_A_PER_MS) s_fric_a += FRIC_RAMP_A_PER_MS;
-    else if (fric_tgt < s_fric_a - FRIC_RAMP_A_PER_MS) s_fric_a -= FRIC_RAMP_A_PER_MS;
-    else                                             s_fric_a  = fric_tgt;
+    if      (fric_tgt > S_Fric_A + FRIC_RAMP_A_PER_MS) S_Fric_A += FRIC_RAMP_A_PER_MS;
+    else if (fric_tgt < S_Fric_A - FRIC_RAMP_A_PER_MS) S_Fric_A -= FRIC_RAMP_A_PER_MS;
+    else                                             S_Fric_A  = fric_tgt;
 
     int16_t fric_l;
     int16_t fric_r;
@@ -707,8 +707,8 @@ static void RC_Fric_Step(uint8_t online, int16_t *out_l, int16_t *out_r)
     if (fric_tgt > 0.0001f)
     {
         /* 正常出力：两轮反向，把弹丸往外挤 */
-        fric_l = (int16_t)(FRIC_L_SIGN * s_fric_a / 20.0f * 16384.0f);
-        fric_r = (int16_t)(FRIC_R_SIGN * s_fric_a / 20.0f * 16384.0f);
+        fric_l = (int16_t)(FRIC_L_SIGN * S_Fric_A / 20.0f * 16384.0f);
+        fric_r = (int16_t)(FRIC_R_SIGN * S_Fric_A / 20.0f * 16384.0f);
     }
     else//若未给值即拨杆不在上
     {

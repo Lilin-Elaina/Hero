@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
   29:modules/chassis/mecanum.c **** /* 单轮斜坡：把 cur 朝 tgt 移动，每拍最多走 max_step                     */
   30:modules/chassis/mecanum.c **** /* ------------------------------------------------------------------ */
   31:modules/chassis/mecanum.c **** static float mec_slew(float cur, float tgt, float max_step)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 2
 
 
   32:modules/chassis/mecanum.c **** {
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
   41:modules/chassis/mecanum.c **** /* ------------------------------------------------------------------ */
   42:modules/chassis/mecanum.c **** void Mecanum_Reset(void)
   43:modules/chassis/mecanum.c **** {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 3
 
 
   44:modules/chassis/mecanum.c ****     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  116              	.LVL10:
   44:modules/chassis/mecanum.c ****     {
  117              		.loc 1 44 18 is_stmt 0 view .LVU21
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 4
 
 
  118 0000 0023     		movs	r3, #0
@@ -238,10 +238,10 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
   62:modules/chassis/mecanum.c **** /* ------------------------------------------------------------------ */
   63:modules/chassis/mecanum.c **** /* 自转通道死区旁路：跟随/小陀螺的自转指令是闭环算出来的，本来就很�
   64:modules/chassis/mecanum.c ****  * 再被归一化死区（0.02）吃掉就等于"指令发了、车不动"。 */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 5
 
 
-  65:modules/chassis/mecanum.c **** static uint8_t s_spin_db_bypass = 0u;
+  65:modules/chassis/mecanum.c **** static uint8_t S_Spin_Db_Bypass = 0u;
   66:modules/chassis/mecanum.c **** 
   67:modules/chassis/mecanum.c **** void Mecanum_SetSpinDeadbandBypass(uint8_t on)
   68:modules/chassis/mecanum.c **** {
@@ -250,7 +250,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  161              		@ args = 0, pretend = 0, frame = 0
  162              		@ frame_needed = 0, uses_anonymous_args = 0
  163              		@ link register save eliminated.
-  69:modules/chassis/mecanum.c ****     s_spin_db_bypass = (on != 0u) ? 1u : 0u;
+  69:modules/chassis/mecanum.c ****     S_Spin_Db_Bypass = (on != 0u) ? 1u : 0u;
  164              		.loc 1 69 5 view .LVU30
  165              		.loc 1 69 22 is_stmt 0 view .LVU31
  166 0000 0346     		mov	r3, r0
@@ -267,7 +267,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  176              	.L18:
  177              		.align	2
  178              	.L17:
- 179 000c 00000000 		.word	s_spin_db_bypass
+ 179 000c 00000000 		.word	S_Spin_Db_Bypass
  180              		.cfi_endproc
  181              	.LFE149:
  183              		.section	.text.Mecanum_Mix,"ax",%progbits
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  205              		.cfi_offset 14, -4
  206 0002 2DED048B 		vpush.64	{d8, d9}
  207              	.LCFI1:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 6
 
 
  208              		.cfi_def_cfa_offset 36
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  236              		.loc 1 100 8 discriminator 1 view .LVU48
  237 001e DFED827A 		vldr.32	s15, .L60
  238 0022 F4EEC07A 		vcmpe.f32	s15, s0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 7
 
 
  239 0026 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
@@ -383,7 +383,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  257              	.LVL20:
  258              	.L25:
  102:modules/chassis/mecanum.c ****     /* 自转：跟随/小陀螺下旁路，否则 3.1° 内指令全被清零 → 起转门槛 + �
- 103:modules/chassis/mecanum.c ****     if ((s_spin_db_bypass == 0u) && (mec_abs(spin) < MEC_DEADBAND_NORM)) spin = 0.0f;
+ 103:modules/chassis/mecanum.c ****     if ((S_Spin_Db_Bypass == 0u) && (mec_abs(spin) < MEC_DEADBAND_NORM)) spin = 0.0f;
  259              		.loc 1 103 5 is_stmt 1 view .LVU54
  260              		.loc 1 103 27 is_stmt 0 view .LVU55
  261 004a 794B     		ldr	r3, .L60+8
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  286 0072 DFED717A 		vldr.32	s15, .L60+16
  287 0076 28EEA71A 		vmul.f32	s2, s17, s15
  288              	.LVL24:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 8
 
 
  108:modules/chassis/mecanum.c **** 
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  333              		.loc 1 92 40 is_stmt 0 discriminator 3 view .LVU79
  334 00bc E4B2     		uxtb	r4, r4
  335              	.LVL29:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 9
 
 
  336              	.L21:
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  377              		.loc 1 111 15 view .LVU92
  378 00f4 0024     		movs	r4, #0
  379 00f6 F9E7     		b	.L28
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 10
 
 
  380              	.LVL35:
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  426 0142 04DD     		ble	.L30
  427              		.loc 1 124 30 is_stmt 1 discriminator 1 view .LVU110
  428              		.loc 1 124 37 is_stmt 0 discriminator 1 view .LVU111
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 11
 
 
  429 0144 04AA     		add	r2, sp, #16
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  470              	.LVL43:
  471              	.L37:
  472              	.LBB7:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 12
 
 
  473              	.LBB5:
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  513 01ba E1D5     		bpl	.L37
  138:modules/chassis/mecanum.c ****         if(tgt[i] * mec_prev[i] < 0.0f) accel_only = 0u; /*反向运动*/
  514              		.loc 1 138 28 discriminator 1 view .LVU136
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 13
 
 
  515 01bc B0EE409A 		vmov.f32	s18, s0
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  559              		.loc 1 144 34 discriminator 1 view .LVU151
  560 01e4 F7EE006A 		vmov.f32	s13, #1.0e+0
  561 01e8 F7E7     		b	.L41
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 14
 
 
  562              	.LVL56:
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  605              	.LCFI4:
  606              		.cfi_restore 82
  607              		.cfi_restore 83
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 15
 
 
  608              		.cfi_restore 80
@@ -852,7 +852,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  616              	.L60:
  617 0228 0AD7A33C 		.word	1017370378
  618 022c 00000000 		.word	0
- 619 0230 00000000 		.word	s_spin_db_bypass
+ 619 0230 00000000 		.word	S_Spin_Db_Bypass
  620 0234 9A99593F 		.word	1062836634
  621 0238 9A99193F 		.word	1058642330
  622 023c 00000000 		.word	mec_prev
@@ -861,8 +861,8 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  625 0248 A69BC43A 		.word	985963430
  626              		.cfi_endproc
  627              	.LFE150:
- 629              		.section	.bss.s_spin_db_bypass,"aw",%nobits
- 632              	s_spin_db_bypass:
+ 629              		.section	.bss.S_Spin_Db_Bypass,"aw",%nobits
+ 632              	S_Spin_Db_Bypass:
  633 0000 00       		.space	1
  634              		.section	.bss.mec_prev,"aw",%nobits
  635              		.align	2
@@ -892,29 +892,29 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccH
  660              		.file 2 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  661              		.file 3 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  662              		.file 4 "modules/chassis/mecanum.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s 			page 16
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 mecanum.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:20     .text.mec_slew:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:25     .text.mec_slew:00000000 mec_slew
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:67     .text.mec_abs:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:72     .text.mec_abs:00000000 mec_abs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:100    .text.Mecanum_Reset:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:106    .text.Mecanum_Reset:00000000 Mecanum_Reset
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:145    .text.Mecanum_Reset:00000018 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:638    .bss.mec_prev:00000000 mec_prev
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:150    .text.Mecanum_SetSpinDeadbandBypass:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:156    .text.Mecanum_SetSpinDeadbandBypass:00000000 Mecanum_SetSpinDeadbandBypass
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:179    .text.Mecanum_SetSpinDeadbandBypass:0000000c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:632    .bss.s_spin_db_bypass:00000000 s_spin_db_bypass
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:184    .text.Mecanum_Mix:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:190    .text.Mecanum_Mix:00000000 Mecanum_Mix
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:617    .text.Mecanum_Mix:00000228 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:645    .rodata.MECANUM_DIR:00000000 MECANUM_DIR
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:633    .bss.s_spin_db_bypass:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:635    .bss.mec_prev:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccHbZHHX.s:642    .rodata.MECANUM_DIR:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:20     .text.mec_slew:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:25     .text.mec_slew:00000000 mec_slew
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:67     .text.mec_abs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:72     .text.mec_abs:00000000 mec_abs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:100    .text.Mecanum_Reset:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:106    .text.Mecanum_Reset:00000000 Mecanum_Reset
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:145    .text.Mecanum_Reset:00000018 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:638    .bss.mec_prev:00000000 mec_prev
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:150    .text.Mecanum_SetSpinDeadbandBypass:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:156    .text.Mecanum_SetSpinDeadbandBypass:00000000 Mecanum_SetSpinDeadbandBypass
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:179    .text.Mecanum_SetSpinDeadbandBypass:0000000c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:632    .bss.S_Spin_Db_Bypass:00000000 S_Spin_Db_Bypass
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:184    .text.Mecanum_Mix:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:190    .text.Mecanum_Mix:00000000 Mecanum_Mix
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:617    .text.Mecanum_Mix:00000228 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:645    .rodata.MECANUM_DIR:00000000 MECANUM_DIR
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:633    .bss.S_Spin_Db_Bypass:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:635    .bss.mec_prev:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccFhCmu8.s:642    .rodata.MECANUM_DIR:00000000 $d
 
 NO UNDEFINED SYMBOLS
