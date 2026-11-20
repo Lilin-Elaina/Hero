@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -28,79 +28,58 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
   26              	.LFB148:
    1:modules/remote/dbus.c **** /**
    2:modules/remote/dbus.c ****  * @file    dbus.c
-   3:modules/remote/dbus.c ****  * @brief   DBUS 接收（UART5 + DMA + IDLE）与 18 字节帧解析
-   4:modules/remote/dbus.c ****  * @note    2026-11-19 分层整理：以下内容从 remote/rc_dbus.c 原样搬迁，逻辑未改�
-   5:modules/remote/dbus.c ****  *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
-   6:modules/remote/dbus.c ****  */
-   7:modules/remote/dbus.c **** #include "dbus.h"
-   8:modules/remote/dbus.c **** #include "bsp_time.h"
-   9:modules/remote/dbus.c **** #include "usart.h"
-  10:modules/remote/dbus.c **** #include "DJ_Motor.h"
-  11:modules/remote/dbus.c **** #include "mecanum.h"
-  12:modules/remote/dbus.c **** #include "ins.h"
-  13:modules/remote/dbus.c **** #include "fdcan.h"
-  14:modules/remote/dbus.c **** #include "bsp_can.h"
-  15:modules/remote/dbus.c **** #include "bsp_uart.h"
-  16:modules/remote/dbus.c **** #include <string.h>
-  17:modules/remote/dbus.c **** #include <math.h>
-  18:modules/remote/dbus.c **** 
-  19:modules/remote/dbus.c **** /**
-  20:modules/remote/dbus.c ****  * @file    dbus.c
-  21:modules/remote/dbus.c ****  * @brief   DT7 + DR16 遥控器 DBUS 帧解析（收帧在 bsp_uart）
-  22:modules/remote/dbus.c ****  * @note    硬件：达妙 DM-MC-Board02 SBUS 口（官方例程走 UART5 / RX=PD2 AF8）
-  23:modules/remote/dbus.c ****  *          协议：100000bps, 8数据位+偶校验, 2停止位, 每帧18字节
-  24:modules/remote/dbus.c ****  */
-  25:modules/remote/dbus.c **** #include "dbus.h"
-  26:modules/remote/dbus.c **** #include "usart.h"
-  27:modules/remote/dbus.c **** #include "DJ_Motor.h"
-  28:modules/remote/dbus.c **** #include "mecanum.h"
-  29:modules/remote/dbus.c **** #include "ins.h"
-  30:modules/remote/dbus.c **** #include "fdcan.h"
-  31:modules/remote/dbus.c **** #include "bsp_can.h"
-  32:modules/remote/dbus.c **** #include "bsp_uart.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 2
+   3:modules/remote/dbus.c ****  * @brief   DT7 + DR16 遥控器 DBUS 帧解析（收帧在 bsp_uart）
+   4:modules/remote/dbus.c ****  * @note    硬件：达妙 DM-MC-Board02 SBUS 口（官方例程走 UART5 / RX=PD2 AF8）
+   5:modules/remote/dbus.c ****  *          协议：100000bps, 8数据位+偶校验, 2停止位, 每帧18字节
+   6:modules/remote/dbus.c ****  *          2026-11-19 分层整理：内容自 remote/rc_dbus.c 原样搬迁，逻辑未改；
+   7:modules/remote/dbus.c ****  *          UART 收帧细节已下沉 bsp_uart（P2c），本文件只管协议解析。
+   8:modules/remote/dbus.c ****  *          2026-11-20 清理：合并重复的文件头与 include，去掉搬迁时带过来的�
+   9:modules/remote/dbus.c ****  */
+  10:modules/remote/dbus.c **** #include "dbus.h"
+  11:modules/remote/dbus.c **** #include "bsp_time.h"
+  12:modules/remote/dbus.c **** #include "bsp_uart.h"
+  13:modules/remote/dbus.c **** #include <string.h>
+  14:modules/remote/dbus.c **** 
+  15:modules/remote/dbus.c **** RC_TypeDef RC_Data = {0};
+  16:modules/remote/dbus.c **** 
+  17:modules/remote/dbus.c **** /* UART/DMA 细节已下沉到 bsp/bsp_uart.c（2026-11-19 P2c）：
+  18:modules/remote/dbus.c ****  *   - DMA 缓冲、IDLE 判定、错误重开、D-Cache 维护都在 bsp；
+  19:modules/remote/dbus.c ****  *   - 这里只注册“收到一帧怎么办”。
+  20:modules/remote/dbus.c ****  * 名字保留 RC_StartReceive，是为了让外部重启接收的调用点不变。 */
+  21:modules/remote/dbus.c **** void RC_StartReceive(void)
+  22:modules/remote/dbus.c **** {
+  23:modules/remote/dbus.c ****     BSP_UART_DBusStart();
+  24:modules/remote/dbus.c **** }
+  25:modules/remote/dbus.c **** 
+  26:modules/remote/dbus.c **** /* bsp 收到一帧 18 字节后回调到这里 */
+  27:modules/remote/dbus.c **** static void DBUS_OnRx(const uint8_t *data, uint16_t len)
+  28:modules/remote/dbus.c **** {
+  29:modules/remote/dbus.c ****     if (len >= DBUS_FRAME_LEN)
+  30:modules/remote/dbus.c ****     {
+  31:modules/remote/dbus.c ****         RC_Decode(data);
+  32:modules/remote/dbus.c ****     }
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 2
 
 
-  33:modules/remote/dbus.c **** #include <string.h>
-  34:modules/remote/dbus.c **** #include <math.h>
-  35:modules/remote/dbus.c **** 
-  36:modules/remote/dbus.c **** RC_TypeDef RC_Data = {0};
-  37:modules/remote/dbus.c **** 
-  38:modules/remote/dbus.c **** /* UART/DMA 细节已下沉到 bsp/bsp_uart.c（2026-11-19 P2c）：
-  39:modules/remote/dbus.c ****  *   - DMA 缓冲、IDLE 判定、错误重开、D-Cache 维护都在 bsp；
-  40:modules/remote/dbus.c ****  *   - 这里只注册“收到一帧怎么办”。
-  41:modules/remote/dbus.c ****  * 名字保留 RC_StartReceive，是为了让外部重启接收的调用点不变。 */
-  42:modules/remote/dbus.c **** void RC_StartReceive(void)
-  43:modules/remote/dbus.c **** {
-  44:modules/remote/dbus.c ****     BSP_UART_DBusStart();
-  45:modules/remote/dbus.c **** }
-  46:modules/remote/dbus.c **** 
-  47:modules/remote/dbus.c **** /* bsp 收到一帧 18 字节后回调到这里 */
-  48:modules/remote/dbus.c **** static void DBUS_OnRx(const uint8_t *data, uint16_t len)
-  49:modules/remote/dbus.c **** {
-  50:modules/remote/dbus.c ****     if (len >= DBUS_FRAME_LEN)
-  51:modules/remote/dbus.c ****     {
-  52:modules/remote/dbus.c ****         RC_Decode(data);
-  53:modules/remote/dbus.c ****     }
-  54:modules/remote/dbus.c **** }
-  55:modules/remote/dbus.c **** 
-  56:modules/remote/dbus.c **** /* UART 错误计数：bsp 出错时回调，计数变量仍在本工程 diag 区（application/rob
-  57:modules/remote/dbus.c **** static void DBUS_OnError(void)
-  58:modules/remote/dbus.c **** {
-  27              		.loc 1 58 1 view -0
+  33:modules/remote/dbus.c **** }
+  34:modules/remote/dbus.c **** 
+  35:modules/remote/dbus.c **** /* UART 错误计数：bsp 出错时回调，计数变量仍在本工程 diag 区（application/rob
+  36:modules/remote/dbus.c **** static void DBUS_OnError(void)
+  37:modules/remote/dbus.c **** {
+  27              		.loc 1 37 1 view -0
   28              		.cfi_startproc
   29              		@ args = 0, pretend = 0, frame = 0
   30              		@ frame_needed = 0, uses_anonymous_args = 0
   31              		@ link register save eliminated.
-  59:modules/remote/dbus.c ****     RC_ErrCnt++;
-  32              		.loc 1 59 5 view .LVU1
-  33              		.loc 1 59 14 is_stmt 0 view .LVU2
+  38:modules/remote/dbus.c ****     RC_ErrCnt++;
+  32              		.loc 1 38 5 view .LVU1
+  33              		.loc 1 38 14 is_stmt 0 view .LVU2
   34 0000 024A     		ldr	r2, .L2
   35 0002 1368     		ldr	r3, [r2]
   36 0004 0133     		adds	r3, r3, #1
   37 0006 1360     		str	r3, [r2]
-  60:modules/remote/dbus.c **** }
-  38              		.loc 1 60 1 view .LVU3
+  39:modules/remote/dbus.c **** }
+  38              		.loc 1 39 1 view .LVU3
   39 0008 7047     		bx	lr
   40              	.L3:
   41 000a 00BF     		.align	2
@@ -116,11 +95,8 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
   52              		.thumb_func
   54              	RC_StartReceive:
   55              	.LFB146:
-  43:modules/remote/dbus.c ****     BSP_UART_DBusStart();
-  56              		.loc 1 43 1 is_stmt 1 view -0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 3
-
-
+  22:modules/remote/dbus.c ****     BSP_UART_DBusStart();
+  56              		.loc 1 22 1 is_stmt 1 view -0
   57              		.cfi_startproc
   58              		@ args = 0, pretend = 0, frame = 0
   59              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -129,12 +105,12 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
   62              		.cfi_def_cfa_offset 8
   63              		.cfi_offset 3, -8
   64              		.cfi_offset 14, -4
-  44:modules/remote/dbus.c **** }
-  65              		.loc 1 44 5 view .LVU5
+  23:modules/remote/dbus.c **** }
+  65              		.loc 1 23 5 view .LVU5
   66 0002 FFF7FEFF 		bl	BSP_UART_DBusStart
   67              	.LVL0:
-  45:modules/remote/dbus.c **** 
-  68              		.loc 1 45 1 is_stmt 0 view .LVU6
+  24:modules/remote/dbus.c **** 
+  68              		.loc 1 24 1 is_stmt 0 view .LVU6
   69 0006 08BD     		pop	{r3, pc}
   70              		.cfi_endproc
   71              	.LFE146:
@@ -142,15 +118,18 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
   74              		.align	1
   75              		.global	RC_Init
   76              		.syntax unified
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 3
+
+
   77              		.thumb
   78              		.thumb_func
   80              	RC_Init:
   81              	.LFB149:
-  61:modules/remote/dbus.c **** 
-  62:modules/remote/dbus.c **** /*清除摇杆数据，在线状态，确定拨杆，开启接收*/
-  63:modules/remote/dbus.c **** void RC_Init(void)
-  64:modules/remote/dbus.c **** {
-  82              		.loc 1 64 1 is_stmt 1 view -0
+  40:modules/remote/dbus.c **** 
+  41:modules/remote/dbus.c **** /*清除摇杆数据，在线状态，确定拨杆，开启接收*/
+  42:modules/remote/dbus.c **** void RC_Init(void)
+  43:modules/remote/dbus.c **** {
+  82              		.loc 1 43 1 is_stmt 1 view -0
   83              		.cfi_startproc
   84              		@ args = 0, pretend = 0, frame = 0
   85              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -159,40 +138,37 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
   88              		.cfi_def_cfa_offset 8
   89              		.cfi_offset 4, -8
   90              		.cfi_offset 14, -4
-  65:modules/remote/dbus.c ****     memset(&RC_Data, 0, sizeof(RC_Data));
-  91              		.loc 1 65 5 view .LVU8
+  44:modules/remote/dbus.c ****     memset(&RC_Data, 0, sizeof(RC_Data));
+  91              		.loc 1 44 5 view .LVU8
   92 0002 084C     		ldr	r4, .L8
   93 0004 3022     		movs	r2, #48
   94 0006 0021     		movs	r1, #0
   95 0008 2046     		mov	r0, r4
   96 000a FFF7FEFF 		bl	memset
   97              	.LVL1:
-  66:modules/remote/dbus.c ****     RC_Data.online = 0;
-  98              		.loc 1 66 5 view .LVU9
-  67:modules/remote/dbus.c ****     RC_Data.sw_swap = 1u;
-  99              		.loc 1 67 5 view .LVU10
- 100              		.loc 1 67 21 is_stmt 0 view .LVU11
+  45:modules/remote/dbus.c ****     RC_Data.online = 0;
+  98              		.loc 1 45 5 view .LVU9
+  46:modules/remote/dbus.c ****     RC_Data.sw_swap = 1u;
+  99              		.loc 1 46 5 view .LVU10
+ 100              		.loc 1 46 21 is_stmt 0 view .LVU11
  101 000e 0123     		movs	r3, #1
  102 0010 2373     		strb	r3, [r4, #12]
-  68:modules/remote/dbus.c ****     BSP_UART_DBusRegisterRx(DBUS_OnRx);
- 103              		.loc 1 68 5 is_stmt 1 view .LVU12
+  47:modules/remote/dbus.c ****     BSP_UART_DBusRegisterRx(DBUS_OnRx);
+ 103              		.loc 1 47 5 is_stmt 1 view .LVU12
  104 0012 0548     		ldr	r0, .L8+4
  105 0014 FFF7FEFF 		bl	BSP_UART_DBusRegisterRx
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 4
-
-
  106              	.LVL2:
-  69:modules/remote/dbus.c ****     BSP_UART_DBusRegisterError(DBUS_OnError);
- 107              		.loc 1 69 5 view .LVU13
+  48:modules/remote/dbus.c ****     BSP_UART_DBusRegisterError(DBUS_OnError);
+ 107              		.loc 1 48 5 view .LVU13
  108 0018 0448     		ldr	r0, .L8+8
  109 001a FFF7FEFF 		bl	BSP_UART_DBusRegisterError
  110              	.LVL3:
-  70:modules/remote/dbus.c ****     RC_StartReceive();
- 111              		.loc 1 70 5 view .LVU14
+  49:modules/remote/dbus.c ****     RC_StartReceive();
+ 111              		.loc 1 49 5 view .LVU14
  112 001e FFF7FEFF 		bl	RC_StartReceive
  113              	.LVL4:
-  71:modules/remote/dbus.c **** }
- 114              		.loc 1 71 1 is_stmt 0 view .LVU15
+  50:modules/remote/dbus.c **** }
+ 114              		.loc 1 50 1 is_stmt 0 view .LVU15
  115 0022 10BD     		pop	{r4, pc}
  116              	.L9:
  117              		.align	2
@@ -202,6 +178,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  121 002c 00000000 		.word	DBUS_OnError
  122              		.cfi_endproc
  123              	.LFE149:
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 4
+
+
  125              		.section	.text.RC_SwitchAutoName,"ax",%progbits
  126              		.align	1
  127              		.global	RC_SwitchAutoName
@@ -210,349 +189,346 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  130              		.thumb_func
  132              	RC_SwitchAutoName:
  133              	.LFB150:
+  51:modules/remote/dbus.c **** 
+  52:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+  53:modules/remote/dbus.c **** /* 18 字节帧完整解析（与大疆官方 sbus_to_rc() 逐位一致）                */
+  54:modules/remote/dbus.c **** /*   byte0~5  : 4 路摇杆×11bit + 2 路拨杆×2bit                         */
+  55:modules/remote/dbus.c **** /*   byte6~13 : 鼠标 x/y/z + 左右键                                    */
+  56:modules/remote/dbus.c **** /*   byte14~15: 键盘按键位图                                           */
+  57:modules/remote/dbus.c **** /*   byte16~17: 左拨轮(11bit)                                          */
+  58:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+  59:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+  60:modules/remote/dbus.c **** /* 拨杆位域自动判定（确定性，不需人工判读）                              */
+  61:modules/remote/dbus.c **** /*   实测法：把 DT7 左拨杆停在非中位、右拨杆保持中位，持续 1 秒。        
+  62:modules/remote/dbus.c **** /*   这一秒内“稳定处于非中位”的那个位域 = 物理左拨杆 → 自动置 sw_swap
+  63:modules/remote/dbus.c **** /*   只在 sw_auto_window_ms 内开放，判定成功即永久锁定。                 */
+  64:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
+  65:modules/remote/dbus.c **** #define RC_SW_AUTO_HOLD_MS      1000    /* 条件需连续保持多少毫秒 */
+  66:modules/remote/dbus.c **** #define RC_SW_AUTO_WINDOW_MS    3000    /* 上电后多久内允许自动判定 */
+  67:modules/remote/dbus.c **** 
+  68:modules/remote/dbus.c **** #define RC_OBS_NONE      0              /* 两个位域都在中位 */
+  69:modules/remote/dbus.c **** #define RC_OBS_LO_MOVED  1              /* 只有 bit4~5 离开中位 */
+  70:modules/remote/dbus.c **** #define RC_OBS_HI_MOVED  2              /* 只有 bit6~7 离开中位 */
+  71:modules/remote/dbus.c **** #define RC_OBS_INVALID   3              /* 两个都离开中位 → 本段不计 */
   72:modules/remote/dbus.c **** 
-  73:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
-  74:modules/remote/dbus.c **** /* 18 字节帧完整解析（与大疆官方 sbus_to_rc() 逐位一致）                */
-  75:modules/remote/dbus.c **** /*   byte0~5  : 4 路摇杆×11bit + 2 路拨杆×2bit                         */
-  76:modules/remote/dbus.c **** /*   byte6~13 : 鼠标 x/y/z + 左右键                                    */
-  77:modules/remote/dbus.c **** /*   byte14~15: 键盘按键位图                                           */
-  78:modules/remote/dbus.c **** /*   byte16~17: 左拨轮(11bit)                                          */
-  79:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
-  80:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
-  81:modules/remote/dbus.c **** /* 拨杆位域自动判定（确定性，不需人工判读）                              */
-  82:modules/remote/dbus.c **** /*   实测法：把 DT7 左拨杆停在非中位、右拨杆保持中位，持续 1 秒。        
-  83:modules/remote/dbus.c **** /*   这一秒内“稳定处于非中位”的那个位域 = 物理左拨杆 → 自动置 sw_swap
-  84:modules/remote/dbus.c **** /*   只在 sw_auto_window_ms 内开放，判定成功即永久锁定。                 */
-  85:modules/remote/dbus.c **** /* ------------------------------------------------------------------ */
-  86:modules/remote/dbus.c **** #define RC_SW_AUTO_HOLD_MS      1000    /* 条件需连续保持多少毫秒 */
-  87:modules/remote/dbus.c **** #define RC_SW_AUTO_WINDOW_MS    3000    /* 上电后多久内允许自动判定 */
-  88:modules/remote/dbus.c **** 
-  89:modules/remote/dbus.c **** #define RC_OBS_NONE      0              /* 两个位域都在中位 */
-  90:modules/remote/dbus.c **** #define RC_OBS_LO_MOVED  1              /* 只有 bit4~5 离开中位 */
-  91:modules/remote/dbus.c **** #define RC_OBS_HI_MOVED  2              /* 只有 bit6~7 离开中位 */
-  92:modules/remote/dbus.c **** #define RC_OBS_INVALID   3              /* 两个都离开中位 → 本段不计 */
-  93:modules/remote/dbus.c **** 
-  94:modules/remote/dbus.c **** void RC_SwitchAutoName(void)
-  95:modules/remote/dbus.c **** {
- 134              		.loc 1 95 1 is_stmt 1 view -0
+  73:modules/remote/dbus.c **** void RC_SwitchAutoName(void)
+  74:modules/remote/dbus.c **** {
+ 134              		.loc 1 74 1 is_stmt 1 view -0
  135              		.cfi_startproc
  136              		@ args = 0, pretend = 0, frame = 0
  137              		@ frame_needed = 0, uses_anonymous_args = 0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 5
-
-
  138 0000 10B5     		push	{r4, lr}
  139              	.LCFI2:
  140              		.cfi_def_cfa_offset 8
  141              		.cfi_offset 4, -8
  142              		.cfi_offset 14, -4
-  96:modules/remote/dbus.c ****     uint32_t now = BSP_Now();
- 143              		.loc 1 96 5 view .LVU17
- 144              		.loc 1 96 20 is_stmt 0 view .LVU18
+  75:modules/remote/dbus.c ****     uint32_t now = BSP_Now();
+ 143              		.loc 1 75 5 view .LVU17
+ 144              		.loc 1 75 20 is_stmt 0 view .LVU18
  145 0002 FFF7FEFF 		bl	BSP_Now
  146              	.LVL5:
-  97:modules/remote/dbus.c **** 
-  98:modules/remote/dbus.c ****     if (RC_Data.sw_auto_done)
- 147              		.loc 1 98 5 is_stmt 1 view .LVU19
- 148              		.loc 1 98 16 is_stmt 0 view .LVU20
+  76:modules/remote/dbus.c **** 
+  77:modules/remote/dbus.c ****     if (RC_Data.sw_auto_done)
+ 147              		.loc 1 77 5 is_stmt 1 view .LVU19
+ 148              		.loc 1 77 16 is_stmt 0 view .LVU20
  149 0006 374B     		ldr	r3, .L34
  150 0008 9A7E     		ldrb	r2, [r3, #26]	@ zero_extendqisi2
- 151              		.loc 1 98 8 view .LVU21
+ 151              		.loc 1 77 8 view .LVU21
  152 000a 002A     		cmp	r2, #0
  153 000c 67D1     		bne	.L10
-  99:modules/remote/dbus.c ****     {
- 100:modules/remote/dbus.c ****         return;                                     /* 已锁定，永不改写 */
- 101:modules/remote/dbus.c ****     }
- 102:modules/remote/dbus.c **** 
- 103:modules/remote/dbus.c ****     /* 第一帧到达时开判定窗口（此前的上电时间不计入窗口） */
- 104:modules/remote/dbus.c ****     if (RC_Data.sw_first_frame_ms == 0)
- 154              		.loc 1 104 5 is_stmt 1 view .LVU22
- 155              		.loc 1 104 16 is_stmt 0 view .LVU23
+  78:modules/remote/dbus.c ****     {
+  79:modules/remote/dbus.c ****         return;                                     /* 已锁定，永不改写 */
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 5
+
+
+  80:modules/remote/dbus.c ****     }
+  81:modules/remote/dbus.c **** 
+  82:modules/remote/dbus.c ****     /* 第一帧到达时开判定窗口（此前的上电时间不计入窗口） */
+  83:modules/remote/dbus.c ****     if (RC_Data.sw_first_frame_ms == 0)
+ 154              		.loc 1 83 5 is_stmt 1 view .LVU22
+ 155              		.loc 1 83 16 is_stmt 0 view .LVU23
  156 000e 5B6A     		ldr	r3, [r3, #36]
- 157              		.loc 1 104 8 view .LVU24
+ 157              		.loc 1 83 8 view .LVU24
  158 0010 3BB9     		cbnz	r3, .L12
- 105:modules/remote/dbus.c ****     {
- 106:modules/remote/dbus.c ****         RC_Data.sw_first_frame_ms = now ? now : 1u;
- 159              		.loc 1 106 9 is_stmt 1 view .LVU25
- 160              		.loc 1 106 47 is_stmt 0 view .LVU26
+  84:modules/remote/dbus.c ****     {
+  85:modules/remote/dbus.c ****         RC_Data.sw_first_frame_ms = now ? now : 1u;
+ 159              		.loc 1 85 9 is_stmt 1 view .LVU25
+ 160              		.loc 1 85 47 is_stmt 0 view .LVU26
  161 0012 70B3     		cbz	r0, .L23
- 162              		.loc 1 106 47 discriminator 1 view .LVU27
+ 162              		.loc 1 85 47 discriminator 1 view .LVU27
  163 0014 0146     		mov	r1, r0
  164              	.L13:
- 165              		.loc 1 106 35 discriminator 4 view .LVU28
+ 165              		.loc 1 85 35 discriminator 4 view .LVU28
  166 0016 334B     		ldr	r3, .L34
  167 0018 5962     		str	r1, [r3, #36]
- 107:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms   = 0;
- 168              		.loc 1 107 9 is_stmt 1 view .LVU29
- 169              		.loc 1 107 35 is_stmt 0 view .LVU30
+  86:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms   = 0;
+ 168              		.loc 1 86 9 is_stmt 1 view .LVU29
+ 169              		.loc 1 86 35 is_stmt 0 view .LVU30
  170 001a 0021     		movs	r1, #0
  171 001c 1962     		str	r1, [r3, #32]
- 108:modules/remote/dbus.c ****         RC_Data.sw_obs_last       = RC_OBS_NONE;
- 172              		.loc 1 108 9 is_stmt 1 view .LVU31
- 173              		.loc 1 108 35 is_stmt 0 view .LVU32
+  87:modules/remote/dbus.c ****         RC_Data.sw_obs_last       = RC_OBS_NONE;
+ 172              		.loc 1 87 9 is_stmt 1 view .LVU31
+ 173              		.loc 1 87 35 is_stmt 0 view .LVU32
  174 001e 1977     		strb	r1, [r3, #28]
- 109:modules/remote/dbus.c ****         RC_Data.sw_obs_hold       = 0;
- 175              		.loc 1 109 9 is_stmt 1 view .LVU33
- 176              		.loc 1 109 35 is_stmt 0 view .LVU34
+  88:modules/remote/dbus.c ****         RC_Data.sw_obs_hold       = 0;
+ 175              		.loc 1 88 9 is_stmt 1 view .LVU33
+ 176              		.loc 1 88 35 is_stmt 0 view .LVU34
  177 0020 5977     		strb	r1, [r3, #29]
  178              	.L12:
- 110:modules/remote/dbus.c ****     }
- 111:modules/remote/dbus.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 6
-
-
- 112:modules/remote/dbus.c ****     if ((now - RC_Data.sw_first_frame_ms) > RC_SW_AUTO_WINDOW_MS)
- 179              		.loc 1 112 5 is_stmt 1 view .LVU35
- 180              		.loc 1 112 23 is_stmt 0 view .LVU36
+  89:modules/remote/dbus.c ****     }
+  90:modules/remote/dbus.c **** 
+  91:modules/remote/dbus.c ****     if ((now - RC_Data.sw_first_frame_ms) > RC_SW_AUTO_WINDOW_MS)
+ 179              		.loc 1 91 5 is_stmt 1 view .LVU35
+ 180              		.loc 1 91 23 is_stmt 0 view .LVU36
  181 0022 304B     		ldr	r3, .L34
  182 0024 5B6A     		ldr	r3, [r3, #36]
- 183              		.loc 1 112 14 view .LVU37
+ 183              		.loc 1 91 14 view .LVU37
  184 0026 C31A     		subs	r3, r0, r3
- 185              		.loc 1 112 8 view .LVU38
+ 185              		.loc 1 91 8 view .LVU38
  186 0028 40F6B831 		movw	r1, #3000
  187 002c 8B42     		cmp	r3, r1
  188 002e 56D8     		bhi	.L10
- 113:modules/remote/dbus.c ****     {
- 114:modules/remote/dbus.c ****         return;                                     /* 窗口已过 → 保持默认，永久放弃
- 115:modules/remote/dbus.c ****     }
- 116:modules/remote/dbus.c **** 
- 117:modules/remote/dbus.c ****     /* 本帧观测：必须“恰好一个位域非中位”才有信息量 */
- 118:modules/remote/dbus.c ****     uint8_t lo_mid = (RC_Data.sw_lo2 == RC_SW_MID) ? 1u : 0u;
- 189              		.loc 1 118 5 is_stmt 1 view .LVU39
- 190              		.loc 1 118 30 is_stmt 0 view .LVU40
+  92:modules/remote/dbus.c ****     {
+  93:modules/remote/dbus.c ****         return;                                     /* 窗口已过 → 保持默认，永久放弃
+  94:modules/remote/dbus.c ****     }
+  95:modules/remote/dbus.c **** 
+  96:modules/remote/dbus.c ****     /* 本帧观测：必须“恰好一个位域非中位”才有信息量 */
+  97:modules/remote/dbus.c ****     uint8_t lo_mid = (RC_Data.sw_lo2 == RC_SW_MID) ? 1u : 0u;
+ 189              		.loc 1 97 5 is_stmt 1 view .LVU39
+ 190              		.loc 1 97 30 is_stmt 0 view .LVU40
  191 0030 2C4B     		ldr	r3, .L34
  192 0032 DB7A     		ldrb	r3, [r3, #11]	@ zero_extendqisi2
- 193              		.loc 1 118 13 view .LVU41
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 6
+
+
+ 193              		.loc 1 97 13 view .LVU41
  194 0034 032B     		cmp	r3, #3
  195 0036 1ED0     		beq	.L31
- 196              		.loc 1 118 13 discriminator 2 view .LVU42
+ 196              		.loc 1 97 13 discriminator 2 view .LVU42
  197 0038 1346     		mov	r3, r2
  198              	.L14:
  199              	.LVL6:
- 119:modules/remote/dbus.c ****     uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
- 200              		.loc 1 119 5 is_stmt 1 view .LVU43
- 201              		.loc 1 119 30 is_stmt 0 view .LVU44
+  98:modules/remote/dbus.c ****     uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
+ 200              		.loc 1 98 5 is_stmt 1 view .LVU43
+ 201              		.loc 1 98 30 is_stmt 0 view .LVU44
  202 003a 2A49     		ldr	r1, .L34
  203 003c 897A     		ldrb	r1, [r1, #10]	@ zero_extendqisi2
- 204              		.loc 1 119 13 view .LVU45
+ 204              		.loc 1 98 13 view .LVU45
  205 003e 0329     		cmp	r1, #3
  206 0040 1BD0     		beq	.L32
- 207              		.loc 1 119 13 discriminator 2 view .LVU46
+ 207              		.loc 1 98 13 discriminator 2 view .LVU46
  208 0042 1146     		mov	r1, r2
  209              	.L15:
  210              	.LVL7:
- 120:modules/remote/dbus.c ****     uint8_t obs;
- 211              		.loc 1 120 5 is_stmt 1 view .LVU47
- 121:modules/remote/dbus.c **** 
- 122:modules/remote/dbus.c ****     if (lo_mid && hi_mid)        obs = RC_OBS_NONE;
- 212              		.loc 1 122 5 view .LVU48
- 213              		.loc 1 122 9 is_stmt 0 view .LVU49
+  99:modules/remote/dbus.c ****     uint8_t obs;
+ 211              		.loc 1 99 5 is_stmt 1 view .LVU47
+ 100:modules/remote/dbus.c **** 
+ 101:modules/remote/dbus.c ****     if (lo_mid && hi_mid)        obs = RC_OBS_NONE;
+ 212              		.loc 1 101 5 view .LVU48
+ 213              		.loc 1 101 9 is_stmt 0 view .LVU49
  214 0044 03F0010E 		and	lr, r3, #1
- 215              		.loc 1 122 16 view .LVU50
+ 215              		.loc 1 101 16 view .LVU50
  216 0048 01F0010C 		and	ip, r1, #1
- 217              		.loc 1 122 8 view .LVU51
+ 217              		.loc 1 101 8 view .LVU51
  218 004c 13EA0C0F 		tst	r3, ip
  219 0050 15D1     		bne	.L26
- 123:modules/remote/dbus.c ****     else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
- 220              		.loc 1 123 10 is_stmt 1 view .LVU52
- 221              		.loc 1 123 14 is_stmt 0 view .LVU53
+ 102:modules/remote/dbus.c ****     else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
+ 220              		.loc 1 102 10 is_stmt 1 view .LVU52
+ 221              		.loc 1 102 14 is_stmt 0 view .LVU53
  222 0052 C3F30003 		ubfx	r3, r3, #0, #1
  223              	.LVL8:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 7
-
-
- 224              		.loc 1 123 14 view .LVU54
+ 224              		.loc 1 102 14 view .LVU54
  225 0056 83F00103 		eor	r3, r3, #1
- 226              		.loc 1 123 13 view .LVU55
+ 226              		.loc 1 102 13 view .LVU55
  227 005a 13EA0C0F 		tst	r3, ip
  228 005e 2FD1     		bne	.L27
- 124:modules/remote/dbus.c ****     else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
- 229              		.loc 1 124 10 is_stmt 1 view .LVU56
- 230              		.loc 1 124 24 is_stmt 0 view .LVU57
+ 103:modules/remote/dbus.c ****     else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
+ 229              		.loc 1 103 10 is_stmt 1 view .LVU56
+ 230              		.loc 1 103 24 is_stmt 0 view .LVU57
  231 0060 C1F30001 		ubfx	r1, r1, #0, #1
  232              	.LVL9:
- 233              		.loc 1 124 24 view .LVU58
+ 233              		.loc 1 103 24 view .LVU58
  234 0064 81F00101 		eor	r1, r1, #1
- 235              		.loc 1 124 13 view .LVU59
+ 235              		.loc 1 103 13 view .LVU59
  236 0068 11EA0E0F 		tst	r1, lr
  237 006c 2AD0     		beq	.L28
- 238              		.loc 1 124 38 discriminator 1 view .LVU60
+ 238              		.loc 1 103 38 discriminator 1 view .LVU60
  239 006e 0223     		movs	r3, #2
  240 0070 06E0     		b	.L16
  241              	.LVL10:
  242              	.L23:
- 106:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms   = 0;
- 243              		.loc 1 106 47 discriminator 2 view .LVU61
+  85:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms   = 0;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 7
+
+
+ 243              		.loc 1 85 47 discriminator 2 view .LVU61
  244 0072 0121     		movs	r1, #1
  245 0074 CFE7     		b	.L13
  246              	.L31:
- 118:modules/remote/dbus.c ****     uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
- 247              		.loc 1 118 13 discriminator 1 view .LVU62
+  97:modules/remote/dbus.c ****     uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
+ 247              		.loc 1 97 13 discriminator 1 view .LVU62
  248 0076 0123     		movs	r3, #1
  249 0078 DFE7     		b	.L14
  250              	.LVL11:
  251              	.L32:
- 119:modules/remote/dbus.c ****     uint8_t obs;
- 252              		.loc 1 119 13 discriminator 1 view .LVU63
+  98:modules/remote/dbus.c ****     uint8_t obs;
+ 252              		.loc 1 98 13 discriminator 1 view .LVU63
  253 007a 0121     		movs	r1, #1
  254 007c E2E7     		b	.L15
  255              	.LVL12:
  256              	.L26:
- 122:modules/remote/dbus.c ****     else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
- 257              		.loc 1 122 38 discriminator 1 view .LVU64
+ 101:modules/remote/dbus.c ****     else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
+ 257              		.loc 1 101 38 discriminator 1 view .LVU64
  258 007e 1346     		mov	r3, r2
  259              	.LVL13:
  260              	.L16:
- 125:modules/remote/dbus.c ****     else                         obs = RC_OBS_INVALID;
- 126:modules/remote/dbus.c **** 
- 127:modules/remote/dbus.c ****     if ((obs != RC_Data.sw_obs_last) || (obs == RC_OBS_NONE) || (obs == RC_OBS_INVALID))
- 261              		.loc 1 127 5 is_stmt 1 view .LVU65
- 262              		.loc 1 127 24 is_stmt 0 view .LVU66
+ 104:modules/remote/dbus.c ****     else                         obs = RC_OBS_INVALID;
+ 105:modules/remote/dbus.c **** 
+ 106:modules/remote/dbus.c ****     if ((obs != RC_Data.sw_obs_last) || (obs == RC_OBS_NONE) || (obs == RC_OBS_INVALID))
+ 261              		.loc 1 106 5 is_stmt 1 view .LVU65
+ 262              		.loc 1 106 24 is_stmt 0 view .LVU66
  263 0080 1849     		ldr	r1, .L34
  264 0082 097F     		ldrb	r1, [r1, #28]	@ zero_extendqisi2
- 265              		.loc 1 127 8 view .LVU67
+ 265              		.loc 1 106 8 view .LVU67
  266 0084 9942     		cmp	r1, r3
  267 0086 1FD1     		bne	.L17
- 268              		.loc 1 127 70 discriminator 1 view .LVU68
+ 268              		.loc 1 106 70 discriminator 1 view .LVU68
  269 0088 032B     		cmp	r3, #3
  270 008a 14BF     		ite	ne
  271 008c 0021     		movne	r1, #0
  272 008e 0121     		moveq	r1, #1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 8
-
-
- 273              		.loc 1 127 62 discriminator 1 view .LVU69
+ 273              		.loc 1 106 62 discriminator 1 view .LVU69
  274 0090 D3B1     		cbz	r3, .L17
  275 0092 C9B9     		cbnz	r1, .L17
- 128:modules/remote/dbus.c ****     {
- 129:modules/remote/dbus.c ****         /* 观测状态变了（或本段无信息量）→ 重新开始计时 */
- 130:modules/remote/dbus.c ****         RC_Data.sw_obs_last     = obs;
- 131:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
- 132:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
- 133:modules/remote/dbus.c ****         return;
- 134:modules/remote/dbus.c ****     }
- 135:modules/remote/dbus.c **** 
- 136:modules/remote/dbus.c ****     if (RC_Data.sw_obs_hold < 250u)
- 276              		.loc 1 136 5 is_stmt 1 view .LVU70
- 277              		.loc 1 136 16 is_stmt 0 view .LVU71
+ 107:modules/remote/dbus.c ****     {
+ 108:modules/remote/dbus.c ****         /* 观测状态变了（或本段无信息量）→ 重新开始计时 */
+ 109:modules/remote/dbus.c ****         RC_Data.sw_obs_last     = obs;
+ 110:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ 111:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 112:modules/remote/dbus.c ****         return;
+ 113:modules/remote/dbus.c ****     }
+ 114:modules/remote/dbus.c **** 
+ 115:modules/remote/dbus.c ****     if (RC_Data.sw_obs_hold < 250u)
+ 276              		.loc 1 115 5 is_stmt 1 view .LVU70
+ 277              		.loc 1 115 16 is_stmt 0 view .LVU71
  278 0094 1349     		ldr	r1, .L34
  279 0096 497F     		ldrb	r1, [r1, #29]	@ zero_extendqisi2
- 280              		.loc 1 136 8 view .LVU72
+ 280              		.loc 1 115 8 view .LVU72
  281 0098 F929     		cmp	r1, #249
  282 009a 02D8     		bhi	.L21
- 137:modules/remote/dbus.c ****     {
- 138:modules/remote/dbus.c ****         RC_Data.sw_obs_hold++;
- 283              		.loc 1 138 9 is_stmt 1 view .LVU73
- 284              		.loc 1 138 28 is_stmt 0 view .LVU74
+ 116:modules/remote/dbus.c ****     {
+ 117:modules/remote/dbus.c ****         RC_Data.sw_obs_hold++;
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 8
+
+
+ 283              		.loc 1 117 9 is_stmt 1 view .LVU73
+ 284              		.loc 1 117 28 is_stmt 0 view .LVU74
  285 009c 0131     		adds	r1, r1, #1
  286 009e 114C     		ldr	r4, .L34
  287 00a0 6177     		strb	r1, [r4, #29]
  288              	.L21:
- 139:modules/remote/dbus.c ****     }
- 140:modules/remote/dbus.c **** 
- 141:modules/remote/dbus.c ****     if (((RC_Data.sw_obs_start_ms != 0u) ? (now - RC_Data.sw_obs_start_ms)
- 289              		.loc 1 141 5 is_stmt 1 view .LVU75
- 290              		.loc 1 141 18 is_stmt 0 view .LVU76
+ 118:modules/remote/dbus.c ****     }
+ 119:modules/remote/dbus.c **** 
+ 120:modules/remote/dbus.c ****     if (((RC_Data.sw_obs_start_ms != 0u) ? (now - RC_Data.sw_obs_start_ms)
+ 289              		.loc 1 120 5 is_stmt 1 view .LVU75
+ 290              		.loc 1 120 18 is_stmt 0 view .LVU76
  291 00a2 1049     		ldr	r1, .L34
  292 00a4 096A     		ldr	r1, [r1, #32]
- 293              		.loc 1 141 8 view .LVU77
+ 293              		.loc 1 120 8 view .LVU77
  294 00a6 D1B1     		cbz	r1, .L10
- 295              		.loc 1 141 49 discriminator 1 view .LVU78
+ 295              		.loc 1 120 49 discriminator 1 view .LVU78
  296 00a8 401A     		subs	r0, r0, r1
  297              	.LVL14:
- 142:modules/remote/dbus.c ****                                         : 0u) >= RC_SW_AUTO_HOLD_MS)
- 298              		.loc 1 142 47 view .LVU79
+ 121:modules/remote/dbus.c ****                                         : 0u) >= RC_SW_AUTO_HOLD_MS)
+ 298              		.loc 1 121 47 view .LVU79
  299 00aa B0F57A7F 		cmp	r0, #1000
  300 00ae 16D3     		bcc	.L10
- 143:modules/remote/dbus.c ****     {
- 144:modules/remote/dbus.c ****         /* 连续 1 秒只有一方离开中位 → 判定完成并永久锁定 */
- 145:modules/remote/dbus.c ****         RC_Data.sw_auto_result = (obs == RC_OBS_HI_MOVED) ? 1u : 0u;
- 301              		.loc 1 145 9 is_stmt 1 view .LVU80
- 302              		.loc 1 145 32 is_stmt 0 view .LVU81
+ 122:modules/remote/dbus.c ****     {
+ 123:modules/remote/dbus.c ****         /* 连续 1 秒只有一方离开中位 → 判定完成并永久锁定 */
+ 124:modules/remote/dbus.c ****         RC_Data.sw_auto_result = (obs == RC_OBS_HI_MOVED) ? 1u : 0u;
+ 301              		.loc 1 124 9 is_stmt 1 view .LVU80
+ 302              		.loc 1 124 32 is_stmt 0 view .LVU81
  303 00b0 022B     		cmp	r3, #2
  304 00b2 15D0     		beq	.L33
  305              	.L22:
- 306              		.loc 1 145 32 discriminator 4 view .LVU82
+ 306              		.loc 1 124 32 discriminator 4 view .LVU82
  307 00b4 0B4B     		ldr	r3, .L34
  308              	.LVL15:
- 309              		.loc 1 145 32 discriminator 4 view .LVU83
+ 309              		.loc 1 124 32 discriminator 4 view .LVU83
  310 00b6 DA76     		strb	r2, [r3, #27]
- 146:modules/remote/dbus.c ****         RC_Data.sw_swap        = RC_Data.sw_auto_result;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 9
-
-
- 311              		.loc 1 146 9 is_stmt 1 view .LVU84
- 312              		.loc 1 146 32 is_stmt 0 view .LVU85
+ 125:modules/remote/dbus.c ****         RC_Data.sw_swap        = RC_Data.sw_auto_result;
+ 311              		.loc 1 125 9 is_stmt 1 view .LVU84
+ 312              		.loc 1 125 32 is_stmt 0 view .LVU85
  313 00b8 1A73     		strb	r2, [r3, #12]
- 147:modules/remote/dbus.c ****         RC_Data.sw_auto_done   = 1u;
- 314              		.loc 1 147 9 is_stmt 1 view .LVU86
- 315              		.loc 1 147 32 is_stmt 0 view .LVU87
+ 126:modules/remote/dbus.c ****         RC_Data.sw_auto_done   = 1u;
+ 314              		.loc 1 126 9 is_stmt 1 view .LVU86
+ 315              		.loc 1 126 32 is_stmt 0 view .LVU87
  316 00ba 0122     		movs	r2, #1
  317 00bc 9A76     		strb	r2, [r3, #26]
  318 00be 0EE0     		b	.L10
  319              	.LVL16:
  320              	.L27:
- 123:modules/remote/dbus.c ****     else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
- 321              		.loc 1 123 38 discriminator 1 view .LVU88
+ 102:modules/remote/dbus.c ****     else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
+ 321              		.loc 1 102 38 discriminator 1 view .LVU88
  322 00c0 0123     		movs	r3, #1
  323 00c2 DDE7     		b	.L16
  324              	.LVL17:
  325              	.L28:
- 125:modules/remote/dbus.c **** 
- 326              		.loc 1 125 38 view .LVU89
+ 104:modules/remote/dbus.c **** 
+ 326              		.loc 1 104 38 view .LVU89
  327 00c4 0323     		movs	r3, #3
  328 00c6 DBE7     		b	.L16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 9
+
+
  329              	.LVL18:
  330              	.L17:
- 130:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
- 331              		.loc 1 130 9 is_stmt 1 view .LVU90
- 130:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
- 332              		.loc 1 130 33 is_stmt 0 view .LVU91
+ 109:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ 331              		.loc 1 109 9 is_stmt 1 view .LVU90
+ 109:modules/remote/dbus.c ****         RC_Data.sw_obs_hold     = 0;
+ 332              		.loc 1 109 33 is_stmt 0 view .LVU91
  333 00c8 064A     		ldr	r2, .L34
  334 00ca 1377     		strb	r3, [r2, #28]
- 131:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
- 335              		.loc 1 131 9 is_stmt 1 view .LVU92
- 131:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
- 336              		.loc 1 131 33 is_stmt 0 view .LVU93
+ 110:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 335              		.loc 1 110 9 is_stmt 1 view .LVU92
+ 110:modules/remote/dbus.c ****         RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
+ 336              		.loc 1 110 33 is_stmt 0 view .LVU93
  337 00cc 0021     		movs	r1, #0
  338 00ce 5177     		strb	r1, [r2, #29]
- 132:modules/remote/dbus.c ****         return;
- 339              		.loc 1 132 9 is_stmt 1 view .LVU94
- 132:modules/remote/dbus.c ****         return;
- 340              		.loc 1 132 59 is_stmt 0 view .LVU95
+ 111:modules/remote/dbus.c ****         return;
+ 339              		.loc 1 111 9 is_stmt 1 view .LVU94
+ 111:modules/remote/dbus.c ****         return;
+ 340              		.loc 1 111 59 is_stmt 0 view .LVU95
  341 00d0 013B     		subs	r3, r3, #1
  342              	.LVL19:
- 132:modules/remote/dbus.c ****         return;
- 343              		.loc 1 132 59 view .LVU96
+ 111:modules/remote/dbus.c ****         return;
+ 343              		.loc 1 111 59 view .LVU96
  344 00d2 DBB2     		uxtb	r3, r3
- 132:modules/remote/dbus.c ****         return;
- 345              		.loc 1 132 92 view .LVU97
+ 111:modules/remote/dbus.c ****         return;
+ 345              		.loc 1 111 92 view .LVU97
  346 00d4 012B     		cmp	r3, #1
  347 00d6 00D9     		bls	.L20
- 132:modules/remote/dbus.c ****         return;
- 348              		.loc 1 132 92 discriminator 2 view .LVU98
+ 111:modules/remote/dbus.c ****         return;
+ 348              		.loc 1 111 92 discriminator 2 view .LVU98
  349 00d8 0846     		mov	r0, r1
  350              	.LVL20:
  351              	.L20:
- 132:modules/remote/dbus.c ****         return;
- 352              		.loc 1 132 33 discriminator 4 view .LVU99
+ 111:modules/remote/dbus.c ****         return;
+ 352              		.loc 1 111 33 discriminator 4 view .LVU99
  353 00da 024B     		ldr	r3, .L34
  354 00dc 1862     		str	r0, [r3, #32]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 10
-
-
- 133:modules/remote/dbus.c ****     }
- 355              		.loc 1 133 9 is_stmt 1 view .LVU100
+ 112:modules/remote/dbus.c ****     }
+ 355              		.loc 1 112 9 is_stmt 1 view .LVU100
  356              	.LVL21:
  357              	.L10:
- 148:modules/remote/dbus.c ****     }
- 149:modules/remote/dbus.c **** }
- 358              		.loc 1 149 1 is_stmt 0 view .LVU101
+ 127:modules/remote/dbus.c ****     }
+ 128:modules/remote/dbus.c **** }
+ 358              		.loc 1 128 1 is_stmt 0 view .LVU101
  359 00de 10BD     		pop	{r4, pc}
  360              	.LVL22:
  361              	.L33:
- 145:modules/remote/dbus.c ****         RC_Data.sw_swap        = RC_Data.sw_auto_result;
- 362              		.loc 1 145 32 discriminator 1 view .LVU102
+ 124:modules/remote/dbus.c ****         RC_Data.sw_swap        = RC_Data.sw_auto_result;
+ 362              		.loc 1 124 32 discriminator 1 view .LVU102
  363 00e0 0122     		movs	r2, #1
  364 00e2 E7E7     		b	.L22
  365              	.L35:
@@ -562,6 +538,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  369              		.cfi_endproc
  370              	.LFE150:
  372              		.section	.text.RC_Decode,"ax",%progbits
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 10
+
+
  373              		.align	1
  374              		.global	RC_Decode
  375              		.syntax unified
@@ -570,14 +549,14 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  379              	RC_Decode:
  380              	.LVL23:
  381              	.LFB151:
- 150:modules/remote/dbus.c **** 
- 151:modules/remote/dbus.c **** void RC_Decode(const uint8_t *b)
- 152:modules/remote/dbus.c **** {
- 382              		.loc 1 152 1 is_stmt 1 view -0
+ 129:modules/remote/dbus.c **** 
+ 130:modules/remote/dbus.c **** void RC_Decode(const uint8_t *b)
+ 131:modules/remote/dbus.c **** {
+ 382              		.loc 1 131 1 is_stmt 1 view -0
  383              		.cfi_startproc
  384              		@ args = 0, pretend = 0, frame = 0
  385              		@ frame_needed = 0, uses_anonymous_args = 0
- 386              		.loc 1 152 1 is_stmt 0 view .LVU104
+ 386              		.loc 1 131 1 is_stmt 0 view .LVU104
  387 0000 38B5     		push	{r3, r4, r5, lr}
  388              	.LCFI3:
  389              		.cfi_def_cfa_offset 16
@@ -586,287 +565,287 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  392              		.cfi_offset 5, -8
  393              		.cfi_offset 14, -4
  394 0002 0446     		mov	r4, r0
- 153:modules/remote/dbus.c ****     /* ---- 4 路摇杆 × 11bit，LSB 先 / 小端顺序打包 ---- */
- 154:modules/remote/dbus.c ****     RC_Data.ch[0] = (uint16_t)(b[0]            | ((uint16_t)b[1] << 8))                 & 0x07FF;
- 395              		.loc 1 154 5 is_stmt 1 view .LVU105
- 396              		.loc 1 154 33 is_stmt 0 view .LVU106
+ 132:modules/remote/dbus.c ****     /* ---- 4 路摇杆 × 11bit，LSB 先 / 小端顺序打包 ---- */
+ 133:modules/remote/dbus.c ****     RC_Data.ch[0] = (uint16_t)(b[0]            | ((uint16_t)b[1] << 8))                 & 0x07FF;
+ 395              		.loc 1 133 5 is_stmt 1 view .LVU105
+ 396              		.loc 1 133 33 is_stmt 0 view .LVU106
  397 0004 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
- 398              		.loc 1 154 62 view .LVU107
+ 398              		.loc 1 133 62 view .LVU107
  399 0006 4278     		ldrb	r2, [r0, #1]	@ zero_extendqisi2
- 400              		.loc 1 154 48 view .LVU108
+ 400              		.loc 1 133 48 view .LVU108
  401 0008 43EA0223 		orr	r3, r3, r2, lsl #8
- 402              		.loc 1 154 89 view .LVU109
+ 402              		.loc 1 133 89 view .LVU109
  403 000c C3F30A03 		ubfx	r3, r3, #0, #11
- 404              		.loc 1 154 19 view .LVU110
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 11
-
-
+ 404              		.loc 1 133 19 view .LVU110
  405 0010 344D     		ldr	r5, .L41
  406 0012 2B80     		strh	r3, [r5]	@ movhi
- 155:modules/remote/dbus.c ****     RC_Data.ch[1] = (uint16_t)((b[1] >> 3)     | ((uint16_t)b[2] << 5))                 & 0x07FF;
- 407              		.loc 1 155 5 is_stmt 1 view .LVU111
- 408              		.loc 1 155 34 is_stmt 0 view .LVU112
+ 134:modules/remote/dbus.c ****     RC_Data.ch[1] = (uint16_t)((b[1] >> 3)     | ((uint16_t)b[2] << 5))                 & 0x07FF;
+ 407              		.loc 1 134 5 is_stmt 1 view .LVU111
+ 408              		.loc 1 134 34 is_stmt 0 view .LVU112
  409 0014 4278     		ldrb	r2, [r0, #1]	@ zero_extendqisi2
- 410              		.loc 1 155 62 view .LVU113
+ 410              		.loc 1 134 62 view .LVU113
  411 0016 8378     		ldrb	r3, [r0, #2]	@ zero_extendqisi2
- 412              		.loc 1 155 48 view .LVU114
+ 412              		.loc 1 134 48 view .LVU114
  413 0018 5B01     		lsls	r3, r3, #5
  414 001a 43EAD203 		orr	r3, r3, r2, lsr #3
- 415              		.loc 1 155 89 view .LVU115
+ 415              		.loc 1 134 89 view .LVU115
  416 001e C3F30A03 		ubfx	r3, r3, #0, #11
- 417              		.loc 1 155 19 view .LVU116
+ 417              		.loc 1 134 19 view .LVU116
  418 0022 6B80     		strh	r3, [r5, #2]	@ movhi
- 156:modules/remote/dbus.c ****     RC_Data.ch[2] = (uint16_t)((b[2] >> 6)     | ((uint16_t)b[3] << 2) | ((uint16_t)b[4] << 10)) & 
- 419              		.loc 1 156 5 is_stmt 1 view .LVU117
- 420              		.loc 1 156 34 is_stmt 0 view .LVU118
+ 135:modules/remote/dbus.c ****     RC_Data.ch[2] = (uint16_t)((b[2] >> 6)     | ((uint16_t)b[3] << 2) | ((uint16_t)b[4] << 10)) & 
+ 419              		.loc 1 135 5 is_stmt 1 view .LVU117
+ 420              		.loc 1 135 34 is_stmt 0 view .LVU118
  421 0024 8278     		ldrb	r2, [r0, #2]	@ zero_extendqisi2
- 422              		.loc 1 156 62 view .LVU119
+ 422              		.loc 1 135 62 view .LVU119
  423 0026 C378     		ldrb	r3, [r0, #3]	@ zero_extendqisi2
- 424              		.loc 1 156 48 view .LVU120
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 11
+
+
+ 424              		.loc 1 135 48 view .LVU120
  425 0028 9B00     		lsls	r3, r3, #2
  426 002a 43EA9213 		orr	r3, r3, r2, lsr #6
- 427              		.loc 1 156 86 view .LVU121
+ 427              		.loc 1 135 86 view .LVU121
  428 002e 0279     		ldrb	r2, [r0, #4]	@ zero_extendqisi2
- 429              		.loc 1 156 72 view .LVU122
+ 429              		.loc 1 135 72 view .LVU122
  430 0030 43EA8223 		orr	r3, r3, r2, lsl #10
- 431              		.loc 1 156 98 view .LVU123
+ 431              		.loc 1 135 98 view .LVU123
  432 0034 C3F30A03 		ubfx	r3, r3, #0, #11
- 433              		.loc 1 156 19 view .LVU124
+ 433              		.loc 1 135 19 view .LVU124
  434 0038 AB80     		strh	r3, [r5, #4]	@ movhi
- 157:modules/remote/dbus.c ****     RC_Data.ch[3] = (uint16_t)((b[4] >> 1)     | ((uint16_t)b[5] << 7))                 & 0x07FF;
- 435              		.loc 1 157 5 is_stmt 1 view .LVU125
- 436              		.loc 1 157 34 is_stmt 0 view .LVU126
+ 136:modules/remote/dbus.c ****     RC_Data.ch[3] = (uint16_t)((b[4] >> 1)     | ((uint16_t)b[5] << 7))                 & 0x07FF;
+ 435              		.loc 1 136 5 is_stmt 1 view .LVU125
+ 436              		.loc 1 136 34 is_stmt 0 view .LVU126
  437 003a 0279     		ldrb	r2, [r0, #4]	@ zero_extendqisi2
- 438              		.loc 1 157 62 view .LVU127
+ 438              		.loc 1 136 62 view .LVU127
  439 003c 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
- 440              		.loc 1 157 48 view .LVU128
+ 440              		.loc 1 136 48 view .LVU128
  441 003e DB01     		lsls	r3, r3, #7
  442 0040 43EA5203 		orr	r3, r3, r2, lsr #1
- 443              		.loc 1 157 89 view .LVU129
+ 443              		.loc 1 136 89 view .LVU129
  444 0044 C3F30A03 		ubfx	r3, r3, #0, #11
- 445              		.loc 1 157 19 view .LVU130
+ 445              		.loc 1 136 19 view .LVU130
  446 0048 EB80     		strh	r3, [r5, #6]	@ movhi
- 158:modules/remote/dbus.c **** 
- 159:modules/remote/dbus.c ****     /* ---- 2 路拨杆，各 2bit，放在 b[5] 的高 4 位 ----
- 160:modules/remote/dbus.c ****      * 与官方 RC_ctrl_t.s[] 的对应关系（位运算不动，命名靠 sw_swap 调）：
- 161:modules/remote/dbus.c ****      *   sw_lo2 = (b[5]>>4)&0x03       = 官方 s[0]（bit4~5）
- 162:modules/remote/dbus.c ****      *   sw_hi2 = ((b[5]>>4)&0x0C)>>2  = 官方 s[1]（bit6~7）
- 163:modules/remote/dbus.c ****      * 官方 s[0]/s[1] 哪个是物理左拨杆有版本分歧，用 sw_swap 一次性量准
- 164:modules/remote/dbus.c ****      * （见 rc_dbus.h 的 ★验证法，位运算本身不用动）*/
- 165:modules/remote/dbus.c ****     RC_Data.sw_lo2 = RC_SW_BITS_LO(b[5]);
- 447              		.loc 1 165 5 is_stmt 1 view .LVU131
- 448              		.loc 1 165 22 is_stmt 0 view .LVU132
+ 137:modules/remote/dbus.c **** 
+ 138:modules/remote/dbus.c ****     /* ---- 2 路拨杆，各 2bit，放在 b[5] 的高 4 位 ----
+ 139:modules/remote/dbus.c ****      * 与官方 RC_ctrl_t.s[] 的对应关系（位运算不动，命名靠 sw_swap 调）：
+ 140:modules/remote/dbus.c ****      *   sw_lo2 = (b[5]>>4)&0x03       = 官方 s[0]（bit4~5）
+ 141:modules/remote/dbus.c ****      *   sw_hi2 = ((b[5]>>4)&0x0C)>>2  = 官方 s[1]（bit6~7）
+ 142:modules/remote/dbus.c ****      * 官方 s[0]/s[1] 哪个是物理左拨杆有版本分歧，用 sw_swap 一次性量准
+ 143:modules/remote/dbus.c ****      * （见 rc_dbus.h 的 ★验证法，位运算本身不用动）*/
+ 144:modules/remote/dbus.c ****     RC_Data.sw_lo2 = RC_SW_BITS_LO(b[5]);
+ 447              		.loc 1 144 5 is_stmt 1 view .LVU131
+ 448              		.loc 1 144 22 is_stmt 0 view .LVU132
  449 004a 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
  450 004c C3F30113 		ubfx	r3, r3, #4, #2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 12
-
-
- 451              		.loc 1 165 20 view .LVU133
+ 451              		.loc 1 144 20 view .LVU133
  452 0050 EB72     		strb	r3, [r5, #11]
- 166:modules/remote/dbus.c ****     RC_Data.sw_hi2 = RC_SW_BITS_HI(b[5]);
- 453              		.loc 1 166 5 is_stmt 1 view .LVU134
- 454              		.loc 1 166 22 is_stmt 0 view .LVU135
+ 145:modules/remote/dbus.c ****     RC_Data.sw_hi2 = RC_SW_BITS_HI(b[5]);
+ 453              		.loc 1 145 5 is_stmt 1 view .LVU134
+ 454              		.loc 1 145 22 is_stmt 0 view .LVU135
  455 0052 4379     		ldrb	r3, [r0, #5]	@ zero_extendqisi2
  456 0054 9B09     		lsrs	r3, r3, #6
- 457              		.loc 1 166 20 view .LVU136
+ 457              		.loc 1 145 20 view .LVU136
  458 0056 AB72     		strb	r3, [r5, #10]
- 167:modules/remote/dbus.c **** 
- 168:modules/remote/dbus.c ****     /* ---- 拨杆位域自动判定：必须在下面的命名映射之前调用，判定结果当
- 169:modules/remote/dbus.c ****      * 实测法（上电后 3 秒内做一次即可）：把左拨杆停在“上”或“下”�
- 170:modules/remote/dbus.c ****      * 保持右拨杆在中位不动，持续约 1 秒 → sw_auto_done 变 1、sw_swap 自动定�
- 171:modules/remote/dbus.c ****     RC_SwitchAutoName();
- 459              		.loc 1 171 5 is_stmt 1 view .LVU137
+ 146:modules/remote/dbus.c **** 
+ 147:modules/remote/dbus.c ****     /* ---- 拨杆位域自动判定：必须在下面的命名映射之前调用，判定结果当
+ 148:modules/remote/dbus.c ****      * 实测法（上电后 3 秒内做一次即可）：把左拨杆停在“上”或“下”�
+ 149:modules/remote/dbus.c ****      * 保持右拨杆在中位不动，持续约 1 秒 → sw_auto_done 变 1、sw_swap 自动定�
+ 150:modules/remote/dbus.c ****     RC_SwitchAutoName();
+ 459              		.loc 1 150 5 is_stmt 1 view .LVU137
  460 0058 FFF7FEFF 		bl	RC_SwitchAutoName
  461              	.LVL24:
- 172:modules/remote/dbus.c **** 
- 173:modules/remote/dbus.c ****     if (RC_Data.sw_swap)
- 462              		.loc 1 173 5 view .LVU138
- 463              		.loc 1 173 16 is_stmt 0 view .LVU139
+ 151:modules/remote/dbus.c **** 
+ 152:modules/remote/dbus.c ****     if (RC_Data.sw_swap)
+ 462              		.loc 1 152 5 view .LVU138
+ 463              		.loc 1 152 16 is_stmt 0 view .LVU139
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 12
+
+
  464 005c 2B7B     		ldrb	r3, [r5, #12]	@ zero_extendqisi2
- 465              		.loc 1 173 8 view .LVU140
+ 465              		.loc 1 152 8 view .LVU140
  466 005e 002B     		cmp	r3, #0
  467 0060 3AD0     		beq	.L37
- 174:modules/remote/dbus.c ****     {
- 175:modules/remote/dbus.c ****         RC_Data.s_left  = RC_Data.sw_hi2;
- 468              		.loc 1 175 9 is_stmt 1 view .LVU141
- 469              		.loc 1 175 34 is_stmt 0 view .LVU142
+ 153:modules/remote/dbus.c ****     {
+ 154:modules/remote/dbus.c ****         RC_Data.s_left  = RC_Data.sw_hi2;
+ 468              		.loc 1 154 9 is_stmt 1 view .LVU141
+ 469              		.loc 1 154 34 is_stmt 0 view .LVU142
  470 0062 AA7A     		ldrb	r2, [r5, #10]	@ zero_extendqisi2
- 471              		.loc 1 175 25 view .LVU143
+ 471              		.loc 1 154 25 view .LVU143
  472 0064 2A72     		strb	r2, [r5, #8]
- 176:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_lo2;
- 473              		.loc 1 176 9 is_stmt 1 view .LVU144
- 474              		.loc 1 176 34 is_stmt 0 view .LVU145
+ 155:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_lo2;
+ 473              		.loc 1 155 9 is_stmt 1 view .LVU144
+ 474              		.loc 1 155 34 is_stmt 0 view .LVU145
  475 0066 EA7A     		ldrb	r2, [r5, #11]	@ zero_extendqisi2
- 476              		.loc 1 176 25 view .LVU146
+ 476              		.loc 1 155 25 view .LVU146
  477 0068 6A72     		strb	r2, [r5, #9]
  478              	.L38:
- 177:modules/remote/dbus.c ****     }
- 178:modules/remote/dbus.c ****     else
- 179:modules/remote/dbus.c ****     {
- 180:modules/remote/dbus.c ****         RC_Data.s_left  = RC_Data.sw_lo2;
- 181:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
- 182:modules/remote/dbus.c ****     }
- 183:modules/remote/dbus.c **** 
- 184:modules/remote/dbus.c ****     /* ---- 鼠标 + 键盘（完整解出，保证整帧 18 字节全覆盖）----
- 185:modules/remote/dbus.c ****      * 控制层暂不使用，但解出后可在调试器里核验通信正确性 */
- 186:modules/remote/dbus.c ****     RC_Data.mouse.x        = (int16_t)(b[6]  | ((uint16_t)b[7]  << 8));
- 479              		.loc 1 186 5 is_stmt 1 view .LVU147
- 480              		.loc 1 186 41 is_stmt 0 view .LVU148
+ 156:modules/remote/dbus.c ****     }
+ 157:modules/remote/dbus.c ****     else
+ 158:modules/remote/dbus.c ****     {
+ 159:modules/remote/dbus.c ****         RC_Data.s_left  = RC_Data.sw_lo2;
+ 160:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 161:modules/remote/dbus.c ****     }
+ 162:modules/remote/dbus.c **** 
+ 163:modules/remote/dbus.c ****     /* ---- 鼠标 + 键盘（完整解出，保证整帧 18 字节全覆盖）----
+ 164:modules/remote/dbus.c ****      * 控制层暂不使用，但解出后可在调试器里核验通信正确性 */
+ 165:modules/remote/dbus.c ****     RC_Data.mouse.x        = (int16_t)(b[6]  | ((uint16_t)b[7]  << 8));
+ 479              		.loc 1 165 5 is_stmt 1 view .LVU147
+ 480              		.loc 1 165 41 is_stmt 0 view .LVU148
  481 006a A379     		ldrb	r3, [r4, #6]	@ zero_extendqisi2
- 482              		.loc 1 186 60 view .LVU149
+ 482              		.loc 1 165 60 view .LVU149
  483 006c E279     		ldrb	r2, [r4, #7]	@ zero_extendqisi2
- 484              		.loc 1 186 30 view .LVU150
+ 484              		.loc 1 165 30 view .LVU150
  485 006e 43EA0223 		orr	r3, r3, r2, lsl #8
- 486              		.loc 1 186 28 view .LVU151
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 13
-
-
+ 486              		.loc 1 165 28 view .LVU151
  487 0072 1C4D     		ldr	r5, .L41
  488 0074 2B82     		strh	r3, [r5, #16]	@ movhi
- 187:modules/remote/dbus.c ****     RC_Data.mouse.y        = (int16_t)(b[8]  | ((uint16_t)b[9]  << 8));
- 489              		.loc 1 187 5 is_stmt 1 view .LVU152
- 490              		.loc 1 187 41 is_stmt 0 view .LVU153
+ 166:modules/remote/dbus.c ****     RC_Data.mouse.y        = (int16_t)(b[8]  | ((uint16_t)b[9]  << 8));
+ 489              		.loc 1 166 5 is_stmt 1 view .LVU152
+ 490              		.loc 1 166 41 is_stmt 0 view .LVU153
  491 0076 237A     		ldrb	r3, [r4, #8]	@ zero_extendqisi2
- 492              		.loc 1 187 60 view .LVU154
+ 492              		.loc 1 166 60 view .LVU154
  493 0078 627A     		ldrb	r2, [r4, #9]	@ zero_extendqisi2
- 494              		.loc 1 187 30 view .LVU155
+ 494              		.loc 1 166 30 view .LVU155
  495 007a 43EA0223 		orr	r3, r3, r2, lsl #8
- 496              		.loc 1 187 28 view .LVU156
+ 496              		.loc 1 166 28 view .LVU156
  497 007e 6B82     		strh	r3, [r5, #18]	@ movhi
- 188:modules/remote/dbus.c ****     RC_Data.mouse.z        = (int16_t)((b[10] | ((uint16_t)b[11] << 8)) & 0x07FF); /* 官方未掩�
- 498              		.loc 1 188 5 is_stmt 1 view .LVU157
- 499              		.loc 1 188 42 is_stmt 0 view .LVU158
+ 167:modules/remote/dbus.c ****     RC_Data.mouse.z        = (int16_t)((b[10] | ((uint16_t)b[11] << 8)) & 0x07FF); /* 官方未掩�
+ 498              		.loc 1 167 5 is_stmt 1 view .LVU157
+ 499              		.loc 1 167 42 is_stmt 0 view .LVU158
  500 0080 A37A     		ldrb	r3, [r4, #10]	@ zero_extendqisi2
- 501              		.loc 1 188 61 view .LVU159
+ 501              		.loc 1 167 61 view .LVU159
  502 0082 E27A     		ldrb	r2, [r4, #11]	@ zero_extendqisi2
- 503              		.loc 1 188 30 view .LVU160
+ 503              		.loc 1 167 30 view .LVU160
  504 0084 1202     		lsls	r2, r2, #8
  505 0086 12B2     		sxth	r2, r2
- 506              		.loc 1 188 47 view .LVU161
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 13
+
+
+ 506              		.loc 1 167 47 view .LVU161
  507 0088 1343     		orrs	r3, r3, r2
- 508              		.loc 1 188 30 view .LVU162
+ 508              		.loc 1 167 30 view .LVU162
  509 008a C3F30A03 		ubfx	r3, r3, #0, #11
- 510              		.loc 1 188 28 view .LVU163
+ 510              		.loc 1 167 28 view .LVU163
  511 008e AB82     		strh	r3, [r5, #20]	@ movhi
- 189:modules/remote/dbus.c ****     RC_Data.mouse.press_l  = b[12];
- 512              		.loc 1 189 5 is_stmt 1 view .LVU164
- 513              		.loc 1 189 31 is_stmt 0 view .LVU165
+ 168:modules/remote/dbus.c ****     RC_Data.mouse.press_l  = b[12];
+ 512              		.loc 1 168 5 is_stmt 1 view .LVU164
+ 513              		.loc 1 168 31 is_stmt 0 view .LVU165
  514 0090 237B     		ldrb	r3, [r4, #12]	@ zero_extendqisi2
- 515              		.loc 1 189 28 view .LVU166
+ 515              		.loc 1 168 28 view .LVU166
  516 0092 AB75     		strb	r3, [r5, #22]
- 190:modules/remote/dbus.c ****     RC_Data.mouse.press_r  = b[13];
- 517              		.loc 1 190 5 is_stmt 1 view .LVU167
- 518              		.loc 1 190 31 is_stmt 0 view .LVU168
+ 169:modules/remote/dbus.c ****     RC_Data.mouse.press_r  = b[13];
+ 517              		.loc 1 169 5 is_stmt 1 view .LVU167
+ 518              		.loc 1 169 31 is_stmt 0 view .LVU168
  519 0094 637B     		ldrb	r3, [r4, #13]	@ zero_extendqisi2
- 520              		.loc 1 190 28 view .LVU169
+ 520              		.loc 1 169 28 view .LVU169
  521 0096 EB75     		strb	r3, [r5, #23]
- 191:modules/remote/dbus.c ****     RC_Data.key_v          = b[14];
- 522              		.loc 1 191 5 is_stmt 1 view .LVU170
- 523              		.loc 1 191 31 is_stmt 0 view .LVU171
+ 170:modules/remote/dbus.c ****     RC_Data.key_v          = b[14];
+ 522              		.loc 1 170 5 is_stmt 1 view .LVU170
+ 523              		.loc 1 170 31 is_stmt 0 view .LVU171
  524 0098 A37B     		ldrb	r3, [r4, #14]	@ zero_extendqisi2
- 525              		.loc 1 191 28 view .LVU172
+ 525              		.loc 1 170 28 view .LVU172
  526 009a 2B76     		strb	r3, [r5, #24]
- 192:modules/remote/dbus.c ****     RC_Data.key_h          = b[15];
- 527              		.loc 1 192 5 is_stmt 1 view .LVU173
- 528              		.loc 1 192 31 is_stmt 0 view .LVU174
+ 171:modules/remote/dbus.c ****     RC_Data.key_h          = b[15];
+ 527              		.loc 1 171 5 is_stmt 1 view .LVU173
+ 528              		.loc 1 171 31 is_stmt 0 view .LVU174
  529 009c E37B     		ldrb	r3, [r4, #15]	@ zero_extendqisi2
- 530              		.loc 1 192 28 view .LVU175
+ 530              		.loc 1 171 28 view .LVU175
  531 009e 6B76     		strb	r3, [r5, #25]
- 193:modules/remote/dbus.c **** 
- 194:modules/remote/dbus.c ****     /* ---- 左拨轮：11bit。官方 sbus_to_rc 未对 wheel 掩码；
- 195:modules/remote/dbus.c ****      * 此处 &0x07FF 为防御性加固——切掉 b[17] 高 5 位未定义脏位，
- 196:modules/remote/dbus.c ****      * 合法帧恒等、异常帧不会把脏位当有效值 ---- */
- 197:modules/remote/dbus.c ****     RC_Data.wheel = (uint16_t)((b[16] | ((uint16_t)b[17] << 8)) & 0x07FF);
- 532              		.loc 1 197 5 is_stmt 1 view .LVU176
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 14
-
-
- 533              		.loc 1 197 34 is_stmt 0 view .LVU177
+ 172:modules/remote/dbus.c **** 
+ 173:modules/remote/dbus.c ****     /* ---- 左拨轮：11bit。官方 sbus_to_rc 未对 wheel 掩码；
+ 174:modules/remote/dbus.c ****      * 此处 &0x07FF 为防御性加固——切掉 b[17] 高 5 位未定义脏位，
+ 175:modules/remote/dbus.c ****      * 合法帧恒等、异常帧不会把脏位当有效值 ---- */
+ 176:modules/remote/dbus.c ****     RC_Data.wheel = (uint16_t)((b[16] | ((uint16_t)b[17] << 8)) & 0x07FF);
+ 532              		.loc 1 176 5 is_stmt 1 view .LVU176
+ 533              		.loc 1 176 34 is_stmt 0 view .LVU177
  534 00a0 237C     		ldrb	r3, [r4, #16]	@ zero_extendqisi2
- 535              		.loc 1 197 53 view .LVU178
+ 535              		.loc 1 176 53 view .LVU178
  536 00a2 627C     		ldrb	r2, [r4, #17]	@ zero_extendqisi2
- 537              		.loc 1 197 39 view .LVU179
+ 537              		.loc 1 176 39 view .LVU179
  538 00a4 43EA0223 		orr	r3, r3, r2, lsl #8
- 539              		.loc 1 197 21 view .LVU180
+ 539              		.loc 1 176 21 view .LVU180
  540 00a8 C3F30A03 		ubfx	r3, r3, #0, #11
- 541              		.loc 1 197 19 view .LVU181
+ 541              		.loc 1 176 19 view .LVU181
  542 00ac EB81     		strh	r3, [r5, #14]	@ movhi
  543              	.LBB2:
- 198:modules/remote/dbus.c **** 
- 199:modules/remote/dbus.c ****     {
- 200:modules/remote/dbus.c ****         uint32_t now = BSP_Now();
- 544              		.loc 1 200 9 is_stmt 1 view .LVU182
- 545              		.loc 1 200 24 is_stmt 0 view .LVU183
+ 177:modules/remote/dbus.c **** 
+ 178:modules/remote/dbus.c ****     {
+ 179:modules/remote/dbus.c ****         uint32_t now = BSP_Now();
+ 544              		.loc 1 179 9 is_stmt 1 view .LVU182
+ 545              		.loc 1 179 24 is_stmt 0 view .LVU183
  546 00ae FFF7FEFF 		bl	BSP_Now
  547              	.LVL25:
- 201:modules/remote/dbus.c **** 
- 202:modules/remote/dbus.c ****         /* 两帧间隔统计：RC_GapMaxMs > 100 就是一次实打实的“准失联”，
- 203:modules/remote/dbus.c ****          * 这比 online 标志可信——online 只看最后一帧距今，间隔大不大它不�
- 204:modules/remote/dbus.c ****         if ((RC_Data.last_tick != 0u) && ((now - RC_Data.last_tick) > RC_GapMaxMs))
- 548              		.loc 1 204 9 is_stmt 1 view .LVU184
- 549              		.loc 1 204 21 is_stmt 0 view .LVU185
+ 180:modules/remote/dbus.c **** 
+ 181:modules/remote/dbus.c ****         /* 两帧间隔统计：RC_GapMaxMs > 100 就是一次实打实的“准失联”，
+ 182:modules/remote/dbus.c ****          * 这比 online 标志可信——online 只看最后一帧距今，间隔大不大它不�
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 14
+
+
+ 183:modules/remote/dbus.c ****         if ((RC_Data.last_tick != 0u) && ((now - RC_Data.last_tick) > RC_GapMaxMs))
+ 548              		.loc 1 183 9 is_stmt 1 view .LVU184
+ 549              		.loc 1 183 21 is_stmt 0 view .LVU185
  550 00b2 AB6A     		ldr	r3, [r5, #40]
- 551              		.loc 1 204 12 view .LVU186
+ 551              		.loc 1 183 12 view .LVU186
  552 00b4 33B1     		cbz	r3, .L39
- 553              		.loc 1 204 48 discriminator 1 view .LVU187
+ 553              		.loc 1 183 48 discriminator 1 view .LVU187
  554 00b6 C31A     		subs	r3, r0, r3
- 555              		.loc 1 204 69 discriminator 1 view .LVU188
+ 555              		.loc 1 183 69 discriminator 1 view .LVU188
  556 00b8 0B4A     		ldr	r2, .L41+4
  557 00ba 1268     		ldr	r2, [r2]
- 558              		.loc 1 204 39 discriminator 1 view .LVU189
+ 558              		.loc 1 183 39 discriminator 1 view .LVU189
  559 00bc 9342     		cmp	r3, r2
  560 00be 01D9     		bls	.L39
- 205:modules/remote/dbus.c ****         {
- 206:modules/remote/dbus.c ****             RC_GapMaxMs = now - RC_Data.last_tick;
- 561              		.loc 1 206 13 is_stmt 1 view .LVU190
- 562              		.loc 1 206 25 is_stmt 0 view .LVU191
+ 184:modules/remote/dbus.c ****         {
+ 185:modules/remote/dbus.c ****             RC_GapMaxMs = now - RC_Data.last_tick;
+ 561              		.loc 1 185 13 is_stmt 1 view .LVU190
+ 562              		.loc 1 185 25 is_stmt 0 view .LVU191
  563 00c0 094A     		ldr	r2, .L41+4
  564 00c2 1360     		str	r3, [r2]
  565              	.L39:
- 207:modules/remote/dbus.c ****         }
- 208:modules/remote/dbus.c ****         RC_FrameCnt++;
- 566              		.loc 1 208 9 is_stmt 1 view .LVU192
- 567              		.loc 1 208 20 is_stmt 0 view .LVU193
+ 186:modules/remote/dbus.c ****         }
+ 187:modules/remote/dbus.c ****         RC_FrameCnt++;
+ 566              		.loc 1 187 9 is_stmt 1 view .LVU192
+ 567              		.loc 1 187 20 is_stmt 0 view .LVU193
  568 00c4 094A     		ldr	r2, .L41+8
  569 00c6 1368     		ldr	r3, [r2]
  570 00c8 0133     		adds	r3, r3, #1
  571 00ca 1360     		str	r3, [r2]
- 209:modules/remote/dbus.c ****         RC_Data.last_tick = now;
- 572              		.loc 1 209 9 is_stmt 1 view .LVU194
- 573              		.loc 1 209 27 is_stmt 0 view .LVU195
+ 188:modules/remote/dbus.c ****         RC_Data.last_tick = now;
+ 572              		.loc 1 188 9 is_stmt 1 view .LVU194
+ 573              		.loc 1 188 27 is_stmt 0 view .LVU195
  574 00cc 054B     		ldr	r3, .L41
  575 00ce 9862     		str	r0, [r3, #40]
  576              	.LBE2:
- 210:modules/remote/dbus.c ****     }
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 15
-
-
- 211:modules/remote/dbus.c ****     RC_Data.online = 1;
- 577              		.loc 1 211 5 is_stmt 1 view .LVU196
- 578              		.loc 1 211 20 is_stmt 0 view .LVU197
+ 189:modules/remote/dbus.c ****     }
+ 190:modules/remote/dbus.c ****     RC_Data.online = 1;
+ 577              		.loc 1 190 5 is_stmt 1 view .LVU196
+ 578              		.loc 1 190 20 is_stmt 0 view .LVU197
  579 00d0 0122     		movs	r2, #1
  580 00d2 83F82C20 		strb	r2, [r3, #44]
- 212:modules/remote/dbus.c **** }
- 581              		.loc 1 212 1 view .LVU198
+ 191:modules/remote/dbus.c **** }
+ 581              		.loc 1 191 1 view .LVU198
  582 00d6 38BD     		pop	{r3, r4, r5, pc}
  583              	.LVL26:
  584              	.L37:
- 180:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
- 585              		.loc 1 180 9 is_stmt 1 view .LVU199
- 180:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
- 586              		.loc 1 180 34 is_stmt 0 view .LVU200
+ 159:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 585              		.loc 1 159 9 is_stmt 1 view .LVU199
+ 159:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 586              		.loc 1 159 34 is_stmt 0 view .LVU200
  587 00d8 024B     		ldr	r3, .L41
  588 00da DA7A     		ldrb	r2, [r3, #11]	@ zero_extendqisi2
- 180:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
- 589              		.loc 1 180 25 view .LVU201
+ 159:modules/remote/dbus.c ****         RC_Data.s_right = RC_Data.sw_hi2;
+ 589              		.loc 1 159 25 view .LVU201
  590 00dc 1A72     		strb	r2, [r3, #8]
- 181:modules/remote/dbus.c ****     }
- 591              		.loc 1 181 9 is_stmt 1 view .LVU202
- 181:modules/remote/dbus.c ****     }
- 592              		.loc 1 181 34 is_stmt 0 view .LVU203
+ 160:modules/remote/dbus.c ****     }
+ 591              		.loc 1 160 9 is_stmt 1 view .LVU202
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 15
+
+
+ 160:modules/remote/dbus.c ****     }
+ 592              		.loc 1 160 34 is_stmt 0 view .LVU203
  593 00de 9A7A     		ldrb	r2, [r3, #10]	@ zero_extendqisi2
- 181:modules/remote/dbus.c ****     }
- 594              		.loc 1 181 25 view .LVU204
+ 160:modules/remote/dbus.c ****     }
+ 594              		.loc 1 160 25 view .LVU204
  595 00e0 5A72     		strb	r2, [r3, #9]
  596 00e2 C2E7     		b	.L38
  597              	.L42:
@@ -885,35 +864,32 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  612              	DBUS_OnRx:
  613              	.LVL27:
  614              	.LFB147:
-  49:modules/remote/dbus.c ****     if (len >= DBUS_FRAME_LEN)
- 615              		.loc 1 49 1 is_stmt 1 view -0
+  28:modules/remote/dbus.c ****     if (len >= DBUS_FRAME_LEN)
+ 615              		.loc 1 28 1 is_stmt 1 view -0
  616              		.cfi_startproc
  617              		@ args = 0, pretend = 0, frame = 0
  618              		@ frame_needed = 0, uses_anonymous_args = 0
-  50:modules/remote/dbus.c ****     {
- 619              		.loc 1 50 5 view .LVU206
-  50:modules/remote/dbus.c ****     {
- 620              		.loc 1 50 8 is_stmt 0 view .LVU207
+  29:modules/remote/dbus.c ****     {
+ 619              		.loc 1 29 5 view .LVU206
+  29:modules/remote/dbus.c ****     {
+ 620              		.loc 1 29 8 is_stmt 0 view .LVU207
  621 0000 1129     		cmp	r1, #17
  622 0002 00D8     		bhi	.L49
  623 0004 7047     		bx	lr
  624              	.L49:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 16
-
-
-  49:modules/remote/dbus.c ****     if (len >= DBUS_FRAME_LEN)
- 625              		.loc 1 49 1 view .LVU208
+  28:modules/remote/dbus.c ****     if (len >= DBUS_FRAME_LEN)
+ 625              		.loc 1 28 1 view .LVU208
  626 0006 08B5     		push	{r3, lr}
  627              	.LCFI4:
  628              		.cfi_def_cfa_offset 8
  629              		.cfi_offset 3, -8
  630              		.cfi_offset 14, -4
-  52:modules/remote/dbus.c ****     }
- 631              		.loc 1 52 9 is_stmt 1 view .LVU209
+  31:modules/remote/dbus.c ****     }
+ 631              		.loc 1 31 9 is_stmt 1 view .LVU209
  632 0008 FFF7FEFF 		bl	RC_Decode
  633              	.LVL28:
-  54:modules/remote/dbus.c **** 
- 634              		.loc 1 54 1 is_stmt 0 view .LVU210
+  33:modules/remote/dbus.c **** 
+ 634              		.loc 1 33 1 is_stmt 0 view .LVU210
  635 000c 08BD     		pop	{r3, pc}
  636              		.cfi_endproc
  637              	.LFE147:
@@ -922,45 +898,45 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  641              		.global	RC_IsOnline
  642              		.syntax unified
  643              		.thumb
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 16
+
+
  644              		.thumb_func
  646              	RC_IsOnline:
  647              	.LVL29:
  648              	.LFB152:
- 213:modules/remote/dbus.c **** 
- 214:modules/remote/dbus.c **** uint8_t RC_IsOnline(uint32_t now_ms)
- 215:modules/remote/dbus.c **** {
- 649              		.loc 1 215 1 is_stmt 1 view -0
+ 192:modules/remote/dbus.c **** 
+ 193:modules/remote/dbus.c **** uint8_t RC_IsOnline(uint32_t now_ms)
+ 194:modules/remote/dbus.c **** {
+ 649              		.loc 1 194 1 is_stmt 1 view -0
  650              		.cfi_startproc
  651              		@ args = 0, pretend = 0, frame = 0
  652              		@ frame_needed = 0, uses_anonymous_args = 0
  653              		@ link register save eliminated.
- 216:modules/remote/dbus.c ****     if ((now_ms - RC_Data.last_tick) > RC_OFFLINE_MS)
- 654              		.loc 1 216 5 view .LVU212
- 655              		.loc 1 216 26 is_stmt 0 view .LVU213
+ 195:modules/remote/dbus.c ****     if ((now_ms - RC_Data.last_tick) > RC_OFFLINE_MS)
+ 654              		.loc 1 195 5 view .LVU212
+ 655              		.loc 1 195 26 is_stmt 0 view .LVU213
  656 0000 064B     		ldr	r3, .L52
  657 0002 9B6A     		ldr	r3, [r3, #40]
- 658              		.loc 1 216 17 view .LVU214
+ 658              		.loc 1 195 17 view .LVU214
  659 0004 C01A     		subs	r0, r0, r3
  660              	.LVL30:
- 661              		.loc 1 216 8 view .LVU215
+ 661              		.loc 1 195 8 view .LVU215
  662 0006 6428     		cmp	r0, #100
  663 0008 03D9     		bls	.L51
- 217:modules/remote/dbus.c ****         RC_Data.online = 0;
- 664              		.loc 1 217 9 is_stmt 1 view .LVU216
- 665              		.loc 1 217 24 is_stmt 0 view .LVU217
+ 196:modules/remote/dbus.c ****         RC_Data.online = 0;
+ 664              		.loc 1 196 9 is_stmt 1 view .LVU216
+ 665              		.loc 1 196 24 is_stmt 0 view .LVU217
  666 000a 044B     		ldr	r3, .L52
  667 000c 0022     		movs	r2, #0
  668 000e 83F82C20 		strb	r2, [r3, #44]
  669              	.L51:
- 218:modules/remote/dbus.c ****     return RC_Data.online;
- 670              		.loc 1 218 5 is_stmt 1 view .LVU218
- 219:modules/remote/dbus.c **** }
- 671              		.loc 1 219 1 is_stmt 0 view .LVU219
+ 197:modules/remote/dbus.c ****     return RC_Data.online;
+ 670              		.loc 1 197 5 is_stmt 1 view .LVU218
+ 198:modules/remote/dbus.c **** }
+ 671              		.loc 1 198 1 is_stmt 0 view .LVU219
  672 0012 024B     		ldr	r3, .L52
  673 0014 93F82C00 		ldrb	r0, [r3, #44]	@ zero_extendqisi2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 17
-
-
  674 0018 7047     		bx	lr
  675              	.L53:
  676 001a 00BF     		.align	2
@@ -977,110 +953,110 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  689              	RC_Norm:
  690              	.LVL31:
  691              	.LFB153:
- 220:modules/remote/dbus.c **** 
- 221:modules/remote/dbus.c **** /* 摇杆原始值 → -1.0 ~ +1.0（带死区） */
- 222:modules/remote/dbus.c **** float RC_Norm(uint16_t ch)
- 223:modules/remote/dbus.c **** {
- 692              		.loc 1 223 1 is_stmt 1 view -0
+ 199:modules/remote/dbus.c **** 
+ 200:modules/remote/dbus.c **** /* 摇杆原始值 → -1.0 ~ +1.0（带死区） */
+ 201:modules/remote/dbus.c **** float RC_Norm(uint16_t ch)
+ 202:modules/remote/dbus.c **** {
+ 692              		.loc 1 202 1 is_stmt 1 view -0
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 17
+
+
  693              		.cfi_startproc
  694              		@ args = 0, pretend = 0, frame = 0
  695              		@ frame_needed = 0, uses_anonymous_args = 0
  696              		@ link register save eliminated.
- 224:modules/remote/dbus.c ****     int32_t v = (int32_t)ch - RC_CH_MID;
- 697              		.loc 1 224 5 view .LVU221
- 698              		.loc 1 224 13 is_stmt 0 view .LVU222
+ 203:modules/remote/dbus.c ****     int32_t v = (int32_t)ch - RC_CH_MID;
+ 697              		.loc 1 203 5 view .LVU221
+ 698              		.loc 1 203 13 is_stmt 0 view .LVU222
  699 0000 A0F58062 		sub	r2, r0, #1024
  700              	.LVL32:
- 225:modules/remote/dbus.c **** 
- 226:modules/remote/dbus.c ****     if ((v > -RC_DEADBAND) && (v < RC_DEADBAND))
- 701              		.loc 1 226 5 is_stmt 1 view .LVU223
- 702              		.loc 1 226 28 is_stmt 0 view .LVU224
+ 204:modules/remote/dbus.c **** 
+ 205:modules/remote/dbus.c ****     if ((v > -RC_DEADBAND) && (v < RC_DEADBAND))
+ 701              		.loc 1 205 5 is_stmt 1 view .LVU223
+ 702              		.loc 1 205 28 is_stmt 0 view .LVU224
  703 0004 A0F2ED33 		subw	r3, r0, #1005
- 704              		.loc 1 226 8 view .LVU225
+ 704              		.loc 1 205 8 view .LVU225
  705 0008 262B     		cmp	r3, #38
  706 000a 22D9     		bls	.L58
- 227:modules/remote/dbus.c ****         return 0.0f;
- 228:modules/remote/dbus.c **** 
- 229:modules/remote/dbus.c ****     v = (v > 0) ? (v - RC_DEADBAND) : (v + RC_DEADBAND);
- 707              		.loc 1 229 5 is_stmt 1 view .LVU226
- 708              		.loc 1 229 37 is_stmt 0 view .LVU227
+ 206:modules/remote/dbus.c ****         return 0.0f;
+ 207:modules/remote/dbus.c **** 
+ 208:modules/remote/dbus.c ****     v = (v > 0) ? (v - RC_DEADBAND) : (v + RC_DEADBAND);
+ 707              		.loc 1 208 5 is_stmt 1 view .LVU226
+ 708              		.loc 1 208 37 is_stmt 0 view .LVU227
  709 000c 002A     		cmp	r2, #0
  710 000e 13DD     		ble	.L56
- 711              		.loc 1 229 37 discriminator 1 view .LVU228
+ 711              		.loc 1 208 37 discriminator 1 view .LVU228
  712 0010 A0F21443 		subw	r3, r0, #1044
  713 0014 07EE903A 		vmov	s15, r3	@ int
  714              	.L57:
  715              	.LVL33:
- 230:modules/remote/dbus.c **** 
- 231:modules/remote/dbus.c ****     float n = (float)v / (float)(RC_CH_MAX - RC_CH_MID);
- 716              		.loc 1 231 5 is_stmt 1 view .LVU229
- 717              		.loc 1 231 15 is_stmt 0 view .LVU230
+ 209:modules/remote/dbus.c **** 
+ 210:modules/remote/dbus.c ****     float n = (float)v / (float)(RC_CH_MAX - RC_CH_MID);
+ 716              		.loc 1 210 5 is_stmt 1 view .LVU229
+ 717              		.loc 1 210 15 is_stmt 0 view .LVU230
  718 0018 F8EEE77A 		vcvt.f32.s32	s15, s15
  719              	.LVL34:
- 720              		.loc 1 231 11 view .LVU231
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 18
-
-
+ 720              		.loc 1 210 11 view .LVU231
  721 001c 9FED107A 		vldr.32	s14, .L63
  722 0020 87EE870A 		vdiv.f32	s0, s15, s14
  723              	.LVL35:
- 232:modules/remote/dbus.c **** 
- 233:modules/remote/dbus.c ****     if (n >  1.0f) n =  1.0f;
- 724              		.loc 1 233 5 is_stmt 1 view .LVU232
- 725              		.loc 1 233 8 is_stmt 0 view .LVU233
+ 211:modules/remote/dbus.c **** 
+ 212:modules/remote/dbus.c ****     if (n >  1.0f) n =  1.0f;
+ 724              		.loc 1 212 5 is_stmt 1 view .LVU232
+ 725              		.loc 1 212 8 is_stmt 0 view .LVU233
  726 0024 F7EE007A 		vmov.f32	s15, #1.0e+0
  727 0028 B4EEE70A 		vcmpe.f32	s0, s15
  728 002c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  729 0030 07DD     		ble	.L61
- 730              		.loc 1 233 22 discriminator 1 view .LVU234
+ 730              		.loc 1 212 22 discriminator 1 view .LVU234
  731 0032 B7EE000A 		vmov.f32	s0, #1.0e+0
  732              	.LVL36:
- 733              		.loc 1 233 22 discriminator 1 view .LVU235
+ 733              		.loc 1 212 22 discriminator 1 view .LVU235
  734 0036 7047     		bx	lr
  735              	.LVL37:
  736              	.L56:
- 229:modules/remote/dbus.c **** 
- 737              		.loc 1 229 37 discriminator 2 view .LVU236
+ 208:modules/remote/dbus.c **** 
+ 737              		.loc 1 208 37 discriminator 2 view .LVU236
  738 0038 A0F57B73 		sub	r3, r0, #1004
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 18
+
+
  739 003c 07EE903A 		vmov	s15, r3	@ int
  740 0040 EAE7     		b	.L57
  741              	.LVL38:
  742              	.L61:
- 234:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
- 743              		.loc 1 234 5 is_stmt 1 view .LVU237
- 744              		.loc 1 234 8 is_stmt 0 view .LVU238
+ 213:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 743              		.loc 1 213 5 is_stmt 1 view .LVU237
+ 744              		.loc 1 213 8 is_stmt 0 view .LVU238
  745 0042 FFEE007A 		vmov.f32	s15, #-1.0e+0
  746 0046 B4EEE70A 		vcmpe.f32	s0, s15
  747 004a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  748 004e 03D4     		bmi	.L62
  749              	.LVL39:
  750              	.L54:
- 235:modules/remote/dbus.c ****     return n;
- 236:modules/remote/dbus.c **** }
- 751              		.loc 1 236 1 view .LVU239
+ 214:modules/remote/dbus.c ****     return n;
+ 215:modules/remote/dbus.c **** }
+ 751              		.loc 1 215 1 view .LVU239
  752 0050 7047     		bx	lr
  753              	.LVL40:
  754              	.L58:
- 227:modules/remote/dbus.c **** 
- 755              		.loc 1 227 16 view .LVU240
+ 206:modules/remote/dbus.c **** 
+ 755              		.loc 1 206 16 view .LVU240
  756 0052 9FED040A 		vldr.32	s0, .L63+4
  757 0056 7047     		bx	lr
  758              	.LVL41:
  759              	.L62:
- 234:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
- 760              		.loc 1 234 22 discriminator 1 view .LVU241
+ 213:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 760              		.loc 1 213 22 discriminator 1 view .LVU241
  761 0058 BFEE000A 		vmov.f32	s0, #-1.0e+0
  762              	.LVL42:
- 234:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
- 763              		.loc 1 234 22 discriminator 1 view .LVU242
+ 213:modules/remote/dbus.c ****     if (n < -1.0f) n = -1.0f;
+ 763              		.loc 1 213 22 discriminator 1 view .LVU242
  764 005c F8E7     		b	.L54
  765              	.L64:
  766 005e 00BF     		.align	2
  767              	.L63:
  768 0060 00002544 		.word	1143275520
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 19
-
-
  769 0064 00000000 		.word	0
  770              		.cfi_endproc
  771              	.LFE153:
@@ -1102,35 +1078,38 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccf
  786              		.file 6 "bsp/bsp_time.h"
  787              		.file 7 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  788              		.file 8 "<built-in>"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s 			page 20
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 19
+
+
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s 			page 20
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 dbus.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:20     .text.DBUS_OnError:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:25     .text.DBUS_OnError:00000000 DBUS_OnError
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:43     .text.DBUS_OnError:0000000c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:48     .text.RC_StartReceive:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:54     .text.RC_StartReceive:00000000 RC_StartReceive
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:74     .text.RC_Init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:80     .text.RC_Init:00000000 RC_Init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:119    .text.RC_Init:00000024 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:778    .bss.RC_Data:00000000 RC_Data
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:612    .text.DBUS_OnRx:00000000 DBUS_OnRx
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:126    .text.RC_SwitchAutoName:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:132    .text.RC_SwitchAutoName:00000000 RC_SwitchAutoName
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:368    .text.RC_SwitchAutoName:000000e4 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:373    .text.RC_Decode:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:379    .text.RC_Decode:00000000 RC_Decode
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:600    .text.RC_Decode:000000e4 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:607    .text.DBUS_OnRx:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:640    .text.RC_IsOnline:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:646    .text.RC_IsOnline:00000000 RC_IsOnline
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:678    .text.RC_IsOnline:0000001c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:683    .text.RC_Norm:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:689    .text.RC_Norm:00000000 RC_Norm
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:768    .text.RC_Norm:00000060 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccfQtLCU.s:775    .bss.RC_Data:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:20     .text.DBUS_OnError:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:25     .text.DBUS_OnError:00000000 DBUS_OnError
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:43     .text.DBUS_OnError:0000000c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:48     .text.RC_StartReceive:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:54     .text.RC_StartReceive:00000000 RC_StartReceive
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:74     .text.RC_Init:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:80     .text.RC_Init:00000000 RC_Init
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:119    .text.RC_Init:00000024 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:778    .bss.RC_Data:00000000 RC_Data
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:612    .text.DBUS_OnRx:00000000 DBUS_OnRx
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:126    .text.RC_SwitchAutoName:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:132    .text.RC_SwitchAutoName:00000000 RC_SwitchAutoName
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:368    .text.RC_SwitchAutoName:000000e4 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:373    .text.RC_Decode:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:379    .text.RC_Decode:00000000 RC_Decode
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:600    .text.RC_Decode:000000e4 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:607    .text.DBUS_OnRx:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:640    .text.RC_IsOnline:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:646    .text.RC_IsOnline:00000000 RC_IsOnline
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:678    .text.RC_IsOnline:0000001c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:683    .text.RC_Norm:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:689    .text.RC_Norm:00000000 RC_Norm
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:768    .text.RC_Norm:00000060 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccYJOAK8.s:775    .bss.RC_Data:00000000 $d
 
 UNDEFINED SYMBOLS
 RC_ErrCnt

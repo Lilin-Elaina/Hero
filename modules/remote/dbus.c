@@ -1,37 +1,16 @@
 /**
  * @file    dbus.c
- * @brief   DBUS 接收（UART5 + DMA + IDLE）与 18 字节帧解析
- * @note    2026-11-19 分层整理：以下内容从 remote/rc_dbus.c 原样搬迁，逻辑未改。
- *          改动仅限：文件头注释、include、以及跨文件共享变量的存储类。
- */
-#include "dbus.h"
-#include "bsp_time.h"
-#include "usart.h"
-#include "DJ_Motor.h"
-#include "mecanum.h"
-#include "ins.h"
-#include "fdcan.h"
-#include "bsp_can.h"
-#include "bsp_uart.h"
-#include <string.h>
-#include <math.h>
-
-/**
- * @file    dbus.c
  * @brief   DT7 + DR16 遥控器 DBUS 帧解析（收帧在 bsp_uart）
  * @note    硬件：达妙 DM-MC-Board02 SBUS 口（官方例程走 UART5 / RX=PD2 AF8）
  *          协议：100000bps, 8数据位+偶校验, 2停止位, 每帧18字节
+ *          2026-11-19 分层整理：内容自 remote/rc_dbus.c 原样搬迁，逻辑未改；
+ *          UART 收帧细节已下沉 bsp_uart（P2c），本文件只管协议解析。
+ *          2026-11-20 清理：合并重复的文件头与 include，去掉搬迁时带过来的无关头。
  */
 #include "dbus.h"
-#include "usart.h"
-#include "DJ_Motor.h"
-#include "mecanum.h"
-#include "ins.h"
-#include "fdcan.h"
-#include "bsp_can.h"
+#include "bsp_time.h"
 #include "bsp_uart.h"
 #include <string.h>
-#include <math.h>
 
 RC_TypeDef RC_Data = {0};
 
@@ -234,41 +213,3 @@ float RC_Norm(uint16_t ch)
     if (n < -1.0f) n = -1.0f;
     return n;
 }
-/* ==================================================================
- *  云台 pitch 双环（6020 ID2，1 kHz 调用）
- *
- *  三个状态：0=未接管  1=回中  2=正常
- *  未接管时要求摇杆居中，且参考角永远从"当前位置"起步 → 不会瞬移、
- *  不会有劣弧、不会一拨使能就跟着摇杆飞。
- *
- *  采用位置环 + 速度环的双环控制，位置环输出目标速度，速度环输出电压。
- * ================================================================== */
-
-
- /*求绝对值 */
-/* UART 空闲中断回调与错误回调已迁到 bsp/bsp_uart.c（P2c） */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

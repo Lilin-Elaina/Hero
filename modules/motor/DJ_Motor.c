@@ -6,7 +6,7 @@
 
 /* 把 32 位中间值夹到 [lo, hi]，再转成 int16_t 打包。
  * 形参用 int32_t 是刻意的：若写成 int16_t，超量程的值在调用时就已经被截断
- * （例 40000 → -25536），clamp 看到的是错的数，会连符号一起放过去。 */
+ */
 static inline int16_t clamp_i16(int32_t v, int32_t lo, int32_t hi)
 {
     if (v > hi) { v = hi; }
