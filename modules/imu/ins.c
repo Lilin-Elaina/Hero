@@ -20,7 +20,7 @@
  * 片选/模拟开关等片上细节已下沉到 bsp/bsp_spi.c（2026-11-19 P2d），
  * 这里只保留"用哪个器件"的语义。 */
 
-/* dev: 0 = 加速度计, 1 = 陀螺 */
+/* Dev_Id: 0 = 加速度计, 1 = 陀螺 */
 #define DEV_ACC   0u
 #define DEV_GYRO  1u
 
@@ -96,7 +96,7 @@ static uint8_t S_Inited;
 /* 世界垂直轴 = SIGN·(ω·v)，v = 世界“上”在体轴系的投影。
  * 判据：静止水平时它必须等于既有约定 ω_yaw = -Gyro[0]。
  * 板子 x 轴朝下（所以当年才要那个负号）→ a_x≈-9.8 → v≈(-1,0,0)
- * → g·v = -g0 → 要再取负一次才是 -g0，故 SIGN = +1。 */
+ * → Gyro_Rad·v = -g0 → 要再取负一次才是 -g0，故 SIGN = +1。 */
 #define INS_WORLD_YAW_SIGN  (+1.0f)
 
 volatile float   INS_WorldYawRate;
@@ -109,91 +109,91 @@ static float    S_Q0 = 1.0f, S_Q1 = 0.0f, S_Q2 = 0.0f, S_Q3 = 0.0f;
 static float    S_Exi, S_Eyi, S_Ezi;
 static uint16_t S_Ahrs_Cnt;
 
-static void ins_ahrs_step(float gx, float gy, float gz, float ax, float ay, float az)
+static void ins_ahrs_step(float Gyro_X, float Gyro_Y, float Gyro_Z, float Acc_X, float Acc_Y, float Acc_Z)
 {
-    float norm = sqrtf(ax * ax + ay * ay + az * az);
-    float vx, vy, vz, ex, ey, ez, kp;
-    float q0q0, q0q1, q0q2, q1q1, q1q3, q2q2, q2q3, q3q3;
-    float t0, t1, t2, t3;
-    float gx_r = gx, gy_r = gy, gz_r = gz;
+    float Vec_Norm = sqrtf(Acc_X * Acc_X + Acc_Y * Acc_Y + Acc_Z * Acc_Z);
+    float Up_X, Up_Y, Up_Z, Err_X, Err_Y, Err_Z, Kp_Gain;
+    float Q0_Sq, Q0_Q1, Q0_Q2, Q1_Sq, Q1_Q3, Q2_Sq, Q2_Q3, Q3_Sq;
+    float Q0_Old, Q1_Old, Q2_Old, Q3_Old;
+    float Gyro_Raw_X = Gyro_X, Gyro_Raw_Y = Gyro_Y, Gyro_Raw_Z = Gyro_Z;
 
-    if (norm < 1.0f) {                    /* 数据无效，本拍跳过 */
+    if (Vec_Norm < 1.0f) {                    /* 数据无效，本拍跳过 */
         return;
     }
 
-    ax /= norm;
-    ay /= norm;
-    az /= norm;
+    Acc_X /= Vec_Norm;
+    Acc_Y /= Vec_Norm;
+    Acc_Z /= Vec_Norm;
 
-    q0q0 = S_Q0 * S_Q0;
-    q0q1 = S_Q0 * S_Q1;
-    q0q2 = S_Q0 * S_Q2;
-    q1q1 = S_Q1 * S_Q1;
-    q1q3 = S_Q1 * S_Q3;
-    q2q2 = S_Q2 * S_Q2;
-    q2q3 = S_Q2 * S_Q3;
-    q3q3 = S_Q3 * S_Q3;
+    Q0_Sq = S_Q0 * S_Q0;
+    Q0_Q1 = S_Q0 * S_Q1;
+    Q0_Q2 = S_Q0 * S_Q2;
+    Q1_Sq = S_Q1 * S_Q1;
+    Q1_Q3 = S_Q1 * S_Q3;
+    Q2_Sq = S_Q2 * S_Q2;
+    Q2_Q3 = S_Q2 * S_Q3;
+    Q3_Sq = S_Q3 * S_Q3;
 
     /* 估计的重力方向（世界“上”在体轴系） */
-    vx = 2.0f * (q1q3 - q0q2);
-    vy = 2.0f * (q0q1 + q2q3);
-    vz = q0q0 - q1q1 - q2q2 + q3q3;
+    Up_X = 2.0f * (Q1_Q3 - Q0_Q2);
+    Up_Y = 2.0f * (Q0_Q1 + Q2_Q3);
+    Up_Z = Q0_Sq - Q1_Sq - Q2_Sq + Q3_Sq;
 
     /* 实测重力与估计重力的叉积 = 姿态误差 */
-    ex = ay * vz - az * vy;
-    ey = az * vx - ax * vz;
-    ez = ax * vy - ay * vx;
+    Err_X = Acc_Y * Up_Z - Acc_Z * Up_Y;
+    Err_Y = Acc_Z * Up_X - Acc_X * Up_Z;
+    Err_Z = Acc_X * Up_Y - Acc_Y * Up_X;
 
     /* 机体线加速度大时加速度计不可信，削弱修正，避免把姿态带偏 */
-    kp = MAHONY_KP;
-    if (fabsf(norm - 9.80665f) > MAHONY_ACC_GATE) {
-        kp *= 0.1f;
+    Kp_Gain = MAHONY_KP;
+    if (fabsf(Vec_Norm - 9.80665f) > MAHONY_ACC_GATE) {
+        Kp_Gain *= 0.1f;
     }
 
-    S_Exi += ex * (MAHONY_KI * MAHONY_DT);
-    S_Eyi += ey * (MAHONY_KI * MAHONY_DT);
-    S_Ezi += ez * (MAHONY_KI * MAHONY_DT);
+    S_Exi += Err_X * (MAHONY_KI * MAHONY_DT);
+    S_Eyi += Err_Y * (MAHONY_KI * MAHONY_DT);
+    S_Ezi += Err_Z * (MAHONY_KI * MAHONY_DT);
 
-    gx += kp * ex + S_Exi;
-    gy += kp * ey + S_Eyi;
-    gz += kp * ez + S_Ezi;
+    Gyro_X += Kp_Gain * Err_X + S_Exi;
+    Gyro_Y += Kp_Gain * Err_Y + S_Eyi;
+    Gyro_Z += Kp_Gain * Err_Z + S_Ezi;
 
     /* 四元数积分 */
-    t0 = S_Q0;
-    t1 = S_Q1;
-    t2 = S_Q2;
-    t3 = S_Q3;
-    S_Q0 += (-t1 * gx - t2 * gy - t3 * gz) * MAHONY_HALFT;
-    S_Q1 += ( t0 * gx + t2 * gz - t3 * gy) * MAHONY_HALFT;
-    S_Q2 += ( t0 * gy - t1 * gz + t3 * gx) * MAHONY_HALFT;
-    S_Q3 += ( t0 * gz + t1 * gy - t2 * gx) * MAHONY_HALFT;
+    Q0_Old = S_Q0;
+    Q1_Old = S_Q1;
+    Q2_Old = S_Q2;
+    Q3_Old = S_Q3;
+    S_Q0 += (-Q1_Old * Gyro_X - Q2_Old * Gyro_Y - Q3_Old * Gyro_Z) * MAHONY_HALFT;
+    S_Q1 += ( Q0_Old * Gyro_X + Q2_Old * Gyro_Z - Q3_Old * Gyro_Y) * MAHONY_HALFT;
+    S_Q2 += ( Q0_Old * Gyro_Y - Q1_Old * Gyro_Z + Q3_Old * Gyro_X) * MAHONY_HALFT;
+    S_Q3 += ( Q0_Old * Gyro_Z + Q1_Old * Gyro_Y - Q2_Old * Gyro_X) * MAHONY_HALFT;
 
     /* 归一化 */
-    norm = sqrtf(S_Q0 * S_Q0 + S_Q1 * S_Q1 + S_Q2 * S_Q2 + S_Q3 * S_Q3);
-    if (norm < 1e-6f) {
+    Vec_Norm = sqrtf(S_Q0 * S_Q0 + S_Q1 * S_Q1 + S_Q2 * S_Q2 + S_Q3 * S_Q3);
+    if (Vec_Norm < 1e-6f) {
         S_Q0 = 1.0f; S_Q1 = 0.0f; S_Q2 = 0.0f; S_Q3 = 0.0f;
         return;
     }
-    S_Q0 /= norm;
-    S_Q1 /= norm;
-    S_Q2 /= norm;
-    S_Q3 /= norm;
+    S_Q0 /= Vec_Norm;
+    S_Q1 /= Vec_Norm;
+    S_Q2 /= Vec_Norm;
+    S_Q3 /= Vec_Norm;
 
     /* 用更新后的姿态重算竖直轴，把实测角速度投影上去（倾斜补偿的核心） */
-    q0q0 = S_Q0 * S_Q0;
-    q0q1 = S_Q0 * S_Q1;
-    q0q2 = S_Q0 * S_Q2;
-    q1q1 = S_Q1 * S_Q1;
-    q1q3 = S_Q1 * S_Q3;
-    q2q2 = S_Q2 * S_Q2;
-    q2q3 = S_Q2 * S_Q3;
-    q3q3 = S_Q3 * S_Q3;
-    vx = 2.0f * (q1q3 - q0q2);
-    vy = 2.0f * (q0q1 + q2q3);
-    vz = q0q0 - q1q1 - q2q2 + q3q3;
+    Q0_Sq = S_Q0 * S_Q0;
+    Q0_Q1 = S_Q0 * S_Q1;
+    Q0_Q2 = S_Q0 * S_Q2;
+    Q1_Sq = S_Q1 * S_Q1;
+    Q1_Q3 = S_Q1 * S_Q3;
+    Q2_Sq = S_Q2 * S_Q2;
+    Q2_Q3 = S_Q2 * S_Q3;
+    Q3_Sq = S_Q3 * S_Q3;
+    Up_X = 2.0f * (Q1_Q3 - Q0_Q2);
+    Up_Y = 2.0f * (Q0_Q1 + Q2_Q3);
+    Up_Z = Q0_Sq - Q1_Sq - Q2_Sq + Q3_Sq;
 
     /* 负号是为了和既有约定 ω_yaw = -INS_Gyro[0] 对齐（静止水平时两者相等） */
-    INS_WorldYawRate = INS_WORLD_YAW_SIGN * (gx_r * vx + gy_r * vy + gz_r * vz) * 57.2957795f;
+    INS_WorldYawRate = INS_WORLD_YAW_SIGN * (Gyro_Raw_X * Up_X + Gyro_Raw_Y * Up_Y + Gyro_Raw_Z * Up_Z) * 57.2957795f;
 
     if (S_Ahrs_Cnt < MAHONY_WARMUP) {
         S_Ahrs_Cnt++;
@@ -208,15 +208,15 @@ static void ins_ahrs_step(float gx, float gy, float gz, float ax, float ay, floa
     if (INS_WorldYaw < -36000.0f) INS_WorldYaw += 72000.0f;
 
     /* 调试：传感器体系下的欧拉角 */
-    INS_RollDeg  = atan2f(2.0f * (q2q3 + q0q1), 1.0f - 2.0f * (q1q1 + q2q2)) * 57.2957795f;
-    INS_PitchDeg = asinf(2.0f * (q0q2 - q1q3)) * 57.2957795f;
+    INS_RollDeg  = atan2f(2.0f * (Q2_Q3 + Q0_Q1), 1.0f - 2.0f * (Q1_Sq + Q2_Sq)) * 57.2957795f;
+    INS_PitchDeg = asinf(2.0f * (Q0_Q2 - Q1_Q3)) * 57.2957795f;
 }
 
 /* ======================= 底层读写 ======================= */
 
-static void ins_cs(uint8_t dev, uint8_t low)
+static void ins_cs(uint8_t Dev_Id, uint8_t Cs_Low)
 {
-    BSP_IMU_Cs((dev == DEV_ACC) ? BSP_IMU_DEV_ACC : BSP_IMU_DEV_GYRO, low);
+    BSP_IMU_Cs((Dev_Id == DEV_ACC) ? BSP_IMU_DEV_ACC : BSP_IMU_DEV_GYRO, Cs_Low);
 }
 
 /* 读寄存器时要丢弃的哑字节个数（上电后由 ins_detect_skip() 实测校准）
@@ -230,60 +230,60 @@ static uint8_t S_Skip_Gyro = 0u;
 /**
   * @brief  用指定的哑字节数读 1 个寄存器（探测/校验用）
   */
-static uint8_t ins_read_at(uint8_t dev, uint8_t skip, uint8_t reg)
+static uint8_t ins_read_at(uint8_t Dev_Id, uint8_t Skip_Bytes, uint8_t Reg_Addr)
 {
-    uint8_t  tx[4] = {0};
-    uint8_t  rx[4] = {0};
-    uint16_t n = (uint16_t)(1u + skip + 1u);
+    uint8_t  Tx_Buf[4] = {0};
+    uint8_t  Rx_Buf[4] = {0};
+    uint16_t Xfer_Len = (uint16_t)(1u + Skip_Bytes + 1u);
 
-    tx[0] = (uint8_t)(reg | 0x80u);          /* bit7=1 → 读 */
+    Tx_Buf[0] = (uint8_t)(Reg_Addr | 0x80u);          /* bit7=1 → 读 */
 
-    ins_cs(dev, 1);
-    (void)BSP_IMU_Transfer(tx, rx, n);
-    ins_cs(dev, 0);
+    ins_cs(Dev_Id, 1);
+    (void)BSP_IMU_Transfer(Tx_Buf, Rx_Buf, Xfer_Len);
+    ins_cs(Dev_Id, 0);
 
-    return rx[1u + skip];
+    return Rx_Buf[1u + Skip_Bytes];
 }
 
 /**
   * @brief  读寄存器（自动处理 SPI 的「空字节」）
   * @note   哑字节个数取 S_Skip_Acc / S_Skip_Gyro（见上方说明）
   */
-static uint8_t ins_read(uint8_t dev, uint8_t reg, uint8_t *buf, uint16_t len)
+static uint8_t ins_read(uint8_t Dev_Id, uint8_t Reg_Addr, uint8_t *Out_Buf, uint16_t Out_Len)
 {
-    uint8_t  tx[24];
-    uint8_t  rx[24];
-    uint16_t skip = (dev == DEV_ACC) ? S_Skip_Acc : S_Skip_Gyro;
-    uint16_t n    = (uint16_t)(1u + skip + len);
-    uint16_t i;
+    uint8_t  Tx_Buf[24];
+    uint8_t  Rx_Buf[24];
+    uint16_t Skip_Bytes = (Dev_Id == DEV_ACC) ? S_Skip_Acc : S_Skip_Gyro;
+    uint16_t Xfer_Len    = (uint16_t)(1u + Skip_Bytes + Out_Len);
+    uint16_t Idx;
 
-    if (n > sizeof(tx)) return 0u;
+    if (Xfer_Len > sizeof(Tx_Buf)) return 0u;
 
-    memset(tx, 0, sizeof(tx));
-    memset(rx, 0, sizeof(rx));
-    tx[0] = (uint8_t)(reg | 0x80u);          /* bit7=1 → 读 */
+    memset(Tx_Buf, 0, sizeof(Tx_Buf));
+    memset(Rx_Buf, 0, sizeof(Rx_Buf));
+    Tx_Buf[0] = (uint8_t)(Reg_Addr | 0x80u);          /* bit7=1 → 读 */
 
-    ins_cs(dev, 1);
-    uint8_t st = BSP_IMU_Transfer(tx, rx, n);
-    ins_cs(dev, 0);
+    ins_cs(Dev_Id, 1);
+    uint8_t Spi_Ok = BSP_IMU_Transfer(Tx_Buf, Rx_Buf, Xfer_Len);
+    ins_cs(Dev_Id, 0);
 
-    if (st == 0u) return 0u;                 /* SPI 失败：数据不可信 */
+    if (Spi_Ok == 0u) return 0u;                 /* SPI 失败：数据不可信 */
 
-    for (i = 0; i < len; i++) {
-        buf[i] = rx[1u + skip + i];
+    for (Idx = 0; Idx < Out_Len; Idx++) {
+        Out_Buf[Idx] = Rx_Buf[1u + Skip_Bytes + Idx];
     }
     return 1u;
 }
 
-static void ins_write(uint8_t dev, uint8_t reg, uint8_t val)
+static void ins_write(uint8_t Dev_Id, uint8_t Reg_Addr, uint8_t Reg_Val)
 {
-    uint8_t tx[2];
-    tx[0] = (uint8_t)(reg & 0x7Fu);          /* bit7=0 → 写 */
-    tx[1] = val;
+    uint8_t Tx_Buf[2];
+    Tx_Buf[0] = (uint8_t)(Reg_Addr & 0x7Fu);          /* bit7=0 → 写 */
+    Tx_Buf[1] = Reg_Val;
 
-    ins_cs(dev, 1);
-    (void)BSP_IMU_Send(tx, 2);
-    ins_cs(dev, 0);
+    ins_cs(Dev_Id, 1);
+    (void)BSP_IMU_Send(Tx_Buf, 2);
+    ins_cs(Dev_Id, 0);
 }
 
 /* ======================= 初始化 ======================= */
@@ -293,44 +293,44 @@ static void ins_write(uint8_t dev, uint8_t reg, uint8_t val)
   */
 static void ins_dump(void)
 {
-    uint8_t i;
+    uint8_t Idx;
 
     /* [0..2] 是偏移探测结果、[3] 是选中的哑字节数，这里只覆盖 [4..15] */
-    for (i = 4u; i < 16u; i++) {
-        ins_read(DEV_ACC,  i, (uint8_t *)&INS_AccDump[i],  1u);
-        ins_read(DEV_GYRO, i, (uint8_t *)&INS_GyroDump[i], 1u);
+    for (Idx = 4u; Idx < 16u; Idx++) {
+        ins_read(DEV_ACC,  Idx, (uint8_t *)&INS_AccDump[Idx],  1u);
+        ins_read(DEV_GYRO, Idx, (uint8_t *)&INS_GyroDump[Idx], 1u);
     }
 }
 
 /**
   * @brief  探测 SPI 读偏移（要丢几个哑字节）
-  * @note   对每个芯片用 skip = 0/1/2 各读一次 CHIP_ID：
+  * @note   对每个芯片用 Skip_Bytes = 0/1/2 各读一次 CHIP_ID：
   *           INS_xxxDump[0..2] = 三次读到的值
-  *           INS_xxxDump[3]    = 最终选中的 skip
+  *           INS_xxxDump[3]    = 最终选中的 Skip_Bytes
   *         谁先读到正确 ID（acc 0x1E / gyro 0x0F）就用谁；
   *         一个都对不上就退回默认 acc=1 / gyro=0。
   */
 static void ins_detect_skip(void)
 {
-    uint8_t k;
+    uint8_t Cand_Skip;
 
     /* 上电第一次读还在 I2C→SPI 切换过程中，先空跑一轮把两片切到 SPI */
-    for (k = 0; k < 3u; k++) {
-        (void)ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
-        (void)ins_read_at(DEV_GYRO, k, GYRO_CHIP_ID);
+    for (Cand_Skip = 0; Cand_Skip < 3u; Cand_Skip++) {
+        (void)ins_read_at(DEV_ACC,  Cand_Skip, ACC_CHIP_ID);
+        (void)ins_read_at(DEV_GYRO, Cand_Skip, GYRO_CHIP_ID);
     }
 
-    for (k = 0; k < 3u; k++) {
-        INS_AccDump[k]  = ins_read_at(DEV_ACC,  k, ACC_CHIP_ID);
-        INS_GyroDump[k] = ins_read_at(DEV_GYRO, k, GYRO_CHIP_ID);
+    for (Cand_Skip = 0; Cand_Skip < 3u; Cand_Skip++) {
+        INS_AccDump[Cand_Skip]  = ins_read_at(DEV_ACC,  Cand_Skip, ACC_CHIP_ID);
+        INS_GyroDump[Cand_Skip] = ins_read_at(DEV_GYRO, Cand_Skip, GYRO_CHIP_ID);
     }
 
     S_Skip_Acc  = 0xFFu;
     S_Skip_Gyro = 0xFFu;
 
-    for (k = 0; k < 3u; k++) {
-        if ((INS_AccDump[k]  == ACC_CHIP_ID_VAL)  && (S_Skip_Acc  == 0xFFu)) S_Skip_Acc  = k;
-        if ((INS_GyroDump[k] == GYRO_CHIP_ID_VAL) && (S_Skip_Gyro == 0xFFu)) S_Skip_Gyro = k;
+    for (Cand_Skip = 0; Cand_Skip < 3u; Cand_Skip++) {
+        if ((INS_AccDump[Cand_Skip]  == ACC_CHIP_ID_VAL)  && (S_Skip_Acc  == 0xFFu)) S_Skip_Acc  = Cand_Skip;
+        if ((INS_GyroDump[Cand_Skip] == GYRO_CHIP_ID_VAL) && (S_Skip_Gyro == 0xFFu)) S_Skip_Gyro = Cand_Skip;
     }
 
     if (S_Skip_Acc  == 0xFFu) S_Skip_Acc  = 1u;
@@ -354,19 +354,19 @@ static void __attribute__((unused)) ins_gpio_init(void)
 
 static void ins_acc_init(void)
 {
-    uint8_t id = 0;
+    uint8_t Chip_Id = 0;
 
     /* 上电默认 I2C 模式：CS 拉高再拉低，产生上升沿后切到 SPI */
     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
     BSP_DelayMs(2);
 
     /* 第一次读多半读到 0xFF/0x00（正在切模式），读两次更稳 */
-    ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
+    ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
     BSP_DelayMs(1);
-    ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
-    INS_AccId = id;
+    ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
+    INS_AccId = Chip_Id;
 
-    if (id != ACC_CHIP_ID_VAL) {
+    if (Chip_Id != ACC_CHIP_ID_VAL) {
         INS_Err |= 0x01u;
         return;
     }
@@ -375,12 +375,12 @@ static void ins_acc_init(void)
     BSP_DelayMs(50);
 
     /* 复位后要重新建立 SPI 通信 */
-    ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
+    ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
     BSP_DelayMs(1);
-    ins_read(DEV_ACC, ACC_CHIP_ID, &id, 1);
-    INS_AccId = id;
+    ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
+    INS_AccId = Chip_Id;
 
-    if (id != ACC_CHIP_ID_VAL) {
+    if (Chip_Id != ACC_CHIP_ID_VAL) {
         INS_Err |= 0x01u;
         return;
     }
@@ -396,15 +396,15 @@ static void ins_acc_init(void)
 
 static void ins_gyro_init(void)
 {
-    uint8_t id = 0;
+    uint8_t Chip_Id = 0;
 
     BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
     BSP_DelayMs(2);
 
-    ins_read(DEV_GYRO, GYRO_CHIP_ID, &id, 1);
-    INS_GyroId = id;
+    ins_read(DEV_GYRO, GYRO_CHIP_ID, &Chip_Id, 1);
+    INS_GyroId = Chip_Id;
 
-    if (id != GYRO_CHIP_ID_VAL) {
+    if (Chip_Id != GYRO_CHIP_ID_VAL) {
         INS_Err |= 0x01u;
         return;
     }
@@ -412,10 +412,10 @@ static void ins_gyro_init(void)
     ins_write(DEV_GYRO, GYRO_SOFTRESET, BMI_SOFTRESET_VAL);
     BSP_DelayMs(30);
 
-    ins_read(DEV_GYRO, GYRO_CHIP_ID, &id, 1);
-    INS_GyroId = id;
+    ins_read(DEV_GYRO, GYRO_CHIP_ID, &Chip_Id, 1);
+    INS_GyroId = Chip_Id;
 
-    if (id != GYRO_CHIP_ID_VAL) {
+    if (Chip_Id != GYRO_CHIP_ID_VAL) {
         INS_Err |= 0x01u;
         return;
     }
@@ -428,7 +428,7 @@ static void ins_gyro_init(void)
 
 void INS_Init(void)
 {
-    uint8_t i;
+    uint8_t Idx;
 
     INS_AccId   = 0;
     INS_GyroId  = 0;
@@ -439,11 +439,11 @@ void INS_Init(void)
     INS_Err     = 0;
     S_Inited    = 0;
 
-    for (i = 0; i < 3; i++) {
-        INS_Bias[i]  = 0.0f;
-        INS_Gyro[i]  = 0.0f;
-        INS_Acc[i]   = 0.0f;
-        S_Sum[i]     = 0.0f;
+    for (Idx = 0; Idx < 3; Idx++) {
+        INS_Bias[Idx]  = 0.0f;
+        INS_Gyro[Idx]  = 0.0f;
+        INS_Acc[Idx]   = 0.0f;
+        S_Sum[Idx]     = 0.0f;
     }
 
     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
@@ -465,11 +465,11 @@ void INS_Init(void)
 
 void INS_ResetBias(void)
 {
-    uint8_t i;
-    for (i = 0; i < 3; i++) {
-        S_Sum[i]    = 0.0f;
-        INS_Bias[i] = 0.0f;
-        INS_Gyro[i] = 0.0f;
+    uint8_t Idx;
+    for (Idx = 0; Idx < 3; Idx++) {
+        S_Sum[Idx]    = 0.0f;
+        INS_Bias[Idx] = 0.0f;
+        INS_Gyro[Idx] = 0.0f;
     }
     INS_CalCnt  = 0;
     INS_CalDone = 0;
@@ -479,53 +479,53 @@ void INS_ResetBias(void)
 
 void INS_Task(void)
 {
-    uint8_t  b[6];
-    uint8_t  i;
-    float    g[3];
-    float    max_dps = 0.0f;
+    uint8_t  Raw_Buf[6];
+    uint8_t  Idx;
+    float    Gyro_Rad[3];
+    float    Max_Rate_Dps = 0.0f;
 
     if (S_Inited == 0u || INS_Ready == 0u) {
         return;
     }
 
     /* ---- 陀螺：0x02 ~ 0x07 ---- */
-    if (ins_read(DEV_GYRO, GYRO_RATE_DATA, b, 6) == 0u) {
+    if (ins_read(DEV_GYRO, GYRO_RATE_DATA, Raw_Buf, 6) == 0u) {
         INS_Err |= 0x04u;        /* SPI 读失败：本拍数据不可信，直接丢弃 */
         return;
     }
-    INS_GyroRaw[0] = (int16_t)(((uint16_t)b[1] << 8) | b[0]);
-    INS_GyroRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
-    INS_GyroRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+    INS_GyroRaw[0] = (int16_t)(((uint16_t)Raw_Buf[1] << 8) | Raw_Buf[0]);
+    INS_GyroRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+    INS_GyroRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
 
-    for (i = 0; i < 3; i++) {
-        g[i] = (float)INS_GyroRaw[i] * INS_GYRO_LSB;      /* rad/s */
-        if (g[i] > max_dps)  max_dps = g[i];
-        if (-g[i] > max_dps) max_dps = -g[i];
+    for (Idx = 0; Idx < 3; Idx++) {
+        Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+        if (Gyro_Rad[Idx] > Max_Rate_Dps)  Max_Rate_Dps = Gyro_Rad[Idx];
+        if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
     }
 
     INS_Sample++;
 
     /* ---- 零偏标定 ---- */
     if (INS_CalDone == 0u) {
-        for (i = 0; i < 3; i++) {
-            S_Sum[i] += g[i];
-            INS_Gyro[i] = 0.0f;
+        for (Idx = 0; Idx < 3; Idx++) {
+            S_Sum[Idx] += Gyro_Rad[Idx];
+            INS_Gyro[Idx] = 0.0f;
         }
         INS_CalCnt++;
 
         /* 标定过程中动过 → 作废重来，不能带着动过的样本收零偏 */
-        if (max_dps > (INS_CAL_MAX_DPS * 0.0174532925f)) {
+        if (Max_Rate_Dps > (INS_CAL_MAX_DPS * 0.0174532925f)) {
             INS_Err |= 0x02u;
-            for (i = 0; i < 3; i++) {
-                S_Sum[i] = 0.0f;
+            for (Idx = 0; Idx < 3; Idx++) {
+                S_Sum[Idx] = 0.0f;
             }
             INS_CalCnt = 0;
             return;
         }
 
         if (INS_CalCnt >= INS_CAL_SAMPLES) {
-            for (i = 0; i < 3; i++) {
-                INS_Bias[i] = S_Sum[i] / (float)INS_CAL_SAMPLES;
+            for (Idx = 0; Idx < 3; Idx++) {
+                INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
             }
             INS_CalDone = 1;
         }
@@ -533,22 +533,22 @@ void INS_Task(void)
     }
 
     /* ---- 去零偏 + 一阶低通 ---- */
-    for (i = 0; i < 3; i++) {
-        float v = g[i] - INS_Bias[i];
-        INS_Gyro[i] += (v - INS_Gyro[i]) * INS_GYRO_LPF;
+    for (Idx = 0; Idx < 3; Idx++) {
+        float v = Gyro_Rad[Idx] - INS_Bias[Idx];
+        INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
     }
 
     /* ---- 加速度计：0x12 ~ 0x17 ---- */
-    if (ins_read(DEV_ACC, ACC_DATA, b, 6) == 0u) {
+    if (ins_read(DEV_ACC, ACC_DATA, Raw_Buf, 6) == 0u) {
         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
         return;
     }
-    INS_AccRaw[0] = (int16_t)(((uint16_t)b[1] << 8) | b[0]);
-    INS_AccRaw[1] = (int16_t)(((uint16_t)b[3] << 8) | b[2]);
-    INS_AccRaw[2] = (int16_t)(((uint16_t)b[5] << 8) | b[4]);
+    INS_AccRaw[0] = (int16_t)(((uint16_t)Raw_Buf[1] << 8) | Raw_Buf[0]);
+    INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+    INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
 
-    for (i = 0; i < 3; i++) {
-        INS_Acc[i] = (float)INS_AccRaw[i] * INS_ACC_LSB;
+    for (Idx = 0; Idx < 3; Idx++) {
+        INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
     }
 
     /* ---- Mahony：世界偏航角速度 / 世界偏航角（倾斜补偿） ---- */
