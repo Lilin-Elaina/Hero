@@ -79,7 +79,7 @@ static void RC_Fric_Step(uint8_t online, int16_t *fric_l, int16_t *fric_r);
  * Ozone 里读 RC_BuildTag，必须等于下面这个值；读出来是 0/乱数 = 挂的 ELF 与芯片
  * 固件不是同一版（地址全错位，Watch 里所有变量读数都不可信）。
  * 每次改了全局变量布局/新增变量就把后 4 位改一下，方便确认。 */
-volatile uint32_t RC_BuildTag = 0x1117235Bu;   /* 0x…5B = 2026-11-19 删 len + 看门狗改 last_tick 判据 */
+volatile uint32_t RC_BuildTag = 0x1117235Du;   /* 0x…5D = 2026-11-20 失联判据改“连续丢帧”+ 失联即停车 */
 /* ------------------------------------------------------------------ */
 /* 控制任务：1kHz 调用一次                                              */
 /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              */
@@ -107,8 +107,8 @@ void RC_Control_Task(void)
         RC_Can2CCCR = hfdcan2.Instance->CCCR;
 
         /* 版本指纹：每拍写入常量（同时保证该变量不被 --gc-sections 回收）。
-         * Watch 读到的值 ≠ 0x1117235A → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
-        RC_BuildTag = 0x1117235Au;
+         * Watch 读到的值 ≠ 0x1117235D → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
+        RC_BuildTag = 0x1117235Du;
     }
 
 #if (RC_ENABLE_SW_POS != 0)
@@ -419,29 +419,99 @@ void RC_Control_Task(void)
 /* ------------------------------------------------------------------ */
 /* 阶段 2：底盘四轮 → 电流指令（原 RC_Control_Task 的第 5 段）          */
 /* ------------------------------------------------------------------ */
+/* 失联判据用“连续丢帧计数”而不是“单次超时”：
+ * 碰撞时线束抖一下就会让某帧晚到几十毫秒，旧判据（>100 ms 即隔离）会把
+ * 那只轮子直接断电、另外三轮继续推 → 整车以它当支点打转。
+ * 现在：连续 RC_WHEEL_FAULT_MISS 拍没有新帧才判失联，恢复也要连续
+ * RC_WHEEL_FAULT_CLEAR 拍好帧（滞回），避免在临界点上反复抖。
+ * 判成失联就整车停车（故障轮断电 + 其余三轮反向制动），不再“少一条腿满力跑”。 */
+static uint16_t s_wheel_miss[MECANUM_WHEEL_NUM];
+static uint32_t s_wheel_seen[MECANUM_WHEEL_NUM];
+static uint16_t s_wheel_ok[MECANUM_WHEEL_NUM];
+static uint8_t  s_wheel_lost[MECANUM_WHEEL_NUM];
+
 static void RC_Wheel_Step(uint8_t mix_state, uint8_t follow_on, uint8_t spin_mode,
                           int16_t *raw)
 {
-     float max_a = (float )RC_MAX_CURRENT_A;
-     uint8_t  fault_mask = 0u;
-
+     float   max_a = (float )RC_MAX_CURRENT_A;
+     uint8_t fault_mask = 0u;
+     uint8_t lost_mask  = 0u;
 
     for (uint8_t i = 0 ; i < MECANUM_WHEEL_NUM; i++)
     {
         raw[i] = 0;
         RC_WheelRef[i] = 0.0f;      /* 断使能/故障时不残留上一拍目标值 */
-        
-        if((BSP_Now() - dj_wheel[i].last_tick) > RC_WHEEL_FEEDBACK_MS)
-         {
-                fault_mask |= (uint8_t)(1u << i);
-         }
-        if(dj_wheel[i].temp > RC_WHEEL_TEMP_LIMIT)
-         {
-                fault_mask |= (uint8_t)(1u << i);
-         }
+
+        /* 连续丢帧计数 + 滞回恢复 */
+        if (dj_wheel[i].last_tick != s_wheel_seen[i])
+        {
+            s_wheel_seen[i] = dj_wheel[i].last_tick;
+            s_wheel_miss[i] = 0u;
+            if (s_wheel_ok[i] < 0xFFFFu)
+            {
+                s_wheel_ok[i]++;
+            }
+            if (s_wheel_ok[i] >= RC_WHEEL_FAULT_CLEAR)
+            {
+                s_wheel_lost[i] = 0u;       /* 连续 CLEAR 拍好帧才恢复 */
+            }
+        }
+        else
+        {
+            s_wheel_ok[i] = 0u;
+            if (s_wheel_miss[i] < 0xFFFFu)
+            {
+                s_wheel_miss[i]++;
+            }
+            if ((s_wheel_miss[i] >= RC_WHEEL_FAULT_MISS) ||
+                ((BSP_Now() - dj_wheel[i].last_tick) > RC_WHEEL_FEEDBACK_MS))
+            {
+                s_wheel_lost[i] = 1u;
+            }
+        }
+
+        if (s_wheel_lost[i] != 0u)
+        {
+            lost_mask |= (uint8_t)(1u << i);
+        }
+        if (dj_wheel[i].temp > RC_WHEEL_TEMP_LIMIT)
+        {
+            fault_mask |= (uint8_t)(1u << i);   /* 过温只隔离该轮，不整车停 */
+        }
 
     }
+      fault_mask |= lost_mask;
       RC_WheelFault = fault_mask;
+
+      /* ★失联即停车：故障轮断电，其余三轮反向制动把车刹住。
+       *   让“少一条腿”的车继续推，只会以故障轮为支点打转，比停更难控。 */
+      if (lost_mask != 0u)
+      {
+          RC_Wheel_Reset();
+          Mecanum_Reset();
+
+          for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
+          {
+              float rpm = (float)dj_wheel[i].rpm;
+              float a   = 0.0f;
+
+              RC_WheelRef[i] = 0.0f;
+
+              if ((lost_mask & (uint8_t)(1u << i)) != 0u)
+              {
+                  raw[i] = 0;           /* 没有反馈，绝不能凭最后一帧旧值给电流 */
+                  continue;
+              }
+              if (wheel_abs(rpm) >= RC_WHEEL_STOP_QUIET_RPM)
+              {
+                  float brake = RC_WHEEL_STOP_KP * wheel_abs(rpm) + RC_WHEEL_STOP_KP0;
+                  a = (rpm > 0.0f) ? -brake : brake;
+                  a = wheel_clamp(a, -RC_WHEEL_STOP_A, RC_WHEEL_STOP_A);
+              }
+              raw[i] = (int16_t)(a / 20.0f * 16384.0f);
+          }
+          return;
+      }
 
       if(mix_state == 2u || (fault_mask != 0u && RC_WHEEL_FAULT_ISOLATE == 0))
     {

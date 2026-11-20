@@ -38,9 +38,11 @@
 #define RC_WHEEL_STOP_A        3.5f       /*回中制动限流A*/
 #define RC_WHEEL_STOP_QUIET_RPM 6.0f      /*轮速低于此值才撤掉制动电流（原来是 50，空中会一直漂）*/
 
-#define RC_WHEEL_FEEDBACK_MS   100u        /*超过这个时间没反馈就认为失联，输出 0 */
+#define RC_WHEEL_FEEDBACK_MS   200u        /*兜底：超过这么久没反馈就判失联（原 100，撞一下线束抖就会误隔离）*/
 #define RC_WHEEL_TEMP_LIMIT    75u        /*温控值，超过这个温度就不输出电流*/
 #define RC_WHEEL_FAULT_ISOLATE 1      /*1=只停故障轮，其余三轮照跑；0=整车断电*/
+#define RC_WHEEL_FAULT_MISS    150u   /*主判据：连续这么多拍（1 kHz → ≈150 ms）没收到新帧才算失联，抗单帧抖动*/
+#define RC_WHEEL_FAULT_CLEAR    50u   /*恢复判据：连续这么多拍有新帧才解除失联（滞回，防临界点抖动）*/
 
 /* ---- 底盘跟随（右拨杆中位）：把车头追向枪口，α→0 ----
  * 用云台编码器算相对角，零漂、不依赖陀螺；速度环仍在下面闭环 */
@@ -147,7 +149,7 @@ extern volatile uint32_t RC_YawOutageCnt; /* yaw 反馈断流次数（每断一�
 extern volatile uint32_t RC_Can2PSR;      /* CAN2 PSR 寄存器：bits[2:0]=LEC 最后错误码，bit7=BO，bit9=ACT */
 extern volatile uint32_t RC_Can2CCCR;     /* CAN2 CCCR 寄存器：bit0=INIT（1=控制器停着） */
 extern volatile uint32_t RC_Can2RestartCnt;/* CAN2 RX 看门狗重启次数（连续 20ms 无帧触发，写 0 复位） */
-extern volatile uint32_t RC_BuildTag;      /* 固件版本指纹：应为 0x1117235A（使能三态机版），不符 = Ozone 挂了旧 ELF */
+extern volatile uint32_t RC_BuildTag;      /* 固件版本指纹：应为 0x1117235D（失联停车版），不符 = Ozone 挂了旧 ELF */
 /* 使能三态机镜像（robot.c）：0=等待条件 1=计时中 2=已使能 */
 extern volatile uint8_t  RC_EnableState;
 extern volatile uint32_t RC_EnableMs;      /* 计时中已等了多少 ms */
