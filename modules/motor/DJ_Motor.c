@@ -4,8 +4,7 @@
 #include "bsp_can.h"
 #include "fdcan.h"
 
-/* 把 32 位中间值夹到 [lo, hi]，再转成 int16_t 打包。
- * 形参用 int32_t 是刻意的：若写成 int16_t，超量程的值在调用时就已经被截断
+/* 限幅函数，32位数据容错高
  */
 static inline int16_t clamp_i16(int32_t v, int32_t lo, int32_t hi)
 {

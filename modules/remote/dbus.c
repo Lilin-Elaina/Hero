@@ -40,7 +40,7 @@ void RC_Init(void)
 {
     memset(&RC_Data, 0, sizeof(RC_Data));
     RC_Data.online = 0;
-    RC_Data.sw_swap = 1u;
+    RC_Data.sw_swap = RC_SW_SWAP;
     BSP_UART_DBusRegisterRx(DBUS_OnRx);
     BSP_UART_DBusRegisterError(DBUS_OnError);
     RC_StartReceive();
@@ -52,77 +52,9 @@ void RC_Init(void)
 /*   byte6~13 : 鼠标 x/y/z + 左右键                                    */
 /*   byte14~15: 键盘按键位图                                           */
 /*   byte16~17: 左拨轮(11bit)                                          */
-/* ------------------------------------------------------------------ */
-/* ------------------------------------------------------------------ */
-/* 拨杆位域自动判定（确定性，不需人工判读）                              */
-/*   实测法：把 DT7 左拨杆停在非中位、右拨杆保持中位，持续 1 秒。         */
-/*   这一秒内“稳定处于非中位”的那个位域 = 物理左拨杆 → 自动置 sw_swap。  */
-/*   只在 sw_auto_window_ms 内开放，判定成功即永久锁定。                 */
-/* ------------------------------------------------------------------ */
-#define RC_SW_AUTO_HOLD_MS      1000    /* 条件需连续保持多少毫秒 */
-#define RC_SW_AUTO_WINDOW_MS    3000    /* 上电后多久内允许自动判定 */
-
-#define RC_OBS_NONE      0              /* 两个位域都在中位 */
-#define RC_OBS_LO_MOVED  1              /* 只有 bit4~5 离开中位 */
-#define RC_OBS_HI_MOVED  2              /* 只有 bit6~7 离开中位 */
-#define RC_OBS_INVALID   3              /* 两个都离开中位 → 本段不计 */
-
-void RC_SwitchAutoName(void)
-{
-    uint32_t now = BSP_Now();
-
-    if (RC_Data.sw_auto_done)
-    {
-        return;                                     /* 已锁定，永不改写 */
-    }
-
-    /* 第一帧到达时开判定窗口（此前的上电时间不计入窗口） */
-    if (RC_Data.sw_first_frame_ms == 0)
-    {
-        RC_Data.sw_first_frame_ms = now ? now : 1u;
-        RC_Data.sw_obs_start_ms   = 0;
-        RC_Data.sw_obs_last       = RC_OBS_NONE;
-        RC_Data.sw_obs_hold       = 0;
-    }
-
-    if ((now - RC_Data.sw_first_frame_ms) > RC_SW_AUTO_WINDOW_MS)
-    {
-        return;                                     /* 窗口已过 → 保持默认，永久放弃 */
-    }
-
-    /* 本帧观测：必须“恰好一个位域非中位”才有信息量 */
-    uint8_t lo_mid = (RC_Data.sw_lo2 == RC_SW_MID) ? 1u : 0u;
-    uint8_t hi_mid = (RC_Data.sw_hi2 == RC_SW_MID) ? 1u : 0u;
-    uint8_t obs;
-
-    if (lo_mid && hi_mid)        obs = RC_OBS_NONE;
-    else if (!lo_mid && hi_mid)  obs = RC_OBS_LO_MOVED;
-    else if (lo_mid && !hi_mid)  obs = RC_OBS_HI_MOVED;
-    else                         obs = RC_OBS_INVALID;
-
-    if ((obs != RC_Data.sw_obs_last) || (obs == RC_OBS_NONE) || (obs == RC_OBS_INVALID))
-    {
-        /* 观测状态变了（或本段无信息量）→ 重新开始计时 */
-        RC_Data.sw_obs_last     = obs;
-        RC_Data.sw_obs_hold     = 0;
-        RC_Data.sw_obs_start_ms = (obs == RC_OBS_LO_MOVED || obs == RC_OBS_HI_MOVED) ? now : 0u;
-        return;
-    }
-
-    if (RC_Data.sw_obs_hold < 250u)
-    {
-        RC_Data.sw_obs_hold++;
-    }
-
-    if (((RC_Data.sw_obs_start_ms != 0u) ? (now - RC_Data.sw_obs_start_ms)
-                                        : 0u) >= RC_SW_AUTO_HOLD_MS)
-    {
-        /* 连续 1 秒只有一方离开中位 → 判定完成并永久锁定 */
-        RC_Data.sw_auto_result = (obs == RC_OBS_HI_MOVED) ? 1u : 0u;
-        RC_Data.sw_swap        = RC_Data.sw_auto_result;
-        RC_Data.sw_auto_done   = 1u;
-    }
-}
+/* 左拨杆在 b[5] 的哪个 2bit 位域，由 dbus.h 的 RC_SW_SWAP 编译期固定：
+ *   0 = bit4~5（官方 s[0]），1 = bit6~7（官方 s[1]）
+ * 不再上电自动判定——换遥控器后若左拨杆失灵，只改那一个宏。 */
 
 void RC_Decode(const uint8_t *b)
 {
@@ -133,18 +65,11 @@ void RC_Decode(const uint8_t *b)
     RC_Data.ch[3] = (uint16_t)((b[4] >> 1)     | ((uint16_t)b[5] << 7))                 & 0x07FF;
 
     /* ---- 2 路拨杆，各 2bit，放在 b[5] 的高 4 位 ----
-     * 与官方 RC_ctrl_t.s[] 的对应关系（位运算不动，命名靠 sw_swap 调）：
      *   sw_lo2 = (b[5]>>4)&0x03       = 官方 s[0]（bit4~5）
      *   sw_hi2 = ((b[5]>>4)&0x0C)>>2  = 官方 s[1]（bit6~7）
-     * 官方 s[0]/s[1] 哪个是物理左拨杆有版本分歧，用 sw_swap 一次性量准
-     * （见 rc_dbus.h 的 ★验证法，位运算本身不用动）*/
+     * 哪个是物理左拨杆由 dbus.h 的 RC_SW_SWAP 编译期指定，位运算不用动。*/
     RC_Data.sw_lo2 = RC_SW_BITS_LO(b[5]);
     RC_Data.sw_hi2 = RC_SW_BITS_HI(b[5]);
-
-    /* ---- 拨杆位域自动判定：必须在下面的命名映射之前调用，判定结果当帧生效 ----
-     * 实测法（上电后 3 秒内做一次即可）：把左拨杆停在“上”或“下”，
-     * 保持右拨杆在中位不动，持续约 1 秒 → sw_auto_done 变 1、sw_swap 自动定好。*/
-    RC_SwitchAutoName();
 
     if (RC_Data.sw_swap)
     {

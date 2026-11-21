@@ -101,9 +101,8 @@ void BSP_CAN_Stop(uint8_t bus)
  * 接收：唯一的 HAL 回调留在 bsp；取到帧后按总线交给注册者解析。
  * ------------------------------------------------------------------ */
 
-
 static BSP_CAN_RxHandler S_Rx_Handler[3] = {0};   /* [1]=CAN1，[2]=CAN2 */
-
+/*存入函数地址*/
 void BSP_CAN_RegisterRx(uint8_t bus, BSP_CAN_RxHandler handler)
 {
     if ((bus >= 1u) && (bus <= 2u))
@@ -118,7 +117,6 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     uint8_t d[8];
     const uint8_t bus = (hfdcan->Instance == FDCAN2) ? 2u : 1u;
    
-
     /* 循环读空：一次中断把所有待处理帧都消费掉 */
     while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx, d) == HAL_OK)
     {
@@ -126,12 +124,12 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
          * 短帧只可能来自异常节点，直接丢，避免上层拿“残留的旧字节”当有效数据。
          * 这样上层解析函数就不需要再传 len 参数。 */
         if (rx.DataLength < FDCAN_DLC_BYTES_8)
-        {
+        {/*异常字节丢弃，继续循环接收数据帧*/
             continue;
         }
 
         if (S_Rx_Handler[bus] != 0)
-        {
+        {    /*相当于调用已注册的函数*/
             S_Rx_Handler[bus](bus, rx.Identifier, d);
         }
     }

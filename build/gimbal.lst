@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
   36 0004 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
   37 0008 00D4     		bmi	.L5
   38              	.LVL1:
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 2
 
 
   39              	.L2:
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
   28:application/gimbal/gimbal.c ****     return v;
   86              		.loc 1 28 5 is_stmt 1 view .LVU12
   29:application/gimbal/gimbal.c **** }
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 3
 
 
   87              		.loc 1 29 1 is_stmt 0 view .LVU13
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  133              	.LVL13:
  134              		.loc 1 39 1 view .LVU25
  135 0028 7047     		bx	lr
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 4
 
 
  136              		.cfi_endproc
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
   84:application/gimbal/gimbal.c ****     if (S_Stage == 0 && pitch_abs(stick) > GM_PITCH_STICK_DEAD)
   85:application/gimbal/gimbal.c ****     {
   86:application/gimbal/gimbal.c ****         return 0.0f;
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 5
 
 
   87:application/gimbal/gimbal.c ****     }
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  141:application/gimbal/gimbal.c **** 
  142:application/gimbal/gimbal.c **** 
  143:application/gimbal/gimbal.c ****       S_Ref += S_V * 0.001f;
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 6
 
 
  144:application/gimbal/gimbal.c **** 
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  198:application/gimbal/gimbal.c ****         volt *= (hi - cur) / soft;
  199:application/gimbal/gimbal.c ****     }
  200:application/gimbal/gimbal.c **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 7
 
 
  201:application/gimbal/gimbal.c **** return GM_PITCH_SIGN * volt;
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  183 0030 7047     		bx	lr
  184              	.L19:
  185 0032 00BF     		.align	2
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 8
 
 
  186              	.L18:
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  232              	.LVL18:
   54:application/gimbal/gimbal.c ****     const float home = (float)GM_PITCH_HOME_ANGLE;
  233              		.loc 1 54 5 view .LVU47
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 9
 
 
   55:application/gimbal/gimbal.c **** 
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  275              		.loc 1 65 33 is_stmt 0 view .LVU60
  276 0028 C84C     		ldr	r4, .L76+20
  277 002a 2588     		ldrh	r5, [r4]
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 10
 
 
  278 002c ADB2     		uxth	r5, r5
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
   72:application/gimbal/gimbal.c ****         cur < (float)GM_PITCH_ANGLE_MIN ||
  318              		.loc 1 72 39 view .LVU75
  319 0074 40F67953 		movw	r3, #3449
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 11
 
 
  320 0078 9D42     		cmp	r5, r3
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  360 00c6 002C     		cmp	r4, #0
  361 00c8 00F0C480 		beq	.L72
  103:application/gimbal/gimbal.c **** {
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 12
 
 
  362              		.loc 1 103 1 is_stmt 1 view .LVU90
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  400 0106 77EE887A 		vadd.f32	s15, s15, s16
  401 010a 954B     		ldr	r3, .L76+40
  402 010c C3ED007A 		vstr.32	s15, [r3]
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 13
 
 
  403              	.LVL31:
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  158:application/gimbal/gimbal.c **** 
  443              		.loc 1 158 15 view .LVU121
  444 0152 DFED8A7A 		vldr.32	s15, .L76+68
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 14
 
 
  445 0156 88EE276A 		vdiv.f32	s12, s16, s15
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  484 0194 DFED7D7A 		vldr.32	s15, .L76+84
  485 0198 79EEA79A 		vadd.f32	s19, s19, s15
  486              	.LVL40:
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 15
 
 
  169:application/gimbal/gimbal.c **** {
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  529 01f4 84ED000A 		vstr.32	s0, [r4]
  172:application/gimbal/gimbal.c **** }
  530              		.loc 1 172 1 is_stmt 1 view .LVU149
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 16
 
 
  172:application/gimbal/gimbal.c **** }
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  571 0242 3F4B     		ldr	r3, .L76+8
  572 0244 0022     		movs	r2, #0
  573 0246 1A70     		strb	r2, [r3]
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 17
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 17
 
 
   77:application/gimbal/gimbal.c ****         return 0.0f;
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
   98:application/gimbal/gimbal.c ****     return 0.0f;
  611              		.loc 1 98 13 discriminator 1 view .LVU181
  612 0274 0122     		movs	r2, #1
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 18
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 18
 
 
  613              	.L27:
@@ -1078,7 +1078,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  119:application/gimbal/gimbal.c ****           pitch_abs(rpm)        <  GM_PITCH_CATCH_RPM &&
  654              		.loc 1 119 7 is_stmt 1 view .LVU195
  119:application/gimbal/gimbal.c ****           pitch_abs(rpm)        <  GM_PITCH_CATCH_RPM &&
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 19
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 19
 
 
  655              		.loc 1 119 11 is_stmt 0 view .LVU196
@@ -1138,7 +1138,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  697              	.L74:
  110:application/gimbal/gimbal.c ****         S_I          = 0.0f;
  698              		.loc 1 110 9 is_stmt 1 view .LVU209
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 20
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 20
 
 
  110:application/gimbal/gimbal.c ****         S_I          = 0.0f;
@@ -1198,7 +1198,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  741 036c 6F12833A 		.word	981668463
  742 0370 00205A45 		.word	1163534336
  743 0374 00709445 		.word	1167355904
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 21
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 21
 
 
  744 0378 00007A44 		.word	1148846080
@@ -1258,7 +1258,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  788 03da 41F28D23 		movw	r3, #4749
  789 03de 9D42     		cmp	r5, r3
  790 03e0 08D9     		bls	.L50
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 22
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 22
 
 
  188:application/gimbal/gimbal.c ****     }
@@ -1318,7 +1318,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  831              	.LVL58:
  198:application/gimbal/gimbal.c ****     }
  832              		.loc 1 198 14 view .LVU245
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 23
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 23
 
 
  833 0430 F5E5     		b	.L20
@@ -1378,7 +1378,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  876 0000 08B5     		push	{r3, lr}
  877              	.LCFI4:
  878              		.cfi_def_cfa_offset 8
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 24
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 24
 
 
  879              		.cfi_offset 3, -8
@@ -1438,7 +1438,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  930              	.LFB152:
  232:application/gimbal/gimbal.c **** float RC_Yaw_Control(uint8_t online, float stick)
  233:application/gimbal/gimbal.c **** {
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 25
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 25
 
 
  931              		.loc 1 233 1 is_stmt 1 view -0
@@ -1498,7 +1498,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  977              		.loc 1 241 5 view .LVU276
  978              		.loc 1 241 34 is_stmt 0 view .LVU277
  979 0028 82F00103 		eor	r3, r2, #1
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 26
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 26
 
 
  980              		.loc 1 241 24 view .LVU278
@@ -1558,7 +1558,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  264:application/gimbal/gimbal.c ****         S_Yaw_I = 0.0f;
  1012              		.loc 1 264 9 is_stmt 1 view .LVU289
  1013              		.loc 1 264 17 is_stmt 0 view .LVU290
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 27
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 27
 
 
  1014 0068 8C4B     		ldr	r3, .L129+20
@@ -1618,7 +1618,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1051 00a2 F4EEC67A 		vcmpe.f32	s15, s12
  1052 00a6 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  1053 00aa 40F1C180 		bpl	.L127
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 28
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 28
 
 
  1054              	.L90:
@@ -1678,7 +1678,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1098 00fe 93ED006A 		vldr.32	s12, [r3]
  1099              		.loc 1 291 20 view .LVU321
  1100 0102 DFED6C7A 		vldr.32	s15, .L129+44
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 29
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 29
 
 
  1101 0106 B4EEE76A 		vcmpe.f32	s12, s15
@@ -1738,7 +1738,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1143 013e 614B     		ldr	r3, .L129+60
  1144 0140 83ED000A 		vstr.32	s0, [r3]
  247:application/gimbal/gimbal.c ****         RC_YawRef    = S_Yaw_Ref;
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 30
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 30
 
 
  1145              		.loc 1 247 9 is_stmt 1 view .LVU337
@@ -1798,7 +1798,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  307:application/gimbal/gimbal.c ****     /* ② 位置 P + 速度前馈 */
  308:application/gimbal/gimbal.c ****     err   = yaw_wrap(S_Yaw_Ref - cur);
  309:application/gimbal/gimbal.c **** 
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 31
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 31
 
 
  310:application/gimbal/gimbal.c ****     /* ②.5 到位清零积分
@@ -1858,7 +1858,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1177              		.cfi_restore 83
  1178              		.cfi_restore 80
  1179              		.cfi_restore 81
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 32
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 32
 
 
  1180              		.cfi_def_cfa_offset 16
@@ -1918,7 +1918,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1222              	.LBE9:
  305:application/gimbal/gimbal.c **** 
  1223              		.loc 1 305 5 is_stmt 1 view .LVU364
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 33
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 33
 
 
  305:application/gimbal/gimbal.c **** 
@@ -1978,7 +1978,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  316:application/gimbal/gimbal.c ****         S_Yaw_I = 0.0f;
  1266              		.loc 1 316 43 view .LVU377
  1267 01e6 13F10E0F 		cmn	r3, #14
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 34
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 34
 
 
  1268 01ea 02DB     		blt	.L98
@@ -2038,7 +2038,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1309              	.LBB11:
  1310              	.LBB8:
  287:application/gimbal/gimbal.c ****             } else {
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 35
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 35
 
 
  1311              		.loc 1 287 22 view .LVU391
@@ -2098,7 +2098,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1352              	.LVL100:
  328:application/gimbal/gimbal.c ****               + d_ref * 1000.0f / 136.53f
  1353              		.loc 1 328 15 view .LVU405
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 36
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 36
 
 
  1354              	.LBE12:
@@ -2158,7 +2158,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1401 02e8 00002042 		.word	1109393408
  1402 02ec 000020C2 		.word	-1038090240
  1403 02f0 8FC2F53D 		.word	1039516303
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 37
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 37
 
 
  1404 02f4 AE870843 		.word	1124632494
@@ -2218,7 +2218,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1445 033e F4EEC55A 		vcmpe.f32	s11, s10
  1446 0342 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  1447 0346 20DD     		ble	.L103
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 38
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 38
 
 
  341:application/gimbal/gimbal.c ****         if (S_Yaw_I >  GM_YAW_I_MAX) S_Yaw_I =  GM_YAW_I_MAX;
@@ -2278,7 +2278,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1486              		.loc 1 343 46 is_stmt 0 discriminator 1 view .LVU441
  1487 0386 83ED007A 		vstr.32	s14, [r3]
  1488              	.LVL113:
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 39
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 39
 
 
  1489              	.L103:
@@ -2338,7 +2338,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1528              		.loc 1 353 5 is_stmt 1 view .LVU456
  353:application/gimbal/gimbal.c ****     RC_YawVolt   = volt;
  1529              		.loc 1 353 18 is_stmt 0 view .LVU457
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 40
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 40
 
 
  1530 03c6 104B     		ldr	r3, .L131+44
@@ -2398,7 +2398,7 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1587              		.align	2
  1590              	S_Stick_F.4:
  1591 0000 00000000 		.space	4
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 41
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 41
 
 
  1592              		.section	.bss.S_I.5,"aw",%nobits
@@ -2448,67 +2448,67 @@ ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 1
  1654              		.file 6 "modules/motor/DJ_Motor.h"
  1655              		.file 7 "modules/imu/ins.h"
  1656              		.file 8 "bsp/bsp_time.h"
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 42
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 42
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 gimbal.c
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:20     .text.pitch_abs:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:25     .text.pitch_abs:00000000 pitch_abs
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:53     .text.pitch_clamp:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:58     .text.pitch_clamp:00000000 pitch_clamp
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:93     .text.pitch_step:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:98     .text.pitch_step:00000000 pitch_step
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:140    .text.yaw_wrap:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:145    .text.yaw_wrap:00000000 yaw_wrap
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:187    .text.yaw_wrap:00000034 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:194    .text.RC_Pitch_Control:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:200    .text.RC_Pitch_Control:00000000 RC_Pitch_Control
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:728    .text.RC_Pitch_Control:00000338 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1601   .bss.S_Stage.6:00000000 S_Stage.6
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1596   .bss.S_I.5:00000000 S_I.5
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1590   .bss.S_Stick_F.4:00000000 S_Stick_F.4
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1584   .bss.S_Ref.3:00000000 S_Ref.3
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1578   .bss.S_V.2:00000000 S_V.2
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1572   .bss.S_Home_Since.1:00000000 S_Home_Since.1
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1566   .bss.S_Homed.0:00000000 S_Homed.0
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:765    .text.RC_Pitch_Control:000003b8 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:855    .text.RC_Pitch_Control:00000450 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:864    .text.RC_GetOffsetAngle:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:870    .text.RC_GetOffsetAngle:00000000 RC_GetOffsetAngle
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:913    .text.RC_GetOffsetAngle:00000034 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1608   .bss.RC_GunAngle:00000000 RC_GunAngle
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:922    .text.RC_Yaw_Control:00000000 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:928    .text.RC_Yaw_Control:00000000 RC_Yaw_Control
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1377   .text.RC_Yaw_Control:00000288 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1632   .bss.S_Yaw_Ready:00000000 S_Yaw_Ready
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1646   .bss.S_Yaw_Ref:00000000 S_Yaw_Ref
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1639   .bss.S_Yaw_I:00000000 S_Yaw_I
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1614   .bss.S_Hold_I:00000000 S_Hold_I
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1626   .bss.S_Psi_Deg:00000000 S_Psi_Deg
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1620   .bss.S_Psi_Ref:00000000 S_Psi_Ref
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1411   .text.RC_Yaw_Control:00000304 $t
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1546   .text.RC_Yaw_Control:000003dc $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1567   .bss.S_Homed.0:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1569   .bss.S_Home_Since.1:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1575   .bss.S_V.2:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1581   .bss.S_Ref.3:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1587   .bss.S_Stick_F.4:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1593   .bss.S_I.5:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1602   .bss.S_Stage.6:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1605   .bss.RC_GunAngle:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1611   .bss.S_Hold_I:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1617   .bss.S_Psi_Ref:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1623   .bss.S_Psi_Deg:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1633   .bss.S_Yaw_Ready:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1636   .bss.S_Yaw_I:00000000 $d
-C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s:1643   .bss.S_Yaw_Ref:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:20     .text.pitch_abs:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:25     .text.pitch_abs:00000000 pitch_abs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:53     .text.pitch_clamp:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:58     .text.pitch_clamp:00000000 pitch_clamp
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:93     .text.pitch_step:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:98     .text.pitch_step:00000000 pitch_step
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:140    .text.yaw_wrap:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:145    .text.yaw_wrap:00000000 yaw_wrap
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:187    .text.yaw_wrap:00000034 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:194    .text.RC_Pitch_Control:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:200    .text.RC_Pitch_Control:00000000 RC_Pitch_Control
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:728    .text.RC_Pitch_Control:00000338 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1601   .bss.S_Stage.6:00000000 S_Stage.6
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1596   .bss.S_I.5:00000000 S_I.5
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1590   .bss.S_Stick_F.4:00000000 S_Stick_F.4
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1584   .bss.S_Ref.3:00000000 S_Ref.3
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1578   .bss.S_V.2:00000000 S_V.2
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1572   .bss.S_Home_Since.1:00000000 S_Home_Since.1
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1566   .bss.S_Homed.0:00000000 S_Homed.0
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:765    .text.RC_Pitch_Control:000003b8 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:855    .text.RC_Pitch_Control:00000450 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:864    .text.RC_GetOffsetAngle:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:870    .text.RC_GetOffsetAngle:00000000 RC_GetOffsetAngle
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:913    .text.RC_GetOffsetAngle:00000034 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1608   .bss.RC_GunAngle:00000000 RC_GunAngle
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:922    .text.RC_Yaw_Control:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:928    .text.RC_Yaw_Control:00000000 RC_Yaw_Control
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1377   .text.RC_Yaw_Control:00000288 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1632   .bss.S_Yaw_Ready:00000000 S_Yaw_Ready
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1646   .bss.S_Yaw_Ref:00000000 S_Yaw_Ref
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1639   .bss.S_Yaw_I:00000000 S_Yaw_I
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1614   .bss.S_Hold_I:00000000 S_Hold_I
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1626   .bss.S_Psi_Deg:00000000 S_Psi_Deg
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1620   .bss.S_Psi_Ref:00000000 S_Psi_Ref
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1411   .text.RC_Yaw_Control:00000304 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1546   .text.RC_Yaw_Control:000003dc $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1567   .bss.S_Homed.0:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1569   .bss.S_Home_Since.1:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1575   .bss.S_V.2:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1581   .bss.S_Ref.3:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1587   .bss.S_Stick_F.4:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1593   .bss.S_I.5:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1602   .bss.S_Stage.6:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1605   .bss.RC_GunAngle:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1611   .bss.S_Hold_I:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1617   .bss.S_Psi_Ref:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1623   .bss.S_Psi_Deg:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1633   .bss.S_Yaw_Ready:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1636   .bss.S_Yaw_I:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s:1643   .bss.S_Yaw_Ref:00000000 $d
 
 UNDEFINED SYMBOLS
 BSP_Now
 gim_pitch
 gim6020
-ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccMlG4Kd.s 			page 43
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cc1QfJe8.s 			page 43
 
 
 INS_Gyro

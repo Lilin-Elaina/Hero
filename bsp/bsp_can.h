@@ -7,8 +7,7 @@ void FDCAN2_Start(void);
 void FDCAN1_Start(void);
 
 /* ---- 统一收发接口：上层（modules）不再直接碰 HAL_FDCAN ----
- * bus：1 = FDCAN1（pitch 6020 + 摩擦轮），2 = FDCAN2（底盘四轮 + yaw 6020）
- * 本工程所有报文都是“标准数据帧、8 字节”，所以数据长度写死，不再传 len。 */
+ * bus：1 = FDCAN1（pitch 6020 + 摩擦轮），2 = FDCAN2（底盘四轮 + yaw 6020） */
 HAL_StatusTypeDef BSP_CAN_Send(uint8_t bus, uint32_t id, const uint8_t *data);
 
 /* 关掉整条总线（不再发任何帧）。
@@ -20,8 +19,7 @@ void BSP_CAN_Stop(uint8_t bus);
 /* ---- 接收：bsp 只负责“从 FIFO 取帧 + 按总线派发”，报文含义留给 modules ----
  * 这样 bsp 不认识任何电机/遥控器，modules 也不用再写 HAL 回调。 */
 
-/* 接收回调类型（自定义，不是 HAL 或 CMSIS 的东西）：
- *   void 你的函数名(uint8_t bus, uint32_t id, const uint8_t *data)
+/* 用于存相同类型的函数地址的指针
  * bsp 只派发 8 字节数据帧。bus 是接收总线号，id 是报文 ID，data 指向 8 字节负载。 */
 typedef void (*BSP_CAN_RxHandler)(uint8_t bus, uint32_t id, const uint8_t *data);
 

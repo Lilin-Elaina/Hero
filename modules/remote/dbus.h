@@ -25,6 +25,12 @@
 #define RC_SW_BITS_HI(b5)   ((uint8_t)(((b5) >> 4) & 0x0C) >> 2)   /* bit6~7 */
 #define RC_SW_BITS_LO(b5)   ((uint8_t)(((b5) >> 4) & 0x03))        /* bit4~5 */
 
+/* ★物理左拨杆在哪个位域（编译期固定，不再上电自动判定）
+ *   0 = b[5] bit4~5（官方 s[0]）
+ *   1 = b[5] bit6~7（官方 s[1]）
+ * 换遥控器/换固件后若“左拨杆推动时模式没反应”，把这里改成另一个值即可。*/
+#define RC_SW_SWAP         1
+
 /* 鼠标数据（DR16 帧 byte6~13），与大疆官方 RC_ctrl_t.mouse 同源
  * 控制层暂不使用，但解出来以保证"整帧 18 字节全覆盖、解析完整" */
 typedef struct
@@ -43,21 +49,11 @@ typedef struct
     uint8_t  S_Right;     /* 物理右拨杆：1=上 2=下 3=中（受 sw_swap 影响） */
     uint8_t  sw_hi2;      /* 原始位域 b[5] bit6~7 = 官方 s[1] */
     uint8_t  sw_lo2;      /* 原始位域 b[5] bit4~5 = 官方 s[0] */
-    uint8_t  sw_swap;     /* ★命名开关：0=默认(S_Left取bit4~5=官方s[0]) 1=互换 */
+    uint8_t  sw_swap;     /* 固定值 = RC_SW_SWAP（编译期决定 S_Left 取哪个位域） */
     uint16_t wheel;       /* 左拨轮(11bit)。官方 wheel 未掩码；此处 &0x07FF 为防御性加固 */
     RC_Mouse_t mouse;     /* 鼠标 x/y/z + 左右键 */
     uint8_t  key_v;       /* 键盘按键位图(纵向) = b[14] */
     uint8_t  key_h;       /* 键盘按键位图(横向) = b[15] */
-    /* ---- 拨杆位域自动判定：上电后 3s 内做一次即可，自动锁定 ----
-     * 实测法：把 DT7 左拨杆停在“上/下”(非中位)，右拨杆保持中位，持续约 1 秒。
-     *   这一秒里“稳定处于非中位”的那个位域 = 物理左拨杆 → 自动置 sw_swap。
-     * 判定成功即永久锁定(sw_auto_done=1)，之后运行中拨动不会改写。      */
-    uint8_t  sw_auto_done;     /* 1 = 已自动判定完成并锁定 */
-    uint8_t  sw_auto_result;   /* 0 = 左拨杆在 bit4~5(sw_swap=0)；1 = 在 bit6~7(sw_swap=1) */
-    uint8_t  sw_obs_last;      /* 内部：上一帧观测状态(0~3) */
-    uint8_t  sw_obs_hold;      /* 内部：当前观测状态已连续保持的帧数(调试观察) */
-    uint32_t sw_obs_start_ms;  /* 内部：当前观测状态首次出现的时刻 */
-    uint32_t sw_first_frame_ms;/* 内部：上电后第一帧到达的时刻 */
     uint32_t last_tick;   /* 最后一次收到帧的 BSP_Now() */
     uint8_t  online;      /* 1=遥控器在线 */
 } RC_TypeDef;
@@ -72,7 +68,6 @@ extern volatile uint32_t RC_ErrCnt;       /* UART5 错误回调次数（ORE/FE/N
 void  RC_Init(void);                 /* 启动 DBUS 接收（UART5 + DMA + IDLE） */
 void  RC_StartReceive(void);         /* 重启一次 DMA 接收 */
 void  RC_Decode(const uint8_t *buf);       /* 18 字节帧解析（只读，不修改缓冲） */
-void  RC_SwitchAutoName(void);       /* 拨杆位域自动判定（在 RC_Decode 内被调用） */
 uint8_t RC_IsOnline(uint32_t now_ms);/* 失联检测 */
 float RC_Norm(uint16_t ch);          /* 归一化函数，摇杆 → -1.0~+1.0（含死区） */
 

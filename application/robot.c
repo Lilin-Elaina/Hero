@@ -79,7 +79,7 @@ static void RC_Fric_Step(uint8_t online, int16_t *fric_l, int16_t *fric_r);
  * Ozone 里读 RC_BuildTag，必须等于下面这个值；读出来是 0/乱数 = 挂的 ELF 与芯片
  * 固件不是同一版（地址全错位，Watch 里所有变量读数都不可信）。
  * 每次改了全局变量布局/新增变量就把后 4 位改一下，方便确认。 */
-volatile uint32_t RC_BuildTag = 0x1117235Du;   /* 0x…5D = 2026-11-20 失联判据改“连续丢帧”+ 失联即停车 */
+volatile uint32_t RC_BuildTag = 0x1117235Eu;   /* 0x…5E = 2026-11-21 拨杆自动判定改为 RC_SW_SWAP 编译期固定 */
 /* ------------------------------------------------------------------ */
 /* 控制任务：1kHz 调用一次                                              */
 /*   摇杆 → 归一化 → 麦轮混控(含斜坡) → 限幅 → CAN 电流指令              */
@@ -107,8 +107,8 @@ void RC_Control_Task(void)
         RC_Can2CCCR = hfdcan2.Instance->CCCR;
 
         /* 版本指纹：每拍写入常量（同时保证该变量不被 --gc-sections 回收）。
-         * Watch 读到的值 ≠ 0x1117235D → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
-        RC_BuildTag = 0x1117235Du;
+         * Watch 读到的值 ≠ 0x1117235E → 挂的 ELF 与芯片固件不是同一版，其余读数全部不可信 */
+        RC_BuildTag = 0x1117235Eu;
     }
 
 #if (RC_ENABLE_SW_POS != 0)

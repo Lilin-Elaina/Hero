@@ -80,7 +80,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
             S_Dbus_Rx(&dbus_buf[Size - BSP_UART_DBUS_FRAME_LEN], BSP_UART_DBUS_FRAME_LEN);
         }
 
-        BSP_UART_DBusStart();   /* 普通模式，需要重新启动 */
+        BSP_UART_DBusStart();   /* 1帧收完，重新启动dma */
     }
 }
 
