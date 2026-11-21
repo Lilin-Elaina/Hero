@@ -340,17 +340,8 @@ static void ins_detect_skip(void)
     INS_GyroDump[3] = S_Skip_Gyro;
 }
 
-/**
-  * @brief  片选脚初始化 + H7 模拟开关
-  * @note   PC0/PC3 在 CubeMX 里没配成输出（gpio.c 只管了 PD2），
-  *         不在这里配的话片选是悬空的，芯片永远不会被选中 → 读回 0x00。
-  */
-/* 当前被 INS_Init 里的“临时停用”注释掉；保留函数避免以后要用时重写 */
-static void __attribute__((unused)) ins_gpio_init(void)
-{
-    /* 片选 GPIO + H7 模拟开关：实现在 bsp_spi.c */
-    BSP_IMU_Init();
-}
+/* 片选脚与 H7 的 PC2_C 模拟开关由 CubeMX 配置（Core/Src/gpio.c 的 MX_GPIO_Init），
+ * 执行顺序早于本模块；这里不再有 gpio 初始化函数。 */
 
 static void ins_acc_init(void)
 {

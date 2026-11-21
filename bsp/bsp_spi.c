@@ -15,26 +15,9 @@
 #define BSP_IMU_CS_ACC    GPIO_PIN_0
 #define BSP_IMU_CS_GYRO   GPIO_PIN_3
 
-void BSP_IMU_Init(void)
-{
-    GPIO_InitTypeDef g = {0};
+/* 片选脚（PC0/PC3）与 PC2_C 模拟开关都由 CubeMX 的 MX_GPIO_Init()（gpio.c）配置，
+ * 执行顺序在 main.c 里早于 INS_Init()，本文件不再重复配置，只负责片选与收发。 */
 
-    __HAL_RCC_GPIOC_CLK_ENABLE();
-    __HAL_RCC_SYSCFG_CLK_ENABLE();
-
-    /* 先把电平置高（未选中），再切成输出，避免切换瞬间误选通 */
-    HAL_GPIO_WritePin(BSP_IMU_CS_PORT, BSP_IMU_CS_ACC | BSP_IMU_CS_GYRO, GPIO_PIN_SET);
-
-    g.Pin   = BSP_IMU_CS_ACC | BSP_IMU_CS_GYRO;
-    g.Mode  = GPIO_MODE_OUTPUT_PP;
-    g.Pull  = GPIO_NOPULL;
-    g.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(BSP_IMU_CS_PORT, &g);
-
-    /* H7 的 PC2_C/PC3_C 与 PC2/PC3 之间有模拟开关，不闭合则引脚不通 */
-    HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC2, SYSCFG_SWITCH_PC2_CLOSE);
-    HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC3, SYSCFG_SWITCH_PC3_CLOSE);
-}
 /*imu片选，第一个参数选择设备，第二个为电平高低*/
 void BSP_IMU_Cs(uint8_t dev, uint8_t low)
 {

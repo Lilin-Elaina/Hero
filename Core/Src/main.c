@@ -104,6 +104,10 @@ int main(void)
   MX_SPI2_Init();
   MX_UART5_Init();
   /* USER CODE BEGIN 2 */
+  /* H7 的 PC2_C 焊盘与 PC2 之间串了一个模拟开关，SPI2_MISO 走的是 PC2_C；
+   * 不闭合则 MISO 与 BMI088 断开 → 读回全 0xFF。CubeMX 只生成了 PC3
+   * （陀螺片选）那一条，PC2 只能在这里补，且必须在 INS_Init() 之前。 */
+  HAL_SYSCFG_AnalogSwitchConfig(SYSCFG_SWITCH_PC2, SYSCFG_SWITCH_PC2_CLOSE);
   DJ_Motor_Init();       /* 先注册 CAN 接收解析，再开总线（bsp 只负责收帧） */
   FDCAN2_Start();        /* CAN2：底盘左/右 + 云台 yaw */
   FDCAN1_Start();        /* CAN1：摩擦轮 + 云台 pitch */

@@ -8,10 +8,8 @@
 #define BSP_IMU_DEV_ACC    0u
 #define BSP_IMU_DEV_GYRO   1u
 
-/* 片选引脚初始化 + H7 的 PC2_C/PC3_C 模拟开关闭合（必须在读写之前调用） */
-void BSP_IMU_Init(void);
-
-/* 片选：low!=0 拉低（选中），low==0 拉高（释放） */
+/* 片选：low!=0 拉低（选中），low==0 拉高（释放）。
+ * 片选脚与 H7 的 PC2_C/PC3_C 模拟开关由 CubeMX（gpio.c）配置，不再需要 Init。 */
 void BSP_IMU_Cs(uint8_t dev, uint8_t low);
 
 /* 全双工传输 n 字节，返回 1 成功 / 0 失败（超时 50 ms）。

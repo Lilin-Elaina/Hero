@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 1
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
   29:modules/imu/ins.c **** #define ACC_CHIP_ID     0x00u
   30:modules/imu/ins.c **** #define ACC_DATA        0x12u
   31:modules/imu/ins.c **** #define ACC_CONF        0x40u
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 2
 
 
   32:modules/imu/ins.c **** #define ACC_RANGE       0x41u
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
   86:modules/imu/ins.c ****  * pitch 一动 x 轴就离开竖直，-Gyro[0] 不再是世界偏航角速度，必须用重力
   87:modules/imu/ins.c ****  * 方向把陀螺投影到竖直轴上：ω_world = ω·v，v = 世界“上”在体轴系的投�
   88:modules/imu/ins.c ****  * 无磁力计 → 偏航角靠陀螺积分，零偏偏移会让 INS_WorldYaw 缓慢漂移（正�
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 3
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 3
 
 
   89:modules/imu/ins.c ****  */
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  143:modules/imu/ins.c ****     Err_X = Acc_Y * Up_Z - Acc_Z * Up_Y;
  144:modules/imu/ins.c ****     Err_Y = Acc_Z * Up_X - Acc_X * Up_Z;
  145:modules/imu/ins.c ****     Err_Z = Acc_X * Up_Y - Acc_Y * Up_X;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 4
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 4
 
 
  146:modules/imu/ins.c **** 
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  200:modules/imu/ins.c ****         if (S_Ahrs_Cnt == MAHONY_WARMUP) {
  201:modules/imu/ins.c ****             INS_AhrsReady = 1u;
  202:modules/imu/ins.c ****         }
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 5
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 5
 
 
  203:modules/imu/ins.c ****         return;                     /* 收敛期内只跑姿态，不发布积分 */
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  226:modules/imu/ins.c ****  *   说明多丢了 1 个字节。默认改成 acc=1 / gyro=0，上电再自动确认。 */
  227:modules/imu/ins.c **** static uint8_t S_Skip_Acc  = 1u;
  228:modules/imu/ins.c **** static uint8_t S_Skip_Gyro = 0u;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 6
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 6
 
 
  229:modules/imu/ins.c **** 
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  242:modules/imu/ins.c ****     (void)BSP_IMU_Transfer(Tx_Buf, Rx_Buf, Xfer_Len);
  102              		.loc 1 242 5 is_stmt 1 view .LVU19
  103              		.loc 1 242 11 is_stmt 0 view .LVU20
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 7
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 7
 
 
  104 001e 3A46     		mov	r2, r7
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  265:modules/imu/ins.c **** 
  266:modules/imu/ins.c ****     ins_cs(Dev_Id, 1);
  267:modules/imu/ins.c ****     uint8_t Spi_Ok = BSP_IMU_Transfer(Tx_Buf, Rx_Buf, Xfer_Len);
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 8
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 8
 
 
  268:modules/imu/ins.c ****     ins_cs(Dev_Id, 0);
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  145              		.cfi_offset 4, -8
  146              		.cfi_offset 14, -4
  315:modules/imu/ins.c ****     uint8_t Cand_Skip;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 9
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 9
 
 
  147              		.loc 1 315 5 view .LVU27
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  189 0026 0022     		movs	r2, #0
  190 0028 2146     		mov	r1, r4
  191 002a 1046     		mov	r0, r2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 10
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 10
 
 
  192 002c FFF7FEFF 		bl	ins_read_at
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  235 0058 1B49     		ldr	r1, .L21+8
  236 005a 0978     		ldrb	r1, [r1]	@ zero_extendqisi2
  237              		.loc 1 332 59 discriminator 1 view .LVU57
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 11
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 11
 
 
  238 005c FF29     		cmp	r1, #255
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  285              		.loc 1 336 21 is_stmt 0 view .LVU74
  286 008e 0E4B     		ldr	r3, .L21+8
  287              	.LVL27:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 12
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 12
 
 
  288              		.loc 1 336 21 view .LVU75
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  333 00c0 00000000 		.word	INS_AccDump
  334 00c4 00000000 		.word	INS_GyroDump
  335 00c8 00000000 		.word	S_Skip_Acc
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 13
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 13
 
 
  336 00cc 00000000 		.word	S_Skip_Gyro
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  257:modules/imu/ins.c ****     uint16_t Idx;
  384              		.loc 1 257 5 is_stmt 1 view .LVU97
  257:modules/imu/ins.c ****     uint16_t Idx;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 14
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 14
 
 
  385              		.loc 1 257 55 is_stmt 0 view .LVU98
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  263:modules/imu/ins.c ****     Tx_Buf[0] = (uint8_t)(Reg_Addr | 0x80u);          /* bit7=1 → 读 */
  430              		.loc 1 263 5 view .LVU108
  431 004e CDF80080 		str	r8, [sp]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 15
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 15
 
 
  432 0052 CDF80480 		str	r8, [sp, #4]
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  273:modules/imu/ins.c ****     }
  474              		.loc 1 273 47 is_stmt 0 view .LVU121
  475 0092 7018     		adds	r0, r6, r1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 16
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 16
 
 
  273:modules/imu/ins.c ****     }
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  299:modules/imu/ins.c ****         ins_read(DEV_ACC,  Idx, (uint8_t *)&INS_AccDump[Idx],  1u);
  523              		.loc 1 299 5 view .LVU131
  524              	.LVL46:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 17
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 17
 
 
  299:modules/imu/ins.c ****         ins_read(DEV_ACC,  Idx, (uint8_t *)&INS_AccDump[Idx],  1u);
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  571              		.syntax unified
  572              		.thumb
  573              		.thumb_func
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 18
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 18
 
 
  575              	ins_write:
@@ -1078,7 +1078,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  287:modules/imu/ins.c **** 
  617              		.loc 1 287 1 is_stmt 0 view .LVU153
  618 0028 02B0     		add	sp, sp, #8
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 19
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 19
 
 
  619              	.LCFI12:
@@ -1095,23 +1095,14 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  630              		.thumb
  631              		.thumb_func
  633              	ins_acc_init:
- 634              	.LFB154:
+ 634              	.LFB153:
  342:modules/imu/ins.c **** 
- 343:modules/imu/ins.c **** /**
- 344:modules/imu/ins.c ****   * @brief  片选脚初始化 + H7 模拟开关
- 345:modules/imu/ins.c ****   * @note   PC0/PC3 在 CubeMX 里没配成输出（gpio.c 只管了 PD2），
- 346:modules/imu/ins.c ****   *         不在这里配的话片选是悬空的，芯片永远不会被选中 → 读回 0x00�
- 347:modules/imu/ins.c ****   */
- 348:modules/imu/ins.c **** /* 当前被 INS_Init 里的“临时停用”注释掉；保留函数避免以后要用时重写 *
- 349:modules/imu/ins.c **** static void __attribute__((unused)) ins_gpio_init(void)
- 350:modules/imu/ins.c **** {
- 351:modules/imu/ins.c ****     /* 片选 GPIO + H7 模拟开关：实现在 bsp_spi.c */
- 352:modules/imu/ins.c ****     BSP_IMU_Init();
- 353:modules/imu/ins.c **** }
- 354:modules/imu/ins.c **** 
- 355:modules/imu/ins.c **** static void ins_acc_init(void)
- 356:modules/imu/ins.c **** {
- 635              		.loc 1 356 1 is_stmt 1 view -0
+ 343:modules/imu/ins.c **** /* 片选脚与 H7 的 PC2_C 模拟开关由 CubeMX 配置（Core/Src/gpio.c 的 MX_GPIO_Init），
+ 344:modules/imu/ins.c ****  * 执行顺序早于本模块；这里不再有 gpio 初始化函数。 */
+ 345:modules/imu/ins.c **** 
+ 346:modules/imu/ins.c **** static void ins_acc_init(void)
+ 347:modules/imu/ins.c **** {
+ 635              		.loc 1 347 1 is_stmt 1 view -0
  636              		.cfi_startproc
  637              		@ args = 0, pretend = 0, frame = 8
  638              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -1124,101 +1115,101 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  645 0002 83B0     		sub	sp, sp, #12
  646              	.LCFI14:
  647              		.cfi_def_cfa_offset 24
- 357:modules/imu/ins.c ****     uint8_t Chip_Id = 0;
- 648              		.loc 1 357 5 view .LVU156
- 649              		.loc 1 357 13 is_stmt 0 view .LVU157
+ 348:modules/imu/ins.c ****     uint8_t Chip_Id = 0;
+ 648              		.loc 1 348 5 view .LVU156
+ 649              		.loc 1 348 13 is_stmt 0 view .LVU157
  650 0004 0024     		movs	r4, #0
  651 0006 8DF80740 		strb	r4, [sp, #7]
- 358:modules/imu/ins.c **** 
- 359:modules/imu/ins.c ****     /* 上电默认 I2C 模式：CS 拉高再拉低，产生上升沿后切到 SPI */
- 360:modules/imu/ins.c ****     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
- 652              		.loc 1 360 5 is_stmt 1 view .LVU158
+ 349:modules/imu/ins.c **** 
+ 350:modules/imu/ins.c ****     /* 上电默认 I2C 模式：CS 拉高再拉低，产生上升沿后切到 SPI */
+ 351:modules/imu/ins.c ****     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
+ 652              		.loc 1 351 5 is_stmt 1 view .LVU158
  653 000a 2146     		mov	r1, r4
  654 000c 2046     		mov	r0, r4
  655 000e FFF7FEFF 		bl	BSP_IMU_Cs
  656              	.LVL58:
- 361:modules/imu/ins.c ****     BSP_DelayMs(2);
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 20
-
-
- 657              		.loc 1 361 5 view .LVU159
+ 352:modules/imu/ins.c ****     BSP_DelayMs(2);
+ 657              		.loc 1 352 5 view .LVU159
  658 0012 0220     		movs	r0, #2
  659 0014 FFF7FEFF 		bl	BSP_DelayMs
  660              	.LVL59:
- 362:modules/imu/ins.c **** 
- 363:modules/imu/ins.c ****     /* 第一次读多半读到 0xFF/0x00（正在切模式），读两次更稳 */
- 364:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
- 661              		.loc 1 364 5 view .LVU160
+ 353:modules/imu/ins.c **** 
+ 354:modules/imu/ins.c ****     /* 第一次读多半读到 0xFF/0x00（正在切模式），读两次更稳 */
+ 355:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
+ 661              		.loc 1 355 5 view .LVU160
  662 0018 0DF10705 		add	r5, sp, #7
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 20
+
+
  663 001c 0123     		movs	r3, #1
  664 001e 2A46     		mov	r2, r5
  665 0020 2146     		mov	r1, r4
  666 0022 2046     		mov	r0, r4
  667 0024 FFF7FEFF 		bl	ins_read
  668              	.LVL60:
- 365:modules/imu/ins.c ****     BSP_DelayMs(1);
- 669              		.loc 1 365 5 view .LVU161
+ 356:modules/imu/ins.c ****     BSP_DelayMs(1);
+ 669              		.loc 1 356 5 view .LVU161
  670 0028 0120     		movs	r0, #1
  671 002a FFF7FEFF 		bl	BSP_DelayMs
  672              	.LVL61:
- 366:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
- 673              		.loc 1 366 5 view .LVU162
+ 357:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
+ 673              		.loc 1 357 5 view .LVU162
  674 002e 0123     		movs	r3, #1
  675 0030 2A46     		mov	r2, r5
  676 0032 2146     		mov	r1, r4
  677 0034 2046     		mov	r0, r4
  678 0036 FFF7FEFF 		bl	ins_read
  679              	.LVL62:
- 367:modules/imu/ins.c ****     INS_AccId = Chip_Id;
- 680              		.loc 1 367 5 view .LVU163
- 681              		.loc 1 367 15 is_stmt 0 view .LVU164
+ 358:modules/imu/ins.c ****     INS_AccId = Chip_Id;
+ 680              		.loc 1 358 5 view .LVU163
+ 681              		.loc 1 358 15 is_stmt 0 view .LVU164
  682 003a 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
  683 003e 254A     		ldr	r2, .L48
  684 0040 1370     		strb	r3, [r2]
- 368:modules/imu/ins.c **** 
- 369:modules/imu/ins.c ****     if (Chip_Id != ACC_CHIP_ID_VAL) {
- 685              		.loc 1 369 5 is_stmt 1 view .LVU165
- 686              		.loc 1 369 8 is_stmt 0 view .LVU166
+ 359:modules/imu/ins.c **** 
+ 360:modules/imu/ins.c ****     if (Chip_Id != ACC_CHIP_ID_VAL) {
+ 685              		.loc 1 360 5 is_stmt 1 view .LVU165
+ 686              		.loc 1 360 8 is_stmt 0 view .LVU166
  687 0042 1E2B     		cmp	r3, #30
  688 0044 06D0     		beq	.L43
- 370:modules/imu/ins.c ****         INS_Err |= 0x01u;
- 689              		.loc 1 370 9 is_stmt 1 view .LVU167
- 690              		.loc 1 370 17 is_stmt 0 view .LVU168
+ 361:modules/imu/ins.c ****         INS_Err |= 0x01u;
+ 689              		.loc 1 361 9 is_stmt 1 view .LVU167
+ 690              		.loc 1 361 17 is_stmt 0 view .LVU168
  691 0046 244A     		ldr	r2, .L48+4
  692 0048 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
  693 004a 43F00103 		orr	r3, r3, #1
  694 004e 1370     		strb	r3, [r2]
- 371:modules/imu/ins.c ****         return;
- 695              		.loc 1 371 9 is_stmt 1 view .LVU169
+ 362:modules/imu/ins.c ****         return;
+ 695              		.loc 1 362 9 is_stmt 1 view .LVU169
  696              	.L42:
- 372:modules/imu/ins.c ****     }
+ 363:modules/imu/ins.c ****     }
+ 364:modules/imu/ins.c **** 
+ 365:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_SOFTRESET, BMI_SOFTRESET_VAL);
+ 366:modules/imu/ins.c ****     BSP_DelayMs(50);
+ 367:modules/imu/ins.c **** 
+ 368:modules/imu/ins.c ****     /* 复位后要重新建立 SPI 通信 */
+ 369:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
+ 370:modules/imu/ins.c ****     BSP_DelayMs(1);
+ 371:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
+ 372:modules/imu/ins.c ****     INS_AccId = Chip_Id;
  373:modules/imu/ins.c **** 
- 374:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_SOFTRESET, BMI_SOFTRESET_VAL);
- 375:modules/imu/ins.c ****     BSP_DelayMs(50);
- 376:modules/imu/ins.c **** 
- 377:modules/imu/ins.c ****     /* 复位后要重新建立 SPI 通信 */
- 378:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 21
+ 374:modules/imu/ins.c ****     if (Chip_Id != ACC_CHIP_ID_VAL) {
+ 375:modules/imu/ins.c ****         INS_Err |= 0x01u;
+ 376:modules/imu/ins.c ****         return;
+ 377:modules/imu/ins.c ****     }
+ 378:modules/imu/ins.c **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 21
 
 
- 379:modules/imu/ins.c ****     BSP_DelayMs(1);
- 380:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
- 381:modules/imu/ins.c ****     INS_AccId = Chip_Id;
+ 379:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CTRL, 0x04u);   /* 打开加速度计 */
+ 380:modules/imu/ins.c ****     BSP_DelayMs(5);
+ 381:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CONF, 0x00u);   /* active 模式 */
  382:modules/imu/ins.c **** 
- 383:modules/imu/ins.c ****     if (Chip_Id != ACC_CHIP_ID_VAL) {
- 384:modules/imu/ins.c ****         INS_Err |= 0x01u;
- 385:modules/imu/ins.c ****         return;
- 386:modules/imu/ins.c ****     }
- 387:modules/imu/ins.c **** 
- 388:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CTRL, 0x04u);   /* 打开加速度计 */
- 389:modules/imu/ins.c ****     BSP_DelayMs(5);
- 390:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CONF, 0x00u);   /* active 模式 */
- 391:modules/imu/ins.c **** 
- 392:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_CONF,  0xACu);      /* 正常模式 / 1600Hz / 带宽 = ODR/2 */
- 393:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_RANGE, 0x01u);      /* ±6g */
- 394:modules/imu/ins.c ****     BSP_DelayMs(10);
- 395:modules/imu/ins.c **** }
- 697              		.loc 1 395 1 is_stmt 0 view .LVU170
+ 383:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_CONF,  0xACu);      /* 正常模式 / 1600Hz / 带宽 = ODR/2 */
+ 384:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_RANGE, 0x01u);      /* ±6g */
+ 385:modules/imu/ins.c ****     BSP_DelayMs(10);
+ 386:modules/imu/ins.c **** }
+ 697              		.loc 1 386 1 is_stmt 0 view .LVU170
  698 0050 03B0     		add	sp, sp, #12
  699              	.LCFI15:
  700              		.cfi_remember_state
@@ -1228,20 +1219,20 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  704              	.L43:
  705              	.LCFI16:
  706              		.cfi_restore_state
- 374:modules/imu/ins.c ****     BSP_DelayMs(50);
- 707              		.loc 1 374 5 is_stmt 1 view .LVU171
+ 365:modules/imu/ins.c ****     BSP_DelayMs(50);
+ 707              		.loc 1 365 5 is_stmt 1 view .LVU171
  708 0054 B622     		movs	r2, #182
  709 0056 7E21     		movs	r1, #126
  710 0058 0020     		movs	r0, #0
  711 005a FFF7FEFF 		bl	ins_write
  712              	.LVL63:
- 375:modules/imu/ins.c **** 
- 713              		.loc 1 375 5 view .LVU172
+ 366:modules/imu/ins.c **** 
+ 713              		.loc 1 366 5 view .LVU172
  714 005e 3220     		movs	r0, #50
  715 0060 FFF7FEFF 		bl	BSP_DelayMs
  716              	.LVL64:
- 378:modules/imu/ins.c ****     BSP_DelayMs(1);
- 717              		.loc 1 378 5 view .LVU173
+ 369:modules/imu/ins.c ****     BSP_DelayMs(1);
+ 717              		.loc 1 369 5 view .LVU173
  718 0064 0DF10704 		add	r4, sp, #7
  719 0068 0123     		movs	r3, #1
  720 006a 2246     		mov	r2, r4
@@ -1249,87 +1240,87 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  722 006e 0846     		mov	r0, r1
  723 0070 FFF7FEFF 		bl	ins_read
  724              	.LVL65:
- 379:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
- 725              		.loc 1 379 5 view .LVU174
+ 370:modules/imu/ins.c ****     ins_read(DEV_ACC, ACC_CHIP_ID, &Chip_Id, 1);
+ 725              		.loc 1 370 5 view .LVU174
  726 0074 0120     		movs	r0, #1
  727 0076 FFF7FEFF 		bl	BSP_DelayMs
  728              	.LVL66:
- 380:modules/imu/ins.c ****     INS_AccId = Chip_Id;
- 729              		.loc 1 380 5 view .LVU175
+ 371:modules/imu/ins.c ****     INS_AccId = Chip_Id;
+ 729              		.loc 1 371 5 view .LVU175
  730 007a 0123     		movs	r3, #1
  731 007c 2246     		mov	r2, r4
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 22
-
-
  732 007e 0021     		movs	r1, #0
  733 0080 0846     		mov	r0, r1
  734 0082 FFF7FEFF 		bl	ins_read
  735              	.LVL67:
- 381:modules/imu/ins.c **** 
- 736              		.loc 1 381 5 view .LVU176
- 381:modules/imu/ins.c **** 
- 737              		.loc 1 381 15 is_stmt 0 view .LVU177
+ 372:modules/imu/ins.c **** 
+ 736              		.loc 1 372 5 view .LVU176
+ 372:modules/imu/ins.c **** 
+ 737              		.loc 1 372 15 is_stmt 0 view .LVU177
  738 0086 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 22
+
+
  739 008a 124A     		ldr	r2, .L48
  740 008c 1370     		strb	r3, [r2]
- 383:modules/imu/ins.c ****         INS_Err |= 0x01u;
- 741              		.loc 1 383 5 is_stmt 1 view .LVU178
- 383:modules/imu/ins.c ****         INS_Err |= 0x01u;
- 742              		.loc 1 383 8 is_stmt 0 view .LVU179
+ 374:modules/imu/ins.c ****         INS_Err |= 0x01u;
+ 741              		.loc 1 374 5 is_stmt 1 view .LVU178
+ 374:modules/imu/ins.c ****         INS_Err |= 0x01u;
+ 742              		.loc 1 374 8 is_stmt 0 view .LVU179
  743 008e 1E2B     		cmp	r3, #30
  744 0090 05D0     		beq	.L45
- 384:modules/imu/ins.c ****         return;
- 745              		.loc 1 384 9 is_stmt 1 view .LVU180
- 384:modules/imu/ins.c ****         return;
- 746              		.loc 1 384 17 is_stmt 0 view .LVU181
+ 375:modules/imu/ins.c ****         return;
+ 745              		.loc 1 375 9 is_stmt 1 view .LVU180
+ 375:modules/imu/ins.c ****         return;
+ 746              		.loc 1 375 17 is_stmt 0 view .LVU181
  747 0092 114A     		ldr	r2, .L48+4
  748 0094 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
  749 0096 43F00103 		orr	r3, r3, #1
  750 009a 1370     		strb	r3, [r2]
- 385:modules/imu/ins.c ****     }
- 751              		.loc 1 385 9 is_stmt 1 view .LVU182
+ 376:modules/imu/ins.c ****     }
+ 751              		.loc 1 376 9 is_stmt 1 view .LVU182
  752 009c D8E7     		b	.L42
  753              	.L45:
- 388:modules/imu/ins.c ****     BSP_DelayMs(5);
- 754              		.loc 1 388 5 view .LVU183
+ 379:modules/imu/ins.c ****     BSP_DelayMs(5);
+ 754              		.loc 1 379 5 view .LVU183
  755 009e 0422     		movs	r2, #4
  756 00a0 7D21     		movs	r1, #125
  757 00a2 0020     		movs	r0, #0
  758 00a4 FFF7FEFF 		bl	ins_write
  759              	.LVL68:
- 389:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CONF, 0x00u);   /* active 模式 */
- 760              		.loc 1 389 5 view .LVU184
+ 380:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_PWR_CONF, 0x00u);   /* active 模式 */
+ 760              		.loc 1 380 5 view .LVU184
  761 00a8 0520     		movs	r0, #5
  762 00aa FFF7FEFF 		bl	BSP_DelayMs
  763              	.LVL69:
- 390:modules/imu/ins.c **** 
- 764              		.loc 1 390 5 view .LVU185
+ 381:modules/imu/ins.c **** 
+ 764              		.loc 1 381 5 view .LVU185
  765 00ae 0022     		movs	r2, #0
  766 00b0 7C21     		movs	r1, #124
  767 00b2 1046     		mov	r0, r2
  768 00b4 FFF7FEFF 		bl	ins_write
  769              	.LVL70:
- 392:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_RANGE, 0x01u);      /* ±6g */
- 770              		.loc 1 392 5 view .LVU186
+ 383:modules/imu/ins.c ****     ins_write(DEV_ACC, ACC_RANGE, 0x01u);      /* ±6g */
+ 770              		.loc 1 383 5 view .LVU186
  771 00b8 AC22     		movs	r2, #172
  772 00ba 4021     		movs	r1, #64
  773 00bc 0020     		movs	r0, #0
  774 00be FFF7FEFF 		bl	ins_write
  775              	.LVL71:
- 393:modules/imu/ins.c ****     BSP_DelayMs(10);
- 776              		.loc 1 393 5 view .LVU187
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 23
-
-
+ 384:modules/imu/ins.c ****     BSP_DelayMs(10);
+ 776              		.loc 1 384 5 view .LVU187
  777 00c2 0122     		movs	r2, #1
  778 00c4 4121     		movs	r1, #65
  779 00c6 0020     		movs	r0, #0
  780 00c8 FFF7FEFF 		bl	ins_write
  781              	.LVL72:
- 394:modules/imu/ins.c **** }
- 782              		.loc 1 394 5 view .LVU188
+ 385:modules/imu/ins.c **** }
+ 782              		.loc 1 385 5 view .LVU188
  783 00cc 0A20     		movs	r0, #10
  784 00ce FFF7FEFF 		bl	BSP_DelayMs
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 23
+
+
  785              	.LVL73:
  786 00d2 BDE7     		b	.L42
  787              	.L49:
@@ -1338,18 +1329,18 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  790 00d4 00000000 		.word	INS_AccId
  791 00d8 00000000 		.word	INS_Err
  792              		.cfi_endproc
- 793              	.LFE154:
+ 793              	.LFE153:
  795              		.section	.text.ins_gyro_init,"ax",%progbits
  796              		.align	1
  797              		.syntax unified
  798              		.thumb
  799              		.thumb_func
  801              	ins_gyro_init:
- 802              	.LFB155:
- 396:modules/imu/ins.c **** 
- 397:modules/imu/ins.c **** static void ins_gyro_init(void)
- 398:modules/imu/ins.c **** {
- 803              		.loc 1 398 1 view -0
+ 802              	.LFB154:
+ 387:modules/imu/ins.c **** 
+ 388:modules/imu/ins.c **** static void ins_gyro_init(void)
+ 389:modules/imu/ins.c **** {
+ 803              		.loc 1 389 1 view -0
  804              		.cfi_startproc
  805              		@ args = 0, pretend = 0, frame = 8
  806              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -1361,76 +1352,76 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  812 0002 82B0     		sub	sp, sp, #8
  813              	.LCFI18:
  814              		.cfi_def_cfa_offset 16
- 399:modules/imu/ins.c ****     uint8_t Chip_Id = 0;
- 815              		.loc 1 399 5 view .LVU190
- 816              		.loc 1 399 13 is_stmt 0 view .LVU191
+ 390:modules/imu/ins.c ****     uint8_t Chip_Id = 0;
+ 815              		.loc 1 390 5 view .LVU190
+ 816              		.loc 1 390 13 is_stmt 0 view .LVU191
  817 0004 0024     		movs	r4, #0
  818 0006 8DF80740 		strb	r4, [sp, #7]
- 400:modules/imu/ins.c **** 
- 401:modules/imu/ins.c ****     BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
- 819              		.loc 1 401 5 is_stmt 1 view .LVU192
+ 391:modules/imu/ins.c **** 
+ 392:modules/imu/ins.c ****     BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
+ 819              		.loc 1 392 5 is_stmt 1 view .LVU192
  820 000a 2146     		mov	r1, r4
  821 000c 0120     		movs	r0, #1
  822 000e FFF7FEFF 		bl	BSP_IMU_Cs
  823              	.LVL74:
- 402:modules/imu/ins.c ****     BSP_DelayMs(2);
- 824              		.loc 1 402 5 view .LVU193
+ 393:modules/imu/ins.c ****     BSP_DelayMs(2);
+ 824              		.loc 1 393 5 view .LVU193
  825 0012 0220     		movs	r0, #2
  826 0014 FFF7FEFF 		bl	BSP_DelayMs
  827              	.LVL75:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 24
-
-
- 403:modules/imu/ins.c **** 
- 404:modules/imu/ins.c ****     ins_read(DEV_GYRO, GYRO_CHIP_ID, &Chip_Id, 1);
- 828              		.loc 1 404 5 view .LVU194
+ 394:modules/imu/ins.c **** 
+ 395:modules/imu/ins.c ****     ins_read(DEV_GYRO, GYRO_CHIP_ID, &Chip_Id, 1);
+ 828              		.loc 1 395 5 view .LVU194
  829 0018 0123     		movs	r3, #1
  830 001a 0DF10702 		add	r2, sp, #7
  831 001e 2146     		mov	r1, r4
  832 0020 1846     		mov	r0, r3
  833 0022 FFF7FEFF 		bl	ins_read
  834              	.LVL76:
- 405:modules/imu/ins.c ****     INS_GyroId = Chip_Id;
- 835              		.loc 1 405 5 view .LVU195
- 836              		.loc 1 405 16 is_stmt 0 view .LVU196
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 24
+
+
+ 396:modules/imu/ins.c ****     INS_GyroId = Chip_Id;
+ 835              		.loc 1 396 5 view .LVU195
+ 836              		.loc 1 396 16 is_stmt 0 view .LVU196
  837 0026 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
  838 002a 1C4A     		ldr	r2, .L56
  839 002c 1370     		strb	r3, [r2]
- 406:modules/imu/ins.c **** 
- 407:modules/imu/ins.c ****     if (Chip_Id != GYRO_CHIP_ID_VAL) {
- 840              		.loc 1 407 5 is_stmt 1 view .LVU197
- 841              		.loc 1 407 8 is_stmt 0 view .LVU198
+ 397:modules/imu/ins.c **** 
+ 398:modules/imu/ins.c ****     if (Chip_Id != GYRO_CHIP_ID_VAL) {
+ 840              		.loc 1 398 5 is_stmt 1 view .LVU197
+ 841              		.loc 1 398 8 is_stmt 0 view .LVU198
  842 002e 0F2B     		cmp	r3, #15
  843 0030 06D0     		beq	.L51
- 408:modules/imu/ins.c ****         INS_Err |= 0x01u;
- 844              		.loc 1 408 9 is_stmt 1 view .LVU199
- 845              		.loc 1 408 17 is_stmt 0 view .LVU200
+ 399:modules/imu/ins.c ****         INS_Err |= 0x01u;
+ 844              		.loc 1 399 9 is_stmt 1 view .LVU199
+ 845              		.loc 1 399 17 is_stmt 0 view .LVU200
  846 0032 1B4A     		ldr	r2, .L56+4
  847 0034 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
  848 0036 43F00103 		orr	r3, r3, #1
  849 003a 1370     		strb	r3, [r2]
- 409:modules/imu/ins.c ****         return;
- 850              		.loc 1 409 9 is_stmt 1 view .LVU201
+ 400:modules/imu/ins.c ****         return;
+ 850              		.loc 1 400 9 is_stmt 1 view .LVU201
  851              	.L50:
- 410:modules/imu/ins.c ****     }
- 411:modules/imu/ins.c **** 
- 412:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_SOFTRESET, BMI_SOFTRESET_VAL);
- 413:modules/imu/ins.c ****     BSP_DelayMs(30);
- 414:modules/imu/ins.c **** 
- 415:modules/imu/ins.c ****     ins_read(DEV_GYRO, GYRO_CHIP_ID, &Chip_Id, 1);
- 416:modules/imu/ins.c ****     INS_GyroId = Chip_Id;
- 417:modules/imu/ins.c **** 
- 418:modules/imu/ins.c ****     if (Chip_Id != GYRO_CHIP_ID_VAL) {
- 419:modules/imu/ins.c ****         INS_Err |= 0x01u;
- 420:modules/imu/ins.c ****         return;
- 421:modules/imu/ins.c ****     }
- 422:modules/imu/ins.c **** 
- 423:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_RANGE,     0x00u);  /* ±2000 dps */
- 424:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_BANDWIDTH, 0x02u);  /* 1000Hz ODR / 116Hz 滤波 */
- 425:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_LPM1,      0x00u);  /* 正常模式 */
- 426:modules/imu/ins.c ****     BSP_DelayMs(5);
- 427:modules/imu/ins.c **** }
- 852              		.loc 1 427 1 is_stmt 0 view .LVU202
+ 401:modules/imu/ins.c ****     }
+ 402:modules/imu/ins.c **** 
+ 403:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_SOFTRESET, BMI_SOFTRESET_VAL);
+ 404:modules/imu/ins.c ****     BSP_DelayMs(30);
+ 405:modules/imu/ins.c **** 
+ 406:modules/imu/ins.c ****     ins_read(DEV_GYRO, GYRO_CHIP_ID, &Chip_Id, 1);
+ 407:modules/imu/ins.c ****     INS_GyroId = Chip_Id;
+ 408:modules/imu/ins.c **** 
+ 409:modules/imu/ins.c ****     if (Chip_Id != GYRO_CHIP_ID_VAL) {
+ 410:modules/imu/ins.c ****         INS_Err |= 0x01u;
+ 411:modules/imu/ins.c ****         return;
+ 412:modules/imu/ins.c ****     }
+ 413:modules/imu/ins.c **** 
+ 414:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_RANGE,     0x00u);  /* ±2000 dps */
+ 415:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_BANDWIDTH, 0x02u);  /* 1000Hz ODR / 116Hz 滤波 */
+ 416:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_LPM1,      0x00u);  /* 正常模式 */
+ 417:modules/imu/ins.c ****     BSP_DelayMs(5);
+ 418:modules/imu/ins.c **** }
+ 852              		.loc 1 418 1 is_stmt 0 view .LVU202
  853 003c 02B0     		add	sp, sp, #8
  854              	.LCFI19:
  855              		.cfi_remember_state
@@ -1438,82 +1429,82 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  857              		@ sp needed
  858 003e 10BD     		pop	{r4, pc}
  859              	.L51:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 25
-
-
  860              	.LCFI20:
  861              		.cfi_restore_state
- 412:modules/imu/ins.c ****     BSP_DelayMs(30);
- 862              		.loc 1 412 5 is_stmt 1 view .LVU203
+ 403:modules/imu/ins.c ****     BSP_DelayMs(30);
+ 862              		.loc 1 403 5 is_stmt 1 view .LVU203
  863 0040 B622     		movs	r2, #182
  864 0042 1421     		movs	r1, #20
  865 0044 0120     		movs	r0, #1
  866 0046 FFF7FEFF 		bl	ins_write
  867              	.LVL77:
- 413:modules/imu/ins.c **** 
- 868              		.loc 1 413 5 view .LVU204
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 25
+
+
+ 404:modules/imu/ins.c **** 
+ 868              		.loc 1 404 5 view .LVU204
  869 004a 1E20     		movs	r0, #30
  870 004c FFF7FEFF 		bl	BSP_DelayMs
  871              	.LVL78:
- 415:modules/imu/ins.c ****     INS_GyroId = Chip_Id;
- 872              		.loc 1 415 5 view .LVU205
+ 406:modules/imu/ins.c ****     INS_GyroId = Chip_Id;
+ 872              		.loc 1 406 5 view .LVU205
  873 0050 0123     		movs	r3, #1
  874 0052 0DF10702 		add	r2, sp, #7
  875 0056 0021     		movs	r1, #0
  876 0058 1846     		mov	r0, r3
  877 005a FFF7FEFF 		bl	ins_read
  878              	.LVL79:
- 416:modules/imu/ins.c **** 
- 879              		.loc 1 416 5 view .LVU206
- 416:modules/imu/ins.c **** 
- 880              		.loc 1 416 16 is_stmt 0 view .LVU207
+ 407:modules/imu/ins.c **** 
+ 879              		.loc 1 407 5 view .LVU206
+ 407:modules/imu/ins.c **** 
+ 880              		.loc 1 407 16 is_stmt 0 view .LVU207
  881 005e 9DF80730 		ldrb	r3, [sp, #7]	@ zero_extendqisi2
  882 0062 0E4A     		ldr	r2, .L56
  883 0064 1370     		strb	r3, [r2]
- 418:modules/imu/ins.c ****         INS_Err |= 0x01u;
- 884              		.loc 1 418 5 is_stmt 1 view .LVU208
- 418:modules/imu/ins.c ****         INS_Err |= 0x01u;
- 885              		.loc 1 418 8 is_stmt 0 view .LVU209
+ 409:modules/imu/ins.c ****         INS_Err |= 0x01u;
+ 884              		.loc 1 409 5 is_stmt 1 view .LVU208
+ 409:modules/imu/ins.c ****         INS_Err |= 0x01u;
+ 885              		.loc 1 409 8 is_stmt 0 view .LVU209
  886 0066 0F2B     		cmp	r3, #15
  887 0068 05D0     		beq	.L53
- 419:modules/imu/ins.c ****         return;
- 888              		.loc 1 419 9 is_stmt 1 view .LVU210
- 419:modules/imu/ins.c ****         return;
- 889              		.loc 1 419 17 is_stmt 0 view .LVU211
+ 410:modules/imu/ins.c ****         return;
+ 888              		.loc 1 410 9 is_stmt 1 view .LVU210
+ 410:modules/imu/ins.c ****         return;
+ 889              		.loc 1 410 17 is_stmt 0 view .LVU211
  890 006a 0D4A     		ldr	r2, .L56+4
  891 006c 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
  892 006e 43F00103 		orr	r3, r3, #1
  893 0072 1370     		strb	r3, [r2]
- 420:modules/imu/ins.c ****     }
- 894              		.loc 1 420 9 is_stmt 1 view .LVU212
+ 411:modules/imu/ins.c ****     }
+ 894              		.loc 1 411 9 is_stmt 1 view .LVU212
  895 0074 E2E7     		b	.L50
  896              	.L53:
- 423:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_BANDWIDTH, 0x02u);  /* 1000Hz ODR / 116Hz 滤波 */
- 897              		.loc 1 423 5 view .LVU213
+ 414:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_BANDWIDTH, 0x02u);  /* 1000Hz ODR / 116Hz 滤波 */
+ 897              		.loc 1 414 5 view .LVU213
  898 0076 0022     		movs	r2, #0
  899 0078 0F21     		movs	r1, #15
  900 007a 0120     		movs	r0, #1
  901 007c FFF7FEFF 		bl	ins_write
  902              	.LVL80:
- 424:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_LPM1,      0x00u);  /* 正常模式 */
- 903              		.loc 1 424 5 view .LVU214
+ 415:modules/imu/ins.c ****     ins_write(DEV_GYRO, GYRO_LPM1,      0x00u);  /* 正常模式 */
+ 903              		.loc 1 415 5 view .LVU214
  904 0080 0222     		movs	r2, #2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 26
-
-
  905 0082 1021     		movs	r1, #16
  906 0084 0120     		movs	r0, #1
  907 0086 FFF7FEFF 		bl	ins_write
  908              	.LVL81:
- 425:modules/imu/ins.c ****     BSP_DelayMs(5);
- 909              		.loc 1 425 5 view .LVU215
+ 416:modules/imu/ins.c ****     BSP_DelayMs(5);
+ 909              		.loc 1 416 5 view .LVU215
  910 008a 0022     		movs	r2, #0
  911 008c 1121     		movs	r1, #17
  912 008e 0120     		movs	r0, #1
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 26
+
+
  913 0090 FFF7FEFF 		bl	ins_write
  914              	.LVL82:
- 426:modules/imu/ins.c **** }
- 915              		.loc 1 426 5 view .LVU216
+ 417:modules/imu/ins.c **** }
+ 915              		.loc 1 417 5 view .LVU216
  916 0094 0520     		movs	r0, #5
  917 0096 FFF7FEFF 		bl	BSP_DelayMs
  918              	.LVL83:
@@ -1524,7 +1515,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  923 009c 00000000 		.word	INS_GyroId
  924 00a0 00000000 		.word	INS_Err
  925              		.cfi_endproc
- 926              	.LFE155:
+ 926              	.LFE154:
  928              		.section	.text.ins_ahrs_step,"ax",%progbits
  929              		.align	1
  930              		.syntax unified
@@ -1558,9 +1549,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  957              		.cfi_offset 87, -12
  958 0006 F0EE408A 		vmov.f32	s17, s0
  959 000a F0EE609A 		vmov.f32	s19, s1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 27
-
-
  960 000e B0EE419A 		vmov.f32	s18, s2
  961 0012 F0EE61AA 		vmov.f32	s21, s3
  962 0016 B0EE42AA 		vmov.f32	s20, s4
@@ -1570,6 +1558,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  114:modules/imu/ins.c ****     float Up_X, Up_Y, Up_Z, Err_X, Err_Y, Err_Z, Kp_Gain;
  965              		.loc 1 114 34 is_stmt 0 view .LVU220
  966 001e 61EEA17A 		vmul.f32	s15, s3, s3
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 27
+
+
  114:modules/imu/ins.c ****     float Up_X, Up_Y, Up_Z, Err_X, Err_Y, Err_Z, Kp_Gain;
  967              		.loc 1 114 50 view .LVU221
  968 0022 22EE027A 		vmul.f32	s14, s4, s4
@@ -1618,9 +1609,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  997              		.loc 1 126 5 is_stmt 1 view .LVU235
  126:modules/imu/ins.c **** 
  998              		.loc 1 126 11 is_stmt 0 view .LVU236
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 28
-
-
  999 0052 88EE003A 		vdiv.f32	s6, s16, s0
  1000              	.LVL89:
  128:modules/imu/ins.c ****     Q0_Q1 = S_Q0 * S_Q1;
@@ -1630,6 +1618,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1003 0056 C54B     		ldr	r3, .L77
  1004 0058 D3ED007A 		vldr.32	s15, [r3]
  128:modules/imu/ins.c ****     Q0_Q1 = S_Q0 * S_Q1;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 28
+
+
  1005              		.loc 1 128 11 view .LVU239
  1006 005c 67EEA76A 		vmul.f32	s13, s15, s15
  1007              	.LVL90:
@@ -1678,9 +1669,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  134:modules/imu/ins.c ****     Q3_Sq = S_Q3 * S_Q3;
  1037              		.loc 1 134 5 is_stmt 1 view .LVU253
  134:modules/imu/ins.c ****     Q3_Sq = S_Q3 * S_Q3;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 29
-
-
  1038              		.loc 1 134 11 is_stmt 0 view .LVU254
  1039 0086 66EE050A 		vmul.f32	s1, s12, s10
  1040              	.LVL96:
@@ -1690,6 +1678,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1042              		.loc 1 135 11 is_stmt 0 view .LVU256
  1043 008a 65EE052A 		vmul.f32	s5, s10, s10
  1044              	.LVL97:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 29
+
+
  138:modules/imu/ins.c ****     Up_Y = 2.0f * (Q0_Q1 + Q2_Q3);
  1045              		.loc 1 138 5 is_stmt 1 view .LVU257
  138:modules/imu/ins.c ****     Up_Y = 2.0f * (Q0_Q1 + Q2_Q3);
@@ -1738,9 +1729,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1076 00b2 72EEE12A 		vsub.f32	s5, s5, s3
  1077              	.LVL106:
  144:modules/imu/ins.c ****     Err_Z = Acc_X * Up_Y - Acc_Y * Up_X;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 30
-
-
  1078              		.loc 1 144 5 is_stmt 1 view .LVU271
  144:modules/imu/ins.c ****     Err_Z = Acc_X * Up_Y - Acc_Y * Up_X;
  1079              		.loc 1 144 19 is_stmt 0 view .LVU272
@@ -1750,6 +1738,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1082              		.loc 1 144 34 view .LVU273
  1083 00ba 64EEA66A 		vmul.f32	s13, s9, s13
  1084              	.LVL108:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 30
+
+
  144:modules/imu/ins.c ****     Err_Z = Acc_X * Up_Y - Acc_Y * Up_X;
  1085              		.loc 1 144 11 view .LVU274
  1086 00be 33EE663A 		vsub.f32	s6, s6, s13
@@ -1798,9 +1789,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1116              		.loc 1 153 20 is_stmt 0 view .LVU287
  1117 00ee 9FEDA47A 		vldr.32	s14, .L77+20
  1118 00f2 62EE876A 		vmul.f32	s13, s5, s14
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 31
-
-
  153:modules/imu/ins.c ****     S_Eyi += Err_Y * (MAHONY_KI * MAHONY_DT);
  1119              		.loc 1 153 11 view .LVU288
  1120 00f6 A34B     		ldr	r3, .L77+24
@@ -1810,6 +1798,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1123              		.loc 1 153 11 view .LVU289
  1124 00fc 76EE846A 		vadd.f32	s13, s13, s8
  1125 0100 C3ED006A 		vstr.32	s13, [r3]
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 31
+
+
  154:modules/imu/ins.c ****     S_Ezi += Err_Z * (MAHONY_KI * MAHONY_DT);
  1126              		.loc 1 154 5 is_stmt 1 view .LVU290
  154:modules/imu/ins.c ****     S_Ezi += Err_Z * (MAHONY_KI * MAHONY_DT);
@@ -1858,9 +1849,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1157              		.loc 1 158 31 view .LVU303
  1158 0138 34EE034A 		vadd.f32	s8, s8, s6
  158:modules/imu/ins.c ****     Gyro_Z += Kp_Gain * Err_Z + S_Ezi;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 32
-
-
  1159              		.loc 1 158 12 view .LVU304
  1160 013c 34EE294A 		vadd.f32	s8, s8, s19
  1161              	.LVL119:
@@ -1870,6 +1858,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1163              		.loc 1 159 23 is_stmt 0 view .LVU306
  1164 0140 63EEA43A 		vmul.f32	s7, s7, s9
  1165              	.LVL120:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 32
+
+
  159:modules/imu/ins.c **** 
  1166              		.loc 1 159 31 view .LVU307
  1167 0144 37EE237A 		vadd.f32	s14, s14, s7
@@ -1918,9 +1909,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1195              		.loc 1 167 22 is_stmt 0 view .LVU322
  1196 0172 67EEA6AA 		vmul.f32	s21, s15, s13
  167:modules/imu/ins.c ****     S_Q2 += ( Q0_Old * Gyro_Y - Q1_Old * Gyro_Z + Q3_Old * Gyro_X) * MAHONY_HALFT;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 33
-
-
  1197              		.loc 1 167 40 view .LVU323
  1198 0176 66EE073A 		vmul.f32	s7, s12, s14
  167:modules/imu/ins.c ****     S_Q2 += ( Q0_Old * Gyro_Y - Q1_Old * Gyro_Z + Q3_Old * Gyro_X) * MAHONY_HALFT;
@@ -1930,6 +1918,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1201              		.loc 1 167 58 view .LVU325
  1202 017e 65EE043A 		vmul.f32	s7, s10, s8
  167:modules/imu/ins.c ****     S_Q2 += ( Q0_Old * Gyro_Y - Q1_Old * Gyro_Z + Q3_Old * Gyro_X) * MAHONY_HALFT;
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 33
+
+
  1203              		.loc 1 167 49 view .LVU326
  1204 0182 7AEEE3AA 		vsub.f32	s21, s21, s7
  167:modules/imu/ins.c ****     S_Q2 += ( Q0_Old * Gyro_Y - Q1_Old * Gyro_Z + Q3_Old * Gyro_X) * MAHONY_HALFT;
@@ -1978,9 +1969,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1234              		.loc 1 169 31 view .LVU340
  1235 01be 38EE078A 		vadd.f32	s16, s16, s14
  169:modules/imu/ins.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 34
-
-
  1236              		.loc 1 169 58 view .LVU341
  1237 01c2 66EE267A 		vmul.f32	s15, s12, s13
  1238              	.LVL124:
@@ -1990,6 +1978,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  169:modules/imu/ins.c **** 
  1241              		.loc 1 169 68 view .LVU343
  1242 01ca 28EE248A 		vmul.f32	s16, s16, s9
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 34
+
+
  169:modules/imu/ins.c **** 
  1243              		.loc 1 169 10 view .LVU344
  1244 01ce 35EE088A 		vadd.f32	s16, s10, s16
@@ -2038,9 +2029,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1275 020e C3ED005A 		vstr.32	s11, [r3]
  178:modules/imu/ins.c ****     S_Q2 /= Vec_Norm;
  1276              		.loc 1 178 5 is_stmt 1 view .LVU357
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 35
-
-
  178:modules/imu/ins.c ****     S_Q2 /= Vec_Norm;
  1277              		.loc 1 178 10 is_stmt 0 view .LVU358
  1278 0212 8AEE806A 		vdiv.f32	s12, s21, s0
@@ -2050,6 +2038,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1281              		.loc 1 179 5 is_stmt 1 view .LVU359
  179:modules/imu/ins.c ****     S_Q3 /= Vec_Norm;
  1282              		.loc 1 179 10 is_stmt 0 view .LVU360
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 35
+
+
  1283 021c CAEE006A 		vdiv.f32	s13, s20, s0
  1284 0220 544B     		ldr	r3, .L77+8
  1285 0222 C3ED006A 		vstr.32	s13, [r3]
@@ -2098,9 +2089,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1314              	.LVL132:
  189:modules/imu/ins.c ****     Q3_Sq = S_Q3 * S_Q3;
  1315              		.loc 1 189 5 is_stmt 1 view .LVU375
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 36
-
-
  189:modules/imu/ins.c ****     Q3_Sq = S_Q3 * S_Q3;
  1316              		.loc 1 189 11 is_stmt 0 view .LVU376
  1317 0248 66EE876A 		vmul.f32	s13, s13, s14
@@ -2110,6 +2098,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  190:modules/imu/ins.c ****     Up_X = 2.0f * (Q1_Q3 - Q0_Q2);
  1320              		.loc 1 190 11 is_stmt 0 view .LVU378
  1321 024c 27EE077A 		vmul.f32	s14, s14, s14
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 36
+
+
  1322              	.LVL134:
  191:modules/imu/ins.c ****     Up_Y = 2.0f * (Q0_Q1 + Q2_Q3);
  1323              		.loc 1 191 5 is_stmt 1 view .LVU379
@@ -2158,9 +2149,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1353 0274 78EEA98A 		vadd.f32	s17, s17, s19
  196:modules/imu/ins.c **** 
  1354              		.loc 1 196 97 view .LVU393
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 37
-
-
  1355 0278 29EE279A 		vmul.f32	s18, s18, s15
  1356              	.LVL142:
  196:modules/imu/ins.c **** 
@@ -2170,6 +2158,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1359              		.loc 1 196 105 view .LVU395
  1360 0280 DFED457A 		vldr.32	s15, .L77+44
  1361              	.LVL143:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 37
+
+
  196:modules/imu/ins.c **** 
  1362              		.loc 1 196 105 view .LVU396
  1363 0284 68EEA78A 		vmul.f32	s17, s17, s15
@@ -2218,9 +2209,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  207:modules/imu/ins.c ****     if (INS_WorldYaw < -36000.0f) INS_WorldYaw += 72000.0f;
  1395              		.loc 1 207 35 is_stmt 1 discriminator 1 view .LVU408
  207:modules/imu/ins.c ****     if (INS_WorldYaw < -36000.0f) INS_WorldYaw += 72000.0f;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 38
-
-
  1396              		.loc 1 207 48 is_stmt 0 discriminator 1 view .LVU409
  1397 02c6 D3ED007A 		vldr.32	s15, [r3]
  1398 02ca 9FED397A 		vldr.32	s14, .L77+68
@@ -2230,6 +2218,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  208:modules/imu/ins.c **** 
  1402              		.loc 1 208 5 is_stmt 1 view .LVU410
  208:modules/imu/ins.c **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 38
+
+
  1403              		.loc 1 208 22 is_stmt 0 view .LVU411
  1404 02d6 344B     		ldr	r3, .L77+60
  1405 02d8 93ED007A 		vldr.32	s14, [r3]
@@ -2278,9 +2269,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1437 031c 38EE4A0A 		vsub.f32	s0, s16, s20
  212:modules/imu/ins.c **** }
  1438              		.loc 1 212 20 view .LVU423
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 39
-
-
  1439 0320 30EE000A 		vadd.f32	s0, s0, s0
  1440 0324 FFF7FEFF 		bl	asinf
  1441              	.LVL147:
@@ -2290,6 +2278,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  212:modules/imu/ins.c **** }
  1444              		.loc 1 212 18 discriminator 1 view .LVU425
  1445 032c 234B     		ldr	r3, .L77+80
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 39
+
+
  1446 032e 83ED000A 		vstr.32	s0, [r3]
  1447              	.LVL148:
  1448              	.L58:
@@ -2338,9 +2329,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  174:modules/imu/ins.c ****         return;
  1484              		.loc 1 174 35 is_stmt 1 view .LVU433
  174:modules/imu/ins.c ****         return;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 40
-
-
  1485              		.loc 1 174 40 is_stmt 0 view .LVU434
  1486 034c 094A     		ldr	r2, .L77+8
  1487 034e 1360     		str	r3, [r2]	@ float
@@ -2350,6 +2338,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1489              		.loc 1 174 53 is_stmt 0 view .LVU436
  1490 0350 094A     		ldr	r2, .L77+12
  1491 0352 1360     		str	r3, [r2]	@ float
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 40
+
+
  175:modules/imu/ins.c ****     }
  1492              		.loc 1 175 9 is_stmt 1 view .LVU437
  1493 0354 EDE7     		b	.L58
@@ -2398,9 +2389,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1529 03a0 00000000 		.word	S_Ahrs_Cnt
  1530 03a4 6F12833A 		.word	981668463
  1531 03a8 00000000 		.word	INS_WorldYaw
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 41
-
-
  1532 03ac 00A00C47 		.word	1192009728
  1533 03b0 00A08C47 		.word	1200398336
  1534 03b4 00A00CC7 		.word	-955473920
@@ -2410,17 +2398,20 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1538              		.cfi_endproc
  1539              	.LFE146:
  1541              		.section	.text.INS_Init,"ax",%progbits
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 41
+
+
  1542              		.align	1
  1543              		.global	INS_Init
  1544              		.syntax unified
  1545              		.thumb
  1546              		.thumb_func
  1548              	INS_Init:
- 1549              	.LFB156:
- 428:modules/imu/ins.c **** 
- 429:modules/imu/ins.c **** void INS_Init(void)
- 430:modules/imu/ins.c **** {
- 1550              		.loc 1 430 1 view -0
+ 1549              	.LFB155:
+ 419:modules/imu/ins.c **** 
+ 420:modules/imu/ins.c **** void INS_Init(void)
+ 421:modules/imu/ins.c **** {
+ 1550              		.loc 1 421 1 view -0
  1551              		.cfi_startproc
  1552              		@ args = 0, pretend = 0, frame = 0
  1553              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -2429,167 +2420,167 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1556              		.cfi_def_cfa_offset 8
  1557              		.cfi_offset 3, -8
  1558              		.cfi_offset 14, -4
- 431:modules/imu/ins.c ****     uint8_t Idx;
- 1559              		.loc 1 431 5 view .LVU446
- 432:modules/imu/ins.c **** 
- 433:modules/imu/ins.c ****     INS_AccId   = 0;
- 1560              		.loc 1 433 5 view .LVU447
- 1561              		.loc 1 433 17 is_stmt 0 view .LVU448
+ 422:modules/imu/ins.c ****     uint8_t Idx;
+ 1559              		.loc 1 422 5 view .LVU446
+ 423:modules/imu/ins.c **** 
+ 424:modules/imu/ins.c ****     INS_AccId   = 0;
+ 1560              		.loc 1 424 5 view .LVU447
+ 1561              		.loc 1 424 17 is_stmt 0 view .LVU448
  1562 0002 0023     		movs	r3, #0
  1563 0004 214A     		ldr	r2, .L84
  1564 0006 1370     		strb	r3, [r2]
- 434:modules/imu/ins.c ****     INS_GyroId  = 0;
- 1565              		.loc 1 434 5 is_stmt 1 view .LVU449
- 1566              		.loc 1 434 17 is_stmt 0 view .LVU450
+ 425:modules/imu/ins.c ****     INS_GyroId  = 0;
+ 1565              		.loc 1 425 5 is_stmt 1 view .LVU449
+ 1566              		.loc 1 425 17 is_stmt 0 view .LVU450
  1567 0008 214A     		ldr	r2, .L84+4
  1568 000a 1370     		strb	r3, [r2]
- 435:modules/imu/ins.c ****     INS_Ready   = 0;
- 1569              		.loc 1 435 5 is_stmt 1 view .LVU451
- 1570              		.loc 1 435 17 is_stmt 0 view .LVU452
+ 426:modules/imu/ins.c ****     INS_Ready   = 0;
+ 1569              		.loc 1 426 5 is_stmt 1 view .LVU451
+ 1570              		.loc 1 426 17 is_stmt 0 view .LVU452
  1571 000c 214A     		ldr	r2, .L84+8
  1572 000e 1370     		strb	r3, [r2]
- 436:modules/imu/ins.c ****     INS_CalDone = 0;
- 1573              		.loc 1 436 5 is_stmt 1 view .LVU453
- 1574              		.loc 1 436 17 is_stmt 0 view .LVU454
+ 427:modules/imu/ins.c ****     INS_CalDone = 0;
+ 1573              		.loc 1 427 5 is_stmt 1 view .LVU453
+ 1574              		.loc 1 427 17 is_stmt 0 view .LVU454
  1575 0010 214A     		ldr	r2, .L84+12
  1576 0012 1370     		strb	r3, [r2]
- 437:modules/imu/ins.c ****     INS_CalCnt  = 0;
- 1577              		.loc 1 437 5 is_stmt 1 view .LVU455
- 1578              		.loc 1 437 17 is_stmt 0 view .LVU456
+ 428:modules/imu/ins.c ****     INS_CalCnt  = 0;
+ 1577              		.loc 1 428 5 is_stmt 1 view .LVU455
+ 1578              		.loc 1 428 17 is_stmt 0 view .LVU456
  1579 0014 214A     		ldr	r2, .L84+16
  1580 0016 1380     		strh	r3, [r2]	@ movhi
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 42
-
-
- 438:modules/imu/ins.c ****     INS_Sample  = 0;
- 1581              		.loc 1 438 5 is_stmt 1 view .LVU457
- 1582              		.loc 1 438 17 is_stmt 0 view .LVU458
+ 429:modules/imu/ins.c ****     INS_Sample  = 0;
+ 1581              		.loc 1 429 5 is_stmt 1 view .LVU457
+ 1582              		.loc 1 429 17 is_stmt 0 view .LVU458
  1583 0018 214A     		ldr	r2, .L84+20
  1584 001a 1360     		str	r3, [r2]
- 439:modules/imu/ins.c ****     INS_Err     = 0;
- 1585              		.loc 1 439 5 is_stmt 1 view .LVU459
- 1586              		.loc 1 439 17 is_stmt 0 view .LVU460
+ 430:modules/imu/ins.c ****     INS_Err     = 0;
+ 1585              		.loc 1 430 5 is_stmt 1 view .LVU459
+ 1586              		.loc 1 430 17 is_stmt 0 view .LVU460
  1587 001c 214A     		ldr	r2, .L84+24
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 42
+
+
  1588 001e 1370     		strb	r3, [r2]
- 440:modules/imu/ins.c ****     S_Inited    = 0;
- 1589              		.loc 1 440 5 is_stmt 1 view .LVU461
- 1590              		.loc 1 440 17 is_stmt 0 view .LVU462
+ 431:modules/imu/ins.c ****     S_Inited    = 0;
+ 1589              		.loc 1 431 5 is_stmt 1 view .LVU461
+ 1590              		.loc 1 431 17 is_stmt 0 view .LVU462
  1591 0020 214A     		ldr	r2, .L84+28
  1592 0022 1370     		strb	r3, [r2]
- 441:modules/imu/ins.c **** 
- 442:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
- 1593              		.loc 1 442 5 is_stmt 1 view .LVU463
+ 432:modules/imu/ins.c **** 
+ 433:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
+ 1593              		.loc 1 433 5 is_stmt 1 view .LVU463
  1594              	.LVL153:
- 1595              		.loc 1 442 5 is_stmt 0 view .LVU464
+ 1595              		.loc 1 433 5 is_stmt 0 view .LVU464
  1596 0024 12E0     		b	.L80
  1597              	.LVL154:
  1598              	.L81:
- 443:modules/imu/ins.c ****         INS_Bias[Idx]  = 0.0f;
- 1599              		.loc 1 443 9 is_stmt 1 view .LVU465
- 1600              		.loc 1 443 24 is_stmt 0 view .LVU466
+ 434:modules/imu/ins.c ****         INS_Bias[Idx]  = 0.0f;
+ 1599              		.loc 1 434 9 is_stmt 1 view .LVU465
+ 1600              		.loc 1 434 24 is_stmt 0 view .LVU466
  1601 0026 2149     		ldr	r1, .L84+32
  1602 0028 01EB8301 		add	r1, r1, r3, lsl #2
  1603 002c 0022     		movs	r2, #0
  1604 002e 0A60     		str	r2, [r1]	@ float
- 444:modules/imu/ins.c ****         INS_Gyro[Idx]  = 0.0f;
- 1605              		.loc 1 444 9 is_stmt 1 view .LVU467
- 1606              		.loc 1 444 24 is_stmt 0 view .LVU468
+ 435:modules/imu/ins.c ****         INS_Gyro[Idx]  = 0.0f;
+ 1605              		.loc 1 435 9 is_stmt 1 view .LVU467
+ 1606              		.loc 1 435 24 is_stmt 0 view .LVU468
  1607 0030 1F49     		ldr	r1, .L84+36
  1608 0032 01EB8301 		add	r1, r1, r3, lsl #2
  1609 0036 0A60     		str	r2, [r1]	@ float
- 445:modules/imu/ins.c ****         INS_Acc[Idx]   = 0.0f;
- 1610              		.loc 1 445 9 is_stmt 1 view .LVU469
- 1611              		.loc 1 445 24 is_stmt 0 view .LVU470
+ 436:modules/imu/ins.c ****         INS_Acc[Idx]   = 0.0f;
+ 1610              		.loc 1 436 9 is_stmt 1 view .LVU469
+ 1611              		.loc 1 436 24 is_stmt 0 view .LVU470
  1612 0038 1E49     		ldr	r1, .L84+40
  1613 003a 01EB8301 		add	r1, r1, r3, lsl #2
  1614 003e 0A60     		str	r2, [r1]	@ float
- 446:modules/imu/ins.c ****         S_Sum[Idx]     = 0.0f;
- 1615              		.loc 1 446 9 is_stmt 1 view .LVU471
- 1616              		.loc 1 446 24 is_stmt 0 view .LVU472
+ 437:modules/imu/ins.c ****         S_Sum[Idx]     = 0.0f;
+ 1615              		.loc 1 437 9 is_stmt 1 view .LVU471
+ 1616              		.loc 1 437 24 is_stmt 0 view .LVU472
  1617 0040 1D49     		ldr	r1, .L84+44
  1618 0042 01EB8301 		add	r1, r1, r3, lsl #2
  1619 0046 0A60     		str	r2, [r1]	@ float
- 442:modules/imu/ins.c ****         INS_Bias[Idx]  = 0.0f;
- 1620              		.loc 1 442 31 is_stmt 1 discriminator 3 view .LVU473
+ 433:modules/imu/ins.c ****         INS_Bias[Idx]  = 0.0f;
+ 1620              		.loc 1 433 31 is_stmt 1 discriminator 3 view .LVU473
  1621 0048 0133     		adds	r3, r3, #1
  1622              	.LVL155:
- 442:modules/imu/ins.c ****         INS_Bias[Idx]  = 0.0f;
- 1623              		.loc 1 442 31 is_stmt 0 discriminator 3 view .LVU474
+ 433:modules/imu/ins.c ****         INS_Bias[Idx]  = 0.0f;
+ 1623              		.loc 1 433 31 is_stmt 0 discriminator 3 view .LVU474
  1624 004a DBB2     		uxtb	r3, r3
  1625              	.LVL156:
  1626              	.L80:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 43
-
-
- 442:modules/imu/ins.c ****         INS_Bias[Idx]  = 0.0f;
- 1627              		.loc 1 442 23 is_stmt 1 discriminator 1 view .LVU475
+ 433:modules/imu/ins.c ****         INS_Bias[Idx]  = 0.0f;
+ 1627              		.loc 1 433 23 is_stmt 1 discriminator 1 view .LVU475
  1628 004c 022B     		cmp	r3, #2
  1629 004e EAD9     		bls	.L81
- 447:modules/imu/ins.c ****     }
- 448:modules/imu/ins.c **** 
- 449:modules/imu/ins.c ****     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
- 1630              		.loc 1 449 5 view .LVU476
+ 438:modules/imu/ins.c ****     }
+ 439:modules/imu/ins.c **** 
+ 440:modules/imu/ins.c ****     BSP_IMU_Cs(BSP_IMU_DEV_ACC, 0);
+ 1630              		.loc 1 440 5 view .LVU476
  1631 0050 0021     		movs	r1, #0
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 43
+
+
  1632 0052 0846     		mov	r0, r1
  1633 0054 FFF7FEFF 		bl	BSP_IMU_Cs
  1634              	.LVL157:
- 450:modules/imu/ins.c ****     BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
- 1635              		.loc 1 450 5 view .LVU477
+ 441:modules/imu/ins.c ****     BSP_IMU_Cs(BSP_IMU_DEV_GYRO, 0);
+ 1635              		.loc 1 441 5 view .LVU477
  1636 0058 0021     		movs	r1, #0
  1637 005a 0120     		movs	r0, #1
  1638 005c FFF7FEFF 		bl	BSP_IMU_Cs
  1639              	.LVL158:
- 451:modules/imu/ins.c ****     /* ins_gpio_init();   临时停用：验证 PC0/PC3 是否与 CAN2 收发器共用引脚 */
- 452:modules/imu/ins.c ****     BSP_DelayMs(10);
- 1640              		.loc 1 452 5 view .LVU478
+ 442:modules/imu/ins.c ****     /* ins_gpio_init();   临时停用：验证 PC0/PC3 是否与 CAN2 收发器共用引脚 */
+ 443:modules/imu/ins.c ****     BSP_DelayMs(10);
+ 1640              		.loc 1 443 5 view .LVU478
  1641 0060 0A20     		movs	r0, #10
  1642 0062 FFF7FEFF 		bl	BSP_DelayMs
  1643              	.LVL159:
- 453:modules/imu/ins.c **** 
- 454:modules/imu/ins.c ****     ins_detect_skip();          /* 先量出 SPI 哑字节个数，再按它初始化 */
- 1644              		.loc 1 454 5 view .LVU479
+ 444:modules/imu/ins.c **** 
+ 445:modules/imu/ins.c ****     ins_detect_skip();          /* 先量出 SPI 哑字节个数，再按它初始化 */
+ 1644              		.loc 1 445 5 view .LVU479
  1645 0066 FFF7FEFF 		bl	ins_detect_skip
  1646              	.LVL160:
- 455:modules/imu/ins.c ****     ins_acc_init();
- 1647              		.loc 1 455 5 view .LVU480
+ 446:modules/imu/ins.c ****     ins_acc_init();
+ 1647              		.loc 1 446 5 view .LVU480
  1648 006a FFF7FEFF 		bl	ins_acc_init
  1649              	.LVL161:
- 456:modules/imu/ins.c ****     ins_gyro_init();
- 1650              		.loc 1 456 5 view .LVU481
+ 447:modules/imu/ins.c ****     ins_gyro_init();
+ 1650              		.loc 1 447 5 view .LVU481
  1651 006e FFF7FEFF 		bl	ins_gyro_init
  1652              	.LVL162:
- 457:modules/imu/ins.c ****     ins_dump();
- 1653              		.loc 1 457 5 view .LVU482
+ 448:modules/imu/ins.c ****     ins_dump();
+ 1653              		.loc 1 448 5 view .LVU482
  1654 0072 FFF7FEFF 		bl	ins_dump
  1655              	.LVL163:
- 458:modules/imu/ins.c **** 
- 459:modules/imu/ins.c ****     /* 两个 ID 都对上才算就绪 */
- 460:modules/imu/ins.c ****     if ((INS_Err & 0x01u) == 0u) {
- 1656              		.loc 1 460 5 view .LVU483
- 1657              		.loc 1 460 18 is_stmt 0 view .LVU484
+ 449:modules/imu/ins.c **** 
+ 450:modules/imu/ins.c ****     /* 两个 ID 都对上才算就绪 */
+ 451:modules/imu/ins.c ****     if ((INS_Err & 0x01u) == 0u) {
+ 1656              		.loc 1 451 5 view .LVU483
+ 1657              		.loc 1 451 18 is_stmt 0 view .LVU484
  1658 0076 0B4B     		ldr	r3, .L84+24
  1659 0078 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1660              		.loc 1 460 8 view .LVU485
+ 1660              		.loc 1 451 8 view .LVU485
  1661 007a 13F0010F 		tst	r3, #1
  1662 007e 04D1     		bne	.L79
- 461:modules/imu/ins.c ****         INS_Ready = 1;
- 1663              		.loc 1 461 9 is_stmt 1 view .LVU486
- 1664              		.loc 1 461 19 is_stmt 0 view .LVU487
+ 452:modules/imu/ins.c ****         INS_Ready = 1;
+ 1663              		.loc 1 452 9 is_stmt 1 view .LVU486
+ 1664              		.loc 1 452 19 is_stmt 0 view .LVU487
  1665 0080 0123     		movs	r3, #1
  1666 0082 044A     		ldr	r2, .L84+8
  1667 0084 1370     		strb	r3, [r2]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 44
-
-
- 462:modules/imu/ins.c ****         S_Inited  = 1;
- 1668              		.loc 1 462 9 is_stmt 1 view .LVU488
- 1669              		.loc 1 462 19 is_stmt 0 view .LVU489
+ 453:modules/imu/ins.c ****         S_Inited  = 1;
+ 1668              		.loc 1 453 9 is_stmt 1 view .LVU488
+ 1669              		.loc 1 453 19 is_stmt 0 view .LVU489
  1670 0086 084A     		ldr	r2, .L84+28
  1671 0088 1370     		strb	r3, [r2]
  1672              	.L79:
- 463:modules/imu/ins.c ****     }
- 464:modules/imu/ins.c **** }
- 1673              		.loc 1 464 1 view .LVU490
+ 454:modules/imu/ins.c ****     }
+ 455:modules/imu/ins.c **** }
+ 1673              		.loc 1 455 1 view .LVU490
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 44
+
+
  1674 008a 08BD     		pop	{r3, pc}
  1675              	.L85:
  1676              		.align	2
@@ -2607,7 +2598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1688 00b4 00000000 		.word	INS_Acc
  1689 00b8 00000000 		.word	S_Sum
  1690              		.cfi_endproc
- 1691              	.LFE156:
+ 1691              	.LFE155:
  1693              		.section	.text.INS_ResetBias,"ax",%progbits
  1694              		.align	1
  1695              		.global	INS_ResetBias
@@ -2615,77 +2606,77 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1697              		.thumb
  1698              		.thumb_func
  1700              	INS_ResetBias:
- 1701              	.LFB157:
- 465:modules/imu/ins.c **** 
- 466:modules/imu/ins.c **** void INS_ResetBias(void)
- 467:modules/imu/ins.c **** {
- 1702              		.loc 1 467 1 is_stmt 1 view -0
+ 1701              	.LFB156:
+ 456:modules/imu/ins.c **** 
+ 457:modules/imu/ins.c **** void INS_ResetBias(void)
+ 458:modules/imu/ins.c **** {
+ 1702              		.loc 1 458 1 is_stmt 1 view -0
  1703              		.cfi_startproc
  1704              		@ args = 0, pretend = 0, frame = 0
  1705              		@ frame_needed = 0, uses_anonymous_args = 0
  1706              		@ link register save eliminated.
- 468:modules/imu/ins.c ****     uint8_t Idx;
- 1707              		.loc 1 468 5 view .LVU492
- 469:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
- 1708              		.loc 1 469 5 view .LVU493
+ 459:modules/imu/ins.c ****     uint8_t Idx;
+ 1707              		.loc 1 459 5 view .LVU492
+ 460:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
+ 1708              		.loc 1 460 5 view .LVU493
  1709              	.LVL164:
- 1710              		.loc 1 469 14 is_stmt 0 view .LVU494
+ 1710              		.loc 1 460 14 is_stmt 0 view .LVU494
  1711 0000 0023     		movs	r3, #0
- 1712              		.loc 1 469 5 view .LVU495
+ 1712              		.loc 1 460 5 view .LVU495
  1713 0002 0EE0     		b	.L87
  1714              	.LVL165:
  1715              	.L88:
- 470:modules/imu/ins.c ****         S_Sum[Idx]    = 0.0f;
- 1716              		.loc 1 470 9 is_stmt 1 view .LVU496
- 1717              		.loc 1 470 23 is_stmt 0 view .LVU497
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 45
-
-
+ 461:modules/imu/ins.c ****         S_Sum[Idx]    = 0.0f;
+ 1716              		.loc 1 461 9 is_stmt 1 view .LVU496
+ 1717              		.loc 1 461 23 is_stmt 0 view .LVU497
  1718 0004 0B4A     		ldr	r2, .L89
  1719 0006 02EB8302 		add	r2, r2, r3, lsl #2
  1720 000a 0021     		movs	r1, #0
  1721 000c 1160     		str	r1, [r2]	@ float
- 471:modules/imu/ins.c ****         INS_Bias[Idx] = 0.0f;
- 1722              		.loc 1 471 9 is_stmt 1 view .LVU498
- 1723              		.loc 1 471 23 is_stmt 0 view .LVU499
+ 462:modules/imu/ins.c ****         INS_Bias[Idx] = 0.0f;
+ 1722              		.loc 1 462 9 is_stmt 1 view .LVU498
+ 1723              		.loc 1 462 23 is_stmt 0 view .LVU499
  1724 000e 0A4A     		ldr	r2, .L89+4
  1725 0010 02EB8302 		add	r2, r2, r3, lsl #2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 45
+
+
  1726 0014 1160     		str	r1, [r2]	@ float
- 472:modules/imu/ins.c ****         INS_Gyro[Idx] = 0.0f;
- 1727              		.loc 1 472 9 is_stmt 1 view .LVU500
- 1728              		.loc 1 472 23 is_stmt 0 view .LVU501
+ 463:modules/imu/ins.c ****         INS_Gyro[Idx] = 0.0f;
+ 1727              		.loc 1 463 9 is_stmt 1 view .LVU500
+ 1728              		.loc 1 463 23 is_stmt 0 view .LVU501
  1729 0016 094A     		ldr	r2, .L89+8
  1730 0018 02EB8302 		add	r2, r2, r3, lsl #2
  1731 001c 1160     		str	r1, [r2]	@ float
- 469:modules/imu/ins.c ****         S_Sum[Idx]    = 0.0f;
- 1732              		.loc 1 469 31 is_stmt 1 discriminator 3 view .LVU502
+ 460:modules/imu/ins.c ****         S_Sum[Idx]    = 0.0f;
+ 1732              		.loc 1 460 31 is_stmt 1 discriminator 3 view .LVU502
  1733 001e 0133     		adds	r3, r3, #1
  1734              	.LVL166:
- 469:modules/imu/ins.c ****         S_Sum[Idx]    = 0.0f;
- 1735              		.loc 1 469 31 is_stmt 0 discriminator 3 view .LVU503
+ 460:modules/imu/ins.c ****         S_Sum[Idx]    = 0.0f;
+ 1735              		.loc 1 460 31 is_stmt 0 discriminator 3 view .LVU503
  1736 0020 DBB2     		uxtb	r3, r3
  1737              	.LVL167:
  1738              	.L87:
- 469:modules/imu/ins.c ****         S_Sum[Idx]    = 0.0f;
- 1739              		.loc 1 469 23 is_stmt 1 discriminator 1 view .LVU504
+ 460:modules/imu/ins.c ****         S_Sum[Idx]    = 0.0f;
+ 1739              		.loc 1 460 23 is_stmt 1 discriminator 1 view .LVU504
  1740 0022 022B     		cmp	r3, #2
  1741 0024 EED9     		bls	.L88
- 473:modules/imu/ins.c ****     }
- 474:modules/imu/ins.c ****     INS_CalCnt  = 0;
- 1742              		.loc 1 474 5 view .LVU505
- 1743              		.loc 1 474 17 is_stmt 0 view .LVU506
+ 464:modules/imu/ins.c ****     }
+ 465:modules/imu/ins.c ****     INS_CalCnt  = 0;
+ 1742              		.loc 1 465 5 view .LVU505
+ 1743              		.loc 1 465 17 is_stmt 0 view .LVU506
  1744 0026 0023     		movs	r3, #0
  1745              	.LVL168:
- 1746              		.loc 1 474 17 view .LVU507
+ 1746              		.loc 1 465 17 view .LVU507
  1747 0028 054A     		ldr	r2, .L89+12
  1748 002a 1380     		strh	r3, [r2]	@ movhi
- 475:modules/imu/ins.c ****     INS_CalDone = 0;
- 1749              		.loc 1 475 5 is_stmt 1 view .LVU508
- 1750              		.loc 1 475 17 is_stmt 0 view .LVU509
+ 466:modules/imu/ins.c ****     INS_CalDone = 0;
+ 1749              		.loc 1 466 5 is_stmt 1 view .LVU508
+ 1750              		.loc 1 466 17 is_stmt 0 view .LVU509
  1751 002c 054A     		ldr	r2, .L89+16
  1752 002e 1370     		strb	r3, [r2]
- 476:modules/imu/ins.c **** }
- 1753              		.loc 1 476 1 view .LVU510
+ 467:modules/imu/ins.c **** }
+ 1753              		.loc 1 467 1 view .LVU510
  1754 0030 7047     		bx	lr
  1755              	.L90:
  1756 0032 00BF     		.align	2
@@ -2696,54 +2687,54 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1761 0040 00000000 		.word	INS_CalCnt
  1762 0044 00000000 		.word	INS_CalDone
  1763              		.cfi_endproc
- 1764              	.LFE157:
+ 1764              	.LFE156:
  1766              		.section	.text.INS_Task,"ax",%progbits
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 46
-
-
  1767              		.align	1
  1768              		.global	INS_Task
  1769              		.syntax unified
  1770              		.thumb
  1771              		.thumb_func
  1773              	INS_Task:
- 1774              	.LFB158:
- 477:modules/imu/ins.c **** 
- 478:modules/imu/ins.c **** /* ======================= 周期任务 ======================= */
- 479:modules/imu/ins.c **** 
- 480:modules/imu/ins.c **** void INS_Task(void)
- 481:modules/imu/ins.c **** {
- 1775              		.loc 1 481 1 is_stmt 1 view -0
+ 1774              	.LFB157:
+ 468:modules/imu/ins.c **** 
+ 469:modules/imu/ins.c **** /* ======================= 周期任务 ======================= */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 46
+
+
+ 470:modules/imu/ins.c **** 
+ 471:modules/imu/ins.c **** void INS_Task(void)
+ 472:modules/imu/ins.c **** {
+ 1775              		.loc 1 472 1 is_stmt 1 view -0
  1776              		.cfi_startproc
  1777              		@ args = 0, pretend = 0, frame = 24
  1778              		@ frame_needed = 0, uses_anonymous_args = 0
- 482:modules/imu/ins.c ****     uint8_t  Raw_Buf[6];
- 1779              		.loc 1 482 5 view .LVU512
- 483:modules/imu/ins.c ****     uint8_t  Idx;
- 1780              		.loc 1 483 5 view .LVU513
- 484:modules/imu/ins.c ****     float    Gyro_Rad[3];
- 1781              		.loc 1 484 5 view .LVU514
- 485:modules/imu/ins.c ****     float    Max_Rate_Dps = 0.0f;
- 1782              		.loc 1 485 5 view .LVU515
+ 473:modules/imu/ins.c ****     uint8_t  Raw_Buf[6];
+ 1779              		.loc 1 473 5 view .LVU512
+ 474:modules/imu/ins.c ****     uint8_t  Idx;
+ 1780              		.loc 1 474 5 view .LVU513
+ 475:modules/imu/ins.c ****     float    Gyro_Rad[3];
+ 1781              		.loc 1 475 5 view .LVU514
+ 476:modules/imu/ins.c ****     float    Max_Rate_Dps = 0.0f;
+ 1782              		.loc 1 476 5 view .LVU515
  1783              	.LVL169:
- 486:modules/imu/ins.c **** 
- 487:modules/imu/ins.c ****     if (S_Inited == 0u || INS_Ready == 0u) {
- 1784              		.loc 1 487 5 view .LVU516
- 1785              		.loc 1 487 18 is_stmt 0 view .LVU517
+ 477:modules/imu/ins.c **** 
+ 478:modules/imu/ins.c ****     if (S_Inited == 0u || INS_Ready == 0u) {
+ 1784              		.loc 1 478 5 view .LVU516
+ 1785              		.loc 1 478 18 is_stmt 0 view .LVU517
  1786 0000 964B     		ldr	r3, .L125
  1787 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1788              		.loc 1 487 8 view .LVU518
+ 1788              		.loc 1 478 8 view .LVU518
  1789 0004 13B1     		cbz	r3, .L118
- 1790              		.loc 1 487 37 discriminator 1 view .LVU519
+ 1790              		.loc 1 478 37 discriminator 1 view .LVU519
  1791 0006 964B     		ldr	r3, .L125+4
  1792 0008 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1793              		.loc 1 487 24 discriminator 1 view .LVU520
+ 1793              		.loc 1 478 24 discriminator 1 view .LVU520
  1794 000a 03B9     		cbnz	r3, .L121
  1795              	.L118:
  1796 000c 7047     		bx	lr
  1797              	.L121:
- 481:modules/imu/ins.c ****     uint8_t  Raw_Buf[6];
- 1798              		.loc 1 481 1 view .LVU521
+ 472:modules/imu/ins.c ****     uint8_t  Raw_Buf[6];
+ 1798              		.loc 1 472 1 view .LVU521
  1799 000e 00B5     		push	{lr}
  1800              	.LCFI26:
  1801              		.cfi_def_cfa_offset 4
@@ -2751,150 +2742,150 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1803 0010 87B0     		sub	sp, sp, #28
  1804              	.LCFI27:
  1805              		.cfi_def_cfa_offset 32
- 488:modules/imu/ins.c ****         return;
- 489:modules/imu/ins.c ****     }
- 490:modules/imu/ins.c **** 
- 491:modules/imu/ins.c ****     /* ---- 陀螺：0x02 ~ 0x07 ---- */
- 492:modules/imu/ins.c ****     if (ins_read(DEV_GYRO, GYRO_RATE_DATA, Raw_Buf, 6) == 0u) {
- 1806              		.loc 1 492 5 is_stmt 1 view .LVU522
- 1807              		.loc 1 492 9 is_stmt 0 view .LVU523
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 47
-
-
+ 479:modules/imu/ins.c ****         return;
+ 480:modules/imu/ins.c ****     }
+ 481:modules/imu/ins.c **** 
+ 482:modules/imu/ins.c ****     /* ---- 陀螺：0x02 ~ 0x07 ---- */
+ 483:modules/imu/ins.c ****     if (ins_read(DEV_GYRO, GYRO_RATE_DATA, Raw_Buf, 6) == 0u) {
+ 1806              		.loc 1 483 5 is_stmt 1 view .LVU522
+ 1807              		.loc 1 483 9 is_stmt 0 view .LVU523
  1808 0012 0623     		movs	r3, #6
  1809 0014 04AA     		add	r2, sp, #16
  1810 0016 0221     		movs	r1, #2
  1811 0018 0120     		movs	r0, #1
  1812 001a FFF7FEFF 		bl	ins_read
  1813              	.LVL170:
- 1814              		.loc 1 492 8 discriminator 1 view .LVU524
+ 1814              		.loc 1 483 8 discriminator 1 view .LVU524
  1815 001e E0B1     		cbz	r0, .L122
- 493:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本拍数据不可信，直接丢弃 */
- 494:modules/imu/ins.c ****         return;
- 495:modules/imu/ins.c ****     }
- 496:modules/imu/ins.c ****     INS_GyroRaw[0] = (int16_t)(((uint16_t)Raw_Buf[1] << 8) | Raw_Buf[0]);
- 1816              		.loc 1 496 5 is_stmt 1 view .LVU525
- 1817              		.loc 1 496 50 is_stmt 0 view .LVU526
+ 484:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本拍数据不可信，直接丢弃 */
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 47
+
+
+ 485:modules/imu/ins.c ****         return;
+ 486:modules/imu/ins.c ****     }
+ 487:modules/imu/ins.c ****     INS_GyroRaw[0] = (int16_t)(((uint16_t)Raw_Buf[1] << 8) | Raw_Buf[0]);
+ 1816              		.loc 1 487 5 is_stmt 1 view .LVU525
+ 1817              		.loc 1 487 50 is_stmt 0 view .LVU526
  1818 0020 9DF81120 		ldrb	r2, [sp, #17]	@ zero_extendqisi2
- 1819              		.loc 1 496 69 view .LVU527
+ 1819              		.loc 1 487 69 view .LVU527
  1820 0024 9DF81030 		ldrb	r3, [sp, #16]	@ zero_extendqisi2
- 1821              		.loc 1 496 22 view .LVU528
+ 1821              		.loc 1 487 22 view .LVU528
  1822 0028 43EA0223 		orr	r3, r3, r2, lsl #8
  1823 002c 1BB2     		sxth	r3, r3
- 1824              		.loc 1 496 20 view .LVU529
+ 1824              		.loc 1 487 20 view .LVU529
  1825 002e 8D4A     		ldr	r2, .L125+8
  1826 0030 1380     		strh	r3, [r2]	@ movhi
- 497:modules/imu/ins.c ****     INS_GyroRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
- 1827              		.loc 1 497 5 is_stmt 1 view .LVU530
- 1828              		.loc 1 497 50 is_stmt 0 view .LVU531
+ 488:modules/imu/ins.c ****     INS_GyroRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+ 1827              		.loc 1 488 5 is_stmt 1 view .LVU530
+ 1828              		.loc 1 488 50 is_stmt 0 view .LVU531
  1829 0032 9DF81310 		ldrb	r1, [sp, #19]	@ zero_extendqisi2
- 1830              		.loc 1 497 69 view .LVU532
+ 1830              		.loc 1 488 69 view .LVU532
  1831 0036 9DF81230 		ldrb	r3, [sp, #18]	@ zero_extendqisi2
- 1832              		.loc 1 497 22 view .LVU533
+ 1832              		.loc 1 488 22 view .LVU533
  1833 003a 43EA0123 		orr	r3, r3, r1, lsl #8
  1834 003e 1BB2     		sxth	r3, r3
- 1835              		.loc 1 497 20 view .LVU534
+ 1835              		.loc 1 488 20 view .LVU534
  1836 0040 5380     		strh	r3, [r2, #2]	@ movhi
- 498:modules/imu/ins.c ****     INS_GyroRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
- 1837              		.loc 1 498 5 is_stmt 1 view .LVU535
- 1838              		.loc 1 498 50 is_stmt 0 view .LVU536
+ 489:modules/imu/ins.c ****     INS_GyroRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
+ 1837              		.loc 1 489 5 is_stmt 1 view .LVU535
+ 1838              		.loc 1 489 50 is_stmt 0 view .LVU536
  1839 0042 9DF81510 		ldrb	r1, [sp, #21]	@ zero_extendqisi2
- 1840              		.loc 1 498 69 view .LVU537
+ 1840              		.loc 1 489 69 view .LVU537
  1841 0046 9DF81430 		ldrb	r3, [sp, #20]	@ zero_extendqisi2
- 1842              		.loc 1 498 22 view .LVU538
+ 1842              		.loc 1 489 22 view .LVU538
  1843 004a 43EA0123 		orr	r3, r3, r1, lsl #8
  1844 004e 1BB2     		sxth	r3, r3
- 1845              		.loc 1 498 20 view .LVU539
+ 1845              		.loc 1 489 20 view .LVU539
  1846 0050 9380     		strh	r3, [r2, #4]	@ movhi
- 499:modules/imu/ins.c **** 
- 500:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
- 1847              		.loc 1 500 5 is_stmt 1 view .LVU540
+ 490:modules/imu/ins.c **** 
+ 491:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
+ 1847              		.loc 1 491 5 is_stmt 1 view .LVU540
  1848              	.LVL171:
- 485:modules/imu/ins.c **** 
- 1849              		.loc 1 485 14 is_stmt 0 view .LVU541
+ 476:modules/imu/ins.c **** 
+ 1849              		.loc 1 476 14 is_stmt 0 view .LVU541
  1850 0052 9FED857A 		vldr.32	s14, .L125+12
- 1851              		.loc 1 500 14 view .LVU542
+ 1851              		.loc 1 491 14 view .LVU542
  1852 0056 0022     		movs	r2, #0
- 1853              		.loc 1 500 5 view .LVU543
+ 1853              		.loc 1 491 5 view .LVU543
  1854 0058 0BE0     		b	.L94
  1855              	.LVL172:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 48
-
-
  1856              	.L122:
- 493:modules/imu/ins.c ****         return;
- 1857              		.loc 1 493 9 is_stmt 1 view .LVU544
- 493:modules/imu/ins.c ****         return;
- 1858              		.loc 1 493 17 is_stmt 0 view .LVU545
+ 484:modules/imu/ins.c ****         return;
+ 1857              		.loc 1 484 9 is_stmt 1 view .LVU544
+ 484:modules/imu/ins.c ****         return;
+ 1858              		.loc 1 484 17 is_stmt 0 view .LVU545
  1859 005a 844A     		ldr	r2, .L125+16
  1860 005c 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
  1861 005e 43F00403 		orr	r3, r3, #4
  1862 0062 1370     		strb	r3, [r2]
- 494:modules/imu/ins.c ****     }
- 1863              		.loc 1 494 9 is_stmt 1 view .LVU546
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 48
+
+
+ 485:modules/imu/ins.c ****     }
+ 1863              		.loc 1 485 9 is_stmt 1 view .LVU546
  1864              	.LVL173:
  1865              	.L91:
- 501:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 502:modules/imu/ins.c ****         if (Gyro_Rad[Idx] > Max_Rate_Dps)  Max_Rate_Dps = Gyro_Rad[Idx];
- 503:modules/imu/ins.c ****         if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
- 504:modules/imu/ins.c ****     }
- 505:modules/imu/ins.c **** 
- 506:modules/imu/ins.c ****     INS_Sample++;
- 507:modules/imu/ins.c **** 
- 508:modules/imu/ins.c ****     /* ---- 零偏标定 ---- */
- 509:modules/imu/ins.c ****     if (INS_CalDone == 0u) {
- 510:modules/imu/ins.c ****         for (Idx = 0; Idx < 3; Idx++) {
- 511:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
- 512:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
- 513:modules/imu/ins.c ****         }
- 514:modules/imu/ins.c ****         INS_CalCnt++;
- 515:modules/imu/ins.c **** 
- 516:modules/imu/ins.c ****         /* 标定过程中动过 → 作废重来，不能带着动过的样本收零偏 */
- 517:modules/imu/ins.c ****         if (Max_Rate_Dps > (INS_CAL_MAX_DPS * 0.0174532925f)) {
- 518:modules/imu/ins.c ****             INS_Err |= 0x02u;
- 519:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
- 520:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
- 521:modules/imu/ins.c ****             }
- 522:modules/imu/ins.c ****             INS_CalCnt = 0;
- 523:modules/imu/ins.c ****             return;
- 524:modules/imu/ins.c ****         }
+ 492:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 493:modules/imu/ins.c ****         if (Gyro_Rad[Idx] > Max_Rate_Dps)  Max_Rate_Dps = Gyro_Rad[Idx];
+ 494:modules/imu/ins.c ****         if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
+ 495:modules/imu/ins.c ****     }
+ 496:modules/imu/ins.c **** 
+ 497:modules/imu/ins.c ****     INS_Sample++;
+ 498:modules/imu/ins.c **** 
+ 499:modules/imu/ins.c ****     /* ---- 零偏标定 ---- */
+ 500:modules/imu/ins.c ****     if (INS_CalDone == 0u) {
+ 501:modules/imu/ins.c ****         for (Idx = 0; Idx < 3; Idx++) {
+ 502:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
+ 503:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
+ 504:modules/imu/ins.c ****         }
+ 505:modules/imu/ins.c ****         INS_CalCnt++;
+ 506:modules/imu/ins.c **** 
+ 507:modules/imu/ins.c ****         /* 标定过程中动过 → 作废重来，不能带着动过的样本收零偏 */
+ 508:modules/imu/ins.c ****         if (Max_Rate_Dps > (INS_CAL_MAX_DPS * 0.0174532925f)) {
+ 509:modules/imu/ins.c ****             INS_Err |= 0x02u;
+ 510:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
+ 511:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
+ 512:modules/imu/ins.c ****             }
+ 513:modules/imu/ins.c ****             INS_CalCnt = 0;
+ 514:modules/imu/ins.c ****             return;
+ 515:modules/imu/ins.c ****         }
+ 516:modules/imu/ins.c **** 
+ 517:modules/imu/ins.c ****         if (INS_CalCnt >= INS_CAL_SAMPLES) {
+ 518:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
+ 519:modules/imu/ins.c ****                 INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
+ 520:modules/imu/ins.c ****             }
+ 521:modules/imu/ins.c ****             INS_CalDone = 1;
+ 522:modules/imu/ins.c ****         }
+ 523:modules/imu/ins.c ****         return;
+ 524:modules/imu/ins.c ****     }
  525:modules/imu/ins.c **** 
- 526:modules/imu/ins.c ****         if (INS_CalCnt >= INS_CAL_SAMPLES) {
- 527:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
- 528:modules/imu/ins.c ****                 INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
- 529:modules/imu/ins.c ****             }
- 530:modules/imu/ins.c ****             INS_CalDone = 1;
- 531:modules/imu/ins.c ****         }
- 532:modules/imu/ins.c ****         return;
- 533:modules/imu/ins.c ****     }
- 534:modules/imu/ins.c **** 
- 535:modules/imu/ins.c ****     /* ---- 去零偏 + 一阶低通 ---- */
- 536:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
- 537:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
- 538:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
- 539:modules/imu/ins.c ****     }
+ 526:modules/imu/ins.c ****     /* ---- 去零偏 + 一阶低通 ---- */
+ 527:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
+ 528:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
+ 529:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
+ 530:modules/imu/ins.c ****     }
+ 531:modules/imu/ins.c **** 
+ 532:modules/imu/ins.c ****     /* ---- 加速度计：0x12 ~ 0x17 ---- */
+ 533:modules/imu/ins.c ****     if (ins_read(DEV_ACC, ACC_DATA, Raw_Buf, 6) == 0u) {
+ 534:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 535:modules/imu/ins.c ****         return;
+ 536:modules/imu/ins.c ****     }
+ 537:modules/imu/ins.c ****     INS_AccRaw[0] = (int16_t)(((uint16_t)Raw_Buf[1] << 8) | Raw_Buf[0]);
+ 538:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+ 539:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
  540:modules/imu/ins.c **** 
- 541:modules/imu/ins.c ****     /* ---- 加速度计：0x12 ~ 0x17 ---- */
- 542:modules/imu/ins.c ****     if (ins_read(DEV_ACC, ACC_DATA, Raw_Buf, 6) == 0u) {
- 543:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
- 544:modules/imu/ins.c ****         return;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 49
+ 541:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
+ 542:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
+ 543:modules/imu/ins.c ****     }
+ 544:modules/imu/ins.c **** 
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 49
 
 
- 545:modules/imu/ins.c ****     }
- 546:modules/imu/ins.c ****     INS_AccRaw[0] = (int16_t)(((uint16_t)Raw_Buf[1] << 8) | Raw_Buf[0]);
- 547:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
- 548:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
- 549:modules/imu/ins.c **** 
- 550:modules/imu/ins.c ****     for (Idx = 0; Idx < 3; Idx++) {
- 551:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
- 552:modules/imu/ins.c ****     }
- 553:modules/imu/ins.c **** 
- 554:modules/imu/ins.c ****     /* ---- Mahony：世界偏航角速度 / 世界偏航角（倾斜补偿） ---- */
- 555:modules/imu/ins.c ****     ins_ahrs_step(INS_Gyro[0], INS_Gyro[1], INS_Gyro[2],
- 556:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
- 557:modules/imu/ins.c **** }
- 1866              		.loc 1 557 1 is_stmt 0 view .LVU547
+ 545:modules/imu/ins.c ****     /* ---- Mahony：世界偏航角速度 / 世界偏航角（倾斜补偿） ---- */
+ 546:modules/imu/ins.c ****     ins_ahrs_step(INS_Gyro[0], INS_Gyro[1], INS_Gyro[2],
+ 547:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
+ 548:modules/imu/ins.c **** }
+ 1866              		.loc 1 548 1 is_stmt 0 view .LVU547
  1867 0064 07B0     		add	sp, sp, #28
  1868              	.LCFI28:
  1869              		.cfi_remember_state
@@ -2905,65 +2896,65 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1874              	.L113:
  1875              	.LCFI29:
  1876              		.cfi_restore_state
- 502:modules/imu/ins.c ****         if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
- 1877              		.loc 1 502 57 discriminator 1 view .LVU548
+ 493:modules/imu/ins.c ****         if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
+ 1877              		.loc 1 493 57 discriminator 1 view .LVU548
  1878 0068 F0EE676A 		vmov.f32	s13, s15
  1879 006c 1BE0     		b	.L95
  1880              	.LVL175:
  1881              	.L96:
- 500:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 1882              		.loc 1 500 31 is_stmt 1 discriminator 2 view .LVU549
+ 491:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 1882              		.loc 1 491 31 is_stmt 1 discriminator 2 view .LVU549
  1883 006e 0132     		adds	r2, r2, #1
  1884              	.LVL176:
- 500:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 1885              		.loc 1 500 31 is_stmt 0 discriminator 2 view .LVU550
+ 491:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 1885              		.loc 1 491 31 is_stmt 0 discriminator 2 view .LVU550
  1886 0070 D2B2     		uxtb	r2, r2
  1887              	.LVL177:
  1888              	.L94:
- 500:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 1889              		.loc 1 500 23 is_stmt 1 discriminator 1 view .LVU551
+ 491:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 1889              		.loc 1 491 23 is_stmt 1 discriminator 1 view .LVU551
  1890 0072 022A     		cmp	r2, #2
  1891 0074 21D8     		bhi	.L123
- 501:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 1892              		.loc 1 501 9 view .LVU552
- 501:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 1893              		.loc 1 501 43 is_stmt 0 view .LVU553
+ 492:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 1892              		.loc 1 492 9 view .LVU552
+ 492:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 1893              		.loc 1 492 43 is_stmt 0 view .LVU553
  1894 0076 7B4B     		ldr	r3, .L125+8
  1895 0078 33F81230 		ldrh	r3, [r3, r2, lsl #1]
  1896 007c 1BB2     		sxth	r3, r3
  1897 007e 07EE903A 		vmov	s15, r3	@ int
- 501:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 1898              		.loc 1 501 25 view .LVU554
+ 492:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 1898              		.loc 1 492 25 view .LVU554
  1899 0082 F8EEE77A 		vcvt.f32.s32	s15, s15
- 501:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 1900              		.loc 1 501 49 view .LVU555
+ 492:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 1900              		.loc 1 492 49 view .LVU555
  1901 0086 DFED7A6A 		vldr.32	s13, .L125+20
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 50
-
-
  1902 008a 67EEA67A 		vmul.f32	s15, s15, s13
- 501:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
- 1903              		.loc 1 501 23 view .LVU556
+ 492:modules/imu/ins.c ****         Gyro_Rad[Idx] = (float)INS_GyroRaw[Idx] * INS_GYRO_LSB;      /* rad/s */
+ 1903              		.loc 1 492 23 view .LVU556
  1904 008e 06AB     		add	r3, sp, #24
  1905 0090 03EB8203 		add	r3, r3, r2, lsl #2
  1906 0094 43ED057A 		vstr.32	s15, [r3, #-20]
- 502:modules/imu/ins.c ****         if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
- 1907              		.loc 1 502 9 is_stmt 1 view .LVU557
- 502:modules/imu/ins.c ****         if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
- 1908              		.loc 1 502 12 is_stmt 0 view .LVU558
+ 493:modules/imu/ins.c ****         if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
+ 1907              		.loc 1 493 9 is_stmt 1 view .LVU557
+ 493:modules/imu/ins.c ****         if (-Gyro_Rad[Idx] > Max_Rate_Dps) Max_Rate_Dps = -Gyro_Rad[Idx];
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 50
+
+
+ 1908              		.loc 1 493 12 is_stmt 0 view .LVU558
  1909 0098 F4EEC77A 		vcmpe.f32	s15, s14
  1910 009c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  1911 00a0 E2DC     		bgt	.L113
  1912 00a2 F0EE476A 		vmov.f32	s13, s14
  1913              	.L95:
  1914              	.LVL178:
- 503:modules/imu/ins.c ****     }
- 1915              		.loc 1 503 9 is_stmt 1 view .LVU559
- 503:modules/imu/ins.c ****     }
- 1916              		.loc 1 503 13 is_stmt 0 view .LVU560
+ 494:modules/imu/ins.c ****     }
+ 1915              		.loc 1 494 9 is_stmt 1 view .LVU559
+ 494:modules/imu/ins.c ****     }
+ 1916              		.loc 1 494 13 is_stmt 0 view .LVU560
  1917 00a6 B1EE677A 		vneg.f32	s14, s15
- 503:modules/imu/ins.c ****     }
- 1918              		.loc 1 503 12 view .LVU561
+ 494:modules/imu/ins.c ****     }
+ 1918              		.loc 1 494 12 view .LVU561
  1919 00aa B4EEE67A 		vcmpe.f32	s14, s13
  1920 00ae F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  1921 00b2 DCDC     		bgt	.L96
@@ -2971,427 +2962,427 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  1923 00b8 D9E7     		b	.L96
  1924              	.LVL179:
  1925              	.L123:
- 506:modules/imu/ins.c **** 
- 1926              		.loc 1 506 5 is_stmt 1 view .LVU562
- 506:modules/imu/ins.c **** 
- 1927              		.loc 1 506 15 is_stmt 0 view .LVU563
+ 497:modules/imu/ins.c **** 
+ 1926              		.loc 1 497 5 is_stmt 1 view .LVU562
+ 497:modules/imu/ins.c **** 
+ 1927              		.loc 1 497 15 is_stmt 0 view .LVU563
  1928 00ba 6E4A     		ldr	r2, .L125+24
  1929              	.LVL180:
- 506:modules/imu/ins.c **** 
- 1930              		.loc 1 506 15 view .LVU564
+ 497:modules/imu/ins.c **** 
+ 1930              		.loc 1 497 15 view .LVU564
  1931 00bc 1368     		ldr	r3, [r2]
  1932 00be 0133     		adds	r3, r3, #1
  1933 00c0 1360     		str	r3, [r2]
- 509:modules/imu/ins.c ****         for (Idx = 0; Idx < 3; Idx++) {
- 1934              		.loc 1 509 5 is_stmt 1 view .LVU565
- 509:modules/imu/ins.c ****         for (Idx = 0; Idx < 3; Idx++) {
- 1935              		.loc 1 509 21 is_stmt 0 view .LVU566
+ 500:modules/imu/ins.c ****         for (Idx = 0; Idx < 3; Idx++) {
+ 1934              		.loc 1 500 5 is_stmt 1 view .LVU565
+ 500:modules/imu/ins.c ****         for (Idx = 0; Idx < 3; Idx++) {
+ 1935              		.loc 1 500 21 is_stmt 0 view .LVU566
  1936 00c2 6D4B     		ldr	r3, .L125+28
  1937 00c4 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 509:modules/imu/ins.c ****         for (Idx = 0; Idx < 3; Idx++) {
- 1938              		.loc 1 509 8 view .LVU567
+ 500:modules/imu/ins.c ****         for (Idx = 0; Idx < 3; Idx++) {
+ 1938              		.loc 1 500 8 view .LVU567
  1939 00c6 03F0FF02 		and	r2, r3, #255
  1940 00ca 5BB3     		cbz	r3, .L114
- 536:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
- 1941              		.loc 1 536 14 view .LVU568
+ 527:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
+ 1941              		.loc 1 527 14 view .LVU568
  1942 00cc 0023     		movs	r3, #0
  1943 00ce 74E0     		b	.L99
  1944              	.LVL181:
  1945              	.L100:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 51
-
-
- 511:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
- 1946              		.loc 1 511 13 is_stmt 1 view .LVU569
- 511:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
- 1947              		.loc 1 511 18 is_stmt 0 view .LVU570
+ 502:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
+ 1946              		.loc 1 502 13 is_stmt 1 view .LVU569
+ 502:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
+ 1947              		.loc 1 502 18 is_stmt 0 view .LVU570
  1948 00d0 6A49     		ldr	r1, .L125+32
  1949 00d2 01EB8301 		add	r1, r1, r3, lsl #2
  1950 00d6 D1ED007A 		vldr.32	s15, [r1]
- 511:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
- 1951              		.loc 1 511 35 view .LVU571
+ 502:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
+ 1951              		.loc 1 502 35 view .LVU571
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 51
+
+
  1952 00da 06A8     		add	r0, sp, #24
  1953 00dc 00EB8300 		add	r0, r0, r3, lsl #2
  1954 00e0 50ED056A 		vldr.32	s13, [r0, #-20]
- 511:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
- 1955              		.loc 1 511 24 view .LVU572
+ 502:modules/imu/ins.c ****             INS_Gyro[Idx] = 0.0f;
+ 1955              		.loc 1 502 24 view .LVU572
  1956 00e4 77EEA67A 		vadd.f32	s15, s15, s13
  1957 00e8 C1ED007A 		vstr.32	s15, [r1]
- 512:modules/imu/ins.c ****         }
- 1958              		.loc 1 512 13 is_stmt 1 view .LVU573
- 512:modules/imu/ins.c ****         }
- 1959              		.loc 1 512 27 is_stmt 0 view .LVU574
+ 503:modules/imu/ins.c ****         }
+ 1958              		.loc 1 503 13 is_stmt 1 view .LVU573
+ 503:modules/imu/ins.c ****         }
+ 1959              		.loc 1 503 27 is_stmt 0 view .LVU574
  1960 00ec 6449     		ldr	r1, .L125+36
  1961 00ee 01EB8301 		add	r1, r1, r3, lsl #2
  1962 00f2 0020     		movs	r0, #0
  1963 00f4 0860     		str	r0, [r1]	@ float
- 510:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
- 1964              		.loc 1 510 35 is_stmt 1 discriminator 3 view .LVU575
+ 501:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
+ 1964              		.loc 1 501 35 is_stmt 1 discriminator 3 view .LVU575
  1965 00f6 0133     		adds	r3, r3, #1
  1966              	.LVL182:
- 510:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
- 1967              		.loc 1 510 35 is_stmt 0 discriminator 3 view .LVU576
+ 501:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
+ 1967              		.loc 1 501 35 is_stmt 0 discriminator 3 view .LVU576
  1968 00f8 DBB2     		uxtb	r3, r3
  1969              	.LVL183:
  1970              	.L98:
- 510:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
- 1971              		.loc 1 510 27 is_stmt 1 discriminator 1 view .LVU577
+ 501:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
+ 1971              		.loc 1 501 27 is_stmt 1 discriminator 1 view .LVU577
  1972 00fa 022B     		cmp	r3, #2
  1973 00fc E8D9     		bls	.L100
- 514:modules/imu/ins.c **** 
- 1974              		.loc 1 514 9 view .LVU578
- 514:modules/imu/ins.c **** 
- 1975              		.loc 1 514 19 is_stmt 0 view .LVU579
+ 505:modules/imu/ins.c **** 
+ 1974              		.loc 1 505 9 view .LVU578
+ 505:modules/imu/ins.c **** 
+ 1975              		.loc 1 505 19 is_stmt 0 view .LVU579
  1976 00fe 6149     		ldr	r1, .L125+40
  1977 0100 0B88     		ldrh	r3, [r1]
  1978              	.LVL184:
- 514:modules/imu/ins.c **** 
- 1979              		.loc 1 514 19 view .LVU580
+ 505:modules/imu/ins.c **** 
+ 1979              		.loc 1 505 19 view .LVU580
  1980 0102 9BB2     		uxth	r3, r3
  1981 0104 0133     		adds	r3, r3, #1
  1982 0106 9BB2     		uxth	r3, r3
  1983 0108 0B80     		strh	r3, [r1]	@ movhi
- 517:modules/imu/ins.c ****             INS_Err |= 0x02u;
- 1984              		.loc 1 517 9 is_stmt 1 view .LVU581
- 517:modules/imu/ins.c ****             INS_Err |= 0x02u;
- 1985              		.loc 1 517 12 is_stmt 0 view .LVU582
+ 508:modules/imu/ins.c ****             INS_Err |= 0x02u;
+ 1984              		.loc 1 508 9 is_stmt 1 view .LVU581
+ 508:modules/imu/ins.c ****             INS_Err |= 0x02u;
+ 1985              		.loc 1 508 12 is_stmt 0 view .LVU582
  1986 010a DFED5F7A 		vldr.32	s15, .L125+44
  1987 010e B4EEE77A 		vcmpe.f32	s14, s15
  1988 0112 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 52
-
-
  1989 0116 14DD     		ble	.L116
- 518:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
- 1990              		.loc 1 518 13 is_stmt 1 view .LVU583
- 518:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
- 1991              		.loc 1 518 21 is_stmt 0 view .LVU584
+ 509:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
+ 1990              		.loc 1 509 13 is_stmt 1 view .LVU583
+ 509:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
+ 1991              		.loc 1 509 21 is_stmt 0 view .LVU584
  1992 0118 5449     		ldr	r1, .L125+16
  1993 011a 0B78     		ldrb	r3, [r1]	@ zero_extendqisi2
  1994 011c 43F00203 		orr	r3, r3, #2
  1995 0120 0B70     		strb	r3, [r1]
- 519:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
- 1996              		.loc 1 519 13 is_stmt 1 view .LVU585
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 52
+
+
+ 510:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
+ 1996              		.loc 1 510 13 is_stmt 1 view .LVU585
  1997              	.LVL185:
- 519:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
- 1998              		.loc 1 519 13 is_stmt 0 view .LVU586
+ 510:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
+ 1998              		.loc 1 510 13 is_stmt 0 view .LVU586
  1999 0122 08E0     		b	.L103
  2000              	.LVL186:
  2001              	.L114:
- 510:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
- 2002              		.loc 1 510 18 view .LVU587
+ 501:modules/imu/ins.c ****             S_Sum[Idx] += Gyro_Rad[Idx];
+ 2002              		.loc 1 501 18 view .LVU587
  2003 0124 1346     		mov	r3, r2
  2004 0126 E8E7     		b	.L98
  2005              	.LVL187:
  2006              	.L104:
- 520:modules/imu/ins.c ****             }
- 2007              		.loc 1 520 17 is_stmt 1 view .LVU588
- 520:modules/imu/ins.c ****             }
- 2008              		.loc 1 520 28 is_stmt 0 view .LVU589
+ 511:modules/imu/ins.c ****             }
+ 2007              		.loc 1 511 17 is_stmt 1 view .LVU588
+ 511:modules/imu/ins.c ****             }
+ 2008              		.loc 1 511 28 is_stmt 0 view .LVU589
  2009 0128 544B     		ldr	r3, .L125+32
  2010 012a 03EB8203 		add	r3, r3, r2, lsl #2
  2011 012e 0021     		movs	r1, #0
  2012 0130 1960     		str	r1, [r3]	@ float
- 519:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
- 2013              		.loc 1 519 39 is_stmt 1 discriminator 3 view .LVU590
+ 510:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
+ 2013              		.loc 1 510 39 is_stmt 1 discriminator 3 view .LVU590
  2014 0132 0132     		adds	r2, r2, #1
  2015              	.LVL188:
- 519:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
- 2016              		.loc 1 519 39 is_stmt 0 discriminator 3 view .LVU591
+ 510:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
+ 2016              		.loc 1 510 39 is_stmt 0 discriminator 3 view .LVU591
  2017 0134 D2B2     		uxtb	r2, r2
  2018              	.LVL189:
  2019              	.L103:
- 519:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
- 2020              		.loc 1 519 31 is_stmt 1 discriminator 1 view .LVU592
+ 510:modules/imu/ins.c ****                 S_Sum[Idx] = 0.0f;
+ 2020              		.loc 1 510 31 is_stmt 1 discriminator 1 view .LVU592
  2021 0136 022A     		cmp	r2, #2
  2022 0138 F6D9     		bls	.L104
- 522:modules/imu/ins.c ****             return;
- 2023              		.loc 1 522 13 view .LVU593
- 522:modules/imu/ins.c ****             return;
- 2024              		.loc 1 522 24 is_stmt 0 view .LVU594
+ 513:modules/imu/ins.c ****             return;
+ 2023              		.loc 1 513 13 view .LVU593
+ 513:modules/imu/ins.c ****             return;
+ 2024              		.loc 1 513 24 is_stmt 0 view .LVU594
  2025 013a 524B     		ldr	r3, .L125+40
  2026 013c 0022     		movs	r2, #0
  2027              	.LVL190:
- 522:modules/imu/ins.c ****             return;
- 2028              		.loc 1 522 24 view .LVU595
+ 513:modules/imu/ins.c ****             return;
+ 2028              		.loc 1 513 24 view .LVU595
  2029 013e 1A80     		strh	r2, [r3]	@ movhi
- 523:modules/imu/ins.c ****         }
- 2030              		.loc 1 523 13 is_stmt 1 view .LVU596
+ 514:modules/imu/ins.c ****         }
+ 2030              		.loc 1 514 13 is_stmt 1 view .LVU596
  2031 0140 90E7     		b	.L91
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 53
-
-
  2032              	.L116:
- 526:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
- 2033              		.loc 1 526 9 view .LVU597
- 526:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
- 2034              		.loc 1 526 24 is_stmt 0 view .LVU598
+ 517:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
+ 2033              		.loc 1 517 9 view .LVU597
+ 517:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
+ 2034              		.loc 1 517 24 is_stmt 0 view .LVU598
  2035 0142 504B     		ldr	r3, .L125+40
  2036 0144 1B88     		ldrh	r3, [r3]
  2037 0146 9BB2     		uxth	r3, r3
- 526:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
- 2038              		.loc 1 526 12 view .LVU599
+ 517:modules/imu/ins.c ****             for (Idx = 0; Idx < 3; Idx++) {
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 53
+
+
+ 2038              		.loc 1 517 12 view .LVU599
  2039 0148 B3F5FA6F 		cmp	r3, #2000
  2040 014c 10D2     		bcs	.L105
  2041 014e 89E7     		b	.L91
  2042              	.LVL191:
  2043              	.L107:
- 528:modules/imu/ins.c ****             }
- 2044              		.loc 1 528 17 is_stmt 1 view .LVU600
- 528:modules/imu/ins.c ****             }
- 2045              		.loc 1 528 38 is_stmt 0 view .LVU601
+ 519:modules/imu/ins.c ****             }
+ 2044              		.loc 1 519 17 is_stmt 1 view .LVU600
+ 519:modules/imu/ins.c ****             }
+ 2045              		.loc 1 519 38 is_stmt 0 view .LVU601
  2046 0150 4A4B     		ldr	r3, .L125+32
  2047 0152 03EB8203 		add	r3, r3, r2, lsl #2
  2048 0156 D3ED006A 		vldr.32	s13, [r3]
- 528:modules/imu/ins.c ****             }
- 2049              		.loc 1 528 44 view .LVU602
+ 519:modules/imu/ins.c ****             }
+ 2049              		.loc 1 519 44 view .LVU602
  2050 015a 9FED4C7A 		vldr.32	s14, .L125+48
  2051 015e C6EE877A 		vdiv.f32	s15, s13, s14
- 528:modules/imu/ins.c ****             }
- 2052              		.loc 1 528 31 view .LVU603
+ 519:modules/imu/ins.c ****             }
+ 2052              		.loc 1 519 31 view .LVU603
  2053 0162 4B4B     		ldr	r3, .L125+52
  2054 0164 03EB8203 		add	r3, r3, r2, lsl #2
  2055 0168 C3ED007A 		vstr.32	s15, [r3]
- 527:modules/imu/ins.c ****                 INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
- 2056              		.loc 1 527 39 is_stmt 1 discriminator 3 view .LVU604
+ 518:modules/imu/ins.c ****                 INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
+ 2056              		.loc 1 518 39 is_stmt 1 discriminator 3 view .LVU604
  2057 016c 0132     		adds	r2, r2, #1
  2058              	.LVL192:
- 527:modules/imu/ins.c ****                 INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
- 2059              		.loc 1 527 39 is_stmt 0 discriminator 3 view .LVU605
+ 518:modules/imu/ins.c ****                 INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
+ 2059              		.loc 1 518 39 is_stmt 0 discriminator 3 view .LVU605
  2060 016e D2B2     		uxtb	r2, r2
  2061              	.LVL193:
  2062              	.L105:
- 527:modules/imu/ins.c ****                 INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
- 2063              		.loc 1 527 31 is_stmt 1 discriminator 1 view .LVU606
+ 518:modules/imu/ins.c ****                 INS_Bias[Idx] = S_Sum[Idx] / (float)INS_CAL_SAMPLES;
+ 2063              		.loc 1 518 31 is_stmt 1 discriminator 1 view .LVU606
  2064 0170 022A     		cmp	r2, #2
  2065 0172 EDD9     		bls	.L107
- 530:modules/imu/ins.c ****         }
- 2066              		.loc 1 530 13 view .LVU607
- 530:modules/imu/ins.c ****         }
- 2067              		.loc 1 530 25 is_stmt 0 view .LVU608
+ 521:modules/imu/ins.c ****         }
+ 2066              		.loc 1 521 13 view .LVU607
+ 521:modules/imu/ins.c ****         }
+ 2067              		.loc 1 521 25 is_stmt 0 view .LVU608
  2068 0174 404B     		ldr	r3, .L125+28
  2069 0176 0122     		movs	r2, #1
  2070              	.LVL194:
- 530:modules/imu/ins.c ****         }
- 2071              		.loc 1 530 25 view .LVU609
+ 521:modules/imu/ins.c ****         }
+ 2071              		.loc 1 521 25 view .LVU609
  2072 0178 1A70     		strb	r2, [r3]
- 532:modules/imu/ins.c ****     }
- 2073              		.loc 1 532 9 is_stmt 1 view .LVU610
+ 523:modules/imu/ins.c ****     }
+ 2073              		.loc 1 523 9 is_stmt 1 view .LVU610
  2074 017a 73E7     		b	.L91
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 54
-
-
  2075              	.LVL195:
  2076              	.L108:
  2077              	.LBB2:
- 537:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
- 2078              		.loc 1 537 9 view .LVU611
- 537:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
- 2079              		.loc 1 537 27 is_stmt 0 view .LVU612
+ 528:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
+ 2078              		.loc 1 528 9 view .LVU611
+ 528:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
+ 2079              		.loc 1 528 27 is_stmt 0 view .LVU612
  2080 017c 06AA     		add	r2, sp, #24
  2081 017e 02EB8302 		add	r2, r2, r3, lsl #2
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 54
+
+
  2082 0182 52ED057A 		vldr.32	s15, [r2, #-20]
- 537:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
- 2083              		.loc 1 537 43 view .LVU613
+ 528:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
+ 2083              		.loc 1 528 43 view .LVU613
  2084 0186 424A     		ldr	r2, .L125+52
  2085 0188 02EB8302 		add	r2, r2, r3, lsl #2
  2086 018c 92ED007A 		vldr.32	s14, [r2]
- 537:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
- 2087              		.loc 1 537 15 view .LVU614
+ 528:modules/imu/ins.c ****         INS_Gyro[Idx] += (v - INS_Gyro[Idx]) * INS_GYRO_LPF;
+ 2087              		.loc 1 528 15 view .LVU614
  2088 0190 77EEC77A 		vsub.f32	s15, s15, s14
  2089              	.LVL196:
- 538:modules/imu/ins.c ****     }
- 2090              		.loc 1 538 9 is_stmt 1 view .LVU615
- 538:modules/imu/ins.c ****     }
- 2091              		.loc 1 538 39 is_stmt 0 view .LVU616
+ 529:modules/imu/ins.c ****     }
+ 2090              		.loc 1 529 9 is_stmt 1 view .LVU615
+ 529:modules/imu/ins.c ****     }
+ 2091              		.loc 1 529 39 is_stmt 0 view .LVU616
  2092 0194 3A4A     		ldr	r2, .L125+36
  2093 0196 02EB8302 		add	r2, r2, r3, lsl #2
  2094 019a 92ED007A 		vldr.32	s14, [r2]
- 538:modules/imu/ins.c ****     }
- 2095              		.loc 1 538 29 view .LVU617
+ 529:modules/imu/ins.c ****     }
+ 2095              		.loc 1 529 29 view .LVU617
  2096 019e 77EEC77A 		vsub.f32	s15, s15, s14
  2097              	.LVL197:
- 538:modules/imu/ins.c ****     }
- 2098              		.loc 1 538 46 view .LVU618
+ 529:modules/imu/ins.c ****     }
+ 2098              		.loc 1 529 46 view .LVU618
  2099 01a2 9FED3C7A 		vldr.32	s14, .L125+56
  2100 01a6 67EE877A 		vmul.f32	s15, s15, s14
- 538:modules/imu/ins.c ****     }
- 2101              		.loc 1 538 17 view .LVU619
+ 529:modules/imu/ins.c ****     }
+ 2101              		.loc 1 529 17 view .LVU619
  2102 01aa 92ED007A 		vldr.32	s14, [r2]
- 538:modules/imu/ins.c ****     }
- 2103              		.loc 1 538 23 view .LVU620
+ 529:modules/imu/ins.c ****     }
+ 2103              		.loc 1 529 23 view .LVU620
  2104 01ae 77EE277A 		vadd.f32	s15, s14, s15
  2105 01b2 C2ED007A 		vstr.32	s15, [r2]
  2106              	.LBE2:
- 536:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
- 2107              		.loc 1 536 31 is_stmt 1 discriminator 3 view .LVU621
+ 527:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
+ 2107              		.loc 1 527 31 is_stmt 1 discriminator 3 view .LVU621
  2108 01b6 0133     		adds	r3, r3, #1
  2109              	.LVL198:
- 536:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
- 2110              		.loc 1 536 31 is_stmt 0 discriminator 3 view .LVU622
+ 527:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
+ 2110              		.loc 1 527 31 is_stmt 0 discriminator 3 view .LVU622
  2111 01b8 DBB2     		uxtb	r3, r3
  2112              	.LVL199:
  2113              	.L99:
- 536:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
- 2114              		.loc 1 536 23 is_stmt 1 discriminator 1 view .LVU623
+ 527:modules/imu/ins.c ****         float v = Gyro_Rad[Idx] - INS_Bias[Idx];
+ 2114              		.loc 1 527 23 is_stmt 1 discriminator 1 view .LVU623
  2115 01ba 022B     		cmp	r3, #2
  2116 01bc DED9     		bls	.L108
- 542:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
- 2117              		.loc 1 542 5 view .LVU624
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 55
-
-
- 542:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
- 2118              		.loc 1 542 9 is_stmt 0 view .LVU625
+ 533:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 2117              		.loc 1 533 5 view .LVU624
+ 533:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 2118              		.loc 1 533 9 is_stmt 0 view .LVU625
  2119 01be 0623     		movs	r3, #6
  2120              	.LVL200:
- 542:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
- 2121              		.loc 1 542 9 view .LVU626
+ 533:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 2121              		.loc 1 533 9 view .LVU626
  2122 01c0 04AA     		add	r2, sp, #16
  2123 01c2 1221     		movs	r1, #18
  2124 01c4 0020     		movs	r0, #0
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 55
+
+
  2125 01c6 FFF7FEFF 		bl	ins_read
  2126              	.LVL201:
- 542:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
- 2127              		.loc 1 542 8 discriminator 1 view .LVU627
+ 533:modules/imu/ins.c ****         INS_Err |= 0x04u;        /* SPI 读失败：本次六轴样本不完整，不发布 */
+ 2127              		.loc 1 533 8 discriminator 1 view .LVU627
  2128 01ca D0B1     		cbz	r0, .L124
- 546:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
- 2129              		.loc 1 546 5 is_stmt 1 view .LVU628
- 546:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
- 2130              		.loc 1 546 49 is_stmt 0 view .LVU629
+ 537:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+ 2129              		.loc 1 537 5 is_stmt 1 view .LVU628
+ 537:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+ 2130              		.loc 1 537 49 is_stmt 0 view .LVU629
  2131 01cc 9DF81120 		ldrb	r2, [sp, #17]	@ zero_extendqisi2
- 546:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
- 2132              		.loc 1 546 68 view .LVU630
+ 537:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+ 2132              		.loc 1 537 68 view .LVU630
  2133 01d0 9DF81030 		ldrb	r3, [sp, #16]	@ zero_extendqisi2
- 546:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
- 2134              		.loc 1 546 21 view .LVU631
+ 537:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+ 2134              		.loc 1 537 21 view .LVU631
  2135 01d4 43EA0223 		orr	r3, r3, r2, lsl #8
  2136 01d8 1BB2     		sxth	r3, r3
- 546:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
- 2137              		.loc 1 546 19 view .LVU632
+ 537:modules/imu/ins.c ****     INS_AccRaw[1] = (int16_t)(((uint16_t)Raw_Buf[3] << 8) | Raw_Buf[2]);
+ 2137              		.loc 1 537 19 view .LVU632
  2138 01da 2F4A     		ldr	r2, .L125+60
  2139 01dc 1380     		strh	r3, [r2]	@ movhi
- 547:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
- 2140              		.loc 1 547 5 is_stmt 1 view .LVU633
- 547:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
- 2141              		.loc 1 547 49 is_stmt 0 view .LVU634
+ 538:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
+ 2140              		.loc 1 538 5 is_stmt 1 view .LVU633
+ 538:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
+ 2141              		.loc 1 538 49 is_stmt 0 view .LVU634
  2142 01de 9DF81310 		ldrb	r1, [sp, #19]	@ zero_extendqisi2
- 547:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
- 2143              		.loc 1 547 68 view .LVU635
+ 538:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
+ 2143              		.loc 1 538 68 view .LVU635
  2144 01e2 9DF81230 		ldrb	r3, [sp, #18]	@ zero_extendqisi2
- 547:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
- 2145              		.loc 1 547 21 view .LVU636
+ 538:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
+ 2145              		.loc 1 538 21 view .LVU636
  2146 01e6 43EA0123 		orr	r3, r3, r1, lsl #8
  2147 01ea 1BB2     		sxth	r3, r3
- 547:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
- 2148              		.loc 1 547 19 view .LVU637
+ 538:modules/imu/ins.c ****     INS_AccRaw[2] = (int16_t)(((uint16_t)Raw_Buf[5] << 8) | Raw_Buf[4]);
+ 2148              		.loc 1 538 19 view .LVU637
  2149 01ec 5380     		strh	r3, [r2, #2]	@ movhi
- 548:modules/imu/ins.c **** 
- 2150              		.loc 1 548 5 is_stmt 1 view .LVU638
- 548:modules/imu/ins.c **** 
- 2151              		.loc 1 548 49 is_stmt 0 view .LVU639
+ 539:modules/imu/ins.c **** 
+ 2150              		.loc 1 539 5 is_stmt 1 view .LVU638
+ 539:modules/imu/ins.c **** 
+ 2151              		.loc 1 539 49 is_stmt 0 view .LVU639
  2152 01ee 9DF81510 		ldrb	r1, [sp, #21]	@ zero_extendqisi2
- 548:modules/imu/ins.c **** 
- 2153              		.loc 1 548 68 view .LVU640
+ 539:modules/imu/ins.c **** 
+ 2153              		.loc 1 539 68 view .LVU640
  2154 01f2 9DF81430 		ldrb	r3, [sp, #20]	@ zero_extendqisi2
- 548:modules/imu/ins.c **** 
- 2155              		.loc 1 548 21 view .LVU641
+ 539:modules/imu/ins.c **** 
+ 2155              		.loc 1 539 21 view .LVU641
  2156 01f6 43EA0123 		orr	r3, r3, r1, lsl #8
  2157 01fa 1BB2     		sxth	r3, r3
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 56
-
-
- 548:modules/imu/ins.c **** 
- 2158              		.loc 1 548 19 view .LVU642
+ 539:modules/imu/ins.c **** 
+ 2158              		.loc 1 539 19 view .LVU642
  2159 01fc 9380     		strh	r3, [r2, #4]	@ movhi
- 550:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
- 2160              		.loc 1 550 5 is_stmt 1 view .LVU643
+ 541:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
+ 2160              		.loc 1 541 5 is_stmt 1 view .LVU643
  2161              	.LVL202:
- 550:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
- 2162              		.loc 1 550 14 is_stmt 0 view .LVU644
+ 541:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
+ 2162              		.loc 1 541 14 is_stmt 0 view .LVU644
  2163 01fe 0022     		movs	r2, #0
- 550:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
- 2164              		.loc 1 550 5 view .LVU645
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 56
+
+
+ 541:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
+ 2164              		.loc 1 541 5 view .LVU645
  2165 0200 18E0     		b	.L110
  2166              	.LVL203:
  2167              	.L124:
- 543:modules/imu/ins.c ****         return;
- 2168              		.loc 1 543 9 is_stmt 1 view .LVU646
- 543:modules/imu/ins.c ****         return;
- 2169              		.loc 1 543 17 is_stmt 0 view .LVU647
+ 534:modules/imu/ins.c ****         return;
+ 2168              		.loc 1 534 9 is_stmt 1 view .LVU646
+ 534:modules/imu/ins.c ****         return;
+ 2169              		.loc 1 534 17 is_stmt 0 view .LVU647
  2170 0202 1A4A     		ldr	r2, .L125+16
  2171 0204 1378     		ldrb	r3, [r2]	@ zero_extendqisi2
  2172 0206 43F00403 		orr	r3, r3, #4
  2173 020a 1370     		strb	r3, [r2]
- 544:modules/imu/ins.c ****     }
- 2174              		.loc 1 544 9 is_stmt 1 view .LVU648
+ 535:modules/imu/ins.c ****     }
+ 2174              		.loc 1 535 9 is_stmt 1 view .LVU648
  2175 020c 2AE7     		b	.L91
  2176              	.LVL204:
  2177              	.L111:
- 551:modules/imu/ins.c ****     }
- 2178              		.loc 1 551 9 view .LVU649
- 551:modules/imu/ins.c ****     }
- 2179              		.loc 1 551 41 is_stmt 0 view .LVU650
+ 542:modules/imu/ins.c ****     }
+ 2178              		.loc 1 542 9 view .LVU649
+ 542:modules/imu/ins.c ****     }
+ 2179              		.loc 1 542 41 is_stmt 0 view .LVU650
  2180 020e 224B     		ldr	r3, .L125+60
  2181 0210 33F81230 		ldrh	r3, [r3, r2, lsl #1]
  2182 0214 1BB2     		sxth	r3, r3
  2183 0216 07EE903A 		vmov	s15, r3	@ int
- 551:modules/imu/ins.c ****     }
- 2184              		.loc 1 551 24 view .LVU651
+ 542:modules/imu/ins.c ****     }
+ 2184              		.loc 1 542 24 view .LVU651
  2185 021a F8EEE77A 		vcvt.f32.s32	s15, s15
- 551:modules/imu/ins.c ****     }
- 2186              		.loc 1 551 47 view .LVU652
+ 542:modules/imu/ins.c ****     }
+ 2186              		.loc 1 542 47 view .LVU652
  2187 021e 9FED1F7A 		vldr.32	s14, .L125+64
  2188 0222 67EE877A 		vmul.f32	s15, s15, s14
- 551:modules/imu/ins.c ****     }
- 2189              		.loc 1 551 22 view .LVU653
+ 542:modules/imu/ins.c ****     }
+ 2189              		.loc 1 542 22 view .LVU653
  2190 0226 1E4B     		ldr	r3, .L125+68
  2191 0228 03EB8203 		add	r3, r3, r2, lsl #2
  2192 022c C3ED007A 		vstr.32	s15, [r3]
- 550:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
- 2193              		.loc 1 550 31 is_stmt 1 discriminator 3 view .LVU654
+ 541:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
+ 2193              		.loc 1 541 31 is_stmt 1 discriminator 3 view .LVU654
  2194 0230 0132     		adds	r2, r2, #1
  2195              	.LVL205:
- 550:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
- 2196              		.loc 1 550 31 is_stmt 0 discriminator 3 view .LVU655
+ 541:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
+ 2196              		.loc 1 541 31 is_stmt 0 discriminator 3 view .LVU655
  2197 0232 D2B2     		uxtb	r2, r2
  2198              	.LVL206:
  2199              	.L110:
- 550:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 57
-
-
- 2200              		.loc 1 550 23 is_stmt 1 discriminator 1 view .LVU656
+ 541:modules/imu/ins.c ****         INS_Acc[Idx] = (float)INS_AccRaw[Idx] * INS_ACC_LSB;
+ 2200              		.loc 1 541 23 is_stmt 1 discriminator 1 view .LVU656
  2201 0234 022A     		cmp	r2, #2
  2202 0236 EAD9     		bls	.L111
- 555:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
- 2203              		.loc 1 555 5 view .LVU657
- 555:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
- 2204              		.loc 1 555 27 is_stmt 0 view .LVU658
+ 546:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
+ 2203              		.loc 1 546 5 view .LVU657
+ 546:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
+ 2204              		.loc 1 546 27 is_stmt 0 view .LVU658
  2205 0238 114B     		ldr	r3, .L125+36
  2206 023a 93ED000A 		vldr.32	s0, [r3]
- 555:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
- 2207              		.loc 1 555 40 view .LVU659
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 57
+
+
+ 546:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
+ 2207              		.loc 1 546 40 view .LVU659
  2208 023e D3ED010A 		vldr.32	s1, [r3, #4]
- 555:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
- 2209              		.loc 1 555 53 view .LVU660
+ 546:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
+ 2209              		.loc 1 546 53 view .LVU660
  2210 0242 93ED021A 		vldr.32	s2, [r3, #8]
- 556:modules/imu/ins.c **** }
- 2211              		.loc 1 556 26 view .LVU661
+ 547:modules/imu/ins.c **** }
+ 2211              		.loc 1 547 26 view .LVU661
  2212 0246 164B     		ldr	r3, .L125+68
  2213 0248 D3ED001A 		vldr.32	s3, [r3]
- 556:modules/imu/ins.c **** }
- 2214              		.loc 1 556 39 view .LVU662
+ 547:modules/imu/ins.c **** }
+ 2214              		.loc 1 547 39 view .LVU662
  2215 024c 93ED012A 		vldr.32	s4, [r3, #4]
- 556:modules/imu/ins.c **** }
- 2216              		.loc 1 556 52 view .LVU663
+ 547:modules/imu/ins.c **** }
+ 2216              		.loc 1 547 52 view .LVU663
  2217 0250 D3ED022A 		vldr.32	s5, [r3, #8]
- 555:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
- 2218              		.loc 1 555 5 view .LVU664
+ 546:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
+ 2218              		.loc 1 546 5 view .LVU664
  2219 0254 FFF7FEFF 		bl	ins_ahrs_step
  2220              	.LVL207:
- 555:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
- 2221              		.loc 1 555 5 view .LVU665
+ 546:modules/imu/ins.c ****                   INS_Acc[0],  INS_Acc[1],  INS_Acc[2]);
+ 2221              		.loc 1 546 5 view .LVU665
  2222 0258 04E7     		b	.L91
  2223              	.L126:
  2224 025a 00BF     		.align	2
@@ -3415,12 +3406,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  2242 029c 0F5CEB3A 		.word	988503055
  2243 02a0 00000000 		.word	INS_Acc
  2244              		.cfi_endproc
- 2245              	.LFE158:
+ 2245              	.LFE157:
  2247              		.section	.bss.S_Skip_Gyro,"aw",%nobits
  2250              	S_Skip_Gyro:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 58
-
-
  2251 0000 00       		.space	1
  2252              		.section	.data.S_Skip_Acc,"aw"
  2255              	S_Skip_Acc:
@@ -3430,6 +3418,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  2261              	S_Ahrs_Cnt:
  2262 0000 0000     		.space	2
  2263              		.section	.bss.S_Ezi,"aw",%nobits
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 58
+
+
  2264              		.align	2
  2267              	S_Ezi:
  2268 0000 00000000 		.space	4
@@ -3478,9 +3469,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  2331 0000 00000000 		.space	4
  2332              		.global	INS_WorldYawRate
  2333              		.section	.bss.INS_WorldYawRate,"aw",%nobits
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 59
-
-
  2334              		.align	2
  2337              	INS_WorldYawRate:
  2338 0000 00000000 		.space	4
@@ -3490,6 +3478,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  2344              		.section	.bss.S_Sum,"aw",%nobits
  2345              		.align	2
  2348              	S_Sum:
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 59
+
+
  2349 0000 00000000 		.space	12
  2349      00000000 
  2349      00000000 
@@ -3538,9 +3529,6 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  2391      0000
  2392              		.global	INS_AccRaw
  2393              		.section	.bss.INS_AccRaw,"aw",%nobits
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 60
-
-
  2394              		.align	2
  2397              	INS_AccRaw:
  2398 0000 00000000 		.space	6
@@ -3550,6 +3538,9 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  2403              	INS_Err:
  2404 0000 00       		.space	1
  2405              		.global	INS_Sample
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 60
+
+
  2406              		.section	.bss.INS_Sample,"aw",%nobits
  2407              		.align	2
  2410              	INS_Sample:
@@ -3584,108 +3575,108 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccq
  2449              		.file 6 "bsp/bsp_spi.h"
  2450              		.file 7 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14.
  2451              		.file 8 "bsp/bsp_time.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 61
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 61
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 ins.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:20     .text.ins_cs:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:25     .text.ins_cs:00000000 ins_cs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:53     .text.ins_read_at:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:58     .text.ins_read_at:00000000 ins_read_at
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:131    .text.ins_detect_skip:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:136    .text.ins_detect_skip:00000000 ins_detect_skip
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:333    .text.ins_detect_skip:000000c0 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2362   .bss.INS_AccDump:00000000 INS_AccDump
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2355   .bss.INS_GyroDump:00000000 INS_GyroDump
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2255   .data.S_Skip_Acc:00000000 S_Skip_Acc
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2250   .bss.S_Skip_Gyro:00000000 S_Skip_Gyro
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:341    .text.ins_read:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:346    .text.ins_read:00000000 ins_read
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:500    .text.ins_read:000000b0 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:506    .text.ins_dump:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:511    .text.ins_dump:00000000 ins_dump
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:564    .text.ins_dump:0000002c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:570    .text.ins_write:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:575    .text.ins_write:00000000 ins_write
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:628    .text.ins_acc_init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:633    .text.ins_acc_init:00000000 ins_acc_init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:790    .text.ins_acc_init:000000d4 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2441   .bss.INS_AccId:00000000 INS_AccId
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2403   .bss.INS_Err:00000000 INS_Err
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:796    .text.ins_gyro_init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:801    .text.ins_gyro_init:00000000 ins_gyro_init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:923    .text.ins_gyro_init:0000009c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2435   .bss.INS_GyroId:00000000 INS_GyroId
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:929    .text.ins_ahrs_step:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:934    .text.ins_ahrs_step:00000000 ins_ahrs_step
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1516   .text.ins_ahrs_step:0000036c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2303   .data.S_Q0:00000000 S_Q0
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2297   .bss.S_Q1:00000000 S_Q1
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2291   .bss.S_Q2:00000000 S_Q2
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2285   .bss.S_Q3:00000000 S_Q3
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2279   .bss.S_Exi:00000000 S_Exi
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2273   .bss.S_Eyi:00000000 S_Eyi
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2267   .bss.S_Ezi:00000000 S_Ezi
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2337   .bss.INS_WorldYawRate:00000000 INS_WorldYawRate
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2261   .bss.S_Ahrs_Cnt:00000000 S_Ahrs_Cnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2330   .bss.INS_WorldYaw:00000000 INS_WorldYaw
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2323   .bss.INS_RollDeg:00000000 INS_RollDeg
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2316   .bss.INS_PitchDeg:00000000 INS_PitchDeg
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2309   .bss.INS_AhrsReady:00000000 INS_AhrsReady
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1542   .text.INS_Init:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1548   .text.INS_Init:00000000 INS_Init
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1678   .text.INS_Init:0000008c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2429   .bss.INS_Ready:00000000 INS_Ready
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2423   .bss.INS_CalDone:00000000 INS_CalDone
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2417   .bss.INS_CalCnt:00000000 INS_CalCnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2410   .bss.INS_Sample:00000000 INS_Sample
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2342   .bss.S_Inited:00000000 S_Inited
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2369   .bss.INS_Bias:00000000 INS_Bias
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2376   .bss.INS_Gyro:00000000 INS_Gyro
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2383   .bss.INS_Acc:00000000 INS_Acc
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s 			page 62
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:20     .text.ins_cs:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:25     .text.ins_cs:00000000 ins_cs
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:53     .text.ins_read_at:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:58     .text.ins_read_at:00000000 ins_read_at
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:131    .text.ins_detect_skip:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:136    .text.ins_detect_skip:00000000 ins_detect_skip
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:333    .text.ins_detect_skip:000000c0 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2362   .bss.INS_AccDump:00000000 INS_AccDump
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2355   .bss.INS_GyroDump:00000000 INS_GyroDump
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2255   .data.S_Skip_Acc:00000000 S_Skip_Acc
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2250   .bss.S_Skip_Gyro:00000000 S_Skip_Gyro
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:341    .text.ins_read:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:346    .text.ins_read:00000000 ins_read
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:500    .text.ins_read:000000b0 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:506    .text.ins_dump:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:511    .text.ins_dump:00000000 ins_dump
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:564    .text.ins_dump:0000002c $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:570    .text.ins_write:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:575    .text.ins_write:00000000 ins_write
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:628    .text.ins_acc_init:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:633    .text.ins_acc_init:00000000 ins_acc_init
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:790    .text.ins_acc_init:000000d4 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2441   .bss.INS_AccId:00000000 INS_AccId
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2403   .bss.INS_Err:00000000 INS_Err
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:796    .text.ins_gyro_init:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:801    .text.ins_gyro_init:00000000 ins_gyro_init
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:923    .text.ins_gyro_init:0000009c $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2435   .bss.INS_GyroId:00000000 INS_GyroId
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:929    .text.ins_ahrs_step:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:934    .text.ins_ahrs_step:00000000 ins_ahrs_step
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1516   .text.ins_ahrs_step:0000036c $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2303   .data.S_Q0:00000000 S_Q0
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2297   .bss.S_Q1:00000000 S_Q1
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2291   .bss.S_Q2:00000000 S_Q2
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2285   .bss.S_Q3:00000000 S_Q3
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2279   .bss.S_Exi:00000000 S_Exi
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2273   .bss.S_Eyi:00000000 S_Eyi
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2267   .bss.S_Ezi:00000000 S_Ezi
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2337   .bss.INS_WorldYawRate:00000000 INS_WorldYawRate
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2261   .bss.S_Ahrs_Cnt:00000000 S_Ahrs_Cnt
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2330   .bss.INS_WorldYaw:00000000 INS_WorldYaw
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2323   .bss.INS_RollDeg:00000000 INS_RollDeg
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2316   .bss.INS_PitchDeg:00000000 INS_PitchDeg
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2309   .bss.INS_AhrsReady:00000000 INS_AhrsReady
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1542   .text.INS_Init:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1548   .text.INS_Init:00000000 INS_Init
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1678   .text.INS_Init:0000008c $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2429   .bss.INS_Ready:00000000 INS_Ready
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2423   .bss.INS_CalDone:00000000 INS_CalDone
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2417   .bss.INS_CalCnt:00000000 INS_CalCnt
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2410   .bss.INS_Sample:00000000 INS_Sample
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2342   .bss.S_Inited:00000000 S_Inited
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2369   .bss.INS_Bias:00000000 INS_Bias
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2376   .bss.INS_Gyro:00000000 INS_Gyro
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2383   .bss.INS_Acc:00000000 INS_Acc
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s 			page 62
 
 
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2348   .bss.S_Sum:00000000 S_Sum
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1694   .text.INS_ResetBias:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1700   .text.INS_ResetBias:00000000 INS_ResetBias
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1758   .text.INS_ResetBias:00000034 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1767   .text.INS_Task:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:1773   .text.INS_Task:00000000 INS_Task
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2226   .text.INS_Task:0000025c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2390   .bss.INS_GyroRaw:00000000 INS_GyroRaw
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2397   .bss.INS_AccRaw:00000000 INS_AccRaw
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2251   .bss.S_Skip_Gyro:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2258   .bss.S_Ahrs_Cnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2264   .bss.S_Ezi:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2270   .bss.S_Eyi:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2276   .bss.S_Exi:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2282   .bss.S_Q3:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2288   .bss.S_Q2:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2294   .bss.S_Q1:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2300   .data.S_Q0:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2310   .bss.INS_AhrsReady:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2313   .bss.INS_PitchDeg:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2320   .bss.INS_RollDeg:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2327   .bss.INS_WorldYaw:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2334   .bss.INS_WorldYawRate:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2343   .bss.S_Inited:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2345   .bss.S_Sum:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2352   .bss.INS_GyroDump:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2359   .bss.INS_AccDump:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2366   .bss.INS_Bias:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2373   .bss.INS_Gyro:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2380   .bss.INS_Acc:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2387   .bss.INS_GyroRaw:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2394   .bss.INS_AccRaw:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2404   .bss.INS_Err:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2407   .bss.INS_Sample:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2414   .bss.INS_CalCnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2424   .bss.INS_CalDone:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2430   .bss.INS_Ready:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2436   .bss.INS_GyroId:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccqDek4Y.s:2442   .bss.INS_AccId:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2348   .bss.S_Sum:00000000 S_Sum
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1694   .text.INS_ResetBias:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1700   .text.INS_ResetBias:00000000 INS_ResetBias
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1758   .text.INS_ResetBias:00000034 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1767   .text.INS_Task:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:1773   .text.INS_Task:00000000 INS_Task
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2226   .text.INS_Task:0000025c $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2390   .bss.INS_GyroRaw:00000000 INS_GyroRaw
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2397   .bss.INS_AccRaw:00000000 INS_AccRaw
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2251   .bss.S_Skip_Gyro:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2258   .bss.S_Ahrs_Cnt:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2264   .bss.S_Ezi:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2270   .bss.S_Eyi:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2276   .bss.S_Exi:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2282   .bss.S_Q3:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2288   .bss.S_Q2:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2294   .bss.S_Q1:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2300   .data.S_Q0:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2310   .bss.INS_AhrsReady:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2313   .bss.INS_PitchDeg:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2320   .bss.INS_RollDeg:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2327   .bss.INS_WorldYaw:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2334   .bss.INS_WorldYawRate:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2343   .bss.S_Inited:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2345   .bss.S_Sum:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2352   .bss.INS_GyroDump:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2359   .bss.INS_AccDump:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2366   .bss.INS_Bias:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2373   .bss.INS_Gyro:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2380   .bss.INS_Acc:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2387   .bss.INS_GyroRaw:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2394   .bss.INS_AccRaw:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2404   .bss.INS_Err:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2407   .bss.INS_Sample:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2414   .bss.INS_CalCnt:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2424   .bss.INS_CalDone:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2430   .bss.INS_Ready:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2436   .bss.INS_GyroId:00000000 $d
+C:\Users\elaina\AppData\Local\Temp\ccByWk0B.s:2442   .bss.INS_AccId:00000000 $d
 
 UNDEFINED SYMBOLS
 BSP_IMU_Cs
