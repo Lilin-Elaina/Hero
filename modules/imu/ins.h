@@ -18,9 +18,6 @@
 #ifndef __INS_H__
 #define __INS_H__
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <stdint.h>
 
@@ -60,8 +57,6 @@ void INS_Init(void);        /* 初始化 BMI088，失败也会置 INS_Err 并返
 void INS_Task(void);        /* 1 kHz 调用一次 */
 void INS_ResetBias(void);   /* 重新开始零偏标定（静止时调用） */
 
-#ifdef __cplusplus
-}
-#endif
+
 
 #endif /* __INS_H__ */

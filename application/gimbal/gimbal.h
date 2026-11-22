@@ -21,4 +21,5 @@ float RC_GetOffsetAngle(void);
  * 返回 6020 的电压指令（已含斜坡前的限幅）。 */
 float RC_Yaw_Control(uint8_t online, float stick);
 
+float pitch_clamp(float v, float lo, float hi);
 #endif /* __GIMBAL_H */

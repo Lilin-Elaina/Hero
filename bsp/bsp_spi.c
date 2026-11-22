@@ -19,6 +19,7 @@
  * 执行顺序在 main.c 里早于 INS_Init()，本文件不再重复配置，只负责片选与收发。 */
 
 /*imu片选，第一个参数选择设备，第二个为电平高低*/
+//第二个参数为1是拉低片选，0是拉高片选
 void BSP_IMU_Cs(uint8_t dev, uint8_t low)
 {
     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;

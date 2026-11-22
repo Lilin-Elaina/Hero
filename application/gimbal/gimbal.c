@@ -14,14 +14,14 @@
 #include "bsp_can.h"
 #include <string.h>
 #include <math.h>
-
+/*绝对值*/
 static float pitch_abs(float v)
  {
      return (v < 0.0f) ? -v : v;
  }
 
 /*对值进行范围限定*/
-static float pitch_clamp(float v, float lo, float hi)
+ float pitch_clamp(float v, float lo, float hi)
 {
     if (v < lo) v = lo;
     if (v > hi) v = hi;
@@ -41,7 +41,7 @@ static float pitch_step(float cur, float tgt, float max_step)
 /* 非 static：分层后由 application/robot.c 的 1 kHz 编排调用 */
 float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
 {
-    static float S_Ref = 0.0f;          /* 参考角，连续量（counts） */
+    static float S_Ref = 0.0f;          /* 参考角（给定角度），连续量（counts） */
     static float S_I   = 0.0f;          /* 速度环积分（电压单位）   */
     static uint8_t  S_Stage = 0;        /*状态*/
     static uint8_t   S_Homed   = 0;     /*是否回中*/
@@ -54,6 +54,7 @@ float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
     const float hi = (float)(GM_PITCH_ANGLE_MAX - GM_PITCH_ANGLE_MARGIN);
     const float home = (float)GM_PITCH_HOME_ANGLE;
 
+    /*离线判断*/
  if (!GM_PITCH_CALIBRATED || !online || !armed)
     {
         S_Stage = 0;
@@ -62,11 +63,12 @@ float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
         return 0.0f;
     }
 
-    float cur = (float)gim_pitch.angle;
-    float rpm = GM_PITCH_RPM_SIGN * (float)gim_pitch.rpm;
-    float err, rpm_des, volt;
 
+    float cur = (float)gim_pitch.angle;  /*获取当前角*/
+    float rpm = GM_PITCH_RPM_SIGN * (float)gim_pitch.rpm;  //获取当前转速
+    float err, rpm_des, volt;          //获取误差，目标转速，电压
 
+/*安全判断*/
  if ((BSP_Now() - gim_pitch.last_tick) > GM_FEEDBACK_TIMEOUT_MS ||
         gim_pitch.temp > GM_PITCH_TEMP_LIMIT ||
         pitch_abs(rpm) > GM_RPM_LIMIT ||
@@ -77,7 +79,7 @@ float RC_Pitch_Control(uint8_t online, uint8_t armed, float stick)
         S_I     = 0.0f;
         return 0.0f;
     }
-
+   //低通滤波
      S_Stick_F += (stick - S_Stick_F) * 0.2f;
 
     /* ③ 接管条件：刚开始上电只看摇杆是否居中 */
@@ -129,17 +131,16 @@ if(S_Stage == 1)
 else
 {
       float v_tgt = S_Stick_F * GM_PITCH_MANUAL_RATE;
+      //braking为0/1   反向或减速为0 用于判断下一行的加速度
       float braking = (v_tgt * S_V < 0.0f)  ||
       (pitch_abs(v_tgt) < pitch_abs(S_V)) ;
 
       float a = (braking) ? GM_PITCH_DECEL : GM_PITCH_ACCEL;
-      float dv = a * 0.001f;
+      float del_v = a * 0.001f;
 
-      if(v_tgt > S_V + dv)      S_V += dv;
-      else if(v_tgt < S_V - dv) S_V -= dv;
-      else                      S_V = v_tgt;
+      S_V = pitch_step(S_V, v_tgt, del_v);      /* 每拍最多变 del_v，够近就直接对齐 */
 
-
+      //最终得到s_ref
       S_Ref += S_V * 0.001f;
 
 
@@ -166,7 +167,10 @@ if(S_Ref > hi) S_Ref = hi;
 err = rpm_des - rpm;
 volt = GM_PITCH_SPD_KP * err + S_I + GM_PITCH_GRAV_FF;
 
-if(pitch_abs(volt) < GM_PITCH_VOLT_MAX || (volt >= GM_PITCH_VOLT_MAX && err < 0.0f) || (volt <= -GM_PITCH_VOLT_MAX && err > 0.0f))
+//积分满时但要反向时允许积分
+if(pitch_abs(volt) < GM_PITCH_VOLT_MAX || 
+(volt >= GM_PITCH_VOLT_MAX && err < 0.0f) || 
+(volt <= -GM_PITCH_VOLT_MAX && err > 0.0f))
 {
 S_I += GM_PITCH_SPD_KI * err * 0.001f;
 S_I = pitch_clamp(S_I, -GM_PITCH_I_MAX,GM_PITCH_I_MAX);
@@ -202,15 +206,14 @@ return GM_PITCH_SIGN * volt;
 
 }
 /* ======================= 云台 yaw 角度闭环 ======================= */
-/* 前三个原来是文件级 static；分层后 gimbal_spin.c 的交接函数也要读写，
- * 改为全局并由 rc_state.h 声明（只改存储类，类型/初值/语义不变） */
+/*角度外环p + d  速度内环pi加前馈*/
 float   S_Yaw_Ref   = 0.0f;   /* 目标角（counts） */
 float   S_Yaw_I     = 0.0f;   /* 速度环积分（电压单位） */
 uint8_t S_Yaw_Ready = 0u;
 static float   S_Psi_Deg   = 0.0f;   /* 枪口世界航向角（度，陀螺积分） */
 static float   S_Psi_Ref   = 0.0f;   /* 航向锁存基准（度） */
 static float   S_Hold_I    = 0.0f;   /* 稳向积分（deg/s），只在底盘带着转时累加 */
-
+/*使角度范围为  - 180 ~ 180*/
 static float yaw_wrap(float d)
 {
     while (d >  4096.0f) d -= 8192.0f;
@@ -221,7 +224,7 @@ static float yaw_wrap(float d)
 /* 枪口相对车头的夹角 α（度，-180 ~ +180）
  * 逆时针（俯视）为正，即 α>0 表示枪口偏向车头左侧 */
 volatile float RC_GunAngle = 0.0f;
-
+/*得到相对夹角（度）*/
 float RC_GetOffsetAngle(void)
 {
     float d = yaw_wrap((float)gim6020.angle - GM_YAW_ALIGN_COUNT);
@@ -238,6 +241,7 @@ float RC_Yaw_Control(uint8_t online, float stick)
     float d_ref, err, rpm_d, err_v, volt;
     float hold_rate = 0.0f;      /* 稳向折算的关节角速度（deg/s），0=未介入 */
 
+    /*控制安全判断*/
     if ((online == 0u) || (fresh == 0u) || (S_Yaw_Ready == 0u)) {
         S_Yaw_Ref   = cur;
         S_Yaw_I     = 0.0f;
@@ -270,34 +274,36 @@ float RC_Yaw_Control(uint8_t online, float stick)
      * （对象是 ω 不是角度，不构成第二个积分器，不会像上次那样自激），
      * 稳态把残差压到 0；条件积分 + 限幅，防止长时间旋转把积分灌满。 */
     {
+        /*通过计算枪口角速度与摇杆控制的速度比较来尽速速度补偿*/
         float wz_ms  = GM_YAW_HOLD_SIGN * -(float)INS_Gyro[0] * 57.2957795f;  /* 枪口世界角速度 deg/s */
         float wz_cmd = d_ref * 1000.0f / GM_YAW_COUNT_PER_DEG;               /* 操作手要的关节角速度 deg/s */
-        /* ★误差取"实测 − 指令"，而不是"实测 − 0"，也不再靠 d_ref==0 开门：
-         *   遥控器零点只要偏 3 个 count，d_ref 就不为 0，原来的门控会让稳向**整段失效**，
-         *   表现就是"稳一下就被带走"。现在给杆时 wz_err 自动扣掉操作手那部分，
-         *   稳向只补"底盘带出来的"转速，推杆不会变粘。 */
+       
         float wz_err = wz_ms - wz_cmd;
 
-        if ((wz_err > GM_YAW_HOLD_DEAD) || (wz_err < -GM_YAW_HOLD_DEAD)) {
+        if ((wz_err > GM_YAW_HOLD_DEAD) || (wz_err < -GM_YAW_HOLD_DEAD))
+        {   //rate为当前角速度补偿值
             float rate = -(GM_YAW_HOLD_K * wz_err + S_Hold_I);   /* deg/s */
-
-            if (rate > GM_YAW_HOLD_RATE_MAX) {
+           //先判断饱和再允许积分
+            if (rate > GM_YAW_HOLD_RATE_MAX)
+            {
                 rate = GM_YAW_HOLD_RATE_MAX;
-            } else if (rate < -GM_YAW_HOLD_RATE_MAX) {
+            } else if (rate < -GM_YAW_HOLD_RATE_MAX) 
+            {
                 rate = -GM_YAW_HOLD_RATE_MAX;
-            } else {
-                S_Hold_I += GM_YAW_HOLD_KI * wz_err * 0.001f;    /* 只在未饱和时积分 */
-                if (S_Hold_I >  GM_YAW_HOLD_RATE_MAX) S_Hold_I =  GM_YAW_HOLD_RATE_MAX;
-                if (S_Hold_I < -GM_YAW_HOLD_RATE_MAX) S_Hold_I = -GM_YAW_HOLD_RATE_MAX;
+            } else 
+            {
+              S_Hold_I = pitch_clamp(S_Hold_I + GM_YAW_HOLD_KI * wz_err * 0.001f,
+                       -GM_YAW_HOLD_RATE_MAX, GM_YAW_HOLD_RATE_MAX);
             }
-
+ 
             S_Yaw_Ref += rate * GM_YAW_COUNT_PER_DEG * 0.001f;
             hold_rate  = rate;     /* ★同时作为速度前馈：只挪目标角、不加转速前馈的话，
                                     *   位置环要靠"误差"才生得出转速，稳态滞后 = 转速/KP，
                                     *   转起来就跟不上目标 → 枪口还是被底盘拖着走 */
             RC_HoldWz   = wz_ms;
             RC_HoldRate = rate;
-        } else {
+        } else 
+        {
             S_Hold_I = 0.0f;   /* 不转就清积分，免得残留偏置让关节自己慢慢爬 */
         }
     }
@@ -308,10 +314,7 @@ float RC_Yaw_Control(uint8_t online, float stick)
     err   = yaw_wrap(S_Yaw_Ref - cur);
 
     /* ②.5 到位清零积分
-     * 现象：快转到位、定住 1~2 s 后又小幅度回摆一下。
-     * 原因：到位瞬间速度环还留着正向积分，位置环慢慢把角度拽回来，
-     *       积分一点点卸，卸完才不动 —— 那一下回摆就是它在卸。
-     * 做法：位置误差和转速都小到"已经到位"时，直接把积分清掉。 */
+     * 防止震荡*/
     if ((err < GM_YAW_ARRIVE_CNT) && (err > -GM_YAW_ARRIVE_CNT) &&
         (gim6020.rpm < GM_YAW_ARRIVE_RPM) && (gim6020.rpm > -GM_YAW_ARRIVE_RPM)) {
         S_Yaw_I = 0.0f;
@@ -337,15 +340,12 @@ float RC_Yaw_Control(uint8_t online, float stick)
     err_v = rpm_d - (float)gim6020.rpm;
     volt  = GM_YAW_SPD_KP * err_v + S_Yaw_I;
 
-    if ((volt < GM_YAW_VOLT_MAX) && (volt > -GM_YAW_VOLT_MAX)) {
+    if ((volt < GM_YAW_VOLT_MAX) && (volt > -GM_YAW_VOLT_MAX)) 
+    {
         S_Yaw_I += GM_YAW_SPD_KI * err_v * 0.001f;
-        if (S_Yaw_I >  GM_YAW_I_MAX) S_Yaw_I =  GM_YAW_I_MAX;
-        if (S_Yaw_I < -GM_YAW_I_MAX) S_Yaw_I = -GM_YAW_I_MAX;
+        S_Yaw_I = pitch_clamp(S_Yaw_I, -GM_YAW_I_MAX, GM_YAW_I_MAX);
     }
-    volt = GM_YAW_SPD_KP * err_v + S_Yaw_I;
-
-    if (volt >  GM_YAW_VOLT_MAX) volt =  GM_YAW_VOLT_MAX;
-    if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;
+    volt = pitch_clamp(GM_YAW_SPD_KP * err_v + S_Yaw_I , -GM_YAW_VOLT_MAX, GM_YAW_VOLT_MAX);
 
     /* 调试镜像 */
     RC_YawRef    = S_Yaw_Ref;

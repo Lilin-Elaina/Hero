@@ -59,6 +59,7 @@ static float mec_abs(float x)
 /*   dt_s 固定按 1kHz 设计 → 每拍步进 = 速率 / 1000       
  * 根据摇杆值在xyz的值进行运算得到各轮速度归一化值，轮速由每1ms爬升
 */
+
 /* ------------------------------------------------------------------ */
 /* 自转通道死区旁路：跟随/小陀螺的自转指令是闭环算出来的，本来就很小，
  * 再被归一化死区（0.02）吃掉就等于"指令发了、车不动"。 */
@@ -130,7 +131,7 @@ uint8_t Mecanum_Mix(float fwd, float strafe, float spin, uint8_t enabled,
      accel_only = 1u;
    
 
-    /* 3) 逐轮解算 + 斜坡限速 */
+    /* 3) 斜坡限速 */
     for (uint8_t i = 0; i < MECANUM_WHEEL_NUM; i++)
     {
  

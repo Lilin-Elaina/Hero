@@ -14,18 +14,20 @@
 #include "bsp_can.h"
 #include <string.h>
 #include <math.h>
+#include "gimbal.h"
 
 /* 小陀螺专用环的状态（与 yaw 环互不共享，靠 RC_Yaw_Handover 交接）
  * S_Yaw_Slew_Kick 原先 static，分层后 robot.c 要读，改全局并由 rc_state.h 声明 */
 static float   S_Spin_Ref   = 0.0f;  /* 世界航向目标 deg（多圈连续） */
 static float   S_Spin_I     = 0.0f;  /* 速度环积分（电压单位） */
 static uint8_t S_Spin_Ready = 0u;
-static uint16_t S_Spin_Bad  = 0u;   /* 失控计数（WorldYawRate 长时间超限） */
-uint8_t  S_Yaw_Slew_Kick = 0u;  /* 交接后把输出斜坡清零的标志 */
+static uint16_t S_Spin_Bad  = 0u;    /* 失控计数（WorldYawRate 长时间超限） */
+uint8_t  S_Yaw_Slew_Kick = 0u;       /* 交接后把输出斜坡清零的标志 */
 volatile float RC_SpinYaw = 0.0f;
 volatile float RC_SpinWch = 0.0f;
 volatile float RC_SpinErr = 0.0f;
 volatile float RC_YawSpinOut = 0.0f;   /* 小陀螺环上一拍真正发出去的电压（斜坡+限幅之后），供积分回算 */
+
 /* ======================= 云台 yaw：小陀螺专用（世界航向闭环） =======================
  * 为什么单独一套：小陀螺下"保持世界朝向"是个跟踪问题——底盘在匀速转，
  * 枪口必须**持续**反向转。用位置环慢慢攒误差的方式（RC_Yaw_Control 里的稳向）
@@ -128,10 +130,8 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
         if (S_Spin_I >  SPIN_YAW_I_MAX) S_Spin_I =  SPIN_YAW_I_MAX;
         if (S_Spin_I < -SPIN_YAW_I_MAX) S_Spin_I = -SPIN_YAW_I_MAX;
     }
-    volt = SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + S_Spin_I;
 
-    if (volt >  GM_YAW_VOLT_MAX) volt =  GM_YAW_VOLT_MAX;
-    if (volt < -GM_YAW_VOLT_MAX) volt = -GM_YAW_VOLT_MAX;
+    volt = pitch_clamp( SPIN_YAW_KV * rpm_d + SPIN_YAW_SPD_KP * err_v + S_Spin_I, -GM_YAW_VOLT_MAX, GM_YAW_VOLT_MAX ); 
 
     /* 调试镜像 */
     RC_SpinYaw   = (float)INS_WorldYaw;
@@ -149,7 +149,7 @@ float RC_Yaw_Spin_Control(uint8_t online, float stick)
 /* 模式切换交接：进/出小陀螺时两边状态都清，谁都从"当前实际"重新开始，
  * 免得接手的一方拿着几秒前的旧目标把枪口拽一下。 */
 void RC_Yaw_Handover(void)
-{
+{             
     S_Yaw_Ref    = (float)gim6020.angle;
     S_Yaw_I      = 0.0f;
     S_Yaw_Ready  = 0u;          /* 下一拍 RC_Yaw_Control 自己按实际角重新接管 */

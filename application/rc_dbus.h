@@ -308,15 +308,10 @@ extern volatile float RC_GunAngle;       /* 调试镜像：当前 α（度，-18
  *                   4 轮时 [0]=左前 [1]=右前 [2]=右后 [3]=左后 */
 extern float RC_WheelOut[];
 
-/* RC_Init / RC_StartReceive / RC_Decode / RC_SwitchAutoName / RC_IsOnline / RC_Norm
- * 的原型在 modules/remote/dbus.h */
-
 /* 每个控制周期调用一次：解码后的摇杆 →3508 的电流指令 */
 void RC_Control_Task(void);
 
 /* ---- 分层后跨文件调用的入口 ----------------------------------------
- * 原型已经按层拆到自己文件的头里，这里只做汇总 include，
- * 这样老的 `#include "rc_dbus.h"` 一处都不用改：
  *   application/chassis/chassis.h      —— 四轮速度环
  *   application/gimbal/gimbal.h        —— pitch / yaw 车体系环
  *   application/gimbal/gimbal_spin.h   —— 小陀螺世界系环 */

@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 1
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
   29:application/robot.c **** volatile float RC_YawRef    = 0.0f;   /* 目标角 counts */
   30:application/robot.c **** volatile float RC_YawErr    = 0.0f;   /* 角度误差 counts */
   31:application/robot.c **** volatile float RC_YawRpmDes = 0.0f;   /* 位置环输出的目标转速 rpm */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 2
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 2
 
 
   32:application/robot.c **** volatile float RC_YawVolt   = 0.0f;   /* 斜坡之前的电压指令 */
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
   86:application/robot.c **** /* ------------------------------------------------------------------ */
   87:application/robot.c **** void RC_Control_Task(void)
   88:application/robot.c **** {     /*通信在线判断*/
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 3
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 3
 
 
   89:application/robot.c ****     uint32_t now = BSP_Now();
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  143:application/robot.c **** 
  144:application/robot.c ****     uint8_t sw_ok = (S_Sw_Cnt >= 40u);
  145:application/robot.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 4
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 4
 
 
  146:application/robot.c ****     uint8_t armed     = 0u;
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  200:application/robot.c ****             {
  201:application/robot.c ****             case RC_EN_WAIT:
  202:application/robot.c ****                 S_En_State = RC_EN_ARMING;  /* 刚满足：开始计时，当拍仍不给力 */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 5
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 5
 
 
  203:application/robot.c ****                 S_En_Since = now;
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  257:application/robot.c ****         }
  258:application/robot.c **** 
  259:application/robot.c ****         static uint8_t S_Can2_Seen = 0u;   /* 上电后是否见过 CAN2 帧 */
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 6
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 6
 
 
  260:application/robot.c **** 
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  314:application/robot.c ****     {
  315:application/robot.c ****         float a = GM_GUN_ANGLE_SIGN * alpha_deg * 0.017453292f;
  316:application/robot.c ****         float c = cosf(a);
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 7
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 7
 
 
  317:application/robot.c ****         float s = sinf(a);
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  371:application/robot.c ****     }
  372:application/robot.c ****    
  373:application/robot.c ****     Mecanum_Reset();
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 8
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 8
 
 
  374:application/robot.c ****     RC_Wheel_Reset();
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  428:application/robot.c **** static uint16_t S_Wheel_Miss[MECANUM_WHEEL_NUM];
  429:application/robot.c **** static uint32_t S_Wheel_Seen[MECANUM_WHEEL_NUM];
  430:application/robot.c **** static uint16_t S_Wheel_Ok[MECANUM_WHEEL_NUM];
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 9
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 9
 
 
  431:application/robot.c **** static uint8_t  S_Wheel_Lost[MECANUM_WHEEL_NUM];
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  485:application/robot.c **** 
  486:application/robot.c ****       /* ★失联即停车：故障轮断电，其余三轮反向制动把车刹住。
  487:application/robot.c ****        *   让“少一条腿”的车继续推，只会以故障轮为支点打转，比停更难�
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 10
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 10
 
 
  488:application/robot.c ****       if (lost_mask != 0u)
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  542:application/robot.c ****           RC_WheelRef[i] = 0.0f;
  543:application/robot.c **** 
  544:application/robot.c ****           /* 故障轮：反馈已停更，它的 rpm 是最后一帧的旧值，
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 11
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 11
 
 
  545:application/robot.c ****            * 拿它算刹车会一直往已停的轮子上灌逆向电流 → 直接给 0 */
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  599:application/robot.c **** 
  600:application/robot.c **** }
  601:application/robot.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 12
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 12
 
 
  602:application/robot.c **** /* ------------------------------------------------------------------ */
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  656:application/robot.c ****     }
  657:application/robot.c **** 
  658:application/robot.c ****     RC_YawKill = (yaw_kill != 0u) ? kill_reason : 0u;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 13
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 13
 
 
  659:application/robot.c ****     if (yaw_kill != 0u) RC_YawKillCnt++;
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  689:application/robot.c ****     uint8_t fric_sw = (RC_Data.S_Right == FRIC_ENABLE_SW);
  690:application/robot.c **** #endif
  691:application/robot.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 14
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 14
 
 
  692:application/robot.c ****     float fric_tgt = (online && fric_sw) ? FRIC_CURRENT_A : 0.0f;
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  100 0040 FFF7FEFF 		bl	BSP_Now
  101              	.LVL8:
  102              		.loc 1 696 33 discriminator 1 view .LVU21
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 15
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 15
 
 
  103 0044 3F4B     		ldr	r3, .L31+4
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  143 008a F3EE046A 		vmov.f32	s13, #2.0e+1
  144 008e C7EE267A 		vdiv.f32	s15, s14, s13
  145              		.loc 1 710 59 view .LVU37
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 16
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 16
 
 
  146 0092 9FED317A 		vldr.32	s14, .L31+24
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  164              		.loc 1 746 5 is_stmt 1 view .LVU43
  165              		.loc 1 746 12 is_stmt 0 view .LVU44
  166 00b4 2380     		strh	r3, [r4]	@ movhi
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 17
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 17
 
 
  747:application/robot.c **** }
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  209              		.loc 1 701 65 is_stmt 0 discriminator 1 view .LVU57
  210 00e6 194B     		ldr	r3, .L31+12
  211 00e8 83ED007A 		vstr.32	s14, [r3]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 18
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 18
 
 
  212 00ec C1E7     		b	.L7
@@ -1078,7 +1078,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  252              		.loc 1 731 12 view .LVU71
  253 011c B3F5967F 		cmp	r3, #300
  254 0120 0ADC     		bgt	.L21
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 19
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 19
 
 
  735:application/robot.c ****         {
@@ -1138,7 +1138,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  435:application/robot.c ****      float   max_a = (float )RC_MAX_CURRENT_A;
  304              		.loc 1 435 1 is_stmt 1 view -0
  305              		.cfi_startproc
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 20
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 20
 
 
  306              		@ args = 0, pretend = 0, frame = 0
@@ -1198,7 +1198,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  461:application/robot.c ****             if (S_Wheel_Miss[i] < 0xFFFFu)
  350              		.loc 1 461 13 is_stmt 1 view .LVU90
  461:application/robot.c ****             if (S_Wheel_Miss[i] < 0xFFFFu)
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 21
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 21
 
 
  351              		.loc 1 461 27 is_stmt 0 view .LVU91
@@ -1258,7 +1258,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  390              		.loc 1 475 39 is_stmt 0 view .LVU106
  391 004c 0123     		movs	r3, #1
  392 004e B340     		lsls	r3, r3, r6
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 22
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 22
 
 
  475:application/robot.c ****         }
@@ -1318,7 +1318,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  432              		.loc 1 443 9 is_stmt 1 view .LVU121
  443:application/robot.c **** 
  433              		.loc 1 443 20 is_stmt 0 view .LVU122
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 23
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 23
 
 
  434 007c 2646     		mov	r6, r4
@@ -1378,7 +1378,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  474              		.loc 1 452 17 is_stmt 1 view .LVU136
  452:application/robot.c ****             }
  475              		.loc 1 452 30 is_stmt 0 view .LVU137
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 24
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 24
 
 
  476 00c6 0133     		adds	r3, r3, #1
@@ -1438,7 +1438,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  516              		.loc 1 484 21 is_stmt 0 view .LVU151
  517 00fc 884B     		ldr	r3, .L81+24
  518 00fe 83F80090 		strb	r9, [r3]
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 25
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 25
 
 
  488:application/robot.c ****       {
@@ -1498,7 +1498,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  557              	.LVL34:
  493:application/robot.c ****           {
  558              		.loc 1 493 11 view .LVU168
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 26
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 26
 
 
  559 0138 18E0     		b	.L44
@@ -1558,7 +1558,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  495:application/robot.c ****               float a   = 0.0f;
  601              		.loc 1 495 15 view .LVU181
  495:application/robot.c ****               float a   = 0.0f;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 27
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 27
 
 
  602              		.loc 1 495 45 is_stmt 0 view .LVU182
@@ -1618,7 +1618,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  642              		.loc 1 507 25 discriminator 1 view .LVU196
  643 01b0 DFED5E7A 		vldr.32	s15, .L81+36
  644 01b4 30EE270A 		vadd.f32	s0, s0, s15
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 28
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 28
 
 
  645              	.LVL43:
@@ -1678,7 +1678,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  684 01da 4F4B     		ldr	r3, .L81+16
  685 01dc 03EB8503 		add	r3, r3, r5, lsl #2
  686 01e0 0022     		movs	r2, #0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 29
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 29
 
 
  687 01e2 1A60     		str	r2, [r3]	@ float
@@ -1738,7 +1738,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  566:application/robot.c ****       }
  731              		.loc 1 566 32 is_stmt 0 view .LVU222
  732 020e B3EE047A 		vmov.f32	s14, #2.0e+1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 30
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 30
 
 
  733 0212 C0EE077A 		vdiv.f32	s15, s0, s14
@@ -1798,7 +1798,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  773              		.loc 1 542 26 is_stmt 0 view .LVU236
  774 0250 314B     		ldr	r3, .L81+16
  775 0252 03EB8803 		add	r3, r3, r8, lsl #2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 31
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 31
 
 
  776 0256 1A60     		str	r2, [r3]	@ float
@@ -1858,7 +1858,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  815 0290 F8EE0C0A 		vmov.f32	s1, #-3.5e+0
  816 0294 FFF7FEFF 		bl	wheel_clamp
  817              	.LVL62:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 32
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 32
 
 
  563:application/robot.c ****           }
@@ -1918,7 +1918,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  859 02da F8EEE00A 		vcvt.f32.s32	s1, s1
  860 02de 2846     		mov	r0, r5
  861 02e0 FFF7FEFF 		bl	RC_Wheel_Speed_PI
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 33
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 33
 
 
  862              	.LVL65:
@@ -1978,7 +1978,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  595:application/robot.c **** 
  907              		.loc 1 595 18 view .LVU274
  908 034c FEEEC97A 		vcvt.s32.f32	s15, s15, #14
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 34
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 34
 
 
  595:application/robot.c **** 
@@ -2038,7 +2038,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  950              	.LBE16:
  951              	.LBE14:
  952              		.cfi_endproc
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 35
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 35
 
 
  953              	.LFE147:
@@ -2098,7 +2098,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  617:application/robot.c **** 
  1000              		.loc 1 617 5 view .LVU297
  1001              	.LBB17:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 36
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 36
 
 
  620:application/robot.c ****         float    rpm_abs = (float)gim6020.rpm;
@@ -2158,7 +2158,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1040 0044 B4EEE77A 		vcmpe.f32	s14, s15
  1041 0048 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
  1042 004c 01D5     		bpl	.L91
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 37
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 37
 
 
  625:application/robot.c **** 
@@ -2218,7 +2218,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  651:application/robot.c ****         } else {
  1081              		.loc 1 651 28 is_stmt 0 view .LVU330
  1082 0070 3D49     		ldr	r1, .L116+24
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 38
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 38
 
 
  1083 0072 0988     		ldrh	r1, [r1]
@@ -2278,7 +2278,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1124              		.loc 1 623 37 discriminator 1 view .LVU343
  1125 009a CAE7     		b	.L89
  1126              	.LVL88:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 39
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 39
 
 
  1127              	.L107:
@@ -2338,7 +2338,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1165 00be 0123     		movs	r3, #1
  1166 00c0 CFE7     		b	.L95
  1167              	.L108:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 40
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 40
 
 
  628:application/robot.c **** 
@@ -2398,7 +2398,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1207              		.loc 1 655 61 discriminator 1 view .LVU374
  1208 00e2 0123     		movs	r3, #1
  1209              	.L100:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 41
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 41
 
 
  1210              	.LBE22:
@@ -2458,7 +2458,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  670:application/robot.c ****     } else {
  1248              		.loc 1 670 25 view .LVU391
  1249 0108 1D4B     		ldr	r3, .L116+48
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 42
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 42
 
 
  1250 010a C3ED007A 		vstr.32	s15, [r3]
@@ -2518,7 +2518,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1291 014e 00BF     		.align	2
  1292              	.L116:
  1293 0150 00000000 		.word	0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 43
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 43
 
 
  1294 0154 00000000 		.word	gim6020
@@ -2578,7 +2578,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
   89:application/robot.c **** 
  1348              		.loc 1 89 20 is_stmt 0 view .LVU407
  1349 000a FFF7FEFF 		bl	BSP_Now
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 44
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 44
 
 
  1350              	.LVL100:
@@ -2638,7 +2638,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  104:application/robot.c ****         if (rec > RC_Can2RECMax) RC_Can2RECMax = rec;
  1388              		.loc 1 104 12 view .LVU424
  1389 002e 8842     		cmp	r0, r1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 45
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 45
 
 
  1390 0030 01D2     		bcs	.L119
@@ -2698,7 +2698,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1427 0050 9F4A     		ldr	r2, .L190+32
  1428 0052 1A60     		str	r2, [r3]
  1429              	.LBE23:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 46
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 46
 
 
  132:application/robot.c ****     static uint16_t S_Sw_Cnt  = 0u;
@@ -2758,7 +2758,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  151:application/robot.c ****             armed     = 1u;
  1466              		.loc 1 151 9 is_stmt 1 view .LVU460
  151:application/robot.c ****             armed     = 1u;
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 47
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 47
 
 
  1467              		.loc 1 151 12 is_stmt 0 view .LVU461
@@ -2818,7 +2818,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1507              	.L123:
  161:application/robot.c **** 
  1508              		.loc 1 161 5 is_stmt 1 view .LVU476
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 48
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 48
 
 
  161:application/robot.c **** 
@@ -2878,7 +2878,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  147:application/robot.c ****     uint8_t spin_mode = 0u;
  1549              		.loc 1 147 13 view .LVU491
  1550 00be 0022     		movs	r2, #0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 49
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 49
 
 
  1551 00c0 EAE7     		b	.L123
@@ -2938,7 +2938,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1589              		.loc 1 194 13 is_stmt 1 view .LVU507
  194:application/robot.c ****             enabled    = 0u;
  1590              		.loc 1 194 24 is_stmt 0 view .LVU508
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 50
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 50
 
 
  1591 00dc 844B     		ldr	r3, .L190+64
@@ -2998,7 +2998,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1631              	.LBB31:
  173:application/robot.c ****             RC_Yaw_Handover();
  1632              		.loc 1 173 13 is_stmt 1 view .LVU523
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 51
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 51
 
 
  173:application/robot.c ****             RC_Yaw_Handover();
@@ -3058,7 +3058,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1673 0120 1B68     		ldr	r3, [r3]
  1674 0122 F31A     		subs	r3, r6, r3
  208:application/robot.c ****                 {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 52
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 52
 
 
  1675              		.loc 1 208 20 view .LVU538
@@ -3118,7 +3118,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  253:application/robot.c ****             {
  1717              		.loc 1 253 38 is_stmt 0 view .LVU551
  1718 0144 03EB4301 		add	r1, r3, r3, lsl #1
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 53
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 53
 
 
  1719 0148 6D4A     		ldr	r2, .L190+80
@@ -3178,7 +3178,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1757              		.loc 1 266 33 discriminator 1 view .LVU567
  1758 016e 87B1     		cbz	r7, .L136
  1759              	.LBB29:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 54
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 54
 
 
  268:application/robot.c **** 
@@ -3238,7 +3238,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  292:application/robot.c ****     {
  1800              		.loc 1 292 5 is_stmt 1 view .LVU582
  292:application/robot.c ****     {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 55
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 55
 
 
  1801              		.loc 1 292 8 is_stmt 0 view .LVU583
@@ -3298,7 +3298,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1840              		.loc 1 315 37 is_stmt 0 view .LVU598
  1841 01d8 B1EE40AA 		vneg.f32	s20, s0
  315:application/robot.c ****         float c = cosf(a);
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 56
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 56
 
 
  1842              		.loc 1 315 15 view .LVU599
@@ -3358,7 +3358,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1880              		.loc 1 322 16 view .LVU615
  1881 020c 38EE298A 		vadd.f32	s16, s16, s19
  1882              	.LVL160:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 57
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 57
 
 
  322:application/robot.c ****     }
@@ -3418,7 +3418,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  1922              	.L145:
  1923              	.LVL164:
  340:application/robot.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 58
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 58
 
 
  1924              		.loc 1 340 13 is_stmt 1 view .LVU631
@@ -3478,7 +3478,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  348:application/robot.c ****         }
  1964              		.loc 1 348 18 view .LVU646
  1965              	.LBE36:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 59
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 59
 
 
  355:application/robot.c ****         if (spin < -RC_FOLLOW_MAX) spin = -RC_FOLLOW_MAX;
@@ -3538,7 +3538,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2014              		.loc 1 355 41 discriminator 1 view .LVU652
  2015              	.LBE35:
  2016              	.LBB38:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 60
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 60
 
 
  2017              	.LBB30:
@@ -3598,7 +3598,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2059 0358 F0EE408A 		vmov.f32	s17, s0
  2060 035c 20E7     		b	.L137
  2061              	.LVL180:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 61
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 61
 
 
  2062              	.L184:
@@ -3658,7 +3658,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  348:application/robot.c ****         }
  2105              		.loc 1 348 18 view .LVU676
  2106              	.LBE37:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 62
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 62
 
 
  355:application/robot.c ****         if (spin < -RC_FOLLOW_MAX) spin = -RC_FOLLOW_MAX;
@@ -3718,7 +3718,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2148 03d0 334B     		ldr	r3, .L192+4
  2149 03d2 DB69     		ldr	r3, [r3, #28]
  366:application/robot.c **** {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 63
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 63
 
 
  2150              		.loc 1 366 24 discriminator 1 view .LVU690
@@ -3778,7 +3778,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  393:application/robot.c **** 
  2191              		.loc 1 393 5 view .LVU704
  2192 0406 6A46     		mov	r2, sp
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 64
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 64
 
 
  2193 0408 0DF10201 		add	r1, sp, #2
@@ -3838,7 +3838,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2235 045a FFF7FEFF 		bl	DJ6020_Send_Can1
  2236              	.LVL205:
  416:application/robot.c **** 
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 65
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 65
 
 
  2237              		.loc 1 416 1 view .LVU717
@@ -3898,7 +3898,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2283 047a 0021     		movs	r1, #0
  2284 047c 1160     		str	r1, [r2]	@ float
  368:application/robot.c ****     {
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 66
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 66
 
 
  2285              		.loc 1 368 49 is_stmt 1 discriminator 3 view .LVU726
@@ -3958,7 +3958,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2334              		.align	1
  2337              	S_Out_Ms.1:
  2338 0000 0000     		.space	2
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 67
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 67
 
 
  2339              		.section	.bss.S_Can2_Seen.2,"aw",%nobits
@@ -4018,7 +4018,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2414              		.section	.rodata.S_Wheel_Sign,"a"
  2415              		.align	2
  2418              	S_Wheel_Sign:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 68
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 68
 
 
  2419 0000 0000803F 		.word	1065353216
@@ -4078,7 +4078,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2493              		.section	.bss.RC_YawSpdMax,"aw",%nobits
  2494              		.align	2
  2497              	RC_YawSpdMax:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 69
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 69
 
 
  2498 0000 00000000 		.space	4
@@ -4138,7 +4138,7 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2574              	RC_YawErr:
  2575 0000 00000000 		.space	4
  2576              		.global	RC_YawRef
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 70
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 70
 
 
  2577              		.section	.bss.RC_YawRef,"aw",%nobits
@@ -4183,114 +4183,114 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccX
  2621              		.file 18 "D:\\STM32CUBE\\STM32CubeCLT_1.22.0\\GNU-tools-for-STM32\\bin/../lib/gcc/arm-none-eabi/14
  2622              		.file 19 "bsp/bsp_can.h"
  2623              		.file 20 "bsp/bsp_time.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 71
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 71
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 robot.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:20     .text.RC_Fric_Step:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:25     .text.RC_Fric_Step:00000000 RC_Fric_Step
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:283    .text.RC_Fric_Step:00000140 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2406   .bss.S_Fric_A:00000000 S_Fric_A
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:296    .text.RC_Wheel_Step:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:301    .text.RC_Wheel_Step:00000000 RC_Wheel_Step
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:883    .text.RC_Wheel_Step:00000308 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2381   .bss.S_Wheel_Ok:00000000 S_Wheel_Ok
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2393   .bss.S_Wheel_Miss:00000000 S_Wheel_Miss
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2375   .bss.S_Wheel_Lost:00000000 S_Wheel_Lost
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2387   .bss.S_Wheel_Seen:00000000 S_Wheel_Seen
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2418   .rodata.S_Wheel_Sign:00000000 S_Wheel_Sign
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2601   .bss.RC_WheelOut:00000000 RC_WheelOut
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:900    .text.RC_Wheel_Step:00000340 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:949    .text.RC_Wheel_Step:00000380 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:956    .text.RC_Yaw_Step:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:961    .text.RC_Yaw_Step:00000000 RC_Yaw_Step
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:1293   .text.RC_Yaw_Step:00000150 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2504   .bss.RC_YawFbAgeMax:00000000 RC_YawFbAgeMax
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2497   .bss.RC_YawSpdMax:00000000 RC_YawSpdMax
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2337   .bss.S_Out_Ms.1:00000000 S_Out_Ms.1
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2331   .bss.S_Rpm_Over.0:00000000 S_Rpm_Over.0
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2449   .bss.RC_YawOutageCnt:00000000 RC_YawOutageCnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2490   .bss.RC_YawKill:00000000 RC_YawKill
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2484   .bss.RC_YawKillCnt:00000000 RC_YawKillCnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2412   .bss.S_Yaw_Volt_Prev:00000000 S_Yaw_Volt_Prev
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:1312   .text.RC_Control_Task:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:1318   .text.RC_Control_Task:00000000 RC_Control_Task
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:1982   .text.RC_Control_Task:000002b0 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2477   .bss.RC_Can2TEC:00000000 RC_Can2TEC
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2470   .bss.RC_Can2REC:00000000 RC_Can2REC
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2463   .bss.RC_Can2TECMax:00000000 RC_Can2TECMax
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2456   .bss.RC_Can2RECMax:00000000 RC_Can2RECMax
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2442   .bss.RC_Can2PSR:00000000 RC_Can2PSR
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2435   .bss.RC_Can2CCCR:00000000 RC_Can2CCCR
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2400   .data.RC_BuildTag:00000000 RC_BuildTag
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2369   .bss.S_Sw_Prev.7:00000000 S_Sw_Prev.7
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2364   .bss.S_Sw_Cnt.6:00000000 S_Sw_Cnt.6
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2358   .bss.S_Spin_Prev.5:00000000 S_Spin_Prev.5
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2353   .bss.S_En_State.4:00000000 S_En_State.4
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2348   .bss.S_En_Since.3:00000000 S_En_Since.3
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2594   .bss.RC_EnableState:00000000 RC_EnableState
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2588   .bss.RC_EnableMs:00000000 RC_EnableMs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2342   .bss.S_Can2_Seen.2:00000000 S_Can2_Seen.2
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2020   .text.RC_Control_Task:00000328 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2317   .text.RC_Control_Task:0000049c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2428   .bss.RC_Can2RestartCnt:00000000 RC_Can2RestartCnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2553   .bss.RC_YawVoltOut:00000000 RC_YawVoltOut
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2328   .bss.S_Rpm_Over.0:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2334   .bss.S_Out_Ms.1:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2343   .bss.S_Can2_Seen.2:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2345   .bss.S_En_Since.3:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2354   .bss.S_En_State.4:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2359   .bss.S_Spin_Prev.5:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2361   .bss.S_Sw_Cnt.6:00000000 $d
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 72
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:20     .text.RC_Fric_Step:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:25     .text.RC_Fric_Step:00000000 RC_Fric_Step
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:283    .text.RC_Fric_Step:00000140 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2406   .bss.S_Fric_A:00000000 S_Fric_A
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:296    .text.RC_Wheel_Step:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:301    .text.RC_Wheel_Step:00000000 RC_Wheel_Step
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:883    .text.RC_Wheel_Step:00000308 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2381   .bss.S_Wheel_Ok:00000000 S_Wheel_Ok
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2393   .bss.S_Wheel_Miss:00000000 S_Wheel_Miss
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2375   .bss.S_Wheel_Lost:00000000 S_Wheel_Lost
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2387   .bss.S_Wheel_Seen:00000000 S_Wheel_Seen
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2418   .rodata.S_Wheel_Sign:00000000 S_Wheel_Sign
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2601   .bss.RC_WheelOut:00000000 RC_WheelOut
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:900    .text.RC_Wheel_Step:00000340 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:949    .text.RC_Wheel_Step:00000380 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:956    .text.RC_Yaw_Step:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:961    .text.RC_Yaw_Step:00000000 RC_Yaw_Step
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:1293   .text.RC_Yaw_Step:00000150 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2504   .bss.RC_YawFbAgeMax:00000000 RC_YawFbAgeMax
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2497   .bss.RC_YawSpdMax:00000000 RC_YawSpdMax
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2337   .bss.S_Out_Ms.1:00000000 S_Out_Ms.1
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2331   .bss.S_Rpm_Over.0:00000000 S_Rpm_Over.0
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2449   .bss.RC_YawOutageCnt:00000000 RC_YawOutageCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2490   .bss.RC_YawKill:00000000 RC_YawKill
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2484   .bss.RC_YawKillCnt:00000000 RC_YawKillCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2412   .bss.S_Yaw_Volt_Prev:00000000 S_Yaw_Volt_Prev
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:1312   .text.RC_Control_Task:00000000 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:1318   .text.RC_Control_Task:00000000 RC_Control_Task
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:1982   .text.RC_Control_Task:000002b0 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2477   .bss.RC_Can2TEC:00000000 RC_Can2TEC
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2470   .bss.RC_Can2REC:00000000 RC_Can2REC
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2463   .bss.RC_Can2TECMax:00000000 RC_Can2TECMax
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2456   .bss.RC_Can2RECMax:00000000 RC_Can2RECMax
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2442   .bss.RC_Can2PSR:00000000 RC_Can2PSR
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2435   .bss.RC_Can2CCCR:00000000 RC_Can2CCCR
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2400   .data.RC_BuildTag:00000000 RC_BuildTag
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2369   .bss.S_Sw_Prev.7:00000000 S_Sw_Prev.7
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2364   .bss.S_Sw_Cnt.6:00000000 S_Sw_Cnt.6
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2358   .bss.S_Spin_Prev.5:00000000 S_Spin_Prev.5
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2353   .bss.S_En_State.4:00000000 S_En_State.4
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2348   .bss.S_En_Since.3:00000000 S_En_Since.3
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2594   .bss.RC_EnableState:00000000 RC_EnableState
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2588   .bss.RC_EnableMs:00000000 RC_EnableMs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2342   .bss.S_Can2_Seen.2:00000000 S_Can2_Seen.2
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2020   .text.RC_Control_Task:00000328 $t
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2317   .text.RC_Control_Task:0000049c $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2428   .bss.RC_Can2RestartCnt:00000000 RC_Can2RestartCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2553   .bss.RC_YawVoltOut:00000000 RC_YawVoltOut
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2328   .bss.S_Rpm_Over.0:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2334   .bss.S_Out_Ms.1:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2343   .bss.S_Can2_Seen.2:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2345   .bss.S_En_Since.3:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2354   .bss.S_En_State.4:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2359   .bss.S_Spin_Prev.5:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2361   .bss.S_Sw_Cnt.6:00000000 $d
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 72
 
 
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2370   .bss.S_Sw_Prev.7:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2372   .bss.S_Wheel_Lost:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2378   .bss.S_Wheel_Ok:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2384   .bss.S_Wheel_Seen:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2390   .bss.S_Wheel_Miss:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2397   .data.RC_BuildTag:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2403   .bss.S_Fric_A:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2409   .bss.S_Yaw_Volt_Prev:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2415   .rodata.S_Wheel_Sign:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2425   .bss.RC_Can2RestartCnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2432   .bss.RC_Can2CCCR:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2439   .bss.RC_Can2PSR:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2446   .bss.RC_YawOutageCnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2453   .bss.RC_Can2RECMax:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2460   .bss.RC_Can2TECMax:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2467   .bss.RC_Can2REC:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2474   .bss.RC_Can2TEC:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2481   .bss.RC_YawKillCnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2491   .bss.RC_YawKill:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2494   .bss.RC_YawSpdMax:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2501   .bss.RC_YawFbAgeMax:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2511   .bss.RC_ErrCnt:00000000 RC_ErrCnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2508   .bss.RC_ErrCnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2518   .bss.RC_GapMaxMs:00000000 RC_GapMaxMs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2515   .bss.RC_GapMaxMs:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2525   .bss.RC_FrameCnt:00000000 RC_FrameCnt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2522   .bss.RC_FrameCnt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2532   .bss.RC_HoldRate:00000000 RC_HoldRate
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2529   .bss.RC_HoldRate:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2539   .bss.RC_HoldWz:00000000 RC_HoldWz
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2536   .bss.RC_HoldWz:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2546   .bss.RC_YawI:00000000 RC_YawI
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2543   .bss.RC_YawI:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2550   .bss.RC_YawVoltOut:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2560   .bss.RC_YawVolt:00000000 RC_YawVolt
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2557   .bss.RC_YawVolt:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2567   .bss.RC_YawRpmDes:00000000 RC_YawRpmDes
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2564   .bss.RC_YawRpmDes:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2574   .bss.RC_YawErr:00000000 RC_YawErr
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2571   .bss.RC_YawErr:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2581   .bss.RC_YawRef:00000000 RC_YawRef
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2578   .bss.RC_YawRef:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2585   .bss.RC_EnableMs:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2595   .bss.RC_EnableState:00000000 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s:2598   .bss.RC_WheelOut:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2370   .bss.S_Sw_Prev.7:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2372   .bss.S_Wheel_Lost:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2378   .bss.S_Wheel_Ok:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2384   .bss.S_Wheel_Seen:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2390   .bss.S_Wheel_Miss:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2397   .data.RC_BuildTag:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2403   .bss.S_Fric_A:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2409   .bss.S_Yaw_Volt_Prev:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2415   .rodata.S_Wheel_Sign:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2425   .bss.RC_Can2RestartCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2432   .bss.RC_Can2CCCR:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2439   .bss.RC_Can2PSR:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2446   .bss.RC_YawOutageCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2453   .bss.RC_Can2RECMax:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2460   .bss.RC_Can2TECMax:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2467   .bss.RC_Can2REC:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2474   .bss.RC_Can2TEC:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2481   .bss.RC_YawKillCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2491   .bss.RC_YawKill:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2494   .bss.RC_YawSpdMax:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2501   .bss.RC_YawFbAgeMax:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2511   .bss.RC_ErrCnt:00000000 RC_ErrCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2508   .bss.RC_ErrCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2518   .bss.RC_GapMaxMs:00000000 RC_GapMaxMs
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2515   .bss.RC_GapMaxMs:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2525   .bss.RC_FrameCnt:00000000 RC_FrameCnt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2522   .bss.RC_FrameCnt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2532   .bss.RC_HoldRate:00000000 RC_HoldRate
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2529   .bss.RC_HoldRate:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2539   .bss.RC_HoldWz:00000000 RC_HoldWz
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2536   .bss.RC_HoldWz:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2546   .bss.RC_YawI:00000000 RC_YawI
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2543   .bss.RC_YawI:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2550   .bss.RC_YawVoltOut:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2560   .bss.RC_YawVolt:00000000 RC_YawVolt
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2557   .bss.RC_YawVolt:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2567   .bss.RC_YawRpmDes:00000000 RC_YawRpmDes
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2564   .bss.RC_YawRpmDes:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2574   .bss.RC_YawErr:00000000 RC_YawErr
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2571   .bss.RC_YawErr:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2581   .bss.RC_YawRef:00000000 RC_YawRef
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2578   .bss.RC_YawRef:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2585   .bss.RC_EnableMs:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2595   .bss.RC_EnableState:00000000 $d
+C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s:2598   .bss.RC_WheelOut:00000000 $d
 
 UNDEFINED SYMBOLS
 BSP_Now
@@ -4303,7 +4303,7 @@ wheel_clamp
 RC_Wheel_Speed_PI
 dj_wheel
 RC_WheelRef
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccXBcrCz.s 			page 73
+ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\cczgZpxw.s 			page 73
 
 
 RC_WheelFault

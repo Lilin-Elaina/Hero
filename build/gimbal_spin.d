@@ -34,7 +34,8 @@ build/gimbal_spin.o: application/gimbal/gimbal_spin.c \
  modules/remote/dbus.h application/chassis/chassis.h \
  application/gimbal/gimbal.h application/gimbal/gimbal_spin.h \
  bsp/bsp_time.h application/rc_state.h modules/motor/DJ_Motor.h \
- modules/chassis/mecanum.h modules/imu/ins.h bsp/bsp_can.h
+ modules/chassis/mecanum.h modules/imu/ins.h bsp/bsp_can.h \
+ application/gimbal/gimbal.h
 application/gimbal/gimbal_spin.h:
 application/rc_dbus.h:
 Core/Inc/main.h:
@@ -82,3 +83,4 @@ modules/motor/DJ_Motor.h:
 modules/chassis/mecanum.h:
 modules/imu/ins.h:
 bsp/bsp_can.h:
+application/gimbal/gimbal.h:

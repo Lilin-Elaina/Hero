@@ -1,14 +1,16 @@
 /**
   ******************************************************************************
   * @file    ins.c
-  * @brief   BMI088 驱动（SPI2 + 双片选），只做「读角速度」这一件事
+  * @brief   BMI088 驱动（SPI2 + 双片选），只做「读角速度」这一件事  板载IMU默认是I2C模式，靠CS上升沿切到SPI
   *
   *  片上资源：
   *    SPI2  : PB13=SCK  PC2_C=MISO  PC1=MOSI   （CPOL=High, CPHA=2Edge, 4.125MHz）
   *    CS    : PC0 = 加速度计,  PC3 = 陀螺      （低有效）
   ******************************************************************************
   */
-
+/*本文件通过写定spi与imu的通信函数实现对imu的模式切换与读写寄存器
+ *通过对加速度计与陀螺仪的初始化，再对数据进行零偏标定与滤波处理，
+ *最终对的得到的六轴数据进行姿态解算的到pitch与roll            */
 #include "ins.h"
 #include "bsp_time.h"
 #include "main.h"
@@ -229,6 +231,7 @@ static uint8_t S_Skip_Gyro = 0u;
 
 /**
   * @brief  用指定的哑字节数读 1 个寄存器（探测/校验用）
+  * hal库可连续发多字节并接收多字节，读寄存器用tx发送无用字节即可，以下两个函数仅返回相应的数组
   */
 static uint8_t ins_read_at(uint8_t Dev_Id, uint8_t Skip_Bytes, uint8_t Reg_Addr)
 {
@@ -290,7 +293,7 @@ static void ins_write(uint8_t Dev_Id, uint8_t Reg_Addr, uint8_t Reg_Val)
 
 /**
   * @brief  抓取两个芯片 0x00~0x0F 的寄存器快照（只在初始化后调用一次）
-  */
+  * 冗余设定，用于排查spi */
 static void ins_dump(void)
 {
     uint8_t Idx;
@@ -303,7 +306,7 @@ static void ins_dump(void)
 }
 
 /**
-  * @brief  探测 SPI 读偏移（要丢几个哑字节）
+  * @brief  探测 SPI 读偏移（要丢几个哑字节），用于判断两die的spi通信延迟
   * @note   对每个芯片用 Skip_Bytes = 0/1/2 各读一次 CHIP_ID：
   *           INS_xxxDump[0..2] = 三次读到的值
   *           INS_xxxDump[3]    = 最终选中的 Skip_Bytes
@@ -362,6 +365,7 @@ static void ins_acc_init(void)
         return;
     }
 
+    /*因为上电后加速度计可能留存上次测得的数据所以应复位*/
     ins_write(DEV_ACC, ACC_SOFTRESET, BMI_SOFTRESET_VAL);
     BSP_DelayMs(50);
 
@@ -470,9 +474,9 @@ void INS_ResetBias(void)
 
 void INS_Task(void)
 {
-    uint8_t  Raw_Buf[6];
-    uint8_t  Idx;
-    float    Gyro_Rad[3];
+    uint8_t  Raw_Buf[6];      // 6 字节原始数据缓存，用于拼数据
+    uint8_t  Idx;     
+    float    Gyro_Rad[3];     //之后的所有角速度都用弧度制
     float    Max_Rate_Dps = 0.0f;
 
     if (S_Inited == 0u || INS_Ready == 0u) {

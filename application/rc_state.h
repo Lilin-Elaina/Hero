@@ -9,9 +9,7 @@
 #ifndef __RC_STATE_H
 #define __RC_STATE_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+
 
 #include <stdint.h>
 
@@ -26,8 +24,5 @@ extern uint8_t S_Yaw_Slew_Kick;
 /* 定义在 application/chassis/chassis.c —— 四轮速度环积分（失速兜底要清零） */
 extern float S_Wheel_I[];
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __RC_STATE_H */

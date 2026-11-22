@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s 			page 1
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s 			page 1
 
 
    1              		.cpu cortex-m7
@@ -49,53 +49,54 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccD
   19:bsp/bsp_spi.c ****  * 执行顺序在 main.c 里早于 INS_Init()，本文件不再重复配置，只负责片选与�
   20:bsp/bsp_spi.c **** 
   21:bsp/bsp_spi.c **** /*imu片选，第一个参数选择设备，第二个为电平高低*/
-  22:bsp/bsp_spi.c **** void BSP_IMU_Cs(uint8_t dev, uint8_t low)
-  23:bsp/bsp_spi.c **** {
-  29              		.loc 1 23 1 view -0
+  22:bsp/bsp_spi.c **** //第二个参数为1是拉低片选，0是拉高片选
+  23:bsp/bsp_spi.c **** void BSP_IMU_Cs(uint8_t dev, uint8_t low)
+  24:bsp/bsp_spi.c **** {
+  29              		.loc 1 24 1 view -0
   30              		.cfi_startproc
   31              		@ args = 0, pretend = 0, frame = 0
   32              		@ frame_needed = 0, uses_anonymous_args = 0
-  33              		.loc 1 23 1 is_stmt 0 view .LVU1
+  33              		.loc 1 24 1 is_stmt 0 view .LVU1
   34 0000 08B5     		push	{r3, lr}
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s 			page 2
+
+
   35              	.LCFI0:
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s 			page 2
-
-
   36              		.cfi_def_cfa_offset 8
   37              		.cfi_offset 3, -8
   38              		.cfi_offset 14, -4
   39 0002 0A46     		mov	r2, r1
-  24:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
-  40              		.loc 1 24 5 is_stmt 1 view .LVU2
-  41              		.loc 1 24 20 is_stmt 0 view .LVU3
+  25:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
+  40              		.loc 1 25 5 is_stmt 1 view .LVU2
+  41              		.loc 1 25 20 is_stmt 0 view .LVU3
   42 0004 38B9     		cbnz	r0, .L3
-  43              		.loc 1 24 20 discriminator 1 view .LVU4
+  43              		.loc 1 25 20 discriminator 1 view .LVU4
   44 0006 0121     		movs	r1, #1
   45              	.LVL1:
   46              	.L2:
-  25:bsp/bsp_spi.c **** 
-  26:bsp/bsp_spi.c ****     HAL_GPIO_WritePin(BSP_IMU_CS_PORT, pin, low ? GPIO_PIN_RESET : GPIO_PIN_SET);
-  47              		.loc 1 26 5 is_stmt 1 view .LVU5
+  26:bsp/bsp_spi.c **** 
+  27:bsp/bsp_spi.c ****     HAL_GPIO_WritePin(BSP_IMU_CS_PORT, pin, low ? GPIO_PIN_RESET : GPIO_PIN_SET);
+  47              		.loc 1 27 5 is_stmt 1 view .LVU5
   48 0008 B2FA82F2 		clz	r2, r2
   49              	.LVL2:
-  50              		.loc 1 26 5 is_stmt 0 view .LVU6
+  50              		.loc 1 27 5 is_stmt 0 view .LVU6
   51 000c 5209     		lsrs	r2, r2, #5
   52 000e 0348     		ldr	r0, .L5
   53              	.LVL3:
-  54              		.loc 1 26 5 view .LVU7
+  54              		.loc 1 27 5 view .LVU7
   55 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
   56              	.LVL4:
-  27:bsp/bsp_spi.c **** }
-  57              		.loc 1 27 1 view .LVU8
+  28:bsp/bsp_spi.c **** }
+  57              		.loc 1 28 1 view .LVU8
   58 0014 08BD     		pop	{r3, pc}
   59              	.LVL5:
   60              	.L3:
-  24:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
-  61              		.loc 1 24 20 discriminator 2 view .LVU9
+  25:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
+  61              		.loc 1 25 20 discriminator 2 view .LVU9
   62 0016 0821     		movs	r1, #8
   63              	.LVL6:
-  24:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
-  64              		.loc 1 24 20 discriminator 2 view .LVU10
+  25:bsp/bsp_spi.c ****     const uint16_t pin = (dev == BSP_IMU_DEV_ACC) ? BSP_IMU_CS_ACC : BSP_IMU_CS_GYRO;
+  64              		.loc 1 25 20 discriminator 2 view .LVU10
   65 0018 F6E7     		b	.L2
   66              	.L6:
   67 001a 00BF     		.align	2
@@ -112,17 +113,17 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccD
   80              	BSP_IMU_Transfer:
   81              	.LVL7:
   82              	.LFB147:
-  28:bsp/bsp_spi.c **** /*收发，用于读寄存器*/
-  29:bsp/bsp_spi.c **** uint8_t BSP_IMU_Transfer(const uint8_t *tx, uint8_t *rx, uint16_t n)
-  30:bsp/bsp_spi.c **** {
-  83              		.loc 1 30 1 is_stmt 1 view -0
+  29:bsp/bsp_spi.c **** /*收发，用于读寄存器*/
+  30:bsp/bsp_spi.c **** uint8_t BSP_IMU_Transfer(const uint8_t *tx, uint8_t *rx, uint16_t n)
+  31:bsp/bsp_spi.c **** {
+  83              		.loc 1 31 1 is_stmt 1 view -0
   84              		.cfi_startproc
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s 			page 3
+
+
   85              		@ args = 0, pretend = 0, frame = 0
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s 			page 3
-
-
   86              		@ frame_needed = 0, uses_anonymous_args = 0
-  87              		.loc 1 30 1 is_stmt 0 view .LVU12
+  87              		.loc 1 31 1 is_stmt 0 view .LVU12
   88 0000 00B5     		push	{lr}
   89              	.LCFI1:
   90              		.cfi_def_cfa_offset 4
@@ -131,28 +132,28 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccD
   93              	.LCFI2:
   94              		.cfi_def_cfa_offset 16
   95 0004 1346     		mov	r3, r2
-  31:bsp/bsp_spi.c ****     return (HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)tx, rx, n, 50) == HAL_OK) ? 1u : 0u;
-  96              		.loc 1 31 5 is_stmt 1 view .LVU13
-  97              		.loc 1 31 13 is_stmt 0 view .LVU14
+  32:bsp/bsp_spi.c ****     return (HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)tx, rx, n, 50) == HAL_OK) ? 1u : 0u;
+  96              		.loc 1 32 5 is_stmt 1 view .LVU13
+  97              		.loc 1 32 13 is_stmt 0 view .LVU14
   98 0006 3222     		movs	r2, #50
   99              	.LVL8:
- 100              		.loc 1 31 13 view .LVU15
+ 100              		.loc 1 32 13 view .LVU15
  101 0008 0092     		str	r2, [sp]
  102 000a 0A46     		mov	r2, r1
  103 000c 0146     		mov	r1, r0
  104              	.LVL9:
- 105              		.loc 1 31 13 view .LVU16
+ 105              		.loc 1 32 13 view .LVU16
  106 000e 0448     		ldr	r0, .L11
  107              	.LVL10:
- 108              		.loc 1 31 13 view .LVU17
+ 108              		.loc 1 32 13 view .LVU17
  109 0010 FFF7FEFF 		bl	HAL_SPI_TransmitReceive
  110              	.LVL11:
- 111              		.loc 1 31 87 discriminator 1 view .LVU18
+ 111              		.loc 1 32 87 discriminator 1 view .LVU18
  112 0014 10B9     		cbnz	r0, .L9
  113 0016 0120     		movs	r0, #1
  114              	.L8:
-  32:bsp/bsp_spi.c **** }
- 115              		.loc 1 32 1 view .LVU19
+  33:bsp/bsp_spi.c **** }
+ 115              		.loc 1 33 1 view .LVU19
  116 0018 03B0     		add	sp, sp, #12
  117              	.LCFI3:
  118              		.cfi_remember_state
@@ -162,8 +163,8 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccD
  122              	.L9:
  123              	.LCFI4:
  124              		.cfi_restore_state
-  31:bsp/bsp_spi.c ****     return (HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)tx, rx, n, 50) == HAL_OK) ? 1u : 0u;
- 125              		.loc 1 31 87 discriminator 2 view .LVU20
+  32:bsp/bsp_spi.c ****     return (HAL_SPI_TransmitReceive(&hspi2, (uint8_t *)tx, rx, n, 50) == HAL_OK) ? 1u : 0u;
+ 125              		.loc 1 32 87 discriminator 2 view .LVU20
  126 001c 0020     		movs	r0, #0
  127 001e FBE7     		b	.L8
  128              	.L12:
@@ -177,49 +178,49 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccD
  137              		.global	BSP_IMU_Send
  138              		.syntax unified
  139              		.thumb
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s 			page 4
+
+
  140              		.thumb_func
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s 			page 4
-
-
  142              	BSP_IMU_Send:
  143              	.LVL12:
  144              	.LFB148:
-  33:bsp/bsp_spi.c **** /*写寄存器*/
-  34:bsp/bsp_spi.c **** uint8_t BSP_IMU_Send(const uint8_t *tx, uint16_t n)
-  35:bsp/bsp_spi.c **** {
- 145              		.loc 1 35 1 is_stmt 1 view -0
+  34:bsp/bsp_spi.c **** /*写寄存器*/
+  35:bsp/bsp_spi.c **** uint8_t BSP_IMU_Send(const uint8_t *tx, uint16_t n)
+  36:bsp/bsp_spi.c **** {
+ 145              		.loc 1 36 1 is_stmt 1 view -0
  146              		.cfi_startproc
  147              		@ args = 0, pretend = 0, frame = 0
  148              		@ frame_needed = 0, uses_anonymous_args = 0
- 149              		.loc 1 35 1 is_stmt 0 view .LVU22
+ 149              		.loc 1 36 1 is_stmt 0 view .LVU22
  150 0000 08B5     		push	{r3, lr}
  151              	.LCFI5:
  152              		.cfi_def_cfa_offset 8
  153              		.cfi_offset 3, -8
  154              		.cfi_offset 14, -4
  155 0002 0A46     		mov	r2, r1
-  36:bsp/bsp_spi.c ****     return (HAL_SPI_Transmit(&hspi2, (uint8_t *)tx, n, 20) == HAL_OK) ? 1u : 0u;
- 156              		.loc 1 36 5 is_stmt 1 view .LVU23
- 157              		.loc 1 36 13 is_stmt 0 view .LVU24
+  37:bsp/bsp_spi.c ****     return (HAL_SPI_Transmit(&hspi2, (uint8_t *)tx, n, 20) == HAL_OK) ? 1u : 0u;
+ 156              		.loc 1 37 5 is_stmt 1 view .LVU23
+ 157              		.loc 1 37 13 is_stmt 0 view .LVU24
  158 0004 1423     		movs	r3, #20
  159 0006 0146     		mov	r1, r0
  160              	.LVL13:
- 161              		.loc 1 36 13 view .LVU25
+ 161              		.loc 1 37 13 view .LVU25
  162 0008 0348     		ldr	r0, .L17
  163              	.LVL14:
- 164              		.loc 1 36 13 view .LVU26
+ 164              		.loc 1 37 13 view .LVU26
  165 000a FFF7FEFF 		bl	HAL_SPI_Transmit
  166              	.LVL15:
- 167              		.loc 1 36 76 discriminator 1 view .LVU27
+ 167              		.loc 1 37 76 discriminator 1 view .LVU27
  168 000e 08B9     		cbnz	r0, .L15
  169 0010 0120     		movs	r0, #1
  170              	.L14:
-  37:bsp/bsp_spi.c **** }
- 171              		.loc 1 37 1 view .LVU28
+  38:bsp/bsp_spi.c **** }
+ 171              		.loc 1 38 1 view .LVU28
  172 0012 08BD     		pop	{r3, pc}
  173              	.L15:
-  36:bsp/bsp_spi.c ****     return (HAL_SPI_Transmit(&hspi2, (uint8_t *)tx, n, 20) == HAL_OK) ? 1u : 0u;
- 174              		.loc 1 36 76 discriminator 2 view .LVU29
+  37:bsp/bsp_spi.c ****     return (HAL_SPI_Transmit(&hspi2, (uint8_t *)tx, n, 20) == HAL_OK) ? 1u : 0u;
+ 174              		.loc 1 37 76 discriminator 2 view .LVU29
  175 0014 0020     		movs	r0, #0
  176 0016 FCE7     		b	.L14
  177              	.L18:
@@ -237,24 +238,24 @@ ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccD
  190              		.file 6 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_gpio.h"
  191              		.file 7 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_dma.h"
  192              		.file 8 "Drivers/STM32H7xx_HAL_Driver/Inc/stm32h7xx_hal_spi.h"
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s 			page 5
+
+
  193              		.file 9 "Core/Inc/spi.h"
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s 			page 5
-
-
-ARM GAS  C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s 			page 6
+ARM GAS  C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s 			page 6
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 bsp_spi.c
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:20     .text.BSP_IMU_Cs:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:26     .text.BSP_IMU_Cs:00000000 BSP_IMU_Cs
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:69     .text.BSP_IMU_Cs:0000001c $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:74     .text.BSP_IMU_Transfer:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:80     .text.BSP_IMU_Transfer:00000000 BSP_IMU_Transfer
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:131    .text.BSP_IMU_Transfer:00000020 $d
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:136    .text.BSP_IMU_Send:00000000 $t
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:142    .text.BSP_IMU_Send:00000000 BSP_IMU_Send
-C:\Users\elaina\Desktop\STM32.HAL.exercise\Remote_Control\.tmpbuild\ccDSwsM2.s:180    .text.BSP_IMU_Send:00000018 $d
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:20     .text.BSP_IMU_Cs:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:26     .text.BSP_IMU_Cs:00000000 BSP_IMU_Cs
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:69     .text.BSP_IMU_Cs:0000001c $d
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:74     .text.BSP_IMU_Transfer:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:80     .text.BSP_IMU_Transfer:00000000 BSP_IMU_Transfer
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:131    .text.BSP_IMU_Transfer:00000020 $d
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:136    .text.BSP_IMU_Send:00000000 $t
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:142    .text.BSP_IMU_Send:00000000 BSP_IMU_Send
+C:\Users\elaina\AppData\Local\Temp\ccXWL7Hr.s:180    .text.BSP_IMU_Send:00000018 $d
 
 UNDEFINED SYMBOLS
 HAL_GPIO_WritePin
